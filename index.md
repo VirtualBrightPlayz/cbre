@@ -1,12 +1,12 @@
 # Basic guide
-&nbsp;
+
+If you have any questions about anything that isn't clear or covered by this guide, you can find me on the **Undertow Games Discord server**, just ask in _#scpcb-general_: [https://discord.com/invite/undertow](https://discord.com/invite/undertow)
+
 ## Getting started
 
 Get the latest CBRE release from here: [https://github.com/juanjp600/cbre/releases](https://github.com/juanjp600/cbre/releases)
 
 Get a collection of editable room files from here: [http://scpcbgame.com/rooms.rar](http://scpcbgame.com/rooms.rar)
-
-If you have any questions, you can find me on the **Undertow Games Discord server**, just ask in _#scpcb-general_: [https://discord.com/invite/undertow](https://discord.com/invite/undertow)
 
 Extract the contents of the zip file you got into a folder, then launch `CBRE.Editor.exe`.
 
