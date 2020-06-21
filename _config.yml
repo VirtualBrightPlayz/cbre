@@ -1,5 +1,5 @@
 title: CBRE
-description: omg it's not 3dws so it sux :(
 show_downloads: false
-google_analytics:
+google_analytics: false
 theme: jekyll-theme-midnight
+site_url: https://juanjp600.github.io/cbre/
