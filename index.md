@@ -6,6 +6,8 @@ Get the latest CBRE release from here: [https://github.com/juanjp600/cbre/releas
 
 Get a collection of editable room files from here: [http://scpcbgame.com/rooms.rar](http://scpcbgame.com/rooms.rar)
 
+If you have any questions, you can find me on the **Undertow Games Discord server**, just ask in _#scpcb-general_: [https://discord.com/invite/undertow](https://discord.com/invite/undertow)
+
 Extract the contents of the zip file you got into a folder, then launch `CBRE.Editor.exe`.
 
 If you haven't configured CBRE before, you should be greeted with a window that looks like this:
