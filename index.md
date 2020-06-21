@@ -40,7 +40,7 @@ You can also reposition the camera by dragging the orange circle in the 2D views
 
 ### Brush Tool - adding geometry
 
-Before you add in new geometry, I recommend browsing for the texture you want to use by browsing for it with the button in the right panel.
+Before you add in new geometry, I recommend selecting the texture you want to use by browsing for it with the button in the right panel.
 
 To add in new geometry, you will need to create a brush using the `Brush Tool`. You can find it on the toolbar on the left.
 
@@ -128,7 +128,7 @@ Once the lightmaps are rendered, you will be able to see the result in the 3D vi
 
 ![](imgs/RenderedLightmap.png)
 
-If you intend to continue adjusting the geometry or lighting, you'll find that the lightmaps don't update automatically and you should change the rendering mode to `3D Textured` to hide them until you re-render them:
+If you intend to continue adjusting the geometry or lighting, you'll find that the lightmaps don't update automatically and you should change the view mode to `3D Textured` to hide them until you re-render them:
 
 ![](imgs/SwapRenderingMode.png)
 
