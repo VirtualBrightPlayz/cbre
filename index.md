@@ -2,9 +2,9 @@
 &nbsp;
 ## Getting started
 
-Get the latest CBRE release from here: https://github.com/juanjp600/cbre/releases
+Get the latest CBRE release from here: [https://github.com/juanjp600/cbre/releases](https://github.com/juanjp600/cbre/releases)
 
-Get a collection of editable room files from here: http://scpcbgame.com/rooms.rar
+Get a collection of editable room files from here: [http://scpcbgame.com/rooms.rar](http://scpcbgame.com/rooms.rar)
 
 Extract the contents of the zip file you got into a folder, then launch `CBRE.Editor.exe`.
 
