@@ -32,6 +32,8 @@ For this guide, I've loaded up `room2_2.3dw`:
 
 This tool is pretty straightforward. In any of the views, just click on the entity you want to interact with. You can also change the size of brushes by dragging the squares that appear along the edges. By clicking several times within one of the 2D views, you can switch between resizing, rotation and shearing.
 
+This tool is locked to the grid, as are the `Brush Tool`, `Entity Tool` and `Clip Tool`. By default, the grid size is a bit high; to adjust it, hit `[` and `]` as needed. This can be rebound in the settings.
+
 ### Camera - self-explanatory
 
 The controls for the `Camera Tool` are fairly straightforward. Just select it from the toolbar on the left, and then hold left click in the 3D view. You should now be able to move the camera around using WASD. You can adjust the movement speed in the settings.
