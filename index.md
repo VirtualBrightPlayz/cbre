@@ -98,7 +98,7 @@ Once you've adjusted the properties, hit OK.
 
 First, select a brush using the `Select Tool`. Then, select the `Clip Tool` from the toolbar on the left and click and hold the Left Mouse Button on one of the 2D views. You'll see a white line that goes through the brush, and a plane on the 3D view:
 
-![](ClipExample.png)
+![](imgs/ClipExample.png)
 
 By clicking on the `Clip Tool` several times, you can choose which of the brushes (either one, or both) to retain once you perform the clip operation. The geometry that will be retained is indicated by having white edges.
 
