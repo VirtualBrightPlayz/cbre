@@ -1,5 +1,5 @@
 # Basic guide
-
+&nbsp;
 ## Getting started
 
 Get the latest CBRE release from here: https://github.com/juanjp600/cbre/releases
@@ -68,7 +68,7 @@ With this tool selected, left click on a face that needs its texture changed. To
 
 Once you've selected all the required faces, browse for the texture you want to use and hit `Apply`.
 
-Additionally, you can change the scale and alignment of the textures on the selected faces by using the Scale, Shift and Rotation fields shown above. As a shortcut, hitting the Fit button with scale and align the texture in such a way that the whole texture will be visible.
+Additionally, you can change the scale and alignment of the textures on the selected faces by using the `Scale`, `Shift` and `Rotation` fields shown above. As a shortcut, hitting the `Fit` button will scale and align the texture in such a way that the whole texture will be visible.
 
 In the following example, I've used `tooltextures/remove_face`. All faces with this texture will be ignored by the lightmapper and removed from the final room:
 
