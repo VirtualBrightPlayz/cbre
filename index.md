@@ -1,6 +1,6 @@
 # Basic guide
 
-If you have any questions about anything that isn't clear or covered by this guide, you can find me on the **Undertow Games Discord server**, just ask in _#scpcb-general_: [https://discord.com/invite/undertow](https://discord.com/invite/undertow)
+If you have any questions about anything that isn't clear or covered by this guide, you can find me on the **Undertow Games Discord server**, just ask in _#scpcb-modding_: [https://discord.com/invite/undertow](https://discord.com/invite/undertow)
 
 ## Getting started
 
