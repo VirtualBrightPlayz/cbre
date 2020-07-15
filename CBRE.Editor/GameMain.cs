@@ -25,96 +25,96 @@ namespace CBRE.Editor {
             Window.AllowUserResizing = true;
 
             Menus.Add(new Menu("File",
-                new Menu.Item("New", "Ctrl+N"),
-                new Menu.Item("Open", "Ctrl+O"),
-                new Menu.Item("Close", ""),
-                new Menu.Item("Save", "Ctrl+S"),
-                new Menu.Item("Save as", "Ctrl+Shift+S"),
-                new Menu.Separator(),
-                new Menu.Item("Export / Lightmap", "F9"),
-                new Menu.Separator(),
-                new Menu.Item("Exit", "")));
+                new MenuItem("New", "Ctrl+N"),
+                new MenuItem("Open", "Ctrl+O"),
+                new MenuItem("Close", ""),
+                new MenuItem("Save", "Ctrl+S"),
+                new MenuItem("Save as", "Ctrl+Shift+S"),
+                new Separator(),
+                new MenuItem("Export / Lightmap", "F9"),
+                new Separator(),
+                new MenuItem("Exit", "") { Action = () => { Exit(); } }));
             Menus.Add(new Menu("Edit",
-                new Menu.Item("Undo", "Ctrl+Z"),
-                new Menu.Item("Redo", "Ctrl+Y"),
-                new Menu.Separator(),
-                new Menu.Item("Cut", "Ctrl+X"),
-                new Menu.Item("Copy", "Ctrl+C"),
-                new Menu.Item("Paste", "Ctrl+V"),
-                new Menu.Item("Paste Special...", ""),
-                new Menu.Item("Delete", "Del"),
-                new Menu.Separator(),
-                new Menu.Item("Clear Selection", ""),
-                new Menu.Item("Select All", "Ctrl+A"),
-                new Menu.Separator(),
-                new Menu.Item("Object Properties", "Alt+Enter")));
+                new MenuItem("Undo", "Ctrl+Z"),
+                new MenuItem("Redo", "Ctrl+Y"),
+                new Separator(),
+                new MenuItem("Cut", "Ctrl+X"),
+                new MenuItem("Copy", "Ctrl+C"),
+                new MenuItem("Paste", "Ctrl+V"),
+                new MenuItem("Paste Special...", ""),
+                new MenuItem("Delete", "Del"),
+                new Separator(),
+                new MenuItem("Clear Selection", ""),
+                new MenuItem("Select All", "Ctrl+A"),
+                new Separator(),
+                new MenuItem("Object Properties", "Alt+Enter")));
             Menus.Add(new Menu("Map",
-                new Menu.Item("Snap to Grid", ""),
-                new Menu.Item("Show 2D Grid", ""),
-                new Menu.Item("Show 3D Grid", ""),
-                new Menu.Item("Grid Settings", "",
-                    new Menu.Item("Smaller Grid", ""),
-                    new Menu.Item("Bigger Grid", "")),
-                new Menu.Separator(),
-                new Menu.Item("Ignore Grouping", ""),
-                new Menu.Separator(),
-                new Menu.Item("Texture Lock", ""),
-                new Menu.Item("Texture Scaling Lock", ""),
-                new Menu.Separator(),
-                new Menu.Item("Hide Null Textures", ""),
-                new Menu.Separator(),
-                new Menu.Item("Show Information", ""),
-                new Menu.Item("Show Selected Brush ID", ""),
-                new Menu.Item("Entity Report...", ""),
-                new Menu.Item("Check for Problems", ""),
-                new Menu.Item("Show Logical Tree", ""),
-                new Menu.Separator(),
-                new Menu.Item("Map Properties...", "")));
+                new MenuItem("Snap to Grid", ""),
+                new MenuItem("Show 2D Grid", ""),
+                new MenuItem("Show 3D Grid", ""),
+                new Menu("Grid Settings",
+                    new MenuItem("Smaller Grid", ""),
+                    new MenuItem("Bigger Grid", "")),
+                new Separator(),
+                new MenuItem("Ignore Grouping", ""),
+                new Separator(),
+                new MenuItem("Texture Lock", ""),
+                new MenuItem("Texture Scaling Lock", ""),
+                new Separator(),
+                new MenuItem("Hide Null Textures", ""),
+                new Separator(),
+                new MenuItem("Show Information", ""),
+                new MenuItem("Show Selected Brush ID", ""),
+                new MenuItem("Entity Report...", ""),
+                new MenuItem("Check for Problems", ""),
+                new MenuItem("Show Logical Tree", ""),
+                new Separator(),
+                new MenuItem("Map Properties...", "")));
             Menus.Add(new Menu("View",
-                new Menu.Item("Autosize All Views", ""),
-                new Menu.Item("Center All Views on Selection", ""),
-                new Menu.Item("Center 2D Views on Selection", ""),
-                new Menu.Item("Center 3D View on Selection", ""),
-                new Menu.Separator(),
-                new Menu.Item("Go to Brush ID...", ""),
-                new Menu.Item("Go to Coordinates...", ""),
-                new Menu.Separator(),
-                new Menu.Item("Hide Selected Objects", ""),
-                new Menu.Item("Hide Unselected Objects", ""),
-                new Menu.Item("Show Hidden Objects", "")));
+                new MenuItem("Autosize All Views", ""),
+                new MenuItem("Center All Views on Selection", ""),
+                new MenuItem("Center 2D Views on Selection", ""),
+                new MenuItem("Center 3D View on Selection", ""),
+                new Separator(),
+                new MenuItem("Go to Brush ID...", ""),
+                new MenuItem("Go to Coordinates...", ""),
+                new Separator(),
+                new MenuItem("Hide Selected Objects", ""),
+                new MenuItem("Hide Unselected Objects", ""),
+                new MenuItem("Show Hidden Objects", "")));
             Menus.Add(new Menu("Tools",
-                new Menu.Item("Carve", ""),
-                new Menu.Item("Make Hollow", ""),
-                new Menu.Separator(),
-                new Menu.Item("Group", ""),
-                new Menu.Item("Ungroup", ""),
-                new Menu.Separator(),
-                new Menu.Item("Tie to Entity", ""),
-                new Menu.Item("Move to World", ""),
-                new Menu.Separator(),
-                new Menu.Item("Replace Textures", ""),
-                new Menu.Separator(),
-                new Menu.Item("Transform...", ""),
-                new Menu.Item("Snap Selected to Grid", ""),
-                new Menu.Item("Snap Selected to Grid Individually", ""),
-                new Menu.Item("Align Objects", "",
-                    new Menu.Item("To X Axis Min", ""),
-                    new Menu.Item("To X Axis Max", ""),
-                    new Menu.Item("To Y Axis Min", ""),
-                    new Menu.Item("To Y Axis Max", ""),
-                    new Menu.Item("To Z Axis Min", ""),
-                    new Menu.Item("To Z Axis Max", "")),
-                new Menu.Item("Flip Objects", "",
-                    new Menu.Item("X Axis", ""),
-                    new Menu.Item("Y Axis", ""),
-                    new Menu.Item("Z Axis", "")),
-                new Menu.Separator(),
-                new Menu.Item("Options...", "")));
+                new MenuItem("Carve", ""),
+                new MenuItem("Make Hollow", ""),
+                new Separator(),
+                new MenuItem("Group", ""),
+                new MenuItem("Ungroup", ""),
+                new Separator(),
+                new MenuItem("Tie to Entity", ""),
+                new MenuItem("Move to World", ""),
+                new Separator(),
+                new MenuItem("Replace Textures", ""),
+                new Separator(),
+                new MenuItem("Transform...", ""),
+                new MenuItem("Snap Selected to Grid", ""),
+                new MenuItem("Snap Selected to Grid Individually", ""),
+                new Menu("Align Objects",
+                    new MenuItem("To X Axis Min", ""),
+                    new MenuItem("To X Axis Max", ""),
+                    new MenuItem("To Y Axis Min", ""),
+                    new MenuItem("To Y Axis Max", ""),
+                    new MenuItem("To Z Axis Min", ""),
+                    new MenuItem("To Z Axis Max", "")),
+                new Menu("Flip Objects",
+                    new MenuItem("X Axis", ""),
+                    new MenuItem("Y Axis", ""),
+                    new MenuItem("Z Axis", "")),
+                new Separator(),
+                new MenuItem("Options...", "")));
             Menus.Add(new Menu("Layout",
-                new Menu.Item("Create New Layout Window", ""),
-                new Menu.Item("Layout Window Settings...", "")));
+                new MenuItem("Create New Layout Window", ""),
+                new MenuItem("Layout Window Settings...", "")));
             Menus.Add(new Menu("Help",
-                new Menu.Item("About...", "")));
+                new MenuItem("About...", "")));
 
             IsMouseVisible = true;
         }
@@ -157,55 +157,46 @@ namespace CBRE.Editor {
             base.Draw(gameTime);
         }
 
-        public class Menu {
-            public Menu(string name, params Item[] items) {
+        public class MenuItem {
+            public MenuItem(string name, string shortcut) {
                 Name = name;
+                Shortcut = shortcut;
+            }
+
+            public virtual void Update() {
+                if (ImGui.MenuItem(Name, Shortcut)) {
+                    Action?.Invoke();
+                }
+            }
+
+            public Action Action;
+
+            public string Name;
+            public string Shortcut;
+        }
+
+        public class Menu : MenuItem {
+            public Menu(string name, params MenuItem[] items) : base(name, "") {
                 Items = items.ToList();
             }
 
-            public string Name;
-            public List<Item> Items;
-
-            public class Item {
-                public Item(string name, string shortcut, params Item[] subItems) {
-                    Name = name;
-                    Shortcut = shortcut;
-                    if (subItems != null && subItems.Any()) {
-                        SubItems = subItems.ToList();
-                    } else {
-                        SubItems = null;
-                    }
+            public override void Update() {
+                if (ImGui.BeginMenu(Name)) {
+                    Items.ForEach(it => it.Update());
+                    ImGui.EndMenu();
                 }
-
-                public virtual void Update() {
-                    if (SubItems?.Any() ?? false) {
-                        if (ImGui.BeginMenu(Name)) {
-                            SubItems.ForEach(it => it.Update());
-                            ImGui.EndMenu();
-                        }
-                    } else {
-                        if (ImGui.MenuItem(Name, Shortcut)) {
-                            Action?.Invoke();
-                        }
-                    }
-                }
-
-                public Action Action;
-
-                public string Name;
-                public string Shortcut;
-
-                public List<Item> SubItems;
             }
+            public List<MenuItem> Items;
+        }
 
-            public class Separator : Item {
-                public Separator() : base("","") { }
+        public class Separator : MenuItem {
+            public Separator() : base("", "") { }
 
-                public override void Update() {
-                    ImGui.Separator();
-                }
+            public override void Update() {
+                ImGui.Separator();
             }
         }
+
         public List<Menu> Menus = new List<Menu>();
 
         protected virtual void ImGuiLayout()
@@ -219,12 +210,7 @@ namespace CBRE.Editor {
                 ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width+2, Window.ClientBounds.Height));
                 if (ImGui.BeginMenuBar()) {
                     for (int i = 0; i < Menus.Count; i++) {
-                        if (ImGui.BeginMenu(Menus[i].Name)) {
-                            for (int j = 0; j < Menus[i].Items.Count; j++) {
-                                Menus[i].Items[j].Update();
-                            }
-                            ImGui.EndMenu();
-                        }
+                        Menus[i].Update();
                     }
 
                     ImGui.EndMenuBar();
