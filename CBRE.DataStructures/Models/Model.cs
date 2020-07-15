@@ -1,4 +1,4 @@
-using CBRE.DataStructures.Geometric;
+﻿using CBRE.DataStructures.Geometric;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -88,7 +88,8 @@ namespace CBRE.DataStructures.Models {
         private void CombineTextures() {
             if (Textures.Count < 1) return;
             // Calculate the dimension of the combined texture
-            var width = 0;
+            //TODO: reimplement?
+            /*var width = 0;
             var height = 0;
             var heightList = new Dictionary<int, int>();
             foreach (var texture in Textures) {
@@ -142,7 +143,7 @@ namespace CBRE.DataStructures.Models {
             // Reset the texture indices
             for (var i = 0; i < Textures.Count; i++) {
                 Textures[i].Index = i;
-            }
+            }*/
         }
 
         /// <summary>
@@ -194,7 +195,7 @@ namespace CBRE.DataStructures.Models {
 
         public void Dispose() {
             foreach (var t in Textures) {
-                if (t.Image != null) t.Image.Dispose();
+                //if (t.Image != null) t.Image.Dispose();
                 if (t.TextureObject != null) t.TextureObject.Dispose();
             }
         }

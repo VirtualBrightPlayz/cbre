@@ -11,11 +11,6 @@
     <ProjectReference Include="..\CBRE.DataStructures\CBRE.DataStructures.csproj" />
     <ProjectReference Include="..\CBRE.FileSystem\CBRE.FileSystem.csproj" />
     <ProjectReference Include="..\CBRE.Graphics\CBRE.Graphics.csproj" />
-    <ProjectReference Include="..\CBRE.Packages\CBRE.Packages.csproj" />
-    <ProjectReference Include="..\CBRE.Providers\CBRE.Providers.csproj" />
-    <ProjectReference Include="..\CBRE.QuickForms\CBRE.QuickForms.csproj" />
-    <ProjectReference Include="..\CBRE.Settings\CBRE.Settings.csproj" />
-    <ProjectReference Include="..\CBRE.UI\CBRE.UI.csproj" />
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
   </ItemGroup>
 

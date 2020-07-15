@@ -1,5 +1,4 @@
 ﻿using CBRE.Extensions;
-using OpenTK;
 using System;
 using System.Runtime.Serialization;
 
@@ -33,6 +32,11 @@ namespace CBRE.DataStructures.Geometric {
         public Coordinate Y { get { return new Coordinate(Values[4], Values[5], Values[6]); } }
         public Coordinate Z { get { return new Coordinate(Values[8], Values[9], Values[10]); } }
         public Coordinate Shift { get { return new Coordinate(Values[3], Values[7], Values[11]); } }
+
+        public Vector4d Row0 { get { return new Vector4d(Values[0], Values[1], Values[2], Values[3]); } }
+        public Vector4d Row1 { get { return new Vector4d(Values[4], Values[5], Values[6], Values[7]); } }
+        public Vector4d Row2 { get { return new Vector4d(Values[8], Values[9], Values[10], Values[11]); } }
+        public Vector4d Row3 { get { return new Vector4d(Values[12], Values[13], Values[14], Values[15]); } }
 
         public Matrix() {
             Values = new decimal[]
@@ -176,48 +180,6 @@ namespace CBRE.DataStructures.Geometric {
             return true;
         }
 
-        public Matrix4 ToGLSLMatrix4() {
-            return new Matrix4(
-                (float)this[0],
-                (float)this[1],
-                (float)this[2],
-                (float)this[3],
-                (float)this[4],
-                (float)this[5],
-                (float)this[6],
-                (float)this[7],
-                (float)this[8],
-                (float)this[9],
-                (float)this[10],
-                (float)this[11],
-                (float)this[12],
-                (float)this[13],
-                (float)this[14],
-                (float)this[15]
-                );
-        }
-
-        public Matrix4 ToOpenTKMatrix4() {
-            return new Matrix4(
-                (float)this[0],
-                (float)this[1],
-                (float)this[2],
-                (float)this[12],
-                (float)this[4],
-                (float)this[5],
-                (float)this[6],
-                (float)this[13],
-                (float)this[8],
-                (float)this[9],
-                (float)this[10],
-                (float)this[14],
-                (float)this[3],
-                (float)this[7],
-                (float)this[11],
-                (float)this[15]
-                );
-        }
-
         public bool Equals(Matrix other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -346,54 +308,6 @@ namespace CBRE.DataStructures.Geometric {
             m.Values[5] = scale.Y;
             m.Values[10] = scale.Z;
             return m;
-        }
-
-        public static Matrix FromOpenTKMatrix4(Matrix4 mat) {
-            return new Matrix(
-                (decimal)mat.Row0.X,
-                (decimal)mat.Row0.Y,
-                (decimal)mat.Row0.Z,
-                (decimal)mat.Row3.X,
-
-                (decimal)mat.Row1.X,
-                (decimal)mat.Row1.Y,
-                (decimal)mat.Row1.Z,
-                (decimal)mat.Row3.Y,
-
-                (decimal)mat.Row2.X,
-                (decimal)mat.Row2.Y,
-                (decimal)mat.Row2.Z,
-                (decimal)mat.Row3.Z,
-
-                (decimal)mat.Row0.W,
-                (decimal)mat.Row1.W,
-                (decimal)mat.Row2.W,
-                (decimal)mat.Row3.W
-                );
-        }
-
-        public static Matrix FromGLSLMatrix4(Matrix4 mat) {
-            return new Matrix(
-                (decimal)mat.Row0.X,
-                (decimal)mat.Row0.Y,
-                (decimal)mat.Row0.Z,
-                (decimal)mat.Row0.W,
-
-                (decimal)mat.Row1.X,
-                (decimal)mat.Row1.Y,
-                (decimal)mat.Row1.Z,
-                (decimal)mat.Row1.W,
-
-                (decimal)mat.Row2.X,
-                (decimal)mat.Row2.Y,
-                (decimal)mat.Row2.Z,
-                (decimal)mat.Row2.W,
-
-                (decimal)mat.Row3.X,
-                (decimal)mat.Row3.Y,
-                (decimal)mat.Row3.Z,
-                (decimal)mat.Row3.W
-                );
         }
     }
 }

@@ -1,4 +1,4 @@
-using CBRE.Common;
+﻿using CBRE.Common;
 
 namespace CBRE.DataStructures.Models {
     public class Texture {
@@ -8,6 +8,6 @@ namespace CBRE.DataStructures.Models {
         public int Width { get; set; }
         public int Height { get; set; }
         public int Flags { get; set; }
-        public System.Drawing.Bitmap Image { get; set; }
+        //public System.Drawing.Bitmap Image { get; set; }
     }
 }

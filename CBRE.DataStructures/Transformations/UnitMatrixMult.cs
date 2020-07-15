@@ -1,5 +1,4 @@
 ﻿using CBRE.DataStructures.Geometric;
-using OpenTK;
 using System;
 using System.Runtime.Serialization;
 
@@ -14,16 +13,6 @@ namespace CBRE.DataStructures.Transformations {
 
         public UnitMatrixMult(Matrix matrix) {
             Matrix = matrix;
-        }
-
-        public UnitMatrixMult(Matrix4 mat) {
-            Matrix = new Matrix(new[]
-            {
-                (decimal) mat.M11, (decimal) mat.M21, (decimal) mat.M31, (decimal) mat.M41,
-                (decimal) mat.M12, (decimal) mat.M22, (decimal) mat.M32, (decimal) mat.M42,
-                (decimal) mat.M13, (decimal) mat.M23, (decimal) mat.M33, (decimal) mat.M43,
-                (decimal) mat.M14, (decimal) mat.M24, (decimal) mat.M34, (decimal) mat.M44
-            });
         }
 
         protected UnitMatrixMult(SerializationInfo info, StreamingContext context) {
