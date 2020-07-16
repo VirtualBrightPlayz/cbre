@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Num = System.Numerics;
@@ -24,14 +25,46 @@ namespace CBRE.Editor {
             _graphics.ApplyChanges();
             Window.AllowUserResizing = true;
 
+            IsMouseVisible = true;
+        }
+
+        Dictionary<string, AsyncTexture> menuTextures;
+
+        protected override void Initialize()
+        {
+            _imGuiRenderer = new ImGuiRenderer(this);
+            _imGuiRenderer.RebuildFontAtlas();
+
+            var style = ImGui.GetStyle();
+            style.ChildRounding = 0;
+            style.FrameRounding = 0;
+            style.GrabRounding = 0;
+            style.PopupRounding = 0;
+            style.ScrollbarRounding = 0;
+            style.TabRounding = 0;
+            style.WindowRounding = 0;
+
+            InitMenus();
+
+            base.Initialize();
+        }
+
+        private void InitMenus() {
+            menuTextures = new Dictionary<string, AsyncTexture>();
+            string[] files = Directory.GetFiles("Resources");
+            foreach (string file in files) {
+                menuTextures.Add(Path.GetFileNameWithoutExtension(file),
+                    LoadTexture(file));
+            }
+
             Menus.Add(new Menu("File",
-                new MenuItem("New", "Ctrl+N"),
-                new MenuItem("Open", "Ctrl+O"),
-                new MenuItem("Close", ""),
-                new MenuItem("Save", "Ctrl+S"),
-                new MenuItem("Save as", "Ctrl+Shift+S"),
+                new MenuItem("New", "Ctrl+N", menuTextures["Menu_New"]),
+                new MenuItem("Open", "Ctrl+O", menuTextures["Menu_Open"]),
+                new MenuItem("Close", "", menuTextures["Menu_Close"]),
+                new MenuItem("Save", "Ctrl+S", menuTextures["Menu_Save"]),
+                new MenuItem("Save as", "Ctrl+Shift+S", menuTextures["Menu_SaveAs"]),
                 new Separator(),
-                new MenuItem("Export / Lightmap", "F9"),
+                new MenuItem("Export / Lightmap", "F9", menuTextures["Menu_ExportRmesh"]),
                 new Separator(),
                 new MenuItem("Exit", "") { Action = () => { Exit(); } }));
             Menus.Add(new Menu("Edit",
@@ -115,25 +148,10 @@ namespace CBRE.Editor {
                 new MenuItem("Layout Window Settings...", "")));
             Menus.Add(new Menu("Help",
                 new MenuItem("About...", "")));
-
-            IsMouseVisible = true;
         }
 
-        protected override void Initialize()
-        {
-            _imGuiRenderer = new ImGuiRenderer(this);
-            _imGuiRenderer.RebuildFontAtlas();
-
-            var style = ImGui.GetStyle();
-            style.ChildRounding = 0;
-            style.FrameRounding = 0;
-            style.GrabRounding = 0;
-            style.PopupRounding = 0;
-            style.ScrollbarRounding = 0;
-            style.TabRounding = 0;
-            style.WindowRounding = 0;
-
-            base.Initialize();
+        private AsyncTexture LoadTexture(string filename) {
+            return new AsyncTexture(GraphicsDevice, _imGuiRenderer, filename);
         }
 
         protected override void LoadContent()
@@ -158,41 +176,59 @@ namespace CBRE.Editor {
         }
 
         public class MenuItem {
-            public MenuItem(string name, string shortcut) {
+            public MenuItem(string name, string shortcut, AsyncTexture texture = null) {
                 Name = name;
                 Shortcut = shortcut;
+                Texture = texture;
             }
 
-            public virtual void Update() {
-                if (ImGui.MenuItem(Name, Shortcut)) {
+            public virtual void Draw(bool topLevel) {
+                Num.Vector2 pos = ImGui.GetCursorPos() + ImGui.GetWindowPos();
+                if (ImGui.MenuItem(GetDrawnText(topLevel), Shortcut)) {
                     Action?.Invoke();
                 }
+                RenderIcon(pos);
+            }
+
+            protected void RenderIcon(Num.Vector2 pos) {
+                if (Texture != null && Texture.ImGuiTexture != IntPtr.Zero) {
+                    ImGui.GetForegroundDrawList().AddImage(Texture.ImGuiTexture, pos + new Num.Vector2(-2,-2), pos + new Num.Vector2(14, 14), Num.Vector2.Zero, Num.Vector2.One, 0xffffffff);
+                }
+            }
+
+            protected string GetDrawnText(bool topLevel) {
+                return (topLevel ? "" : "   ") + Name;
             }
 
             public Action Action;
 
             public string Name;
             public string Shortcut;
+            public AsyncTexture Texture;
         }
 
         public class Menu : MenuItem {
-            public Menu(string name, params MenuItem[] items) : base(name, "") {
+            public Menu(string name, AsyncTexture texture, params MenuItem[] items) : base(name, "", texture) {
                 Items = items.ToList();
             }
 
-            public override void Update() {
-                if (ImGui.BeginMenu(Name)) {
-                    Items.ForEach(it => it.Update());
+            public Menu(string name, params MenuItem[] items) : this(name, null, items) { }
+
+            public override void Draw(bool topLevel) {
+                Num.Vector2 pos = ImGui.GetCursorPos() + ImGui.GetWindowPos();
+                if (ImGui.BeginMenu(GetDrawnText(topLevel))) {
+                    Items.ForEach(it => it.Draw(false));
                     ImGui.EndMenu();
                 }
+                RenderIcon(pos);
             }
             public List<MenuItem> Items;
         }
 
         public class Separator : MenuItem {
-            public Separator() : base("", "") { }
+            public Separator() : base("", "", null) { }
 
-            public override void Update() {
+            public override void Draw(bool topLevel) {
                 ImGui.Separator();
             }
         }
@@ -210,7 +246,7 @@ namespace CBRE.Editor {
                 ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width+2, Window.ClientBounds.Height));
                 if (ImGui.BeginMenuBar()) {
                     for (int i = 0; i < Menus.Count; i++) {
-                        Menus[i].Update();
+                        Menus[i].Draw(true);
                     }
 
                     ImGui.EndMenuBar();
