@@ -107,10 +107,11 @@ namespace CBRE.Editor {
 
         private void UpdateMenus() {
             if (ImGui.BeginMenuBar()) {
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.One * 8);
                 for (int i = 0; i < Menus.Count; i++) {
                     Menus[i].Draw(true);
                 }
-
+                ImGui.PopStyleVar();
                 ImGui.EndMenuBar();
             }
         }
