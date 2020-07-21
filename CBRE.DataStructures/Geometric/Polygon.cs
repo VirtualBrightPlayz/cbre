@@ -10,14 +10,14 @@ namespace CBRE.DataStructures.Geometric {
     /// </summary>
     [Serializable]
     public class Polygon : ISerializable {
-        public List<Coordinate> Vertices { get; set; }
+        public List<Vector3> Vertices { get; set; }
         public Plane Plane { get; set; }
 
         /// <summary>
         /// Creates a polygon from a list of points
         /// </summary>
         /// <param name="vertices">The vertices of the polygon</param>
-        public Polygon(IEnumerable<Coordinate> vertices) {
+        public Polygon(IEnumerable<Vector3> vertices) {
             Vertices = vertices.ToList();
             Plane = new Plane(Vertices[0], Vertices[1], Vertices[2]);
             Simplify();
@@ -34,11 +34,11 @@ namespace CBRE.DataStructures.Geometric {
 
             // Get aligned up and right axes to the plane
             var direction = Plane.GetClosestAxisToNormal();
-            var tempV = direction == Coordinate.UnitZ ? -Coordinate.UnitY : -Coordinate.UnitZ;
+            var tempV = direction == Vector3.UnitZ ? -Vector3.UnitY : -Vector3.UnitZ;
             var up = tempV.Cross(Plane.Normal).Normalise();
             var right = Plane.Normal.Cross(up).Normalise();
 
-            Vertices = new List<Coordinate>
+            Vertices = new List<Vector3>
                            {
                                plane.PointOnPlane + right + up, // Top right
                                plane.PointOnPlane - right + up, // Top left
@@ -49,7 +49,7 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         protected Polygon(SerializationInfo info, StreamingContext context) {
-            Vertices = ((Coordinate[])info.GetValue("Vertices", typeof(Coordinate[]))).ToList();
+            Vertices = ((Vector3[])info.GetValue("Vertices", typeof(Vector3[]))).ToList();
             Plane = (Plane)info.GetValue("Plane", typeof(Plane));
         }
 
@@ -59,11 +59,11 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public Polygon Clone() {
-            return new Polygon(new List<Coordinate>(Vertices));
+            return new Polygon(new List<Vector3>(Vertices));
         }
 
         public void Unclone(Polygon polygon) {
-            Vertices = new List<Coordinate>(polygon.Vertices);
+            Vertices = new List<Vector3>(polygon.Vertices);
             Plane = polygon.Plane.Clone();
         }
 
@@ -71,8 +71,8 @@ namespace CBRE.DataStructures.Geometric {
         /// Returns the origin of this polygon.
         /// </summary>
         /// <returns></returns>
-        public Coordinate GetOrigin() {
-            return Vertices.Aggregate(Coordinate.Zero, (x, y) => x + y) / Vertices.Count;
+        public Vector3 GetOrigin() {
+            return Vertices.Aggregate(Vector3.Zero, (x, y) => x + y) / Vertices.Count;
         }
 
         /// <summary>
@@ -216,8 +216,8 @@ namespace CBRE.DataStructures.Geometric {
             }
 
             // Get the new front and back vertices
-            var backVerts = new List<Coordinate>();
-            var frontVerts = new List<Coordinate>();
+            var backVerts = new List<Vector3>();
+            var frontVerts = new List<Vector3>();
             var prev = 0;
 
             for (var i = 0; i <= Vertices.Count; i++) {

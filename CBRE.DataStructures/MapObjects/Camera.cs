@@ -5,17 +5,17 @@ using System.Runtime.Serialization;
 namespace CBRE.DataStructures.MapObjects {
     [Serializable]
     public class Camera {
-        public Coordinate EyePosition { get; set; }
-        public Coordinate LookPosition { get; set; }
+        public Vector3 EyePosition { get; set; }
+        public Vector3 LookPosition { get; set; }
 
         public Camera() {
-            EyePosition = new Coordinate(0, 0, 0);
-            LookPosition = new Coordinate(0, 0, 0);
+            EyePosition = new Vector3(0, 0, 0);
+            LookPosition = new Vector3(0, 0, 0);
         }
 
         protected Camera(SerializationInfo info, StreamingContext context) {
-            EyePosition = (Coordinate)info.GetValue("EyePosition", typeof(Coordinate));
-            LookPosition = (Coordinate)info.GetValue("LookPosition", typeof(Coordinate));
+            EyePosition = (Vector3)info.GetValue("EyePosition", typeof(Vector3));
+            LookPosition = (Vector3)info.GetValue("LookPosition", typeof(Vector3));
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context) {
@@ -28,7 +28,7 @@ namespace CBRE.DataStructures.MapObjects {
             set { LookPosition = EyePosition + Direction * value; }
         }
 
-        public Coordinate Direction {
+        public Vector3 Direction {
             get { return (LookPosition - EyePosition).Normalise(); }
             set { LookPosition = EyePosition + value.Normalise() * Length; }
         }

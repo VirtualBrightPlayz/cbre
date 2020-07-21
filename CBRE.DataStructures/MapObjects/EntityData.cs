@@ -63,9 +63,9 @@ namespace CBRE.DataStructures.MapObjects {
             prop.Value = value;
         }
 
-        public Coordinate GetPropertyCoordinate(string key, Coordinate def = null) {
+        public Vector3 GetPropertyVector3(string key, Vector3 def = null) {
             var prop = Properties.FirstOrDefault(x => String.Equals(key, x.Key, StringComparison.OrdinalIgnoreCase));
-            return prop == null ? def : prop.GetCoordinate(def);
+            return prop == null ? def : prop.GetVector3(def);
         }
     }
 }

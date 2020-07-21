@@ -27,7 +27,7 @@ namespace CBRE.Providers.Map {
 
         protected override DataStructures.MapObjects.Map GetFromStream(Stream stream) {
             var map = new DataStructures.MapObjects.Map();
-            map.CordonBounds = new Box(Coordinate.One * -16384, Coordinate.One * 16384);
+            map.CordonBounds = new Box(Vector3.One * -16384, Vector3.One * 16384);
             BinaryReader br = new BinaryReader(stream);
 
             //header
@@ -151,7 +151,7 @@ namespace CBRE.Providers.Map {
                     float x = br.ReadSingle();
                     float z = br.ReadSingle();
                     float y = br.ReadSingle();
-                    if (entity != null) entity.Origin = new Coordinate((decimal)x, (decimal)y, (decimal)z);
+                    if (entity != null) entity.Origin = new Vector3((decimal)x, (decimal)y, (decimal)z);
 
                     if (entity.EntityData.GetPropertyValue("file") == null) {
                         newProperty = new Property();
@@ -203,7 +203,7 @@ namespace CBRE.Providers.Map {
 
                     Entity entity = new Entity(map.IDGenerator.GetNextObjectID());
                     entity.Colour = Colour.GetDefaultEntityColour();
-                    entity.Origin = new Coordinate((decimal)x, (decimal)y, (decimal)z);
+                    entity.Origin = new Vector3((decimal)x, (decimal)y, (decimal)z);
 
                     Int32 keyCount = br.ReadInt32();
                     for (int j = 0; j < keyCount; j++) {
@@ -253,11 +253,11 @@ namespace CBRE.Providers.Map {
 
                     byte red = br.ReadByte(); byte green = br.ReadByte(); byte blue = br.ReadByte();
 
-                    List<Coordinate> vertices = new List<Coordinate>();
+                    List<Vector3> vertices = new List<Vector3>();
                     byte vertexCount = br.ReadByte();
                     for (int j = 0; j < vertexCount; j++) {
                         decimal x = (decimal)br.ReadSingle(); decimal z = (decimal)br.ReadSingle(); decimal y = (decimal)br.ReadSingle();
-                        vertices.Add(new Coordinate(x, y, z));
+                        vertices.Add(new Vector3(x, y, z));
                     }
                     List<Face> faces = new List<Face>();
                     byte faceCount = br.ReadByte();
@@ -298,7 +298,7 @@ namespace CBRE.Providers.Map {
                             }
                         }
 
-                        Coordinate norm = new Coordinate(planeEq0, planeEq2, planeEq1);
+                        Vector3 norm = new Vector3(planeEq0, planeEq2, planeEq1);
 
                         if (Math.Abs((float)norm.LengthSquared()) > 0.001f) {
                             if (Math.Abs((double)norm.LengthSquared() - 1) > 0.001) throw new Exception(norm.LengthSquared().ToString());
@@ -313,8 +313,8 @@ namespace CBRE.Providers.Map {
 
                             newFace.UpdateBoundingBox();
 
-                            Coordinate uNorm = new Coordinate(uTexPlane0, uTexPlane2, uTexPlane1).Normalise();
-                            Coordinate vNorm = new Coordinate(vTexPlane0, vTexPlane2, vTexPlane1).Normalise();
+                            Vector3 uNorm = new Vector3(uTexPlane0, uTexPlane2, uTexPlane1).Normalise();
+                            Vector3 vNorm = new Vector3(vTexPlane0, vTexPlane2, vTexPlane1).Normalise();
                             if (Math.Abs((double)(uNorm.LengthSquared() - vNorm.LengthSquared())) > 0.001) throw new Exception(uNorm.LengthSquared().ToString() + " " + vNorm.LengthSquared().ToString());
 
                             newFace.Texture.Name = (faceFlags & 4) != 0 ? "tooltextures/remove_face" :
@@ -355,7 +355,7 @@ namespace CBRE.Providers.Map {
                                 newFace.Texture.VAxis = -newFace.Texture.VAxis;
                             }
 
-                            newFace.Transform(new UnitScale(Coordinate.One, newFace.BoundingBox.Center), TransformFlags.None);
+                            newFace.Transform(new UnitScale(Vector3.One, newFace.BoundingBox.Center), TransformFlags.None);
 
                             faces.Add(newFace);
                         }
@@ -380,7 +380,7 @@ namespace CBRE.Providers.Map {
                     if (newSolid.IsValid()) {
                         newSolid.SetParent(parent);
 
-                        newSolid.Transform(new UnitScale(Coordinate.One, newSolid.BoundingBox.Center), TransformFlags.None);
+                        newSolid.Transform(new UnitScale(Vector3.One, newSolid.BoundingBox.Center), TransformFlags.None);
                     } else {
                         var offset = newSolid.BoundingBox.Center;
                         // Not a valid solid, decompose into tetrahedrons/etc
@@ -398,7 +398,7 @@ namespace CBRE.Providers.Map {
                                     newSolid.SetParent(parent);
                                     newSolid.UpdateBoundingBox();
 
-                                    newSolid.Transform(new UnitScale(Coordinate.One, newSolid.BoundingBox.Center), TransformFlags.None);
+                                    newSolid.Transform(new UnitScale(Vector3.One, newSolid.BoundingBox.Center), TransformFlags.None);
                                 }
                             } else {
                                 // cone/pyramid/whatever
@@ -406,7 +406,7 @@ namespace CBRE.Providers.Map {
                                 newSolid.SetParent(parent);
                                 newSolid.UpdateBoundingBox();
 
-                                newSolid.Transform(new UnitScale(Coordinate.One, newSolid.BoundingBox.Center), TransformFlags.None);
+                                newSolid.Transform(new UnitScale(Vector3.One, newSolid.BoundingBox.Center), TransformFlags.None);
                             }
                         }
                     }
@@ -421,11 +421,11 @@ namespace CBRE.Providers.Map {
             return map;
         }
 
-        private Solid SolidifyFace(DataStructures.MapObjects.Map map, Face face, Coordinate offset) {
+        private Solid SolidifyFace(DataStructures.MapObjects.Map map, Face face, Vector3 offset) {
             var solid = new Solid(map.IDGenerator.GetNextObjectID());
             solid.Faces.Add(face);
             face.Parent = solid;
-            var center = face.Vertices.Aggregate(Coordinate.Zero, (sum, v) => sum + v.Location) / face.Vertices.Count;
+            var center = face.Vertices.Aggregate(Vector3.Zero, (sum, v) => sum + v.Location) / face.Vertices.Count;
             var normalOffset = center - face.Plane.Normal * 5;
             if (face.Plane.Normal.Dot(offset - center) >= 0) { offset = normalOffset; }
             for (var i = 0; i < face.Vertices.Count; i++) {

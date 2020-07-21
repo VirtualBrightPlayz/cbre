@@ -5,17 +5,17 @@ using System.Runtime.Serialization;
 namespace CBRE.DataStructures.Transformations {
     [Serializable]
     public class UnitScale : IUnitTransformation {
-        public Coordinate Scalar { get; set; }
-        public Coordinate Origin { get; set; }
+        public Vector3 Scalar { get; set; }
+        public Vector3 Origin { get; set; }
 
-        public UnitScale(Coordinate scalar, Coordinate origin) {
+        public UnitScale(Vector3 scalar, Vector3 origin) {
             Scalar = scalar;
             Origin = origin;
         }
 
         protected UnitScale(SerializationInfo info, StreamingContext context) {
-            Scalar = (Coordinate)info.GetValue("Scalar", typeof(Coordinate));
-            Origin = (Coordinate)info.GetValue("Origin", typeof(Coordinate));
+            Scalar = (Vector3)info.GetValue("Scalar", typeof(Vector3));
+            Origin = (Vector3)info.GetValue("Origin", typeof(Vector3));
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context) {
@@ -23,12 +23,12 @@ namespace CBRE.DataStructures.Transformations {
             info.AddValue("Origin", Origin);
         }
 
-        public Coordinate Transform(Coordinate c) {
+        public Vector3 Transform(Vector3 c) {
             return (c - Origin).ComponentMultiply(Scalar) + Origin;
         }
 
-        public CoordinateF Transform(CoordinateF c) {
-            return (c - new CoordinateF(Origin)).ComponentMultiply(new CoordinateF(Scalar)) + new CoordinateF(Origin);
+        public Vector3F Transform(Vector3F c) {
+            return (c - new Vector3F(Origin)).ComponentMultiply(new Vector3F(Scalar)) + new Vector3F(Origin);
         }
     }
 }

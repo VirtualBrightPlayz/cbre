@@ -20,7 +20,7 @@ namespace Microsoft.Xna.Framework.Graphics
         /// <summary>
         /// Texture coordinate data or can be used for user-defined data.
         /// </summary>
-        TextureCoordinate, 
+        TextureVector3, 
         /// <summary>
         /// Normal data.
         /// </summary>

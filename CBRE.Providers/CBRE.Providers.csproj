@@ -8,6 +8,7 @@
     <ProjectReference Include="..\AssimpNet\AssimpNet\AssimpNet.csproj" />
     <ProjectReference Include="..\CBRE.DataStructures\CBRE.DataStructures.csproj" />
     <ProjectReference Include="..\CBRE.FileSystem\CBRE.FileSystem.csproj" />
+    <ProjectReference Include="..\CBRE.Graphics\CBRE.Graphics.csproj" />
   </ItemGroup>
 
 </Project>

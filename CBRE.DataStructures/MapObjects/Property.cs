@@ -33,14 +33,14 @@ namespace CBRE.DataStructures.MapObjects {
             return defaultIfInvalid;
         }
 
-        public Coordinate GetCoordinate(Coordinate defaultIfInvalid) {
+        public Vector3 GetVector3(Vector3 defaultIfInvalid) {
             var spl = Value.Split(' ');
             if (spl.Length != 3) return defaultIfInvalid;
             decimal x, y, z;
             if (decimal.TryParse(spl[0], NumberStyles.Float, CultureInfo.InvariantCulture, out x)
                 && decimal.TryParse(spl[1], NumberStyles.Float, CultureInfo.InvariantCulture, out y)
                 && decimal.TryParse(spl[2], NumberStyles.Float, CultureInfo.InvariantCulture, out z)) {
-                return new Coordinate(x, y, z);
+                return new Vector3(x, y, z);
             }
             return defaultIfInvalid;
         }

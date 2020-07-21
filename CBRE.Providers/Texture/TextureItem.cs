@@ -1,5 +1,5 @@
 ﻿using CBRE.Common;
-using CBRE.Graphics.Helpers;
+using CBRE.Graphics;
 using System.Collections.Generic;
 
 namespace CBRE.Providers.Texture {
@@ -20,6 +20,8 @@ namespace CBRE.Providers.Texture {
 
         public int Width { get { return PrimarySubItem.Width; } }
         public int Height { get { return PrimarySubItem.Height; } }
+
+        public readonly ITexture Texture;
 
         public TextureItem(TexturePackage package, string name, TextureFlags flags, int width, int height) {
             Package = package;
@@ -51,10 +53,7 @@ namespace CBRE.Providers.Texture {
         }
 
         public ITexture GetTexture() {
-            if (!TextureHelper.Exists(Name.ToLowerInvariant())) {
-                TextureProvider.LoadTextureItem(this);
-            }
-            return TextureHelper.Get(Name.ToLowerInvariant());
+            return Texture;
         }
     }
 }

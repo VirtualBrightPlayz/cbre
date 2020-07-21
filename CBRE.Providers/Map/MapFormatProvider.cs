@@ -35,7 +35,7 @@ namespace CBRE.Providers.Map {
             if (!b) throw new Exception(message);
         }
 
-        private string FormatCoordinate(Coordinate c) {
+        private string FormatVector3(Vector3 c) {
             return c.X.ToString("0.000")
                    + " " + c.Y.ToString("0.000")
                    + " " + c.Z.ToString("0.000");
@@ -65,9 +65,9 @@ namespace CBRE.Providers.Map {
             Assert(parts[14] == ")");
 
             var face = new Face(generator.GetNextFaceID()) {
-                Plane = new Plane(Coordinate.Parse(parts[1], parts[2], parts[3]),
-                    Coordinate.Parse(parts[6], parts[7], parts[8]),
-                    Coordinate.Parse(parts[11], parts[12], parts[13])),
+                Plane = new Plane(Vector3.Parse(parts[1], parts[2], parts[3]),
+                    Vector3.Parse(parts[6], parts[7], parts[8]),
+                    Vector3.Parse(parts[11], parts[12], parts[13])),
                 Texture = { Name = parts[15] }
             };
 
@@ -85,9 +85,9 @@ namespace CBRE.Providers.Map {
                 Assert(parts[22] == "[");
                 Assert(parts[27] == "]");
 
-                face.Texture.UAxis = Coordinate.Parse(parts[17], parts[18], parts[19]);
+                face.Texture.UAxis = Vector3.Parse(parts[17], parts[18], parts[19]);
                 face.Texture.XShift = decimal.Parse(parts[20], ns);
-                face.Texture.VAxis = Coordinate.Parse(parts[23], parts[24], parts[25]);
+                face.Texture.VAxis = Vector3.Parse(parts[23], parts[24], parts[25]);
                 face.Texture.YShift = decimal.Parse(parts[26], ns);
                 face.Texture.Rotation = decimal.Parse(parts[28], ns);
                 face.Texture.XScale = decimal.Parse(parts[29], ns);
@@ -99,14 +99,14 @@ namespace CBRE.Providers.Map {
 
         private void WriteFace(StreamWriter sw, Face face) {
             // ( -128 64 64 ) ( -64 64 64 ) ( -64 0 64 ) AAATRIGGER [ 1 0 0 0 ] [ 0 -1 0 0 ] 0 1 1
-            var strings = face.Vertices.Take(3).Select(x => "( " + FormatCoordinate(x.Location) + " )").ToList();
+            var strings = face.Vertices.Take(3).Select(x => "( " + FormatVector3(x.Location) + " )").ToList();
             strings.Add(String.IsNullOrWhiteSpace(face.Texture.Name) ? "AAATRIGGER" : face.Texture.Name);
             strings.Add("[");
-            strings.Add(FormatCoordinate(face.Texture.UAxis));
+            strings.Add(FormatVector3(face.Texture.UAxis));
             strings.Add(face.Texture.XShift.ToString("0.000"));
             strings.Add("]");
             strings.Add("[");
-            strings.Add(FormatCoordinate(face.Texture.VAxis));
+            strings.Add(FormatVector3(face.Texture.VAxis));
             strings.Add(face.Texture.YShift.ToString("0.000"));
             strings.Add("]");
             strings.Add(face.Texture.Rotation.ToString("0.000"));
@@ -162,7 +162,7 @@ namespace CBRE.Providers.Map {
                 ent.EntityData.Flags = int.Parse(val);
             } else if (key == "origin") {
                 var osp = val.Split(' ');
-                ent.Origin = Coordinate.Parse(osp[0], osp[1], osp[2]);
+                ent.Origin = Vector3.Parse(osp[0], osp[1], osp[2]);
             } else if (!ExcludedKeys.Contains(key.ToLower())) {
                 ent.EntityData.SetPropertyValue(key, val);
             }
@@ -214,7 +214,7 @@ namespace CBRE.Providers.Map {
             }
 
             if (solids.Any()) solids.ForEach(x => WriteSolid(sw, x)); // Brush entity
-            else WriteProperty(sw, "origin", FormatCoordinate(ent.Origin)); // Point entity
+            else WriteProperty(sw, "origin", FormatVector3(ent.Origin)); // Point entity
 
             sw.WriteLine("}");
         }

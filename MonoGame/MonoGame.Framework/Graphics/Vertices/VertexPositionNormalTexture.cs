@@ -7,13 +7,13 @@ namespace Microsoft.Xna.Framework.Graphics
     {
         public Vector3 Position;
         public Vector3 Normal;
-        public Vector2 TextureCoordinate;
+        public Vector2 TextureVector3;
         public static readonly VertexDeclaration VertexDeclaration;
-        public VertexPositionNormalTexture(Vector3 position, Vector3 normal, Vector2 textureCoordinate)
+        public VertexPositionNormalTexture(Vector3 position, Vector3 normal, Vector2 textureVector3)
         {
             this.Position = position;
             this.Normal = normal;
-            this.TextureCoordinate = textureCoordinate;
+            this.TextureVector3 = textureVector3;
         }
 
         VertexDeclaration IVertexType.VertexDeclaration
@@ -30,19 +30,19 @@ namespace Microsoft.Xna.Framework.Graphics
             {
                 var hashCode = Position.GetHashCode();
                 hashCode = (hashCode * 397) ^ Normal.GetHashCode();
-                hashCode = (hashCode * 397) ^ TextureCoordinate.GetHashCode();
+                hashCode = (hashCode * 397) ^ TextureVector3.GetHashCode();
                 return hashCode;
             }
         }
 
         public override string ToString()
         {
-            return "{{Position:" + this.Position + " Normal:" + this.Normal + " TextureCoordinate:" + this.TextureCoordinate + "}}";
+            return "{{Position:" + this.Position + " Normal:" + this.Normal + " TextureVector3:" + this.TextureVector3 + "}}";
         }
 
         public static bool operator ==(VertexPositionNormalTexture left, VertexPositionNormalTexture right)
         {
-            return (((left.Position == right.Position) && (left.Normal == right.Normal)) && (left.TextureCoordinate == right.TextureCoordinate));
+            return (((left.Position == right.Position) && (left.Normal == right.Normal)) && (left.TextureVector3 == right.TextureVector3));
         }
 
         public static bool operator !=(VertexPositionNormalTexture left, VertexPositionNormalTexture right)
@@ -65,7 +65,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
         static VertexPositionNormalTexture()
         {
-            VertexElement[] elements = new VertexElement[] { new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0), new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0), new VertexElement(0x18, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0) };
+            VertexElement[] elements = new VertexElement[] { new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0), new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0), new VertexElement(0x18, VertexElementFormat.Vector2, VertexElementUsage.TextureVector3, 0) };
             VertexDeclaration declaration = new VertexDeclaration(elements);
             VertexDeclaration = declaration;
         }

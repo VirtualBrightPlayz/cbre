@@ -32,29 +32,29 @@ namespace Microsoft.Xna.Framework.Graphics
             vertexTL.Position.Y = y+dx*sin+dy*cos;
             vertexTL.Position.Z = depth;
             vertexTL.Color = color;
-            vertexTL.TextureCoordinate.X = texCoordTL.X;
-            vertexTL.TextureCoordinate.Y = texCoordTL.Y;
+            vertexTL.TextureVector3.X = texCoordTL.X;
+            vertexTL.TextureVector3.Y = texCoordTL.Y;
 
 			vertexTR.Position.X = x+(dx+w)*cos-dy*sin;
             vertexTR.Position.Y = y+(dx+w)*sin+dy*cos;
             vertexTR.Position.Z = depth;
             vertexTR.Color = color;
-            vertexTR.TextureCoordinate.X = texCoordBR.X;
-            vertexTR.TextureCoordinate.Y = texCoordTL.Y;
+            vertexTR.TextureVector3.X = texCoordBR.X;
+            vertexTR.TextureVector3.Y = texCoordTL.Y;
 
 			vertexBL.Position.X = x+dx*cos-(dy+h)*sin;
             vertexBL.Position.Y = y+dx*sin+(dy+h)*cos;
             vertexBL.Position.Z = depth;
             vertexBL.Color = color;
-            vertexBL.TextureCoordinate.X = texCoordTL.X;
-            vertexBL.TextureCoordinate.Y = texCoordBR.Y;
+            vertexBL.TextureVector3.X = texCoordTL.X;
+            vertexBL.TextureVector3.Y = texCoordBR.Y;
 
 			vertexBR.Position.X = x+(dx+w)*cos-(dy+h)*sin;
             vertexBR.Position.Y = y+(dx+w)*sin+(dy+h)*cos;
             vertexBR.Position.Z = depth;
             vertexBR.Color = color;
-            vertexBR.TextureCoordinate.X = texCoordBR.X;
-            vertexBR.TextureCoordinate.Y = texCoordBR.Y;
+            vertexBR.TextureVector3.X = texCoordBR.X;
+            vertexBR.TextureVector3.Y = texCoordBR.Y;
 		}
 
         public void Set(float x, float y, float w, float h, Color color, Vector2 texCoordTL, Vector2 texCoordBR, float depth)
@@ -63,29 +63,29 @@ namespace Microsoft.Xna.Framework.Graphics
             vertexTL.Position.Y = y;
             vertexTL.Position.Z = depth;
             vertexTL.Color = color;
-            vertexTL.TextureCoordinate.X = texCoordTL.X;
-            vertexTL.TextureCoordinate.Y = texCoordTL.Y;
+            vertexTL.TextureVector3.X = texCoordTL.X;
+            vertexTL.TextureVector3.Y = texCoordTL.Y;
 
             vertexTR.Position.X = x + w;
             vertexTR.Position.Y = y;
             vertexTR.Position.Z = depth;
             vertexTR.Color = color;
-            vertexTR.TextureCoordinate.X = texCoordBR.X;
-            vertexTR.TextureCoordinate.Y = texCoordTL.Y;
+            vertexTR.TextureVector3.X = texCoordBR.X;
+            vertexTR.TextureVector3.Y = texCoordTL.Y;
 
             vertexBL.Position.X = x;
             vertexBL.Position.Y = y + h;
             vertexBL.Position.Z = depth;
             vertexBL.Color = color;
-            vertexBL.TextureCoordinate.X = texCoordTL.X;
-            vertexBL.TextureCoordinate.Y = texCoordBR.Y;
+            vertexBL.TextureVector3.X = texCoordTL.X;
+            vertexBL.TextureVector3.Y = texCoordBR.Y;
 
             vertexBR.Position.X = x + w;
             vertexBR.Position.Y = y + h;
             vertexBR.Position.Z = depth;
             vertexBR.Color = color;
-            vertexBR.TextureCoordinate.X = texCoordBR.X;
-            vertexBR.TextureCoordinate.Y = texCoordBR.Y;
+            vertexBR.TextureVector3.X = texCoordBR.X;
+            vertexBR.TextureVector3.Y = texCoordBR.Y;
         }
 
         #region Implement IComparable

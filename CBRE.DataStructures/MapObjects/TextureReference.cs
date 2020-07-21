@@ -18,14 +18,14 @@ namespace CBRE.DataStructures.MapObjects {
 
         public decimal Rotation { get; set; }
 
-        private Coordinate _uAxis;
-        public Coordinate UAxis {
+        private Vector3 _uAxis;
+        public Vector3 UAxis {
             get { return _uAxis; }
             set { _uAxis = value.Normalise(); }
         }
 
-        private Coordinate _vAxis;
-        public Coordinate VAxis {
+        private Vector3 _vAxis;
+        public Vector3 VAxis {
             get { return _vAxis; }
             set { _vAxis = value.Normalise(); }
         }
@@ -40,8 +40,8 @@ namespace CBRE.DataStructures.MapObjects {
             Name = "";
             Texture = null;
             Rotation = 0;
-            _uAxis = -Coordinate.UnitZ;
-            _vAxis = Coordinate.UnitX;
+            _uAxis = -Vector3.UnitZ;
+            _vAxis = Vector3.UnitX;
             XShift = YShift = 0;
             XScale = YScale = 1;
         }
@@ -49,8 +49,8 @@ namespace CBRE.DataStructures.MapObjects {
         protected TextureReference(SerializationInfo info, StreamingContext context) {
             Name = info.GetString("Name");
             Rotation = info.GetInt32("Rotation");
-            _uAxis = (Coordinate)info.GetValue("UAxis", typeof(Coordinate));
-            _vAxis = (Coordinate)info.GetValue("VAxis", typeof(Coordinate));
+            _uAxis = (Vector3)info.GetValue("UAxis", typeof(Vector3));
+            _vAxis = (Vector3)info.GetValue("VAxis", typeof(Vector3));
             XShift = info.GetDecimal("XShift");
             XScale = info.GetDecimal("XScale");
             YShift = info.GetDecimal("YShift");
@@ -68,7 +68,7 @@ namespace CBRE.DataStructures.MapObjects {
             info.AddValue("YScale", YScale);
         }
 
-        public Coordinate GetNormal() {
+        public Vector3 GetNormal() {
             return UAxis.Cross(VAxis).Normalise();
         }
 

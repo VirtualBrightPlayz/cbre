@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Transformations {
     public interface IUnitTransformation : ISerializable {
-        Coordinate Transform(Coordinate c);
-        CoordinateF Transform(CoordinateF c);
+        Vector3 Transform(Vector3 c);
+        Vector3F Transform(Vector3F c);
     }
 }

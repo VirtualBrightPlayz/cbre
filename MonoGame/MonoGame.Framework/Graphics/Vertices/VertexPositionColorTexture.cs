@@ -7,14 +7,14 @@ namespace Microsoft.Xna.Framework.Graphics
     {
         public Vector3 Position;
         public Color Color;
-        public Vector2 TextureCoordinate;
+        public Vector2 TextureVector3;
         public static readonly VertexDeclaration VertexDeclaration;
 
-        public VertexPositionColorTexture(Vector3 position, Color color, Vector2 textureCoordinate)
+        public VertexPositionColorTexture(Vector3 position, Color color, Vector2 textureVector3)
         {
             Position = position;
             Color = color;
-            TextureCoordinate = textureCoordinate;
+            TextureVector3 = textureVector3;
         }
 		
         VertexDeclaration IVertexType.VertexDeclaration
@@ -31,19 +31,19 @@ namespace Microsoft.Xna.Framework.Graphics
             {
                 var hashCode = Position.GetHashCode();
                 hashCode = (hashCode * 397) ^ Color.GetHashCode();
-                hashCode = (hashCode * 397) ^ TextureCoordinate.GetHashCode();
+                hashCode = (hashCode * 397) ^ TextureVector3.GetHashCode();
                 return hashCode;
             }
         }
 
         public override string ToString()
         {
-            return "{{Position:" + this.Position + " Color:" + this.Color + " TextureCoordinate:" + this.TextureCoordinate + "}}";
+            return "{{Position:" + this.Position + " Color:" + this.Color + " TextureVector3:" + this.TextureVector3 + "}}";
         }
 
         public static bool operator ==(VertexPositionColorTexture left, VertexPositionColorTexture right)
         {
-            return (((left.Position == right.Position) && (left.Color == right.Color)) && (left.TextureCoordinate == right.TextureCoordinate));
+            return (((left.Position == right.Position) && (left.Color == right.Color)) && (left.TextureVector3 == right.TextureVector3));
         }
 
         public static bool operator !=(VertexPositionColorTexture left, VertexPositionColorTexture right)
@@ -68,7 +68,7 @@ namespace Microsoft.Xna.Framework.Graphics
             { 
                 new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0), 
                 new VertexElement(12, VertexElementFormat.Color, VertexElementUsage.Color, 0), 
-                new VertexElement(16, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0) 
+                new VertexElement(16, VertexElementFormat.Vector2, VertexElementUsage.TextureVector3, 0) 
             };
             VertexDeclaration = new VertexDeclaration(elements);
         }

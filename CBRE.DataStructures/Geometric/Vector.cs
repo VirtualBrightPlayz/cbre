@@ -3,11 +3,11 @@ using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
-    public class Vector : Coordinate {
-        public Coordinate Normal { get; set; }
+    public class Vector : Vector3 {
+        public Vector3 Normal { get; set; }
         public decimal Distance { get; set; }
 
-        public Vector(Coordinate normal, decimal distance)
+        public Vector(Vector3 normal, decimal distance)
             : base(0, 0, 0) {
             Normal = normal.Normalise();
             Distance = distance;
@@ -17,13 +17,13 @@ namespace CBRE.DataStructures.Geometric {
             Z = temp.Z;
         }
 
-        public Vector(Coordinate offsets)
+        public Vector(Vector3 offsets)
             : base(0, 0, 0) {
             Set(offsets);
         }
 
         protected Vector(SerializationInfo info, StreamingContext context) : base(info, context) {
-            Normal = (Coordinate)info.GetValue("Normal", typeof(Coordinate));
+            Normal = (Vector3)info.GetValue("Normal", typeof(Vector3));
             Distance = info.GetDecimal("Distance");
         }
 
@@ -37,7 +37,7 @@ namespace CBRE.DataStructures.Geometric {
             X = Y = Z = Distance = 0;
         }
 
-        public void Set(Coordinate offsets) {
+        public void Set(Vector3 offsets) {
             Distance = offsets.VectorMagnitude();
             if (Distance == 0) {
                 X = Y = Z = 0;

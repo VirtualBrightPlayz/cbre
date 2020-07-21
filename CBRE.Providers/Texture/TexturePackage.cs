@@ -1,5 +1,4 @@
-﻿using CBRE.Graphics.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace CBRE.Providers.Texture {
@@ -35,7 +34,7 @@ namespace CBRE.Providers.Texture {
 
         public void Dispose() {
             foreach (var kv in _loadedItems) {
-                TextureHelper.Delete(kv.Value.Name.ToLowerInvariant());
+                kv.Value.Texture.Dispose();
             }
         }
     }

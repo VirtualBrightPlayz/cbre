@@ -27,7 +27,7 @@ namespace CBRE.DataStructures.Transformations {
         /**
          * http://paulbourke.net/geometry/rotate/
          */
-        public Coordinate Transform(Coordinate c) {
+        public Vector3 Transform(Vector3 c) {
             var p = c - Axis.Start;
             var r = (Axis.End - Axis.Start).Normalise();
 
@@ -48,12 +48,12 @@ namespace CBRE.DataStructures.Transformations {
             z += ((1 - costheta) * r.Y * r.Z + r.X * sintheta) * p.Y;
             z += (costheta + (1 - costheta) * r.Z * r.Z) * p.Z;
 
-            return new Coordinate(x, y, z) + Axis.Start;
+            return new Vector3(x, y, z) + Axis.Start;
         }
 
-        public CoordinateF Transform(CoordinateF c) {
-            var p = c - new CoordinateF(Axis.Start);
-            var r = new CoordinateF((Axis.End - Axis.Start).Normalise());
+        public Vector3F Transform(Vector3F c) {
+            var p = c - new Vector3F(Axis.Start);
+            var r = new Vector3F((Axis.End - Axis.Start).Normalise());
 
             var costheta = (float)Math.Cos((float)Rotation);
             var sintheta = (float)Math.Sin((float)Rotation);
@@ -72,7 +72,7 @@ namespace CBRE.DataStructures.Transformations {
             z += ((1 - costheta) * r.Y * r.Z + r.X * sintheta) * p.Y;
             z += (costheta + (1 - costheta) * r.Z * r.Z) * p.Z;
 
-            return new CoordinateF(x, y, z) + new CoordinateF(Axis.Start);
+            return new Vector3F(x, y, z) + new Vector3F(Axis.Start);
         }
     }
 }

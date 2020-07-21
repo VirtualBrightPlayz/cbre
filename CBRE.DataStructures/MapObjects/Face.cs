@@ -165,7 +165,7 @@ namespace CBRE.DataStructures.MapObjects {
             Bottom
         }
 
-        public virtual void CalculateTextureCoordinates(bool minimizeShiftValues) {
+        public virtual void CalculateTextureVector3s(bool minimizeShiftValues) {
             if (minimizeShiftValues) MinimiseTextureShiftValues();
             Vertices.ForEach(c => c.TextureU = c.TextureV = 0);
 
@@ -196,11 +196,11 @@ namespace CBRE.DataStructures.MapObjects {
             // V axis: If the closest axis to the normal is the Z axis,
             //         the V axis is -UnitY. Otherwise, the V axis is -UnitZ.
 
-            Texture.UAxis = direction == Coordinate.UnitX ? Coordinate.UnitY : Coordinate.UnitX;
-            Texture.VAxis = direction == Coordinate.UnitZ ? -Coordinate.UnitY : -Coordinate.UnitZ;
+            Texture.UAxis = direction == Vector3.UnitX ? Vector3.UnitY : Vector3.UnitX;
+            Texture.VAxis = direction == Vector3.UnitZ ? -Vector3.UnitY : -Vector3.UnitZ;
             Texture.Rotation = 0;
 
-            CalculateTextureCoordinates(true);
+            CalculateTextureVector3s(true);
         }
 
         public void AlignTextureToFace() {
@@ -210,12 +210,12 @@ namespace CBRE.DataStructures.MapObjects {
 
             var direction = Plane.GetClosestAxisToNormal();
 
-            var tempV = direction == Coordinate.UnitZ ? -Coordinate.UnitY : -Coordinate.UnitZ;
+            var tempV = direction == Vector3.UnitZ ? -Vector3.UnitY : -Vector3.UnitZ;
             Texture.UAxis = Plane.Normal.Cross(tempV).Normalise();
             Texture.VAxis = Texture.UAxis.Cross(Plane.Normal).Normalise();
             Texture.Rotation = 0;
 
-            CalculateTextureCoordinates(true);
+            CalculateTextureVector3s(true);
         }
 
         public bool IsTextureAlignedToWorld() {
@@ -266,7 +266,7 @@ namespace CBRE.DataStructures.MapObjects {
                 var angle = DMath.Acos(dot); // A.B = cos(angle)
 
                 // Rotate the texture axis by the angle around the intersection edge
-                var transform = new UnitRotate(angle, new Line(Coordinate.Zero, intersectionEdge));
+                var transform = new UnitRotate(angle, new Line(Vector3.Zero, intersectionEdge));
                 refU = transform.Transform(refU);
                 refV = transform.Transform(refV);
 
@@ -284,7 +284,7 @@ namespace CBRE.DataStructures.MapObjects {
             Texture.XScale = face.Texture.XScale;
             Texture.YScale = face.Texture.YScale;
 
-            CalculateTextureCoordinates(true);
+            CalculateTextureVector3s(true);
         }
 
         private void MinimiseTextureShiftValues() {
@@ -315,7 +315,7 @@ namespace CBRE.DataStructures.MapObjects {
             Texture.XShift = -minU / Texture.XScale;
             Texture.YShift = -minV / Texture.YScale;
 
-            CalculateTextureCoordinates(true);
+            CalculateTextureVector3s(true);
         }
 
         public void AlignTextureWithPointCloud(Cloud cloud, BoxAlignMode mode) {
@@ -349,7 +349,7 @@ namespace CBRE.DataStructures.MapObjects {
                     Texture.YShift = -maxV + Texture.Texture.Height;
                     break;
             }
-            CalculateTextureCoordinates(true);
+            CalculateTextureVector3s(true);
         }
 
         /// <summary>
@@ -360,12 +360,12 @@ namespace CBRE.DataStructures.MapObjects {
             var rads = DMath.DegreesToRadians(Texture.Rotation - rotate);
             // Rotate around the texture normal
             var texNorm = Texture.VAxis.Cross(Texture.UAxis).Normalise();
-            var transform = new UnitRotate(rads, new Line(Coordinate.Zero, texNorm));
+            var transform = new UnitRotate(rads, new Line(Vector3.Zero, texNorm));
             Texture.UAxis = transform.Transform(Texture.UAxis);
             Texture.VAxis = transform.Transform(Texture.VAxis);
             Texture.Rotation = rotate;
 
-            CalculateTextureCoordinates(false);
+            CalculateTextureVector3s(false);
         }
 
         #endregion
@@ -383,7 +383,7 @@ namespace CBRE.DataStructures.MapObjects {
             if (flags.HasFlag(TransformFlags.TextureScalingLock) && Texture.Texture != null) {
                 // Make a best-effort guess of retaining scaling. All bets are off during skew operations.
                 // Transform the current texture axes
-                var origin = transform.Transform(Coordinate.Zero);
+                var origin = transform.Transform(Vector3.Zero);
                 var ua = transform.Transform(Texture.UAxis) - origin;
                 var va = transform.Transform(Texture.VAxis) - origin;
                 // Multiply the scales by the magnitudes (they were normals before the transform operation)
@@ -392,7 +392,7 @@ namespace CBRE.DataStructures.MapObjects {
             }
             {
                 // Transform the texture axes and move them back to the origin
-                var origin = transform.Transform(Coordinate.Zero);
+                var origin = transform.Transform(Vector3.Zero);
                 var ua = transform.Transform(Texture.UAxis) - origin;
                 var va = transform.Transform(Texture.VAxis) - origin;
 
@@ -407,8 +407,8 @@ namespace CBRE.DataStructures.MapObjects {
 
                 if (flags.HasFlag(TransformFlags.TextureLock) && Texture.Texture != null) {
                     // Check some original reference points to see how the transform mutates them
-                    var scaled = (transform.Transform(Coordinate.One) - transform.Transform(Coordinate.Zero)).VectorMagnitude();
-                    var original = (Coordinate.One - Coordinate.Zero).VectorMagnitude();
+                    var scaled = (transform.Transform(Vector3.One) - transform.Transform(Vector3.Zero)).VectorMagnitude();
+                    var original = (Vector3.One - Vector3.Zero).VectorMagnitude();
 
                     // Ignore texture lock when the transformation contains a scale
                     if (DMath.Abs(scaled - original) <= 0.01m) {
@@ -419,7 +419,7 @@ namespace CBRE.DataStructures.MapObjects {
                     }
                 }
             }
-            CalculateTextureCoordinates(true);
+            CalculateTextureVector3s(true);
             UpdateBoundingBox();
         }
 
@@ -435,7 +435,7 @@ namespace CBRE.DataStructures.MapObjects {
         /// <param name="line">The intersection line</param>
         /// <returns>The point of intersection between the face and the line.
         /// Returns null if the line does not intersect this face.</returns>
-        public virtual Coordinate GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
+        public virtual Vector3 GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
             return GetIntersectionPoint(Vertices.Select(x => x.Location).ToList(), line, ignoreDirection, ignoreSegment);
         }
 
@@ -480,7 +480,7 @@ namespace CBRE.DataStructures.MapObjects {
             return PlaneClassification.Spanning;
         }
 
-        protected static Coordinate GetIntersectionPoint(IList<Coordinate> coordinates, Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
+        protected static Vector3 GetIntersectionPoint(IList<Vector3> coordinates, Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
             var plane = new Plane(coordinates[0], coordinates[1], coordinates[2]);
             var intersect = plane.GetIntersectionPoint(line, ignoreDirection, ignoreSegment);
             if (intersect == null) return null;

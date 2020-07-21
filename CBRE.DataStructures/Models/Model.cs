@@ -35,7 +35,7 @@ namespace CBRE.DataStructures.Models {
                     from vertex in mesh.Vertices
                     let transform = transforms[vertex.BoneWeightings.First().Bone.BoneIndex]
                     let cf = vertex.Location * transform
-                    select new Coordinate((decimal)cf.X, (decimal)cf.Y, (decimal)cf.Z);
+                    select new Vector3((decimal)cf.X, (decimal)cf.Y, (decimal)cf.Z);
                 _boundingBox = new Box(list);
             }
             return _boundingBox;
@@ -76,9 +76,9 @@ namespace CBRE.DataStructures.Models {
             if (_preprocessed) return;
             _preprocessed = true;
 
-            PreCalculateChromeCoordinates();
+            PreCalculateChromeVector3s();
             CombineTextures();
-            NormaliseTextureCoordinates();
+            NormaliseTextureVector3s();
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace CBRE.DataStructures.Models {
         /// Pre-calculates chrome texture values for the model.
         /// This operation modifies the model vertices.
         /// </summary>
-        private void PreCalculateChromeCoordinates() {
+        private void PreCalculateChromeVector3s() {
             var transforms = Bones.Select(x => x.Transform).ToList();
             foreach (var g in GetActiveMeshes().GroupBy(x => x.SkinRef)) {
                 var skin = Textures.FirstOrDefault(x => x.Index == g.Key);
@@ -162,7 +162,7 @@ namespace CBRE.DataStructures.Models {
                     var tmp = transform.Shift.Normalise();
 
                     // Using unitx for the "player right" vector
-                    var up = tmp.Cross(CoordinateF.UnitX).Normalise();
+                    var up = tmp.Cross(Vector3F.UnitX).Normalise();
                     var right = tmp.Cross(up).Normalise();
 
                     // HLMV is doing an inverse rotate (no translation),
@@ -182,7 +182,7 @@ namespace CBRE.DataStructures.Models {
         /// Normalises vertex texture coordinates to be between 0 and 1.
         /// This operation modifies the model vertices.
         /// </summary>
-        private void NormaliseTextureCoordinates() {
+        private void NormaliseTextureVector3s() {
             foreach (var g in GetActiveMeshes().GroupBy(x => x.SkinRef)) {
                 var skin = Textures.FirstOrDefault(x => x.Index == g.Key);
                 if (skin == null) continue;

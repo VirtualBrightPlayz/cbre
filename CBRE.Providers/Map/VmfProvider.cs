@@ -55,7 +55,7 @@ namespace CBRE.Providers.Map {
             }
         }
 
-        private static string FormatCoordinate(Coordinate c) {
+        private static string FormatVector3(Vector3 c) {
             return c.X.ToString("0.00000000")
                 + " " + c.Y.ToString("0.00000000")
                 + " " + c.Z.ToString("0.00000000");
@@ -105,7 +105,7 @@ namespace CBRE.Providers.Map {
             // power, startposition, flags, elevation, subdiv, normals{}, distances{},
             // offsets{}, offset_normals{}, alphas{}, triangle_tags{}, allowed_verts{}
             disp.SetPower(dispinfo.PropertyInteger("power", 3));
-            disp.StartPosition = dispinfo.PropertyCoordinate("startposition");
+            disp.StartPosition = dispinfo.PropertyVector3("startposition");
             disp.Elevation = dispinfo.PropertyDecimal("elevation");
             disp.SubDiv = dispinfo.PropertyInteger("subdiv") > 0;
             var size = disp.Resolution + 1;
@@ -118,9 +118,9 @@ namespace CBRE.Providers.Map {
             //var allowedVerts = dispinfo.GetChildren("allowed_verts").First();
             for (var i = 0; i < size; i++) {
                 var row = "row" + i;
-                var norm = normals != null ? normals.PropertyCoordinateArray(row, size) : Enumerable.Range(0, size).Select(x => Coordinate.Zero).ToArray();
+                var norm = normals != null ? normals.PropertyVector3Array(row, size) : Enumerable.Range(0, size).Select(x => Vector3.Zero).ToArray();
                 var dist = distances != null ? distances.PropertyDecimalArray(row, size) : Enumerable.Range(0, size).Select(x => 0m).ToArray();
-                var offn = offsetNormals != null ? offsetNormals.PropertyCoordinateArray(row, size) : Enumerable.Range(0, size).Select(x => Coordinate.Zero).ToArray();
+                var offn = offsetNormals != null ? offsetNormals.PropertyVector3Array(row, size) : Enumerable.Range(0, size).Select(x => Vector3.Zero).ToArray();
                 var offs = offsets != null ? offsets.PropertyDecimalArray(row, size) : Enumerable.Range(0, size).Select(x => 0m).ToArray();
                 var alph = alphas != null ? alphas.PropertyDecimalArray(row, size) : Enumerable.Range(0, size).Select(x => 0m).ToArray();
                 for (var j = 0; j < size; j++) {
@@ -158,7 +158,7 @@ namespace CBRE.Providers.Map {
             if (verts != null) {
                 var count = verts.PropertyInteger("count");
                 for (var i = 0; i < count; i++) {
-                    ret.Vertices.Add(new Vertex(verts.PropertyCoordinate("vertex" + i), ret));
+                    ret.Vertices.Add(new Vertex(verts.PropertyVector3("vertex" + i), ret));
                 }
             }
 
@@ -169,12 +169,12 @@ namespace CBRE.Providers.Map {
             var ret = new GenericStructure("side");
             ret["id"] = face.ID.ToString();
             ret["plane"] = String.Format("({0}) ({1}) ({2})",
-                                         FormatCoordinate(face.Vertices[0].Location),
-                                         FormatCoordinate(face.Vertices[1].Location),
-                                         FormatCoordinate(face.Vertices[2].Location));
+                                         FormatVector3(face.Vertices[0].Location),
+                                         FormatVector3(face.Vertices[1].Location),
+                                         FormatVector3(face.Vertices[2].Location));
             ret["material"] = face.Texture.Name;
-            ret["uaxis"] = String.Format("[{0} {1}] {2}", FormatCoordinate(face.Texture.UAxis), face.Texture.XShift, face.Texture.XScale);
-            ret["vaxis"] = String.Format("[{0} {1}] {2}", FormatCoordinate(face.Texture.VAxis), face.Texture.YShift, face.Texture.YScale);
+            ret["uaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.UAxis), face.Texture.XShift, face.Texture.XScale);
+            ret["vaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.VAxis), face.Texture.YShift, face.Texture.YScale);
             ret["rotation"] = face.Texture.Rotation.ToString();
             // ret["lightmapscale"]
             // ret["smoothing_groups"]
@@ -182,7 +182,7 @@ namespace CBRE.Providers.Map {
             var verts = new GenericStructure("vertex");
             verts["count"] = face.Vertices.Count.ToString();
             for (var i = 0; i < face.Vertices.Count; i++) {
-                verts["vertex" + i] = FormatCoordinate(face.Vertices[i].Location);
+                verts["vertex" + i] = FormatVector3(face.Vertices[i].Location);
             }
             ret.Children.Add(verts);
 
@@ -279,7 +279,7 @@ namespace CBRE.Providers.Map {
             var ret = new Entity(GetObjectID(entity, generator)) {
                 ClassName = entity["classname"],
                 EntityData = ReadEntityData(entity),
-                Origin = entity.PropertyCoordinate("origin")
+                Origin = entity.PropertyVector3("origin")
             };
             var editor = entity.GetChildren("editor").FirstOrDefault() ?? new GenericStructure("editor");
             ret.Colour = editor.PropertyColour("color", Colour.GetRandomBrushColour());
@@ -296,7 +296,7 @@ namespace CBRE.Providers.Map {
             ret["id"] = ent.ID.ToString();
             ret["classname"] = ent.EntityData.Name;
             WriteEntityData(ret, ent.EntityData);
-            if (!ent.HasChildren) ret["origin"] = FormatCoordinate(ent.Origin);
+            if (!ent.HasChildren) ret["origin"] = FormatVector3(ent.Origin);
 
             var editor = WriteEditor(ent);
             ret.Children.Add(editor);
@@ -522,15 +522,15 @@ namespace CBRE.Providers.Map {
                 if (cameras != null) {
                     activeCamera = cameras.PropertyInteger("activecamera");
                     foreach (var cam in cameras.GetChildren("camera")) {
-                        var pos = cam.PropertyCoordinate("position");
-                        var look = cam.PropertyCoordinate("look");
+                        var pos = cam.PropertyVector3("position");
+                        var look = cam.PropertyVector3("look");
                         if (pos != null && look != null) {
                             map.Cameras.Add(new Camera { EyePosition = pos, LookPosition = look });
                         }
                     }
                 }
                 if (!map.Cameras.Any()) {
-                    map.Cameras.Add(new Camera { EyePosition = Coordinate.Zero, LookPosition = Coordinate.UnitY });
+                    map.Cameras.Add(new Camera { EyePosition = Vector3.Zero, LookPosition = Vector3.UnitY });
                 }
                 if (activeCamera < 0 || activeCamera >= map.Cameras.Count) {
                     activeCamera = 0;
@@ -538,8 +538,8 @@ namespace CBRE.Providers.Map {
                 map.ActiveCamera = map.Cameras[activeCamera];
 
                 if (cordon != null) {
-                    var start = cordon.PropertyCoordinate("mins", map.CordonBounds.Start);
-                    var end = cordon.PropertyCoordinate("maxs", map.CordonBounds.End);
+                    var start = cordon.PropertyVector3("mins", map.CordonBounds.Start);
+                    var end = cordon.PropertyVector3("maxs", map.CordonBounds.End);
                     map.CordonBounds = new Box(start, end);
                     map.Cordon = cordon.PropertyBoolean("active", map.Cordon);
                 }
@@ -600,8 +600,8 @@ namespace CBRE.Providers.Map {
             cameras.AddProperty("activecamera", map.Cameras.IndexOf(map.ActiveCamera).ToString());
             foreach (var cam in map.Cameras) {
                 var camera = new GenericStructure("camera");
-                camera.AddProperty("position", "[" + FormatCoordinate(cam.EyePosition) + "]");
-                camera.AddProperty("look", "[" + FormatCoordinate(cam.LookPosition) + "]");
+                camera.AddProperty("position", "[" + FormatVector3(cam.EyePosition) + "]");
+                camera.AddProperty("look", "[" + FormatVector3(cam.LookPosition) + "]");
                 cameras.Children.Add(camera);
             }
 

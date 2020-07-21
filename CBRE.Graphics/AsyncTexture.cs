@@ -5,12 +5,13 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using CBRE.Common;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Graphics {
-    public class AsyncTexture : IDisposable {
-        private struct Data {
+    public class AsyncTexture : ITexture {
+        public struct Data {
             public byte[] Bytes;
             public int Width; public int Height;
             public bool Compressed;
@@ -19,8 +20,6 @@ namespace CBRE.Graphics {
         private Task<Data> task;
         private Texture2D monoGameTexture;
         private IntPtr imGuiTexture;
-        private GraphicsDevice graphicsDevice;
-        private ImGuiRenderer imGuiRenderer;
 
         public Texture2D MonoGameTexture {
             get {
@@ -36,17 +35,22 @@ namespace CBRE.Graphics {
             }
         }
 
+        public TextureFlags Flags => TextureFlags.None;
+
+        public string Name => Path.GetFileNameWithoutExtension(Filename);
+
+        public int Width => MonoGameTexture?.Width ?? 0;
+
+        public int Height => MonoGameTexture?.Height ?? 0;
+
         public readonly string Filename;
 
-        public AsyncTexture(GraphicsDevice device, ImGuiRenderer renderer, string filename) {
-            graphicsDevice = device;
-            imGuiRenderer = renderer;
-
+        public AsyncTexture(string filename, Task<Data> tsk=null) {
             monoGameTexture = null;
             imGuiTexture = IntPtr.Zero;
 
             Filename = filename;
-            task = Load();
+            task = tsk ?? Load();
         }
 
         private async Task<Data> Load() {
@@ -55,10 +59,15 @@ namespace CBRE.Graphics {
                 var bytes = Texture2D.TextureDataFromStream(stream, out int width, out int height, out _);
 
                 bool compressed = false;
-                if ((width&0x03)==0 && (height&0x03)==0) {
+                if ((width > 64 || height > 64) &&
+                    (width&0x03)==0 && (height&0x03)==0) {
                     bytes = CompressDxt5(bytes, width, height);
                     compressed = true;
                 }
+
+#if DEBUG
+                await Task.Delay((int)(((uint)Filename.GetHashCode()) % 2000));
+#endif
 
                 return new Data { Bytes = bytes, Width = width, Height = height, Compressed = compressed };
             }
@@ -69,10 +78,10 @@ namespace CBRE.Graphics {
                 if (!task.IsCompleted) { return; }
 
                 Data data = task.Result;
-                monoGameTexture = new Texture2D(graphicsDevice, data.Width, data.Height, false, data.Compressed ? SurfaceFormat.Dxt5 : SurfaceFormat.Color);
+                monoGameTexture = new Texture2D(GlobalGraphics.GraphicsDevice, data.Width, data.Height, false, data.Compressed ? SurfaceFormat.Dxt5 : SurfaceFormat.Color);
                 monoGameTexture.SetData(data.Bytes);
 
-                imGuiTexture = imGuiRenderer.BindTexture(monoGameTexture);
+                imGuiTexture = GlobalGraphics.ImGuiRenderer.BindTexture(monoGameTexture);
 
                 task = null;
             }
@@ -84,7 +93,7 @@ namespace CBRE.Graphics {
             }
 
             if (imGuiTexture != IntPtr.Zero) {
-                imGuiRenderer.UnbindTexture(imGuiTexture);
+                GlobalGraphics.ImGuiRenderer.UnbindTexture(imGuiTexture);
                 imGuiTexture = IntPtr.Zero;
             }
             monoGameTexture?.Dispose(); monoGameTexture = null;
@@ -213,6 +222,14 @@ namespace CBRE.Graphics {
             newData[10] = (byte)((g2_565 << 5) | b2_565);
 
             output.Write(newData, 0, 16);
+        }
+
+        public void Bind() {
+            throw new NotImplementedException();
+        }
+
+        public void Unbind() {
+            throw new NotImplementedException();
         }
     }
 }

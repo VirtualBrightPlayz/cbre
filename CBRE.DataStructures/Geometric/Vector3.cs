@@ -6,14 +6,14 @@ using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
-    public class Coordinate : ISerializable {
-        public readonly static Coordinate MaxValue = new Coordinate(Decimal.MaxValue, Decimal.MaxValue, Decimal.MaxValue);
-        public readonly static Coordinate MinValue = new Coordinate(Decimal.MinValue, Decimal.MinValue, Decimal.MinValue);
-        public readonly static Coordinate Zero = new Coordinate(0, 0, 0);
-        public readonly static Coordinate One = new Coordinate(1, 1, 1);
-        public readonly static Coordinate UnitX = new Coordinate(1, 0, 0);
-        public readonly static Coordinate UnitY = new Coordinate(0, 1, 0);
-        public readonly static Coordinate UnitZ = new Coordinate(0, 0, 1);
+    public class Vector3 : ISerializable {
+        public readonly static Vector3 MaxValue = new Vector3(Decimal.MaxValue, Decimal.MaxValue, Decimal.MaxValue);
+        public readonly static Vector3 MinValue = new Vector3(Decimal.MinValue, Decimal.MinValue, Decimal.MinValue);
+        public readonly static Vector3 Zero = new Vector3(0, 0, 0);
+        public readonly static Vector3 One = new Vector3(1, 1, 1);
+        public readonly static Vector3 UnitX = new Vector3(1, 0, 0);
+        public readonly static Vector3 UnitY = new Vector3(0, 1, 0);
+        public readonly static Vector3 UnitZ = new Vector3(0, 0, 1);
 
         #region X, Y, Z
         private decimal _z;
@@ -73,7 +73,7 @@ namespace CBRE.DataStructures.Geometric {
         }
         #endregion
 
-        public Coordinate(decimal x, decimal y, decimal z) {
+        public Vector3(decimal x, decimal y, decimal z) {
             _x = x;
             _y = y;
             _z = z;
@@ -82,7 +82,7 @@ namespace CBRE.DataStructures.Geometric {
             _dz = (double)z;
         }
 
-        public Coordinate(CoordinateF other) {
+        public Vector3(Vector3F other) {
             _x = (decimal)other.X;
             _y = (decimal)other.Y;
             _z = (decimal)other.Z;
@@ -91,7 +91,7 @@ namespace CBRE.DataStructures.Geometric {
             _dy = other.Z;
         }
 
-        protected Coordinate(SerializationInfo info, StreamingContext context) {
+        protected Vector3(SerializationInfo info, StreamingContext context) {
             X = info.GetDecimal("X");
             Y = info.GetDecimal("Y");
             Z = info.GetDecimal("Z");
@@ -103,14 +103,14 @@ namespace CBRE.DataStructures.Geometric {
             info.AddValue("Z", Z);
         }
 
-        public bool EquivalentTo(Coordinate test, decimal delta = 0.0001m) {
+        public bool EquivalentTo(Vector3 test, decimal delta = 0.0001m) {
             var xd = Math.Abs(_x - test._x);
             var yd = Math.Abs(_y - test._y);
             var zd = Math.Abs(_z - test._z);
             return (xd < delta) && (yd < delta) && (zd < delta);
         }
 
-        public bool Equals(Coordinate other) {
+        public bool Equals(Vector3 other) {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return EquivalentTo(other);
@@ -119,7 +119,7 @@ namespace CBRE.DataStructures.Geometric {
         public override bool Equals(object obj) {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == typeof(Coordinate) && Equals((Coordinate)obj);
+            return obj.GetType() == typeof(Vector3) && Equals((Vector3)obj);
         }
 
         public override int GetHashCode() {
@@ -131,23 +131,23 @@ namespace CBRE.DataStructures.Geometric {
             }
         }
 
-        public decimal Dot(Coordinate c) {
+        public decimal Dot(Vector3 c) {
             return ((_x * c._x) + (_y * c._y) + (_z * c._z));
         }
 
-        public Coordinate Cross(Coordinate that) {
+        public Vector3 Cross(Vector3 that) {
             var xv = (_y * that._z) - (_z * that._y);
             var yv = (_z * that._x) - (_x * that._z);
             var zv = (_x * that._y) - (_y * that._x);
-            return new Coordinate(xv, yv, zv);
+            return new Vector3(xv, yv, zv);
         }
 
-        public Coordinate Round(int num = 8) {
-            return new Coordinate(Math.Round(_x, num), Math.Round(_y, num), Math.Round(_z, num));
+        public Vector3 Round(int num = 8) {
+            return new Vector3(Math.Round(_x, num), Math.Round(_y, num), Math.Round(_z, num));
         }
 
-        public Coordinate Snap(decimal snapTo) {
-            return new Coordinate(
+        public Vector3 Snap(decimal snapTo) {
+            return new Vector3(
                 Math.Round(_x / snapTo) * snapTo,
                 Math.Round(_y / snapTo) * snapTo,
                 Math.Round(_z / snapTo) * snapTo
@@ -162,92 +162,92 @@ namespace CBRE.DataStructures.Geometric {
             return (decimal)(Math.Pow(_dx, 2) + Math.Pow(_dy, 2) + Math.Pow(_dz, 2));
         }
 
-        public Coordinate Normalise() {
+        public Vector3 Normalise() {
             var len = VectorMagnitude();
-            return len == 0 ? new Coordinate(0, 0, 0) : new Coordinate(_x / len, _y / len, _z / len);
+            return len == 0 ? new Vector3(0, 0, 0) : new Vector3(_x / len, _y / len, _z / len);
         }
 
-        public Coordinate Absolute() {
-            return new Coordinate(Math.Abs(_x), Math.Abs(_y), Math.Abs(_z));
+        public Vector3 Absolute() {
+            return new Vector3(Math.Abs(_x), Math.Abs(_y), Math.Abs(_z));
         }
 
-        public Coordinate XYZ() {
-            return new Coordinate(_x, _y, _z);
+        public Vector3 XYZ() {
+            return new Vector3(_x, _y, _z);
         }
 
-        public Coordinate ZXY() {
-            return new Coordinate(_z, _x, _y);
+        public Vector3 ZXY() {
+            return new Vector3(_z, _x, _y);
         }
 
-        public Coordinate YZX() {
-            return new Coordinate(_y, _z, _x);
+        public Vector3 YZX() {
+            return new Vector3(_y, _z, _x);
         }
 
-        public Coordinate ZYX() {
-            return new Coordinate(_z, _y, _x);
+        public Vector3 ZYX() {
+            return new Vector3(_z, _y, _x);
         }
 
-        public Coordinate YXZ() {
-            return new Coordinate(_y, _x, _z);
+        public Vector3 YXZ() {
+            return new Vector3(_y, _x, _z);
         }
 
-        public Coordinate XZY() {
-            return new Coordinate(_x, _z, _y);
+        public Vector3 XZY() {
+            return new Vector3(_x, _z, _y);
         }
 
 
-        public static bool operator ==(Coordinate c1, Coordinate c2) {
+        public static bool operator ==(Vector3 c1, Vector3 c2) {
             return Equals(c1, null) ? Equals(c2, null) : c1.Equals(c2);
         }
 
-        public static bool operator !=(Coordinate c1, Coordinate c2) {
+        public static bool operator !=(Vector3 c1, Vector3 c2) {
             return Equals(c1, null) ? !Equals(c2, null) : !c1.Equals(c2);
         }
 
-        public static Coordinate operator +(Coordinate c1, Coordinate c2) {
-            return new Coordinate(c1._x + c2._x, c1._y + c2._y, c1._z + c2._z);
+        public static Vector3 operator +(Vector3 c1, Vector3 c2) {
+            return new Vector3(c1._x + c2._x, c1._y + c2._y, c1._z + c2._z);
         }
 
-        public static Coordinate operator -(Coordinate c1, Coordinate c2) {
-            return new Coordinate(c1._x - c2._x, c1._y - c2._y, c1._z - c2._z);
+        public static Vector3 operator -(Vector3 c1, Vector3 c2) {
+            return new Vector3(c1._x - c2._x, c1._y - c2._y, c1._z - c2._z);
         }
 
-        public static Coordinate operator -(Coordinate c1) {
-            return new Coordinate(-c1._x, -c1._y, -c1._z);
+        public static Vector3 operator -(Vector3 c1) {
+            return new Vector3(-c1._x, -c1._y, -c1._z);
         }
 
-        public static Coordinate operator /(Coordinate c, decimal f) {
-            return f == 0 ? new Coordinate(0, 0, 0) : new Coordinate(c._x / f, c._y / f, c._z / f);
+        public static Vector3 operator /(Vector3 c, decimal f) {
+            return f == 0 ? new Vector3(0, 0, 0) : new Vector3(c._x / f, c._y / f, c._z / f);
         }
 
-        public static Coordinate operator *(Coordinate c, decimal f) {
-            return new Coordinate(c._x * f, c._y * f, c._z * f);
+        public static Vector3 operator *(Vector3 c, decimal f) {
+            return new Vector3(c._x * f, c._y * f, c._z * f);
         }
 
-        public static Coordinate operator *(decimal f, Coordinate c) {
+        public static Vector3 operator *(decimal f, Vector3 c) {
             return c * f;
         }
 
-        public Coordinate ComponentMultiply(Coordinate c) {
-            return new Coordinate(_x * c._x, _y * c._y, _z * c._z);
+        public Vector3 ComponentMultiply(Vector3 c) {
+            return new Vector3(_x * c._x, _y * c._y, _z * c._z);
         }
 
-        public Coordinate ComponentDivide(Coordinate c) {
+        public Vector3 ComponentDivide(Vector3 c) {
             var x = c._x == 0 ? 1 : c._x;
             var y = c._y == 0 ? 1 : c._y;
             var z = c._z == 0 ? 1 : c._z;
-            return new Coordinate(_x / x, _y / y, _z / z);
+            return new Vector3(_x / x, _y / y, _z / z);
         }
 
         /// <summary>
         /// Treats this vector as a directional unit vector and constructs a euler angle representation of that angle (in radians)
         /// </summary>
         /// <returns></returns>
-        public Coordinate ToEulerAngles() {
+        public Vector3 ToEulerAngles() {
             // http://www.gamedev.net/topic/399701-convert-vector-to-euler-cardan-angles/#entry3651854
             var yaw = DMath.Atan2(_y, _x);
             var pitch = DMath.Atan2(-_z, DMath.Sqrt(_x * _x + _y * _y));
-            return new Coordinate(0, pitch, yaw); // HL FGD has X = roll, Y = pitch, Z = yaw
+            return new Vector3(0, pitch, yaw); // HL FGD has X = roll, Y = pitch, Z = yaw
         }
 
         public override string ToString() {
@@ -266,17 +266,17 @@ namespace CBRE.DataStructures.Geometric {
             return toStringNoTrailing(_x) + " " + toStringNoTrailing(_y) + " " + toStringNoTrailing(_z);
         }
 
-        public Coordinate Clone() {
-            return new Coordinate(_x, _y, _z);
+        public Vector3 Clone() {
+            return new Vector3(_x, _y, _z);
         }
 
-        public static Coordinate Parse(string x, string y, string z) {
+        public static Vector3 Parse(string x, string y, string z) {
             const NumberStyles ns = NumberStyles.Float;
-            return new Coordinate(decimal.Parse(x, ns), decimal.Parse(y, ns), decimal.Parse(z, ns));
+            return new Vector3(decimal.Parse(x, ns), decimal.Parse(y, ns), decimal.Parse(z, ns));
         }
 
-        public CoordinateF ToCoordinateF() {
-            return new CoordinateF((float)_dx, (float)_dy, (float)_dz);
+        public Vector3F ToVector3F() {
+            return new Vector3F((float)_dx, (float)_dy, (float)_dz);
         }
     }
 

@@ -6,15 +6,15 @@ namespace CBRE.DataStructures.Models {
         public int ParentIndex { get; private set; }
         public Bone Parent { get; private set; }
         public string Name { get; private set; }
-        public CoordinateF DefaultPosition { get; private set; }
-        public CoordinateF DefaultAngles { get; private set; }
-        public CoordinateF DefaultPositionScale { get; private set; }
-        public CoordinateF DefaultAnglesScale { get; private set; }
+        public Vector3F DefaultPosition { get; private set; }
+        public Vector3F DefaultAngles { get; private set; }
+        public Vector3F DefaultPositionScale { get; private set; }
+        public Vector3F DefaultAnglesScale { get; private set; }
         public MatrixF Transform { get; private set; }
 
         public Bone(int boneIndex, int parentIndex, Bone parent, string name,
-                    CoordinateF defaultPosition, CoordinateF defaultAngles,
-                    CoordinateF defaultPositionScale, CoordinateF defaultAnglesScale) {
+                    Vector3F defaultPosition, Vector3F defaultAngles,
+                    Vector3F defaultPositionScale, Vector3F defaultAnglesScale) {
             BoneIndex = boneIndex;
             ParentIndex = parentIndex;
             Parent = parent;

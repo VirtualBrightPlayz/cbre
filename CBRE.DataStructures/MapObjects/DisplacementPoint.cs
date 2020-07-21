@@ -9,7 +9,7 @@ namespace CBRE.DataStructures.MapObjects {
         public Displacement Parent { get; set; }
 
         public Vertex CurrentPosition { get; set; }
-        public Coordinate InitialPosition { get; set; }
+        public Vector3 InitialPosition { get; set; }
 
         public Vector Displacement { get; set; }
         public Vector OffsetDisplacement { get; set; }
@@ -21,7 +21,7 @@ namespace CBRE.DataStructures.MapObjects {
         /// <summary>
         /// Shorthand for CurrentPosition.Location.
         /// </summary>
-        public Coordinate Location {
+        public Vector3 Location {
             get { return CurrentPosition.Location; }
         }
 
@@ -29,10 +29,10 @@ namespace CBRE.DataStructures.MapObjects {
             Parent = parent;
             XIndex = x;
             YIndex = y;
-            CurrentPosition = new Vertex(Coordinate.Zero, parent);
-            InitialPosition = Coordinate.Zero;
-            Displacement = new Vector(Coordinate.UnitZ, 0);
-            OffsetDisplacement = new Vector(Coordinate.UnitZ, 0);
+            CurrentPosition = new Vertex(Vector3.Zero, parent);
+            InitialPosition = Vector3.Zero;
+            Displacement = new Vector(Vector3.UnitZ, 0);
+            OffsetDisplacement = new Vector(Vector3.UnitZ, 0);
             Alpha = 0;
         }
 
@@ -40,7 +40,7 @@ namespace CBRE.DataStructures.MapObjects {
             XIndex = info.GetInt32("XIndex");
             YIndex = info.GetInt32("YIndex");
             CurrentPosition = (Vertex)info.GetValue("CurrentPosition", typeof(Vertex));
-            InitialPosition = (Coordinate)info.GetValue("InitialPosition", typeof(Coordinate));
+            InitialPosition = (Vector3)info.GetValue("InitialPosition", typeof(Vector3));
             Displacement = (Vector)info.GetValue("Displacement", typeof(Vector));
             OffsetDisplacement = (Vector)info.GetValue("OffsetDisplacement", typeof(Vector));
             Alpha = info.GetDecimal("Alpha");

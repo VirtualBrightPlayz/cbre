@@ -28,10 +28,10 @@ namespace CBRE.DataStructures.Geometric {
             set { Values[i] = value; }
         }
 
-        public Coordinate X { get { return new Coordinate(Values[0], Values[1], Values[2]); } }
-        public Coordinate Y { get { return new Coordinate(Values[4], Values[5], Values[6]); } }
-        public Coordinate Z { get { return new Coordinate(Values[8], Values[9], Values[10]); } }
-        public Coordinate Shift { get { return new Coordinate(Values[3], Values[7], Values[11]); } }
+        public Vector3 X { get { return new Vector3(Values[0], Values[1], Values[2]); } }
+        public Vector3 Y { get { return new Vector3(Values[4], Values[5], Values[6]); } }
+        public Vector3 Z { get { return new Vector3(Values[8], Values[9], Values[10]); } }
+        public Vector3 Shift { get { return new Vector3(Values[3], Values[7], Values[11]); } }
 
         public Vector4d Row0 { get { return new Vector4d(Values[0], Values[1], Values[2], Values[3]); } }
         public Vector4d Row1 { get { return new Vector4d(Values[4], Values[5], Values[6], Values[7]); } }
@@ -166,7 +166,7 @@ namespace CBRE.DataStructures.Geometric {
                               Values[3], Values[7], Values[11], Values[15]);
         }
 
-        public Matrix Translate(Coordinate translation) {
+        public Matrix Translate(Vector3 translation) {
             return new Matrix(Values[0], Values[1], Values[2], Values[3] + translation.X,
                               Values[4], Values[5], Values[6], Values[7] + translation.Y,
                               Values[8], Values[9], Values[10], Values[11] + translation.Z,
@@ -208,8 +208,8 @@ namespace CBRE.DataStructures.Geometric {
             return !Equals(left, right);
         }
 
-        public static Coordinate operator *(Coordinate left, Matrix right) {
-            return new Coordinate(
+        public static Vector3 operator *(Vector3 left, Matrix right) {
+            return new Vector3(
                 right[3] + left.X * right[0] + left.Y * right[4] + left.Z * right[8],
                 right[7] + left.X * right[1] + left.Y * right[5] + left.Z * right[9],
                 right[11] + left.X * right[2] + left.Y * right[6] + left.Z * right[10]);
@@ -247,7 +247,7 @@ namespace CBRE.DataStructures.Geometric {
             return mat;
         }
 
-        public static Matrix Rotation(Coordinate axis, decimal angle) {
+        public static Matrix Rotation(Vector3 axis, decimal angle) {
             var cos = DMath.Cos(-angle);
             var sin = DMath.Sin(-angle);
             var t = 1m - cos;
@@ -294,7 +294,7 @@ namespace CBRE.DataStructures.Geometric {
                               0, 0, 0, 1);
         }
 
-        public static Matrix Translation(Coordinate translation) {
+        public static Matrix Translation(Vector3 translation) {
             var m = Identity;
             m.Values[3] = translation.X;
             m.Values[7] = translation.Y;
@@ -302,7 +302,7 @@ namespace CBRE.DataStructures.Geometric {
             return m;
         }
 
-        public static Matrix Scale(Coordinate scale) {
+        public static Matrix Scale(Vector3 scale) {
             var m = Identity;
             m.Values[0] = scale.X;
             m.Values[5] = scale.Y;

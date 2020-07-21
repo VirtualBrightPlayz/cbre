@@ -95,12 +95,12 @@ namespace Microsoft.Xna.Framework
             result = (((this.Normal.X * value.X) + (this.Normal.Y * value.Y)) + (this.Normal.Z * value.Z)) + (this.D * value.W);
         }
 
-        public float DotCoordinate(Vector3 value)
+        public float DotVector3(Vector3 value)
         {
             return ((((this.Normal.X * value.X) + (this.Normal.Y * value.Y)) + (this.Normal.Z * value.Z)) + this.D);
         }
 
-        public void DotCoordinate(ref Vector3 value, out float result)
+        public void DotVector3(ref Vector3 value, out float result)
         {
             result = (((this.Normal.X * value.X) + (this.Normal.Y * value.Y)) + (this.Normal.Z * value.Z)) + this.D;
         }
@@ -252,7 +252,7 @@ namespace Microsoft.Xna.Framework
         internal PlaneIntersectionType Intersects(ref Vector3 point)
         {
             float distance;
-            DotCoordinate(ref point, out distance);
+            DotVector3(ref point, out distance);
 
             if (distance > 0)
                 return PlaneIntersectionType.Front;

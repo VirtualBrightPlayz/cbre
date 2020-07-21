@@ -28,10 +28,10 @@ namespace CBRE.DataStructures.Geometric {
             set { Values[i] = value; }
         }
 
-        public CoordinateF X { get { return new CoordinateF(Values[0], Values[1], Values[2]); } }
-        public CoordinateF Y { get { return new CoordinateF(Values[4], Values[5], Values[6]); } }
-        public CoordinateF Z { get { return new CoordinateF(Values[8], Values[9], Values[10]); } }
-        public CoordinateF Shift { get { return new CoordinateF(Values[12], Values[13], Values[14]); } }
+        public Vector3F X { get { return new Vector3F(Values[0], Values[1], Values[2]); } }
+        public Vector3F Y { get { return new Vector3F(Values[4], Values[5], Values[6]); } }
+        public Vector3F Z { get { return new Vector3F(Values[8], Values[9], Values[10]); } }
+        public Vector3F Shift { get { return new Vector3F(Values[12], Values[13], Values[14]); } }
 
         public MatrixF() {
             Values = new float[]
@@ -161,7 +161,7 @@ namespace CBRE.DataStructures.Geometric {
                               Values[3], Values[7], Values[11], Values[15]);
         }
 
-        public MatrixF Translate(CoordinateF translation) {
+        public MatrixF Translate(Vector3F translation) {
             return new MatrixF(Values[0], Values[1], Values[2], Values[3],
                               Values[4], Values[5], Values[6], Values[7],
                               Values[8], Values[9], Values[10], Values[11],
@@ -203,8 +203,8 @@ namespace CBRE.DataStructures.Geometric {
             return !Equals(left, right);
         }
 
-        public static CoordinateF operator *(CoordinateF left, MatrixF right) {
-            return new CoordinateF(
+        public static Vector3F operator *(Vector3F left, MatrixF right) {
+            return new Vector3F(
                 right[12] + left.X * right[0] + left.Y * right[4] + left.Z * right[8],
                 right[13] + left.X * right[1] + left.Y * right[5] + left.Z * right[9],
                 right[14] + left.X * right[2] + left.Y * right[6] + left.Z * right[10]);
@@ -250,7 +250,7 @@ namespace CBRE.DataStructures.Geometric {
             return mat;
         }
 
-        public static MatrixF Rotation(CoordinateF axis, float angle) {
+        public static MatrixF Rotation(Vector3F axis, float angle) {
             var cos = (float)Math.Cos(-angle);
             var sin = (float)Math.Sin(-angle);
             var t = 1f - cos;
@@ -297,7 +297,7 @@ namespace CBRE.DataStructures.Geometric {
                               0, 0, 0, 1);
         }
 
-        public static MatrixF Translation(CoordinateF translation) {
+        public static MatrixF Translation(Vector3F translation) {
             var m = Identity;
             m.Values[12] = translation.X;
             m.Values[13] = translation.Y;
@@ -305,7 +305,7 @@ namespace CBRE.DataStructures.Geometric {
             return m;
         }
 
-        public static MatrixF Scale(CoordinateF scale) {
+        public static MatrixF Scale(Vector3F scale) {
             var m = Identity;
             m.Values[0] = scale.X;
             m.Values[5] = scale.Y;

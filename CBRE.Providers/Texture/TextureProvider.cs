@@ -1,7 +1,7 @@
-﻿using CBRE.Graphics.Helpers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Providers.Texture {
     public abstract class TextureProvider {
@@ -84,7 +84,7 @@ namespace CBRE.Providers.Texture {
         }
 
         private static void LoadTextures(TextureProvider provider, IEnumerable<TextureItem> items) {
-            var all = items.Where(x => !TextureHelper.Exists(x.Name.ToLowerInvariant())).ToList();
+            var all = items.ToList();
             if (!all.Any()) return;
             provider.LoadTextures(all);
         }

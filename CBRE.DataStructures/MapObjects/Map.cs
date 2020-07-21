@@ -41,7 +41,7 @@ namespace CBRE.DataStructures.MapObjects {
             Show2DGrid = SnapToGrid = true;
             TextureLock = true;
             HideDisplacementSolids = true;
-            CordonBounds = new Box(Coordinate.One * -1024, Coordinate.One * 1024);
+            CordonBounds = new Box(Vector3.One * -1024, Vector3.One * 1024);
         }
 
         protected Map(SerializationInfo info, StreamingContext context) {
@@ -207,7 +207,7 @@ namespace CBRE.DataStructures.MapObjects {
                     s.Faces.ForEach(f => {
                         if (f.Texture.Texture == null) {
                             f.Texture.Texture = textureAccessor(f.Texture.Name.ToLowerInvariant());
-                            f.CalculateTextureCoordinates(true);
+                            f.CalculateTextureVector3s(true);
                         }
                         if (disp && !(f is Displacement)) {
                             f.Opacity = 0;

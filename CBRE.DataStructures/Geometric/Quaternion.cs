@@ -12,7 +12,7 @@ namespace CBRE.DataStructures.Geometric {
             get { return new Quaternion(0, 0, 0, 1); }
         }
 
-        public Coordinate Vector { get; private set; }
+        public Vector3 Vector { get; private set; }
         public decimal Scalar { get; private set; }
 
         public decimal X { get { return Vector.X; } }
@@ -20,18 +20,18 @@ namespace CBRE.DataStructures.Geometric {
         public decimal Z { get { return Vector.Z; } }
         public decimal W { get { return Scalar; } }
 
-        public Quaternion(Coordinate vector, decimal scalar) {
+        public Quaternion(Vector3 vector, decimal scalar) {
             Vector = vector;
             Scalar = scalar;
         }
 
         public Quaternion(decimal x, decimal y, decimal z, decimal w) {
-            Vector = new Coordinate(x, y, z);
+            Vector = new Vector3(x, y, z);
             Scalar = w;
         }
 
         protected Quaternion(SerializationInfo info, StreamingContext context) {
-            Vector = (Coordinate)info.GetValue("Vector", typeof(Coordinate));
+            Vector = (Vector3)info.GetValue("Vector", typeof(Vector3));
             Scalar = info.GetDecimal("Scalar");
         }
 
@@ -70,15 +70,15 @@ namespace CBRE.DataStructures.Geometric {
             return new Quaternion(X, Y, Z, W);
         }
 
-        public Tuple<Coordinate, decimal> GetAxisAngle() {
+        public Tuple<Vector3, decimal> GetAxisAngle() {
             var q = W > 1 ? Normalise() : this;
             var angle = 2 * DMath.Acos(q.W);
             var denom = DMath.Sqrt(1 - q.W * q.W);
-            var coord = denom <= 0.0001m ? Coordinate.UnitX : q.Vector / denom;
+            var coord = denom <= 0.0001m ? Vector3.UnitX : q.Vector / denom;
             return Tuple.Create(coord, angle);
         }
 
-        public Coordinate GetEulerAngles(bool homogenous = true) {
+        public Vector3 GetEulerAngles(bool homogenous = true) {
             // http://willperone.net/Code/quaternion.php
             var sqw = W * W;
             var sqx = X * X;
@@ -86,11 +86,11 @@ namespace CBRE.DataStructures.Geometric {
             var sqz = Z * Z;
 
             return homogenous
-                       ? new Coordinate(
+                       ? new Vector3(
                              DMath.Atan2(2 * (X * Y + Z * W), sqx - sqy - sqz + sqw),
                              DMath.Asin(-2 * (X * Z - Y * W)),
                              DMath.Atan2(2 * (Y * Z + X * W), -sqx - sqy + sqz + sqw))
-                       : new Coordinate(
+                       : new Vector3(
                              DMath.Atan2(2 * (Z * Y + X * W), 1 - 2 * (sqx + sqy)),
                              DMath.Asin(-2 * (X * Z - Y * W)),
                              DMath.Atan2(2 * (X * Y + Z * W), 1 - 2 * (sqy + sqz)));
@@ -124,7 +124,7 @@ namespace CBRE.DataStructures.Geometric {
                        );
         }
 
-        public Coordinate Rotate(Coordinate coord) {
+        public Vector3 Rotate(Vector3 coord) {
             // http://content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation
             var q = new Quaternion(coord.Normalise(), 0);
             var temp = q * Conjugate();
@@ -193,10 +193,10 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public static Quaternion EulerAngles(decimal x, decimal y, decimal z) {
-            return EulerAngles(new Coordinate(x, y, z));
+            return EulerAngles(new Vector3(x, y, z));
         }
 
-        public static Quaternion EulerAngles(Coordinate angles) {
+        public static Quaternion EulerAngles(Vector3 angles) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/eulerToQuaternion/index.htm
             angles = angles / 2;
             var sy = DMath.Sin(angles.Z);
@@ -212,7 +212,7 @@ namespace CBRE.DataStructures.Geometric {
 
         }
 
-        public static Quaternion AxisAngle(Coordinate axis, decimal angle) {
+        public static Quaternion AxisAngle(Vector3 axis, decimal angle) {
             return axis.VectorMagnitude() == 0
                        ? Identity
                        : new Quaternion(axis.Normalise() * DMath.Sin(angle / 2), DMath.Cos(angle / 2)).Normalise();

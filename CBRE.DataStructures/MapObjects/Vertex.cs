@@ -46,11 +46,11 @@ namespace CBRE.DataStructures.MapObjects {
         public float LMU { get; set; } = -1000.0f;
         public float LMV { get; set; } = -1000.0f;
 
-        public Coordinate Location { get; set; }
+        public Vector3 Location { get; set; }
 
         public Face Parent { get; set; }
 
-        public Vertex(Coordinate location, Face parent) {
+        public Vertex(Vector3 location, Face parent) {
             Location = location;
             Parent = parent;
             TextureV = TextureU = 0;
@@ -59,7 +59,7 @@ namespace CBRE.DataStructures.MapObjects {
         protected Vertex(SerializationInfo info, StreamingContext context) {
             TextureU = info.GetDecimal("TextureU");
             TextureV = info.GetDecimal("TextureV");
-            Location = (Coordinate)info.GetValue("Location", typeof(Coordinate));
+            Location = (Vector3)info.GetValue("Location", typeof(Vector3));
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context) {

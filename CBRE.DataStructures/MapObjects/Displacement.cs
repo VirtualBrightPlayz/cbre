@@ -10,7 +10,7 @@ namespace CBRE.DataStructures.MapObjects {
     [Serializable]
     public class Displacement : Face {
         public int Power { get; private set; }
-        public Coordinate StartPosition { get; set; }
+        public Vector3 StartPosition { get; set; }
         public decimal Elevation { get; set; }
         public bool SubDiv { get; set; }
         public DisplacementPoint[,] Points { get; set; }
@@ -18,14 +18,14 @@ namespace CBRE.DataStructures.MapObjects {
 
         public Displacement(long id) : base(id) {
             SetPower(3);
-            StartPosition = new Coordinate(0, 0, 0);
+            StartPosition = new Vector3(0, 0, 0);
             Elevation = 0;
             SubDiv = false;
         }
 
         protected Displacement(SerializationInfo info, StreamingContext context) : base(info, context) {
             Power = info.GetInt32("Power");
-            StartPosition = (Coordinate)info.GetValue("StartPosition", typeof(Coordinate));
+            StartPosition = (Vector3)info.GetValue("StartPosition", typeof(Vector3));
             Elevation = info.GetDecimal("Elevation");
             SubDiv = info.GetBoolean("SubDiv");
             Points = (DisplacementPoint[,])info.GetValue("Points", typeof(DisplacementPoint[,]));
@@ -132,7 +132,7 @@ namespace CBRE.DataStructures.MapObjects {
             if (startVertex == null) throw new Exception("Unable to locate displacement start position.");
 
             var index = Vertices.IndexOf(startVertex);
-            var corners = new List<Coordinate>();
+            var corners = new List<Vector3>();
             for (var i = 0; i < 4; i++) corners.Add(Vertices[(index + i) % 4].Location);
 
             var res = Resolution;
@@ -245,7 +245,7 @@ namespace CBRE.DataStructures.MapObjects {
             }
         }
 
-        public override void CalculateTextureCoordinates(bool minimizeTextureValues) {
+        public override void CalculateTextureVector3s(bool minimizeTextureValues) {
             var list = new List<Vertex>();
             foreach (var p in Points) list.Add(p.CurrentPosition);
             list.ForEach(c => c.TextureU = c.TextureV = 0);
@@ -270,7 +270,7 @@ namespace CBRE.DataStructures.MapObjects {
         }
 
         public override void UpdateBoundingBox() {
-            var list = new List<Coordinate>();
+            var list = new List<Vector3>();
             // LINQ doesn't seem to like multi-dimensional arrays
             foreach (var p in Points) list.Add(p.CurrentPosition.Location);
             BoundingBox = new Box(list);
@@ -285,7 +285,7 @@ namespace CBRE.DataStructures.MapObjects {
             base.Transform(transform, flags);
         }
 
-        public override Coordinate GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
+        public override Vector3 GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
             // Return the first intersection we find, don't care where it is
             return GetTriangles()
                 .Select(triangle => GetIntersectionPoint(triangle.Select(x => x.Location).ToList(), line, ignoreDirection, ignoreSegment))

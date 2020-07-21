@@ -179,7 +179,7 @@ namespace CBRE.DataStructures.MapObjects {
             UpdateBoundingBox();
         }
 
-        public virtual Coordinate GetIntersectionPoint(Line line) {
+        public virtual Vector3 GetIntersectionPoint(Line line) {
             return null;
         }
 
@@ -246,7 +246,7 @@ namespace CBRE.DataStructures.MapObjects {
             var list = new List<MapObject>();
             if ((!allowCodeHidden && IsCodeHidden) || (!allowVisgroupHidden && IsVisgroupHidden)) return list;
             if (!(this is World)) {
-                if (BoundingBox == null || !box.CoordinateIsInside(BoundingBox.Center)) return list;
+                if (BoundingBox == null || !box.Vector3IsInside(BoundingBox.Center)) return list;
                 if ((this is Solid || this is Entity) && !Children.Any()) list.Add(this);
             }
             list.AddRange(GetChildren().SelectMany(x => x.GetAllNodesWithCentersContainedWithin(box, allowCodeHidden, allowVisgroupHidden)));
@@ -312,7 +312,7 @@ namespace CBRE.DataStructures.MapObjects {
                     list.Add(this);
                 }
                 // Origins: Match bounding box center against box (for solids and point entities)
-                else if ((includeOrigin || forceOrigin) && !Children.Any() && (this is Solid || this is Entity) && box.CoordinateIsInside(BoundingBox.Center)) {
+                else if ((includeOrigin || forceOrigin) && !Children.Any() && (this is Solid || this is Entity) && box.Vector3IsInside(BoundingBox.Center)) {
                     list.Add(this);
                 }
             }

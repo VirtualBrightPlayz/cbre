@@ -7,15 +7,15 @@ namespace CBRE.DataStructures.Geometric {
     /// </summary>
     [Serializable]
     public class Plane : ISerializable {
-        public Coordinate Normal { get; private set; }
+        public Vector3 Normal { get; private set; }
         public decimal DistanceFromOrigin { get; private set; }
         public decimal A { get; private set; }
         public decimal B { get; private set; }
         public decimal C { get; private set; }
         public decimal D { get; private set; }
-        public Coordinate PointOnPlane { get; private set; }
+        public Vector3 PointOnPlane { get; private set; }
 
-        public Plane(Coordinate p1, Coordinate p2, Coordinate p3) {
+        public Plane(Vector3 p1, Vector3 p2, Vector3 p3) {
             var ab = p2 - p1;
             var ac = p3 - p1;
 
@@ -29,7 +29,7 @@ namespace CBRE.DataStructures.Geometric {
             D = -DistanceFromOrigin;
         }
 
-        public Plane(Coordinate norm, Coordinate pointOnPlane) {
+        public Plane(Vector3 norm, Vector3 pointOnPlane) {
             Normal = norm.Normalise();
             DistanceFromOrigin = Normal.Dot(pointOnPlane);
             PointOnPlane = pointOnPlane;
@@ -40,7 +40,7 @@ namespace CBRE.DataStructures.Geometric {
             D = -DistanceFromOrigin;
         }
 
-        public Plane(Coordinate norm, decimal distanceFromOrigin) {
+        public Plane(Vector3 norm, decimal distanceFromOrigin) {
             Normal = norm.Normalise();
             DistanceFromOrigin = distanceFromOrigin;
             PointOnPlane = Normal * DistanceFromOrigin;
@@ -51,7 +51,7 @@ namespace CBRE.DataStructures.Geometric {
             D = -DistanceFromOrigin;
         }
 
-        protected Plane(SerializationInfo info, StreamingContext context) : this((Coordinate)info.GetValue("Normal", typeof(Coordinate)), info.GetDecimal("DistanceFromOrigin")) {
+        protected Plane(SerializationInfo info, StreamingContext context) : this((Vector3)info.GetValue("Normal", typeof(Vector3)), info.GetDecimal("DistanceFromOrigin")) {
 
         }
 
@@ -68,7 +68,7 @@ namespace CBRE.DataStructures.Geometric {
         ///  value == 1 if coordinate is above the plane<br />
         ///  value == 0 if coordinate is on the plane.
         /// </returns>
-        public int OnPlane(Coordinate co, decimal epsilon = 0.5m) {
+        public int OnPlane(Vector3 co, decimal epsilon = 0.5m) {
             //eval (s = Ax + By + Cz + D) at point (x,y,z)
             //if s > 0 then point is "above" the plane (same side as normal)
             //if s < 0 then it lies on the opposite side
@@ -88,7 +88,7 @@ namespace CBRE.DataStructures.Geometric {
         /// <param name="ignoreSegment">Set to true to ignore the start and
         /// end points of the line in the intersection. Defaults to false.</param>
         /// <returns>The point of intersection, or null if the line does not intersect</returns>
-        public Coordinate GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
+        public Vector3 GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
             // http://softsurfer.com/Archive/algorithm_0104/algorithm_0104B.htm#Line%20Intersections
             // http://paulbourke.net/geometry/planeline/
 
@@ -107,27 +107,27 @@ namespace CBRE.DataStructures.Geometric {
         /// </summary>
         /// <param name="point">The point to project</param>
         /// <returns>The point projected onto this plane</returns>
-        public Coordinate Project(Coordinate point) {
+        public Vector3 Project(Vector3 point) {
             // http://www.gamedev.net/topic/262196-projecting-vector-onto-a-plane/
             // Projected = Point - ((Point - PointOnPlane) . Normal) * Normal
             return point - ((point - PointOnPlane).Dot(Normal)) * Normal;
         }
 
-        public decimal EvalAtPoint(Coordinate co) {
+        public decimal EvalAtPoint(Vector3 co) {
             return A * co.X + B * co.Y + C * co.Z + D;
         }
 
         /// <summary>
         /// Gets the axis closest to the normal of this plane
         /// </summary>
-        /// <returns>Coordinate.UnitX, Coordinate.UnitY, or Coordinate.UnitZ depending on the plane's normal</returns>
-        public Coordinate GetClosestAxisToNormal() {
+        /// <returns>Vector3.UnitX, Vector3.UnitY, or Vector3.UnitZ depending on the plane's normal</returns>
+        public Vector3 GetClosestAxisToNormal() {
             // VHE prioritises the axes in order of X, Y, Z.
             var norm = Normal.Absolute();
 
-            if (norm.X >= norm.Y && norm.X >= norm.Z) return Coordinate.UnitX;
-            if (norm.Y >= norm.Z) return Coordinate.UnitY;
-            return Coordinate.UnitZ;
+            if (norm.X >= norm.Y && norm.X >= norm.Z) return Vector3.UnitX;
+            if (norm.Y >= norm.Z) return Vector3.UnitY;
+            return Vector3.UnitZ;
         }
 
         public Plane Clone() {
@@ -138,7 +138,7 @@ namespace CBRE.DataStructures.Geometric {
         /// Intersects three planes and gets the point of their intersection.
         /// </summary>
         /// <returns>The point that the planes intersect at, or null if they do not intersect at a point.</returns>
-        public static Coordinate Intersect(Plane p1, Plane p2, Plane p3) {
+        public static Vector3 Intersect(Plane p1, Plane p2, Plane p3) {
             // http://paulbourke.net/geometry/3planes/
 
             var c1 = p2.Normal.Cross(p3.Normal);

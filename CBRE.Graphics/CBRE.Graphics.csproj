@@ -13,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CBRE.Common\CBRE.Common.csproj" />
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
     <ProjectReference Include="..\MonoGame\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" />
   </ItemGroup>

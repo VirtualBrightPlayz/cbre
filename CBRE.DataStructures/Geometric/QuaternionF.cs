@@ -11,7 +11,7 @@ namespace CBRE.DataStructures.Geometric {
             get { return new QuaternionF(0, 0, 0, 1); }
         }
 
-        public CoordinateF Vector { get; private set; }
+        public Vector3F Vector { get; private set; }
         public float Scalar { get; private set; }
 
         public float X { get { return Vector.X; } }
@@ -19,13 +19,13 @@ namespace CBRE.DataStructures.Geometric {
         public float Z { get { return Vector.Z; } }
         public float W { get { return Scalar; } }
 
-        public QuaternionF(CoordinateF vector, float scalar) {
+        public QuaternionF(Vector3F vector, float scalar) {
             Vector = vector;
             Scalar = scalar;
         }
 
         public QuaternionF(float x, float y, float z, float w) {
-            Vector = new CoordinateF(x, y, z);
+            Vector = new Vector3F(x, y, z);
             Scalar = w;
         }
 
@@ -34,7 +34,7 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         protected QuaternionF(SerializationInfo info, StreamingContext context) {
-            Vector = (CoordinateF)info.GetValue("Vector", typeof(CoordinateF));
+            Vector = (Vector3F)info.GetValue("Vector", typeof(Vector3F));
             Scalar = info.GetSingle("Scalar");
         }
 
@@ -69,15 +69,15 @@ namespace CBRE.DataStructures.Geometric {
             return new QuaternionF(X, Y, Z, W);
         }
 
-        public Tuple<CoordinateF, float> GetAxisAngle() {
+        public Tuple<Vector3F, float> GetAxisAngle() {
             var q = W > 1 ? Normalise() : this;
             var angle = 2f * (float)Math.Acos(q.W);
             var denom = (float)Math.Sqrt(1 - q.W * q.W);
-            var coord = denom <= 0.0001 ? CoordinateF.UnitX : q.Vector / denom;
+            var coord = denom <= 0.0001 ? Vector3F.UnitX : q.Vector / denom;
             return Tuple.Create(coord, angle);
         }
 
-        public CoordinateF GetEulerAngles(bool homogenous = true) {
+        public Vector3F GetEulerAngles(bool homogenous = true) {
             // http://willperone.net/Code/quaternion.php
             var sqw = W * W;
             var sqx = X * X;
@@ -85,11 +85,11 @@ namespace CBRE.DataStructures.Geometric {
             var sqz = Z * Z;
 
             return homogenous
-                       ? new CoordinateF(
+                       ? new Vector3F(
                              (float)Math.Atan2(2 * (X * Y + Z * W), sqx - sqy - sqz + sqw),
                              (float)Math.Asin(-2 * (X * Z - Y * W)),
                              (float)Math.Atan2(2 * (Y * Z + X * W), -sqx - sqy + sqz + sqw))
-                       : new CoordinateF(
+                       : new Vector3F(
                              (float)Math.Atan2(2 * (Z * Y + X * W), 1 - 2 * (sqx + sqy)),
                              (float)Math.Asin(-2 * (X * Z - Y * W)),
                              (float)Math.Atan2(2 * (X * Y + Z * W), 1 - 2 * (sqy + sqz)));
@@ -123,7 +123,7 @@ namespace CBRE.DataStructures.Geometric {
                        );
         }
 
-        public CoordinateF Rotate(CoordinateF coord) {
+        public Vector3F Rotate(Vector3F coord) {
             // http://content.gpwiki.org/index.php/OpenGL:Tutorials:Using_Quaternions_to_represent_rotation
             var q = new QuaternionF(coord.Normalise(), 0);
             var temp = q * Conjugate();
@@ -191,7 +191,7 @@ namespace CBRE.DataStructures.Geometric {
             return left * right.Inverse();
         }
 
-        public static QuaternionF EulerAngles(CoordinateF angles) {
+        public static QuaternionF EulerAngles(Vector3F angles) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/eulerToQuaternionF/index.htm
             angles = angles / 2;
             var sy = (float)Math.Sin(angles.Z);
@@ -207,7 +207,7 @@ namespace CBRE.DataStructures.Geometric {
 
         }
 
-        public static QuaternionF AxisAngle(CoordinateF axis, float angle) {
+        public static QuaternionF AxisAngle(Vector3F axis, float angle) {
             return Math.Abs(axis.VectorMagnitude()) < 0.0001
                        ? Identity
                        : new QuaternionF(axis.Normalise() * (float)Math.Sin(angle / 2), (float)Math.Cos(angle / 2)).Normalise();

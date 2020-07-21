@@ -1,5 +1,6 @@
 ﻿using CBRE.Common;
-using CBRE.Graphics.Helpers;
+using CBRE.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -16,20 +17,9 @@ namespace CBRE.Providers.Texture {
         private readonly List<TexturePackage> _packages;
         private readonly Dictionary<string, TextureItem> _items;
 
-        public bool LightmapTextureOutdated = false;
-        public Bitmap[] Lightmaps { get; private set; } = new Bitmap[4];
-        public ITexture LightmapTexture { get; set; } = null;
+        public List<RenderTargetTexture> Lightmaps { get; private set; } = new List<RenderTargetTexture>();
 
         private static ulong LastTextureCollectionID = 0;
-
-        public void UpdateLightmapTexture() {
-            lock (Lightmaps) {
-                string texName = LightmapTexture.Name;
-                LightmapTexture.Dispose();
-                LightmapTexture = TextureHelper.Create(texName, Lightmaps[3], Lightmaps[3].Width, Lightmaps[3].Height, TextureFlags.None);
-                LightmapTextureOutdated = false;
-            }
-        }
 
         public TextureItem SelectedTexture {
             get { return _selectedTexture; }
@@ -53,18 +43,12 @@ namespace CBRE.Providers.Texture {
             _recentTextures = new List<TextureItem>();
             SelectedTexture = GetDefaultSelection();
 
-            Bitmap bmp = new Bitmap(64, 64);
-            for (int i = 0; i < 64; i++) {
-                for (int j = 0; j < 64; j++) {
-                    bmp.SetPixel(i, j, Color.White);
-                }
-            }
             LastTextureCollectionID++;
-            LightmapTexture = TextureHelper.Create("__lightmap" + LastTextureCollectionID.ToString(), bmp, 64, 64, TextureFlags.None);
+            Lightmaps.Add(new RenderTargetTexture(64, 64));
         }
 
         ~TextureCollection() {
-            TextureHelper.EnqueueDisposal(LightmapTexture);
+            Lightmaps.ForEach(lm => lm.Dispose());
             for (int i = 0; i < 4; i++) {
                 Lightmaps[i]?.Dispose();
             }

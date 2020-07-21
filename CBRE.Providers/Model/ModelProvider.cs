@@ -1,6 +1,5 @@
 ﻿using CBRE.Common;
 using CBRE.FileSystem;
-using CBRE.Graphics.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -58,7 +57,7 @@ namespace CBRE.Providers.Model {
                 model.PreprocessModel();
                 for (var i = 0; i < model.Textures.Count; i++) {
                     var t = model.Textures[i];
-                    t.TextureObject = TextureHelper.Create(String.Format("ModelProvider: {0}/{1}/{2}", path, t.Name, i), t.Image, t.Image.Width, t.Image.Height, TextureFlags.None);
+                    //t.TextureObject = TextureHelper.Create(String.Format("ModelProvider: {0}/{1}/{2}", path, t.Name, i), t.Image, t.Image.Width, t.Image.Height, TextureFlags.None);
                 }
                 Models[path] = model;
                 return model;

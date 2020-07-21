@@ -127,7 +127,7 @@ namespace CBRE.UI {
             FocusOn(box.Center);
         }
 
-        public virtual void FocusOn(Coordinate coordinate) {
+        public virtual void FocusOn(Vector3 coordinate) {
             // Virtual
         }
 

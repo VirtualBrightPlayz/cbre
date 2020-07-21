@@ -122,7 +122,7 @@ namespace CBRE.DataStructures.Geometric {
         /// <remarks>
         /// <seealso cref="Vector4d(Vector3d, decimal)"/>.
         /// </remarks>
-        public Vector4d(Coordinate v) {
+        public Vector4d(Vector3 v) {
             X = v.X;
             Y = v.Y;
             Z = v.Z;
@@ -134,7 +134,7 @@ namespace CBRE.DataStructures.Geometric {
         /// </summary>
         /// <param name="v">The Vector3d to copy components from.</param>
         /// <param name="w">The w component of the new Vector4.</param>
-        public Vector4d(Coordinate v, decimal w) {
+        public Vector4d(Vector3 v, decimal w) {
             X = v.X;
             Y = v.Y;
             Z = v.Z;
@@ -594,8 +594,8 @@ namespace CBRE.DataStructures.Geometric {
         /// <param name="a">First input Vector.</param>
         /// <param name="b">Second input Vector.</param>
         /// <param name="c">Third input Vector.</param>
-        /// <param name="u">First Barycentric Coordinate.</param>
-        /// <param name="v">Second Barycentric Coordinate.</param>
+        /// <param name="u">First Barycentric Vector3.</param>
+        /// <param name="v">Second Barycentric Vector3.</param>
         /// <returns>a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c otherwise.</returns>
         [Pure]
         public static Vector4d BaryCentric(Vector4d a, Vector4d b, Vector4d c, decimal u, decimal v) {
@@ -609,8 +609,8 @@ namespace CBRE.DataStructures.Geometric {
         /// <param name="a">First input Vector.</param>
         /// <param name="b">Second input Vector.</param>
         /// <param name="c">Third input Vector.</param>
-        /// <param name="u">First Barycentric Coordinate.</param>
-        /// <param name="v">Second Barycentric Coordinate.</param>
+        /// <param name="u">First Barycentric Vector3.</param>
+        /// <param name="v">Second Barycentric Vector3.</param>
         /// <param name="result">
         /// Output Vector. a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c
         /// otherwise.

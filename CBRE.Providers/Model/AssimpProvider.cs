@@ -3,10 +3,13 @@ using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.DataStructures.Models;
 using CBRE.FileSystem;
+using CBRE.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Face = CBRE.DataStructures.MapObjects.Face;
 using Mesh = Assimp.Mesh;
 using Path = System.IO.Path;
@@ -46,10 +49,10 @@ namespace CBRE.Providers.Model {
                 assimpVertex = selfMatrix * assimpVertex;
                 var assimpNormal = assimpMesh.Normals[i];
                 assimpNormal = selfMatrix * assimpNormal;
-                var assimpUv = assimpMesh.TextureCoordinateChannels[0][i];
+                var assimpUv = assimpMesh.TextureVector3Channels[0][i];
 
-                vertices.Add(new MeshVertex(new CoordinateF(assimpVertex.X, -assimpVertex.Z, assimpVertex.Y),
-                                            new CoordinateF(assimpNormal.X, -assimpNormal.Z, assimpNormal.Y),
+                vertices.Add(new MeshVertex(new Vector3F(assimpVertex.X, -assimpVertex.Z, assimpVertex.Y),
+                                            new Vector3F(assimpNormal.X, -assimpNormal.Z, assimpNormal.Y),
                                             sledgeModel.Bones[0], assimpUv.X, -assimpUv.Y));
             }
 
@@ -72,7 +75,7 @@ namespace CBRE.Providers.Model {
             }
 
             DataStructures.Models.Model model = new DataStructures.Models.Model();
-            DataStructures.Models.Bone bone = new DataStructures.Models.Bone(0, -1, null, "rootBone", CoordinateF.Zero, CoordinateF.Zero, CoordinateF.One, CoordinateF.One);
+            DataStructures.Models.Bone bone = new DataStructures.Models.Bone(0, -1, null, "rootBone", Vector3F.Zero, Vector3F.Zero, Vector3F.One, Vector3F.One);
             model.Bones.Add(bone);
 
             Scene scene = importer.ImportFile(file.FullPathName);
@@ -86,14 +89,12 @@ namespace CBRE.Providers.Model {
                     string path = Path.Combine(Path.GetDirectoryName(file.FullPathName), scene.Materials[i].TextureDiffuse.FilePath);
                     if (!File.Exists(path)) { path = scene.Materials[i].TextureDiffuse.FilePath; }
                     if (File.Exists(path)) {
-                        Bitmap bmp = new Bitmap(path);
+                        AsyncTexture _tex = new AsyncTexture(path);
                         tex = new DataStructures.Models.Texture {
                             Name = path,
                             Index = 0,
-                            Width = bmp.Width,
-                            Height = bmp.Height,
                             Flags = 0,
-                            Image = bmp
+                            TextureObject = _tex
                         };
                     }
                     break;
@@ -101,19 +102,19 @@ namespace CBRE.Providers.Model {
             }
 
             if (tex == null) {
-                Bitmap bmp = new Bitmap(64, 64);
-                for (int i = 0; i < 64; i++) {
-                    for (int j = 0; j < 64; j++) {
-                        bmp.SetPixel(i, j, Color.DarkGray);
-                    }
-                }
+                AsyncTexture _tex = new AsyncTexture("___", Task.Run(() => {
+                    return new AsyncTexture.Data {
+                        Bytes = Enumerable.Repeat(0xff777777, 64 * 64).SelectMany(i => BitConverter.GetBytes(i)).ToArray(),
+                        Width = 64,
+                        Height = 64,
+                        Compressed = false
+                    };
+                }));
                 tex = new DataStructures.Models.Texture {
-                    Name = "blank",
+                    Name = "____",
                     Index = 0,
-                    Width = 64,
-                    Height = 64,
                     Flags = 0,
-                    Image = bmp
+                    TextureObject = _tex
                 };
             }
 
@@ -174,7 +175,7 @@ namespace CBRE.Providers.Model {
                     foreach (Vertex v in face.Vertices) {
                         mesh.Vertices.Add(new Vector3D((float)v.Location.X, (float)v.Location.Z, (float)v.Location.Y));
                         mesh.Normals.Add(new Vector3D((float)face.Plane.Normal.X, (float)face.Plane.Normal.Z, (float)face.Plane.Normal.Y));
-                        mesh.TextureCoordinateChannels[0].Add(new Vector3D((float)v.TextureU, (float)v.TextureV, 0));
+                        mesh.TextureVector3Channels[0].Add(new Vector3D((float)v.TextureU, (float)v.TextureV, 0));
                     }
                     mesh.UVComponentCount[0] = 2;
                     foreach (uint ind in face.GetTriangleIndices()) {

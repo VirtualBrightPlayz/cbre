@@ -9,18 +9,18 @@ namespace CBRE.DataStructures.Geometric {
     /// </summary>
     [Serializable]
     public class Cloud : ISerializable {
-        public List<Coordinate> Points { get; private set; }
+        public List<Vector3> Points { get; private set; }
         public Box BoundingBox { get; private set; }
 
-        public Coordinate MinX { get; private set; }
-        public Coordinate MinY { get; private set; }
-        public Coordinate MinZ { get; private set; }
-        public Coordinate MaxX { get; private set; }
-        public Coordinate MaxY { get; private set; }
-        public Coordinate MaxZ { get; private set; }
+        public Vector3 MinX { get; private set; }
+        public Vector3 MinY { get; private set; }
+        public Vector3 MinZ { get; private set; }
+        public Vector3 MaxX { get; private set; }
+        public Vector3 MaxY { get; private set; }
+        public Vector3 MaxZ { get; private set; }
 
-        public Cloud(IEnumerable<Coordinate> points) {
-            Points = new List<Coordinate>(points);
+        public Cloud(IEnumerable<Vector3> points) {
+            Points = new List<Vector3>(points);
             BoundingBox = new Box(points);
             MinX = MinY = MinZ = MaxX = MaxY = MaxZ = null;
             foreach (var p in points) {
@@ -33,7 +33,7 @@ namespace CBRE.DataStructures.Geometric {
             }
         }
 
-        protected Cloud(SerializationInfo info, StreamingContext context) : this((Coordinate[])info.GetValue("Points", typeof(Coordinate[]))) {
+        protected Cloud(SerializationInfo info, StreamingContext context) : this((Vector3[])info.GetValue("Points", typeof(Vector3[]))) {
 
         }
 
@@ -45,7 +45,7 @@ namespace CBRE.DataStructures.Geometric {
         /// Get a list of the 6 points that define the outermost extents of this cloud.
         /// </summary>
         /// <returns>A list of the 6 (Min|Max)(X|Y|Z) values of this cloud.</returns>
-        public IEnumerable<Coordinate> GetExtents() {
+        public IEnumerable<Vector3> GetExtents() {
             return new[]
                        {
                            MinX, MinY, MinZ,

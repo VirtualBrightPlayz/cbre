@@ -13,9 +13,9 @@ namespace CBRE.DataStructures.MapObjects {
     public class Entity : MapObject {
         public GameDataObject GameData { get; set; }
         public EntityData EntityData { get; set; }
-        public Coordinate Origin {
+        public Vector3 Origin {
             get {
-                return EntityData.GetPropertyCoordinate("position", Coordinate.Zero).XZY();
+                return EntityData.GetPropertyVector3("position", Vector3.Zero).XZY();
             }
 
             set {
@@ -29,7 +29,7 @@ namespace CBRE.DataStructures.MapObjects {
 
         protected Entity(SerializationInfo info, StreamingContext context) : base(info, context) {
             EntityData = (EntityData)info.GetValue("EntityData", typeof(EntityData));
-            Origin = (Coordinate)info.GetValue("Origin", typeof(Coordinate));
+            Origin = (Vector3)info.GetValue("Origin", typeof(Vector3));
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context) {
@@ -71,13 +71,13 @@ namespace CBRE.DataStructures.MapObjects {
 
         public override void UpdateBoundingBox(bool cascadeToParent = true) {
             if (GameData == null && !Children.Any()) {
-                var sub = new Coordinate(-16, -16, -16);
-                var add = new Coordinate(16, 16, 16);
+                var sub = new Vector3(-16, -16, -16);
+                var add = new Vector3(16, 16, 16);
                 BoundingBox = new Box(Origin + sub, Origin + add);
             } else if (MetaData.Has<Box>("BoundingBox")) {
-                var scale = EntityData.GetPropertyCoordinate("scale", Coordinate.One);
-                scale = new Coordinate(scale.X, scale.Z, scale.Y);
-                var angles = EntityData.GetPropertyCoordinate("angles", Coordinate.Zero);
+                var scale = EntityData.GetPropertyVector3("scale", Vector3.One);
+                scale = new Vector3(scale.X, scale.Z, scale.Y);
+                var angles = EntityData.GetPropertyVector3("angles", Vector3.Zero);
                 Matrix pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
                 Matrix yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
                 Matrix roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
@@ -85,15 +85,15 @@ namespace CBRE.DataStructures.MapObjects {
                 if (MetaData.Has<bool>("RotateBoundingBox") && !MetaData.Get<bool>("RotateBoundingBox")) tform = Matrix.Translation(Origin);
                 BoundingBox = MetaData.Get<Box>("BoundingBox").Transform(new UnitMatrixMult(tform));
             } else if (GameData != null && GameData.ClassType == ClassType.Point) {
-                var sub = new Coordinate(-16, -16, -16);
-                var add = new Coordinate(16, 16, 16);
+                var sub = new Vector3(-16, -16, -16);
+                var add = new Vector3(16, 16, 16);
                 var behav = GameData.Behaviours.SingleOrDefault(x => x.Name == "size");
                 if (behav != null && behav.Values.Count >= 6) {
-                    sub = behav.GetCoordinate(0);
-                    add = behav.GetCoordinate(1);
+                    sub = behav.GetVector3(0);
+                    add = behav.GetVector3(1);
                 } else if (GameData.Name == "infodecal") {
-                    sub = Coordinate.One * -4;
-                    add = Coordinate.One * 4;
+                    sub = Vector3.One * -4;
+                    add = Vector3.One * 4;
                 }
                 BoundingBox = new Box(Origin + sub, Origin + add);
             } else if (Children.Any()) {
@@ -145,7 +145,7 @@ namespace CBRE.DataStructures.MapObjects {
 
         public override void Transform(IUnitTransformation transform, TransformFlags flags) {
             Origin = transform.Transform(Origin);
-            Coordinate angles = EntityData.GetPropertyCoordinate("angles");
+            Vector3 angles = EntityData.GetPropertyVector3("angles");
             if (angles != null && transform is UnitMatrixMult uTransform) {
                 var finalAngles = TransformToEuler(uTransform, angles);
 
@@ -154,33 +154,33 @@ namespace CBRE.DataStructures.MapObjects {
             base.Transform(transform, flags);
         }
 
-        public static Coordinate TransformToEuler(UnitMatrixMult uTransform, Coordinate angles) {
+        public static Vector3 TransformToEuler(UnitMatrixMult uTransform, Vector3 angles) {
             Matrix _pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
             Matrix _yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
             Matrix _roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
             var existingRotation = new UnitMatrixMult(_yaw * _roll * _pitch);
 
-            Coordinate unitX = uTransform.Transform(existingRotation.Transform(new Coordinate(1, 0, 0)), 0).Normalise();
-            Coordinate unitY = uTransform.Transform(existingRotation.Transform(new Coordinate(0, 1, 0)), 0).Normalise();
-            Coordinate unitZ = uTransform.Transform(existingRotation.Transform(new Coordinate(0, 0, 1)), 0).Normalise();
+            Vector3 unitX = uTransform.Transform(existingRotation.Transform(new Vector3(1, 0, 0)), 0).Normalise();
+            Vector3 unitY = uTransform.Transform(existingRotation.Transform(new Vector3(0, 1, 0)), 0).Normalise();
+            Vector3 unitZ = uTransform.Transform(existingRotation.Transform(new Vector3(0, 0, 1)), 0).Normalise();
 
             var tempAngles = ToEuler(unitZ.YXZ(), unitY.YXZ(), unitX.YXZ()).XZY() * 180m / DMath.PI;
-            return new Coordinate(
+            return new Vector3(
                 90 - tempAngles.X,
                 tempAngles.Y,
                 90 - tempAngles.Z);
         }
 
         //http://geom3d.com/data/documents/Calculation=20of=20Euler=20angles.pdf
-        private static Coordinate ToEuler(Coordinate X1, Coordinate Y1, Coordinate Z1) {
+        private static Vector3 ToEuler(Vector3 X1, Vector3 Y1, Vector3 Z1) {
             decimal Z1xy = DMath.Sqrt(Z1.X * Z1.X + Z1.Y * Z1.Y);
             if (Z1xy > 0.0001m) {
-                return new Coordinate(
+                return new Vector3(
                     DMath.Atan2(Y1.X * Z1.Y - Y1.Y * Z1.X, X1.X * Z1.Y - X1.Y * Z1.X),
                     DMath.Atan2(Z1xy, Z1.Z),
                     -DMath.Atan2(-Z1.X, Z1.Y));
             } else {
-                return new Coordinate(
+                return new Vector3(
                     0m,
                     (Z1.Z > 0m) ? 0m : DMath.PI,
                     -DMath.Atan2(X1.Y, X1.X));
@@ -192,7 +192,7 @@ namespace CBRE.DataStructures.MapObjects {
         /// </summary>
         /// <param name="line">The intersection line</param>
         /// <returns>The closest intersecting point, or null if the line doesn't intersect.</returns>
-        public override Coordinate GetIntersectionPoint(Line line) {
+        public override Vector3 GetIntersectionPoint(Line line) {
             var faces = GetBoxFaces().Union(MetaData.GetAll<List<Face>>().SelectMany(x => x));
             return faces.Select(x => x.GetIntersectionPoint(line))
                 .Where(x => x != null)

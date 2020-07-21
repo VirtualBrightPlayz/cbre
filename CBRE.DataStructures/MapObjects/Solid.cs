@@ -38,7 +38,7 @@ namespace CBRE.DataStructures.MapObjects {
                 f.Parent = e;
                 e.Faces.Add(f);
                 f.UpdateBoundingBox();
-                f.CalculateTextureCoordinates(true);
+                f.CalculateTextureVector3s(true);
             }
             CopyBase(e, generator);
             return e;
@@ -86,8 +86,8 @@ namespace CBRE.DataStructures.MapObjects {
         }
 
         public override void Transform(Transformations.IUnitTransformation transform, TransformFlags flags) {
-            Coordinate newStart = transform.Transform(BoundingBox.Start);
-            Coordinate newEnd = transform.Transform(BoundingBox.End);
+            Vector3 newStart = transform.Transform(BoundingBox.Start);
+            Vector3 newEnd = transform.Transform(BoundingBox.End);
 
             if ((newStart-newEnd).VectorMagnitude() > 1000000m) { return; }
 
@@ -109,7 +109,7 @@ namespace CBRE.DataStructures.MapObjects {
         /// </summary>
         /// <param name="line">The intersection line</param>
         /// <returns>The closest intersecting point, or null if the line doesn't intersect.</returns>
-        public override Coordinate GetIntersectionPoint(Line line) {
+        public override Vector3 GetIntersectionPoint(Line line) {
             return Faces.Select(x => x.GetIntersectionPoint(line))
                 .Where(x => x != null)
                 .OrderBy(x => (x - line.Start).VectorMagnitude())
@@ -168,7 +168,7 @@ namespace CBRE.DataStructures.MapObjects {
                     break;
                 }
             }
-            front.Faces.Union(back.Faces).ToList().ForEach(x => x.CalculateTextureCoordinates(true));
+            front.Faces.Union(back.Faces).ToList().ForEach(x => x.CalculateTextureVector3s(true));
 
             return true;
         }
@@ -217,9 +217,9 @@ namespace CBRE.DataStructures.MapObjects {
                    && Faces.All(x => x.IsConvex()); // Check all faces are convex
         }
 
-        public Coordinate GetOrigin() {
+        public Vector3 GetOrigin() {
             var points = Faces.SelectMany(x => x.Vertices.Select(y => y.Location)).ToList();
-            var origin = points.Aggregate(Coordinate.Zero, (x, y) => x + y) / points.Count;
+            var origin = points.Aggregate(Vector3.Zero, (x, y) => x + y) / points.Count;
             return origin;
         }
     }

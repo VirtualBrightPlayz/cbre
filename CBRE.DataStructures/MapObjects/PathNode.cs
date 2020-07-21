@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 namespace CBRE.DataStructures.MapObjects {
     [Serializable]
     public class PathNode : ISerializable {
-        public Coordinate Position { get; set; }
+        public Vector3 Position { get; set; }
         public int ID { get; set; }
         public string Name { get; set; }
         public List<Property> Properties { get; private set; }
@@ -18,7 +18,7 @@ namespace CBRE.DataStructures.MapObjects {
         }
 
         protected PathNode(SerializationInfo info, StreamingContext context) {
-            Position = (Coordinate)info.GetValue("Position", typeof(Coordinate));
+            Position = (Vector3)info.GetValue("Position", typeof(Vector3));
             ID = info.GetInt32("ID");
             Name = info.GetString("Name");
             Properties = ((Property[])info.GetValue("Properties", typeof(Property[]))).ToList();

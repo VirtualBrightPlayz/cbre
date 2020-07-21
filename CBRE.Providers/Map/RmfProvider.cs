@@ -101,8 +101,8 @@ namespace CBRE.Providers.Map {
             var num = br.ReadInt32();
             for (var i = 0; i < num; i++) {
                 yield return new Camera {
-                    EyePosition = br.ReadCoordinate(),
-                    LookPosition = br.ReadCoordinate()
+                    EyePosition = br.ReadVector3(),
+                    LookPosition = br.ReadVector3()
                 };
             }
         }
@@ -110,8 +110,8 @@ namespace CBRE.Providers.Map {
         public static void WriteCameras(BinaryWriter bw, List<Camera> cameras) {
             bw.Write(cameras.Count);
             foreach (var camera in cameras) {
-                bw.WriteCoordinate(camera.EyePosition);
-                bw.WriteCoordinate(camera.LookPosition);
+                bw.WriteVector3(camera.EyePosition);
+                bw.WriteVector3(camera.LookPosition);
             }
         }
 
@@ -206,7 +206,7 @@ namespace CBRE.Providers.Map {
             ReadMapBase(br, ent, visgroups, generator);
             ent.EntityData = ReadEntityData(br);
             br.ReadBytes(2); // Unused
-            ent.Origin = br.ReadCoordinate();
+            ent.Origin = br.ReadVector3();
             br.ReadBytes(4); // Unused
             ent.UpdateBoundingBox(false);
             return ent;
@@ -217,7 +217,7 @@ namespace CBRE.Providers.Map {
             WriteMapBase(bw, ent);
             WriteEntityData(bw, ent.EntityData);
             bw.Write(new byte[2]); // Unused
-            bw.WriteCoordinate(ent.Origin);
+            bw.WriteVector3(ent.Origin);
             bw.Write(new byte[4]); // Unused
         }
 
@@ -226,9 +226,9 @@ namespace CBRE.Providers.Map {
             var textureName = br.ReadFixedLengthString(Encoding.UTF8, 256);
             br.ReadBytes(4); // Unused
             face.Texture.Name = textureName;
-            face.Texture.UAxis = br.ReadCoordinate();
+            face.Texture.UAxis = br.ReadVector3();
             face.Texture.XShift = br.ReadSingleAsDecimal();
-            face.Texture.VAxis = br.ReadCoordinate();
+            face.Texture.VAxis = br.ReadVector3();
             face.Texture.YShift = br.ReadSingleAsDecimal();
             face.Texture.Rotation = br.ReadSingleAsDecimal();
             face.Texture.XScale = br.ReadSingleAsDecimal();
@@ -236,7 +236,7 @@ namespace CBRE.Providers.Map {
             br.ReadBytes(16); // Unused
             var numVerts = br.ReadInt32();
             for (var i = 0; i < numVerts; i++) {
-                face.Vertices.Add(new Vertex(br.ReadCoordinate(), face));
+                face.Vertices.Add(new Vertex(br.ReadVector3(), face));
             }
             face.Plane = br.ReadPlane();
             face.UpdateBoundingBox();
@@ -246,9 +246,9 @@ namespace CBRE.Providers.Map {
         private static void WriteFace(BinaryWriter bw, Face face) {
             bw.WriteFixedLengthString(Encoding.UTF8, 256, face.Texture.Name);
             bw.Write(new byte[4]);
-            bw.WriteCoordinate(face.Texture.UAxis);
+            bw.WriteVector3(face.Texture.UAxis);
             bw.WriteDecimalAsSingle(face.Texture.XShift);
-            bw.WriteCoordinate(face.Texture.VAxis);
+            bw.WriteVector3(face.Texture.VAxis);
             bw.WriteDecimalAsSingle(face.Texture.YShift);
             bw.WriteDecimalAsSingle(face.Texture.Rotation);
             bw.WriteDecimalAsSingle(face.Texture.XScale);
@@ -256,7 +256,7 @@ namespace CBRE.Providers.Map {
             bw.Write(new byte[16]);
             bw.Write(face.Vertices.Count);
             foreach (var vertex in face.Vertices) {
-                bw.WriteCoordinate(vertex.Location);
+                bw.WriteVector3(vertex.Location);
             }
             bw.WritePlane(face.Vertices.Select(v => v.Location).ToArray());
         }
@@ -298,7 +298,7 @@ namespace CBRE.Providers.Map {
 
         private static PathNode ReadPathNode(BinaryReader br) {
             var node = new PathNode {
-                Position = br.ReadCoordinate(),
+                Position = br.ReadVector3(),
                 ID = br.ReadInt32(),
                 Name = br.ReadFixedLengthString(Encoding.UTF8, 128)
             };
@@ -310,7 +310,7 @@ namespace CBRE.Providers.Map {
         }
 
         private static void WritePathNode(BinaryWriter bw, PathNode node) {
-            bw.WriteCoordinate(node.Position);
+            bw.WriteVector3(node.Position);
             bw.Write(node.ID);
             bw.WriteFixedLengthString(Encoding.UTF8, 128, node.Name);
             bw.Write(node.Properties.Count);

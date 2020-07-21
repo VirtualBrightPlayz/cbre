@@ -7,11 +7,11 @@ using System.Runtime.Serialization;
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
     public class BoxF : ISerializable {
-        public readonly static BoxF Empty = new BoxF(CoordinateF.Zero, CoordinateF.Zero);
+        public readonly static BoxF Empty = new BoxF(Vector3F.Zero, Vector3F.Zero);
 
-        public CoordinateF Start { get; private set; }
-        public CoordinateF End { get; private set; }
-        public CoordinateF Center { get; private set; }
+        public Vector3F Start { get; private set; }
+        public Vector3F End { get; private set; }
+        public Vector3F Center { get; private set; }
 
         /// <summary>
         /// The X value difference of this box
@@ -34,22 +34,22 @@ namespace CBRE.DataStructures.Geometric {
             get { return End.Z - Start.Z; }
         }
 
-        public CoordinateF Dimensions {
-            get { return new CoordinateF(Width, Length, Height); }
+        public Vector3F Dimensions {
+            get { return new Vector3F(Width, Length, Height); }
         }
 
-        public BoxF(CoordinateF start, CoordinateF end) {
+        public BoxF(Vector3F start, Vector3F end) {
             Start = start;
             End = end;
             Center = (Start + End) / 2;
         }
 
-        public BoxF(IEnumerable<CoordinateF> coordinates) {
+        public BoxF(IEnumerable<Vector3F> coordinates) {
             if (!coordinates.Any()) {
                 throw new Exception("Cannot create a bounding box out of zero coordinates.");
             }
-            var min = new CoordinateF(float.MaxValue, float.MaxValue, float.MaxValue);
-            var max = new CoordinateF(float.MinValue, float.MinValue, float.MinValue);
+            var min = new Vector3F(float.MaxValue, float.MaxValue, float.MaxValue);
+            var max = new Vector3F(float.MinValue, float.MinValue, float.MinValue);
             foreach (var vertex in coordinates) {
                 min.X = Math.Min(vertex.X, min.X);
                 min.Y = Math.Min(vertex.Y, min.Y);
@@ -67,8 +67,8 @@ namespace CBRE.DataStructures.Geometric {
             if (!boxes.Any()) {
                 throw new Exception("Cannot create a bounding box out of zero other boxes.");
             }
-            var min = new CoordinateF(float.MaxValue, float.MaxValue, float.MaxValue);
-            var max = new CoordinateF(float.MinValue, float.MinValue, float.MinValue);
+            var min = new Vector3F(float.MaxValue, float.MaxValue, float.MaxValue);
+            var max = new Vector3F(float.MinValue, float.MinValue, float.MinValue);
             foreach (var box in boxes) {
                 min.X = Math.Min(box.Start.X, min.X);
                 min.Y = Math.Min(box.Start.Y, min.Y);
@@ -83,8 +83,8 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         protected BoxF(SerializationInfo info, StreamingContext context) {
-            Start = (CoordinateF)info.GetValue("Start", typeof(CoordinateF));
-            End = (CoordinateF)info.GetValue("End", typeof(CoordinateF));
+            Start = (Vector3F)info.GetValue("Start", typeof(Vector3F));
+            End = (Vector3F)info.GetValue("End", typeof(Vector3F));
             Center = (Start + End) / 2;
         }
 
@@ -96,16 +96,16 @@ namespace CBRE.DataStructures.Geometric {
         public bool IsEmpty() {
             return Width == 0 && Height == 0 && Length == 0;
         }
-        public IEnumerable<CoordinateF> GetBoxPoints() {
-            yield return new CoordinateF(Start.X, End.Y, End.Z);
+        public IEnumerable<Vector3F> GetBoxPoints() {
+            yield return new Vector3F(Start.X, End.Y, End.Z);
             yield return End.Clone();
-            yield return new CoordinateF(Start.X, Start.Y, End.Z);
-            yield return new CoordinateF(End.X, Start.Y, End.Z);
+            yield return new Vector3F(Start.X, Start.Y, End.Z);
+            yield return new Vector3F(End.X, Start.Y, End.Z);
 
-            yield return new CoordinateF(Start.X, End.Y, Start.Z);
-            yield return new CoordinateF(End.X, End.Y, Start.Z);
+            yield return new Vector3F(Start.X, End.Y, Start.Z);
+            yield return new Vector3F(End.X, End.Y, Start.Z);
             yield return Start.Clone();
-            yield return new CoordinateF(End.X, Start.Y, Start.Z);
+            yield return new Vector3F(End.X, Start.Y, Start.Z);
         }
 
         public PlaneF[] GetBoxPlanes() {
@@ -117,16 +117,16 @@ namespace CBRE.DataStructures.Geometric {
             return planes;
         }
 
-        public CoordinateF[][] GetBoxFaces() {
-            var topLeftBack = new CoordinateF(Start.X, End.Y, End.Z);
+        public Vector3F[][] GetBoxFaces() {
+            var topLeftBack = new Vector3F(Start.X, End.Y, End.Z);
             var topRightBack = End.Clone();
-            var topLeftFront = new CoordinateF(Start.X, Start.Y, End.Z);
-            var topRightFront = new CoordinateF(End.X, Start.Y, End.Z);
+            var topLeftFront = new Vector3F(Start.X, Start.Y, End.Z);
+            var topRightFront = new Vector3F(End.X, Start.Y, End.Z);
 
-            var bottomLeftBack = new CoordinateF(Start.X, End.Y, Start.Z);
-            var bottomRightBack = new CoordinateF(End.X, End.Y, Start.Z);
+            var bottomLeftBack = new Vector3F(Start.X, End.Y, Start.Z);
+            var bottomRightBack = new Vector3F(End.X, End.Y, Start.Z);
             var bottomLeftFront = Start.Clone();
-            var bottomRightFront = new CoordinateF(End.X, Start.Y, Start.Z);
+            var bottomRightFront = new Vector3F(End.X, Start.Y, Start.Z);
             return new[]
                        {
                            new[] {topLeftFront, topRightFront, bottomRightFront, bottomLeftFront},
@@ -139,15 +139,15 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public IEnumerable<LineF> GetBoxLines() {
-            var topLeftBack = new CoordinateF(Start.X, End.Y, End.Z);
+            var topLeftBack = new Vector3F(Start.X, End.Y, End.Z);
             var topRightBack = End.Clone();
-            var topLeftFront = new CoordinateF(Start.X, Start.Y, End.Z);
-            var topRightFront = new CoordinateF(End.X, Start.Y, End.Z);
+            var topLeftFront = new Vector3F(Start.X, Start.Y, End.Z);
+            var topRightFront = new Vector3F(End.X, Start.Y, End.Z);
 
-            var bottomLeftBack = new CoordinateF(Start.X, End.Y, Start.Z);
-            var bottomRightBack = new CoordinateF(End.X, End.Y, Start.Z);
+            var bottomLeftBack = new Vector3F(Start.X, End.Y, Start.Z);
+            var bottomRightBack = new Vector3F(End.X, End.Y, Start.Z);
             var bottomLeftFront = Start.Clone();
-            var bottomRightFront = new CoordinateF(End.X, Start.Y, Start.Z);
+            var bottomRightFront = new Vector3F(End.X, Start.Y, Start.Z);
 
             yield return new LineF(topLeftBack, topRightBack);
             yield return new LineF(topLeftFront, topRightFront);
@@ -236,7 +236,7 @@ namespace CBRE.DataStructures.Geometric {
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
-        public bool CoordinateIsInside(CoordinateF c) {
+        public bool Vector3IsInside(Vector3F c) {
             return c.X >= Start.X && c.Y >= Start.Y && c.Z >= Start.Z
                    && c.X <= End.X && c.Y <= End.Y && c.Z <= End.Z;
         }

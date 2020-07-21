@@ -5,21 +5,21 @@ using System.Runtime.Serialization;
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
     public class Line : ISerializable {
-        public Coordinate Start { get; set; }
-        public Coordinate End { get; set; }
+        public Vector3 Start { get; set; }
+        public Vector3 End { get; set; }
 
-        public readonly static Line AxisX = new Line(Coordinate.Zero, Coordinate.UnitX);
-        public readonly static Line AxisY = new Line(Coordinate.Zero, Coordinate.UnitY);
-        public static readonly Line AxisZ = new Line(Coordinate.Zero, Coordinate.UnitZ);
+        public readonly static Line AxisX = new Line(Vector3.Zero, Vector3.UnitX);
+        public readonly static Line AxisY = new Line(Vector3.Zero, Vector3.UnitY);
+        public static readonly Line AxisZ = new Line(Vector3.Zero, Vector3.UnitZ);
 
-        public Line(Coordinate start, Coordinate end) {
+        public Line(Vector3 start, Vector3 end) {
             Start = start;
             End = end;
         }
 
         protected Line(SerializationInfo info, StreamingContext context) {
-            Start = (Coordinate)info.GetValue("Start", typeof(Coordinate));
-            End = (Coordinate)info.GetValue("End", typeof(Coordinate));
+            Start = (Vector3)info.GetValue("Start", typeof(Vector3));
+            End = (Vector3)info.GetValue("End", typeof(Vector3));
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context) {
@@ -31,7 +31,7 @@ namespace CBRE.DataStructures.Geometric {
             return new Line(End, Start);
         }
 
-        public Coordinate ClosestPoint(Coordinate point) {
+        public Vector3 ClosestPoint(Vector3 point) {
             // http://paulbourke.net/geometry/pointline/
 
             var delta = End - Start;

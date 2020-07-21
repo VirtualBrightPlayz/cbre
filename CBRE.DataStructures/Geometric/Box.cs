@@ -7,11 +7,11 @@ using System.Runtime.Serialization;
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
     public class Box : ISerializable {
-        public readonly static Box Empty = new Box(Coordinate.Zero, Coordinate.Zero);
+        public readonly static Box Empty = new Box(Vector3.Zero, Vector3.Zero);
 
-        public Coordinate Start { get; private set; }
-        public Coordinate End { get; private set; }
-        public Coordinate Center { get; private set; }
+        public Vector3 Start { get; private set; }
+        public Vector3 End { get; private set; }
+        public Vector3 Center { get; private set; }
 
         /// <summary>
         /// The X value difference of this box
@@ -34,22 +34,22 @@ namespace CBRE.DataStructures.Geometric {
             get { return End.Z - Start.Z; }
         }
 
-        public Coordinate Dimensions {
-            get { return new Coordinate(Width, Length, Height); }
+        public Vector3 Dimensions {
+            get { return new Vector3(Width, Length, Height); }
         }
 
-        public Box(Coordinate start, Coordinate end) {
+        public Box(Vector3 start, Vector3 end) {
             Start = start;
             End = end;
             Center = (Start + End) / 2;
         }
 
-        public Box(IEnumerable<Coordinate> coordinates) {
+        public Box(IEnumerable<Vector3> coordinates) {
             if (!coordinates.Any()) {
                 throw new Exception("Cannot create a bounding box out of zero coordinates.");
             }
-            var min = new Coordinate(decimal.MaxValue, decimal.MaxValue, decimal.MaxValue);
-            var max = new Coordinate(decimal.MinValue, decimal.MinValue, decimal.MinValue);
+            var min = new Vector3(decimal.MaxValue, decimal.MaxValue, decimal.MaxValue);
+            var max = new Vector3(decimal.MinValue, decimal.MinValue, decimal.MinValue);
             foreach (var vertex in coordinates) {
                 min.X = Math.Min(vertex.X, min.X);
                 min.Y = Math.Min(vertex.Y, min.Y);
@@ -67,8 +67,8 @@ namespace CBRE.DataStructures.Geometric {
             if (!boxes.Any()) {
                 throw new Exception("Cannot create a bounding box out of zero other boxes.");
             }
-            var min = new Coordinate(decimal.MaxValue, decimal.MaxValue, decimal.MaxValue);
-            var max = new Coordinate(decimal.MinValue, decimal.MinValue, decimal.MinValue);
+            var min = new Vector3(decimal.MaxValue, decimal.MaxValue, decimal.MaxValue);
+            var max = new Vector3(decimal.MinValue, decimal.MinValue, decimal.MinValue);
             foreach (var box in boxes) {
                 min.X = Math.Min(box.Start.X, min.X);
                 min.Y = Math.Min(box.Start.Y, min.Y);
@@ -83,8 +83,8 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         protected Box(SerializationInfo info, StreamingContext context) {
-            Start = (Coordinate)info.GetValue("Start", typeof(Coordinate));
-            End = (Coordinate)info.GetValue("End", typeof(Coordinate));
+            Start = (Vector3)info.GetValue("Start", typeof(Vector3));
+            End = (Vector3)info.GetValue("End", typeof(Vector3));
             Center = (Start + End) / 2;
         }
 
@@ -96,16 +96,16 @@ namespace CBRE.DataStructures.Geometric {
         public bool IsEmpty() {
             return Width == 0 && Height == 0 && Length == 0;
         }
-        public IEnumerable<Coordinate> GetBoxPoints() {
-            yield return new Coordinate(Start.X, End.Y, End.Z);
+        public IEnumerable<Vector3> GetBoxPoints() {
+            yield return new Vector3(Start.X, End.Y, End.Z);
             yield return End.Clone();
-            yield return new Coordinate(Start.X, Start.Y, End.Z);
-            yield return new Coordinate(End.X, Start.Y, End.Z);
+            yield return new Vector3(Start.X, Start.Y, End.Z);
+            yield return new Vector3(End.X, Start.Y, End.Z);
 
-            yield return new Coordinate(Start.X, End.Y, Start.Z);
-            yield return new Coordinate(End.X, End.Y, Start.Z);
+            yield return new Vector3(Start.X, End.Y, Start.Z);
+            yield return new Vector3(End.X, End.Y, Start.Z);
             yield return Start.Clone();
-            yield return new Coordinate(End.X, Start.Y, Start.Z);
+            yield return new Vector3(End.X, Start.Y, Start.Z);
         }
 
         public Plane[] GetBoxPlanes() {
@@ -117,16 +117,16 @@ namespace CBRE.DataStructures.Geometric {
             return planes;
         }
 
-        public Coordinate[][] GetBoxFaces() {
-            var topLeftBack = new Coordinate(Start.X, End.Y, End.Z);
+        public Vector3[][] GetBoxFaces() {
+            var topLeftBack = new Vector3(Start.X, End.Y, End.Z);
             var topRightBack = End.Clone();
-            var topLeftFront = new Coordinate(Start.X, Start.Y, End.Z);
-            var topRightFront = new Coordinate(End.X, Start.Y, End.Z);
+            var topLeftFront = new Vector3(Start.X, Start.Y, End.Z);
+            var topRightFront = new Vector3(End.X, Start.Y, End.Z);
 
-            var bottomLeftBack = new Coordinate(Start.X, End.Y, Start.Z);
-            var bottomRightBack = new Coordinate(End.X, End.Y, Start.Z);
+            var bottomLeftBack = new Vector3(Start.X, End.Y, Start.Z);
+            var bottomRightBack = new Vector3(End.X, End.Y, Start.Z);
             var bottomLeftFront = Start.Clone();
-            var bottomRightFront = new Coordinate(End.X, Start.Y, Start.Z);
+            var bottomRightFront = new Vector3(End.X, Start.Y, Start.Z);
             return new[]
                        {
                            new[] {topLeftFront, topRightFront, bottomRightFront, bottomLeftFront},
@@ -139,15 +139,15 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public IEnumerable<Line> GetBoxLines() {
-            var topLeftBack = new Coordinate(Start.X, End.Y, End.Z);
+            var topLeftBack = new Vector3(Start.X, End.Y, End.Z);
             var topRightBack = End.Clone();
-            var topLeftFront = new Coordinate(Start.X, Start.Y, End.Z);
-            var topRightFront = new Coordinate(End.X, Start.Y, End.Z);
+            var topLeftFront = new Vector3(Start.X, Start.Y, End.Z);
+            var topRightFront = new Vector3(End.X, Start.Y, End.Z);
 
-            var bottomLeftBack = new Coordinate(Start.X, End.Y, Start.Z);
-            var bottomRightBack = new Coordinate(End.X, End.Y, Start.Z);
+            var bottomLeftBack = new Vector3(Start.X, End.Y, Start.Z);
+            var bottomRightBack = new Vector3(End.X, End.Y, Start.Z);
             var bottomLeftFront = Start.Clone();
-            var bottomRightFront = new Coordinate(End.X, Start.Y, Start.Z);
+            var bottomRightFront = new Vector3(End.X, Start.Y, Start.Z);
 
             yield return new Line(topLeftBack, topRightBack);
             yield return new Line(topLeftFront, topRightFront);
@@ -236,7 +236,7 @@ namespace CBRE.DataStructures.Geometric {
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
-        public bool CoordinateIsInside(Coordinate c) {
+        public bool Vector3IsInside(Vector3 c) {
             return c.X >= Start.X && c.Y >= Start.Y && c.Z >= Start.Z
                    && c.X <= End.X && c.Y <= End.Y && c.Z <= End.Z;
         }

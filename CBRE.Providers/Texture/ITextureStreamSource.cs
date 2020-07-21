@@ -4,14 +4,8 @@ using System.Drawing;
 using System.Linq;
 
 namespace CBRE.Providers.Texture {
-    public class BitmapRef {
-        public BitmapRef(Bitmap bmp) { Bitmap = bmp; }
-        public Bitmap Bitmap { get; private set; }
-    }
-
     public interface ITextureStreamSource : IDisposable {
         bool HasImage(TextureItem item);
-        BitmapRef GetImage(TextureItem item);
     }
 
     public class MultiTextureStreamSource : ITextureStreamSource {
@@ -23,13 +17,6 @@ namespace CBRE.Providers.Texture {
 
         public bool HasImage(TextureItem item) {
             return _streams.Any(x => x.HasImage(item));
-        }
-
-        public BitmapRef GetImage(TextureItem item) {
-            foreach (var ss in _streams) {
-                if (ss.HasImage(item)) return ss.GetImage(item);
-            }
-            return null;
         }
 
         public void Dispose() {

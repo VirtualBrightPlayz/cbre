@@ -9,8 +9,6 @@ using System.Reflection;
 
 namespace CBRE.Settings {
     public static class SettingsManager {
-        public static Build Build { get; private set; }
-        public static Game Game { get; private set; }
         public static List<RecentFile> RecentFiles { get; set; }
         public static List<Setting> Settings { get; set; }
         public static List<Hotkey> Hotkeys { get; set; }
@@ -20,21 +18,12 @@ namespace CBRE.Settings {
         public static string SettingsFile { get; set; }
 
         static SettingsManager() {
-            Build = new Build();
-            Game = new Game();
             RecentFiles = new List<RecentFile>();
             Settings = new List<Setting>();
             Hotkeys = new List<Hotkey>();
             SpecialTextureOpacities = new Dictionary<string, float>
                                           {
                                               {"null", 0},
-                                              {"bevel", 0},
-                                              {"tools/toolsnodraw", 0},
-                                              {"aaatrigger", 0.5f},
-                                              {"clip", 0.5f},
-                                              {"hint", 0.5f},
-                                              {"origin", 0.5f},
-                                              {"skip", 0.5f},
                                               {"tooltextures/remove_face", 0.5f},
                                               {"tooltextures/invisible_collision", 0.5f},
                                               {"tooltextures/block_light", 0.5f},
@@ -208,8 +197,8 @@ namespace CBRE.Settings {
             return Path.Combine(sledge, "session");
         }
 
-        public static void SaveSession(IEnumerable<Tuple<string, Game>> files) {
-            File.WriteAllLines(GetSessionFile(), files.Select(x => x.Item1 + ":" + x.Item2.ID));
+        public static void SaveSession(IEnumerable<string> files) {
+            File.WriteAllLines(GetSessionFile(), files);
         }
 
         public static IEnumerable<string> LoadSession() {

@@ -6,8 +6,6 @@ namespace CBRE.Common {
         string Name { get; }
         int Width { get; }
         int Height { get; }
-        void Bind();
-        void Unbind();
     }
 
     public static class TextureExtensions {

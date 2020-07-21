@@ -44,53 +44,53 @@ namespace CBRE.UI {
             }
         }
 
-        private static Coordinate Flatten(Coordinate c, ViewDirection direction) {
+        private static Vector3 Flatten(Vector3 c, ViewDirection direction) {
             switch (direction) {
                 case ViewDirection.Top:
-                    return new Coordinate(c.X, c.Y, 0);
+                    return new Vector3(c.X, c.Y, 0);
                 case ViewDirection.Front:
-                    return new Coordinate(c.Y, c.Z, 0);
+                    return new Vector3(c.Y, c.Z, 0);
                 case ViewDirection.Side:
-                    return new Coordinate(c.X, c.Z, 0);
+                    return new Vector3(c.X, c.Z, 0);
                 default:
                     throw new ArgumentOutOfRangeException("direction");
             }
         }
 
-        private static Coordinate Expand(Coordinate c, ViewDirection direction) {
+        private static Vector3 Expand(Vector3 c, ViewDirection direction) {
             switch (direction) {
                 case ViewDirection.Top:
-                    return new Coordinate(c.X, c.Y, 0);
+                    return new Vector3(c.X, c.Y, 0);
                 case ViewDirection.Front:
-                    return new Coordinate(0, c.X, c.Y);
+                    return new Vector3(0, c.X, c.Y);
                 case ViewDirection.Side:
-                    return new Coordinate(c.X, 0, c.Y);
+                    return new Vector3(c.X, 0, c.Y);
                 default:
                     throw new ArgumentOutOfRangeException("direction");
             }
         }
 
-        private static Coordinate GetUnusedCoordinate(Coordinate c, ViewDirection direction) {
+        private static Vector3 GetUnusedVector3(Vector3 c, ViewDirection direction) {
             switch (direction) {
                 case ViewDirection.Top:
-                    return new Coordinate(0, 0, c.Z);
+                    return new Vector3(0, 0, c.Z);
                 case ViewDirection.Front:
-                    return new Coordinate(c.X, 0, 0);
+                    return new Vector3(c.X, 0, 0);
                 case ViewDirection.Side:
-                    return new Coordinate(0, c.Y, 0);
+                    return new Vector3(0, c.Y, 0);
                 default:
                     throw new ArgumentOutOfRangeException("direction");
             }
         }
 
-        private static Coordinate ZeroUnusedCoordinate(Coordinate c, ViewDirection direction) {
+        private static Vector3 ZeroUnusedVector3(Vector3 c, ViewDirection direction) {
             switch (direction) {
                 case ViewDirection.Top:
-                    return new Coordinate(c.X, c.Y, 0);
+                    return new Vector3(c.X, c.Y, 0);
                 case ViewDirection.Front:
-                    return new Coordinate(0, c.Y, c.Z);
+                    return new Vector3(0, c.Y, c.Z);
                 case ViewDirection.Side:
-                    return new Coordinate(c.X, 0, c.Z);
+                    return new Vector3(c.X, 0, c.Z);
                 default:
                     throw new ArgumentOutOfRangeException("direction");
             }
@@ -98,8 +98,8 @@ namespace CBRE.UI {
 
         public ViewDirection Direction { get; set; }
 
-        private Coordinate _position;
-        public Coordinate Position {
+        private Vector3 _position;
+        public Vector3 Position {
             get { return _position; }
             set {
                 var old = _position;
@@ -120,40 +120,40 @@ namespace CBRE.UI {
             }
         }
 
-        private Coordinate CenterScreen { get; set; }
+        private Vector3 CenterScreen { get; set; }
 
         public Viewport2D(ViewDirection direction) {
             Zoom = 1;
-            Position = new Coordinate(0, 0, 0);
+            Position = new Vector3(0, 0, 0);
             Direction = direction;
-            CenterScreen = new Coordinate(Width / 2m, Height / 2m, 0);
+            CenterScreen = new Vector3(Width / 2m, Height / 2m, 0);
         }
 
         public Viewport2D(ViewDirection direction, RenderContext context) : base(context) {
             Zoom = 1;
-            Position = new Coordinate(0, 0, 0);
+            Position = new Vector3(0, 0, 0);
             Direction = direction;
-            CenterScreen = new Coordinate(Width / 2m, Height / 2m, 0);
+            CenterScreen = new Vector3(Width / 2m, Height / 2m, 0);
         }
 
-        public override void FocusOn(Coordinate coordinate) {
+        public override void FocusOn(Vector3 coordinate) {
             Position = Flatten(coordinate);
         }
 
-        public Coordinate Flatten(Coordinate c) {
+        public Vector3 Flatten(Vector3 c) {
             return Flatten(c, Direction);
         }
 
-        public Coordinate Expand(Coordinate c) {
+        public Vector3 Expand(Vector3 c) {
             return Expand(c, Direction);
         }
 
-        public Coordinate GetUnusedCoordinate(Coordinate c) {
-            return GetUnusedCoordinate(c, Direction);
+        public Vector3 GetUnusedVector3(Vector3 c) {
+            return GetUnusedVector3(c, Direction);
         }
 
-        public Coordinate ZeroUnusedCoordinate(Coordinate c) {
-            return ZeroUnusedCoordinate(c, Direction);
+        public Vector3 ZeroUnusedVector3(Vector3 c) {
+            return ZeroUnusedVector3(c, Direction);
         }
 
         public override void SetViewport() {
@@ -178,23 +178,23 @@ namespace CBRE.UI {
         }
 
         protected override void OnResize(EventArgs e) {
-            CenterScreen = new Coordinate(Width / 2m, Height / 2m, 0);
+            CenterScreen = new Vector3(Width / 2m, Height / 2m, 0);
             base.OnResize(e);
         }
 
-        public Coordinate ScreenToWorld(Point location) {
+        public Vector3 ScreenToWorld(Point location) {
             return ScreenToWorld(location.X, location.Y);
         }
 
-        public Coordinate ScreenToWorld(decimal x, decimal y) {
-            return ScreenToWorld(new Coordinate(x, y, 0));
+        public Vector3 ScreenToWorld(decimal x, decimal y) {
+            return ScreenToWorld(new Vector3(x, y, 0));
         }
 
-        public Coordinate ScreenToWorld(Coordinate location) {
+        public Vector3 ScreenToWorld(Vector3 location) {
             return Position + ((location - CenterScreen) / Zoom);
         }
 
-        public Coordinate WorldToScreen(Coordinate location) {
+        public Vector3 WorldToScreen(Vector3 location) {
             return CenterScreen + ((location - Position) * Zoom);
         }
 

@@ -536,8 +536,8 @@ namespace CBRE.DataStructures.Geometric {
         /// <param name="a">First input Vector.</param>
         /// <param name="b">Second input Vector.</param>
         /// <param name="c">Third input Vector.</param>
-        /// <param name="u">First Barycentric Coordinate.</param>
-        /// <param name="v">Second Barycentric Coordinate.</param>
+        /// <param name="u">First Barycentric Vector3.</param>
+        /// <param name="v">Second Barycentric Vector3.</param>
         /// <returns>a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c otherwise.</returns>
         [Pure]
         public static Vector2d BaryCentric(Vector2d a, Vector2d b, Vector2d c, decimal u, decimal v) {
@@ -551,8 +551,8 @@ namespace CBRE.DataStructures.Geometric {
         /// <param name="a">First input Vector.</param>
         /// <param name="b">Second input Vector.</param>
         /// <param name="c">Third input Vector.</param>
-        /// <param name="u">First Barycentric Coordinate.</param>
-        /// <param name="v">Second Barycentric Coordinate.</param>
+        /// <param name="u">First Barycentric Vector3.</param>
+        /// <param name="v">Second Barycentric Vector3.</param>
         /// <param name="result">
         /// Output Vector. a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c
         /// otherwise.

@@ -5,21 +5,21 @@ using System.Runtime.Serialization;
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
     public class LineF : ISerializable {
-        public CoordinateF Start { get; set; }
-        public CoordinateF End { get; set; }
+        public Vector3F Start { get; set; }
+        public Vector3F End { get; set; }
 
-        public readonly static LineF AxisX = new LineF(CoordinateF.Zero, CoordinateF.UnitX);
-        public readonly static LineF AxisY = new LineF(CoordinateF.Zero, CoordinateF.UnitY);
-        public static readonly LineF AxisZ = new LineF(CoordinateF.Zero, CoordinateF.UnitZ);
+        public readonly static LineF AxisX = new LineF(Vector3F.Zero, Vector3F.UnitX);
+        public readonly static LineF AxisY = new LineF(Vector3F.Zero, Vector3F.UnitY);
+        public static readonly LineF AxisZ = new LineF(Vector3F.Zero, Vector3F.UnitZ);
 
-        public LineF(CoordinateF start, CoordinateF end) {
+        public LineF(Vector3F start, Vector3F end) {
             Start = start;
             End = end;
         }
 
         protected LineF(SerializationInfo info, StreamingContext context) {
-            Start = (CoordinateF)info.GetValue("Start", typeof(CoordinateF));
-            End = (CoordinateF)info.GetValue("End", typeof(CoordinateF));
+            Start = (Vector3F)info.GetValue("Start", typeof(Vector3F));
+            End = (Vector3F)info.GetValue("End", typeof(Vector3F));
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context) {
@@ -31,7 +31,7 @@ namespace CBRE.DataStructures.Geometric {
             return new LineF(End, Start);
         }
 
-        public CoordinateF ClosestPoint(CoordinateF point) {
+        public Vector3F ClosestPoint(Vector3F point) {
             // http://paulbourke.net/geometry/pointline/
 
             var delta = End - Start;
