@@ -798,7 +798,7 @@ namespace Assimp
     public enum TextureMapping
     {
         /// <summary>
-        /// Vector3s are taken from the an existing UV channel.
+        /// Coordinates are taken from the an existing UV channel.
         /// <para>
         /// The AI_MATKEY_UVWSRC key specifies from the UV channel the texture coordinates
         /// are to be taken from since meshes can have more than one UV channel.

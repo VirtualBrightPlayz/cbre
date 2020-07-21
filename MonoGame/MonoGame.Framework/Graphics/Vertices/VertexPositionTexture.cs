@@ -6,12 +6,12 @@ namespace Microsoft.Xna.Framework.Graphics
     public struct VertexPositionTexture : IVertexType
     {
         public Vector3 Position;
-        public Vector2 TextureVector3;
+        public Vector2 TextureCoordinate;
         public static readonly VertexDeclaration VertexDeclaration;
-        public VertexPositionTexture(Vector3 position, Vector2 textureVector3)
+        public VertexPositionTexture(Vector3 position, Vector2 textureCoordinate)
         {
             this.Position = position;
-            this.TextureVector3 = textureVector3;
+            this.TextureCoordinate = textureCoordinate;
         }
 
         VertexDeclaration IVertexType.VertexDeclaration
@@ -26,18 +26,18 @@ namespace Microsoft.Xna.Framework.Graphics
         {
             unchecked
             {
-                return (Position.GetHashCode() * 397) ^ TextureVector3.GetHashCode();
+                return (Position.GetHashCode() * 397) ^ TextureCoordinate.GetHashCode();
             }
         }
 
         public override string ToString()
         {
-            return "{{Position:" + this.Position + " TextureVector3:" + this.TextureVector3 + "}}";
+            return "{{Position:" + this.Position + " TextureCoordinate:" + this.TextureCoordinate + "}}";
         }
 
         public static bool operator ==(VertexPositionTexture left, VertexPositionTexture right)
         {
-            return ((left.Position == right.Position) && (left.TextureVector3 == right.TextureVector3));
+            return ((left.Position == right.Position) && (left.TextureCoordinate == right.TextureCoordinate));
         }
 
         public static bool operator !=(VertexPositionTexture left, VertexPositionTexture right)
@@ -60,7 +60,7 @@ namespace Microsoft.Xna.Framework.Graphics
 
         static VertexPositionTexture()
         {
-            VertexElement[] elements = new VertexElement[] { new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0), new VertexElement(12, VertexElementFormat.Vector2, VertexElementUsage.TextureVector3, 0) };
+            VertexElement[] elements = new VertexElement[] { new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0), new VertexElement(12, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0) };
             VertexDeclaration declaration = new VertexDeclaration(elements);
             VertexDeclaration = declaration;
         }

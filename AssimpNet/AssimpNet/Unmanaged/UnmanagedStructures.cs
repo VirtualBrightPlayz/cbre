@@ -254,7 +254,7 @@ namespace Assimp.Unmanaged
         /// <summary>
         /// aiVector3D*[Max_Value], array of arrays of texture coordinates. Max_Value is defined as <see cref="AiDefines.AI_MAX_NUMBER_OF_TEXTURECOORDS"/>.
         /// </summary>
-        public AiMeshTextureVector3Array TextureCoords;
+        public AiMeshTextureCoordinateArray TextureCoords;
 
         /// <summary>
         /// unsigned int[Max_Value], array of ints denoting the number of components for each set of texture coordinates - UV (2), UVW (3) for example.
@@ -943,7 +943,7 @@ namespace Assimp.Unmanaged
         /// <summary>
         /// aiVector3D*[Max_Value], array of arrays of texture coordinates. Max_Value is defined as <see cref="AiDefines.AI_MAX_NUMBER_OF_TEXTURECOORDS"/>.
         /// </summary>
-        public AiMeshTextureVector3Array TextureCoords;
+        public AiMeshTextureCoordinateArray TextureCoords;
 
         /// <summary>
         /// unsigned int, number of vertices.
@@ -1248,7 +1248,7 @@ namespace Assimp.Unmanaged
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     [CLSCompliant(false)]
-    public unsafe struct AiMeshTextureVector3Array
+    public unsafe struct AiMeshTextureCoordinateArray
     {
         //No fixed size intptrs
         private IntPtr m_ptr0, m_ptr1, m_ptr2, m_ptr3, m_ptr4, m_ptr5, m_ptr6, m_ptr7;

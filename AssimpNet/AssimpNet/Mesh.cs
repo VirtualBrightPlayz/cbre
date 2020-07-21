@@ -247,7 +247,7 @@ namespace Assimp
         /// in the mesh (list is not empty/not null). This can be a value between zero and the maximum texture coordinate count.
         /// Each individual channel should be the size of <see cref="VertexCount"/>.
         /// </summary>
-        public int TextureVector3ChannelCount
+        public int TextureCoordinateChannelCount
         {
             get
             {
@@ -278,7 +278,7 @@ namespace Assimp
         /// Gets the array that contains each texture coordinate channel, by default all are lists of zero (but can be set to null). Each index
         /// in the array corresponds to the texture coordinate channel. The length of the array corresponds to Assimp's maximum UV channel limit.
         /// </summary>
-        public List<Vector3D>[] TextureVector3Channels
+        public List<Vector3D>[] TextureCoordinateChannels
         {
             get
             {
@@ -632,7 +632,7 @@ namespace Assimp
             nativeValue.Bones = IntPtr.Zero;
             nativeValue.Faces = IntPtr.Zero;
             nativeValue.Colors = new AiMeshColorArray();
-            nativeValue.TextureCoords = new AiMeshTextureVector3Array();
+            nativeValue.TextureCoords = new AiMeshTextureCoordinateArray();
             nativeValue.NumUVComponents = new AiMeshUVComponentArray();
             nativeValue.PrimitiveTypes = m_primitiveType;
             nativeValue.MaterialIndex = (uint)m_materialIndex;

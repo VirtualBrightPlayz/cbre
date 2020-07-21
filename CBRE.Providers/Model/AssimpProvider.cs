@@ -49,7 +49,7 @@ namespace CBRE.Providers.Model {
                 assimpVertex = selfMatrix * assimpVertex;
                 var assimpNormal = assimpMesh.Normals[i];
                 assimpNormal = selfMatrix * assimpNormal;
-                var assimpUv = assimpMesh.TextureVector3Channels[0][i];
+                var assimpUv = assimpMesh.TextureCoordinateChannels[0][i];
 
                 vertices.Add(new MeshVertex(new Vector3F(assimpVertex.X, -assimpVertex.Z, assimpVertex.Y),
                                             new Vector3F(assimpNormal.X, -assimpNormal.Z, assimpNormal.Y),
@@ -175,7 +175,7 @@ namespace CBRE.Providers.Model {
                     foreach (Vertex v in face.Vertices) {
                         mesh.Vertices.Add(new Vector3D((float)v.Location.X, (float)v.Location.Z, (float)v.Location.Y));
                         mesh.Normals.Add(new Vector3D((float)face.Plane.Normal.X, (float)face.Plane.Normal.Z, (float)face.Plane.Normal.Y));
-                        mesh.TextureVector3Channels[0].Add(new Vector3D((float)v.TextureU, (float)v.TextureV, 0));
+                        mesh.TextureCoordinateChannels[0].Add(new Vector3D((float)v.TextureU, (float)v.TextureV, 0));
                     }
                     mesh.UVComponentCount[0] = 2;
                     foreach (uint ind in face.GetTriangleIndices()) {
