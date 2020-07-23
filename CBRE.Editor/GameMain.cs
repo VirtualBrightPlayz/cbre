@@ -62,6 +62,7 @@ namespace CBRE.Editor {
 
             InitMenus();
             InitTopBar();
+            InitToolBar();
 
             base.Initialize();
         }
@@ -97,13 +98,17 @@ namespace CBRE.Editor {
                                     ImGuiWindowFlags.NoBringToFrontOnFocus |
                                     ImGuiWindowFlags.NoMove |
                                     ImGuiWindowFlags.NoDecoration |
-                                    ImGuiWindowFlags.MenuBar)) {
+                                    ImGuiWindowFlags.MenuBar |
+                                    ImGuiWindowFlags.NoScrollbar |
+                                    ImGuiWindowFlags.NoScrollWithMouse)) {
                 ImGui.SetWindowPos(new Num.Vector2(-1, 0));
                 ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width + 2, Window.ClientBounds.Height));
 
                 UpdateMenus();
-
                 UpdateTopBar();
+                UpdateToolBar();
+
+                ImGui.End();
             }
         }
 	}
