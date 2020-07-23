@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace CBRE.Graphics {
@@ -92,7 +93,7 @@ namespace CBRE.Graphics {
         /// Creates a pointer to a texture, which can be passed through ImGui calls such as <see cref="ImGui.Image" />. That pointer is then used by ImGui to let us know what texture to draw
         /// </summary>
         public virtual IntPtr BindTexture(Texture2D texture) {
-            var id = new IntPtr(_textureId++);
+            var id = new IntPtr(++_textureId);
 
             _loadedTextures.Add(id, texture);
 
@@ -338,17 +339,11 @@ namespace CBRE.Graphics {
 
                     foreach (var pass in effect.CurrentTechnique.Passes) {
                         pass.Apply();
-
-#pragma warning disable CS0618 // // FNA does not expose an alternative method.
                         _graphicsDevice.DrawIndexedPrimitives(
-                            primitiveType: PrimitiveType.TriangleList,
-                            baseVertex: vtxOffset,
-                            minVertexIndex: 0,
-                            numVertices: cmdList.VtxBuffer.Size,
-                            startIndex: idxOffset,
-                            primitiveCount: (int)drawCmd.ElemCount / 3
-                        );
-#pragma warning restore CS0618
+                            PrimitiveType.TriangleList,
+                            vtxOffset,
+                            idxOffset,
+                            (int)drawCmd.ElemCount / 3);
                     }
 
                     idxOffset += (int)drawCmd.ElemCount;

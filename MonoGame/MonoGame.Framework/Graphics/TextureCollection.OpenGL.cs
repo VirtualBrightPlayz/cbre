@@ -64,7 +64,7 @@ namespace Microsoft.Xna.Framework.Graphics
                     break;
             }
 
-            _dirty = 0;
+            if (_dirty != 0) throw new System.Exception("AAAAA");
         }
     }
 }

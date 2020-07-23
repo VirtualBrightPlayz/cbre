@@ -1,4 +1,4 @@
-// MonoGame - Copyright (C) The MonoGame Team
+﻿// MonoGame - Copyright (C) The MonoGame Team
 // This file is subject to the terms and conditions defined in
 // file 'LICENSE.txt', which is part of this source code package.
 
@@ -35,6 +35,8 @@ namespace Microsoft.Xna.Framework.Graphics
             format.GetGLFormat(GraphicsDevice, out glInternalFormat, out glFormat, out glType);
             Threading.BlockOnUIThread(() =>
             {
+                var prevTexture = GraphicsExtensions.GetBoundTexture2D();
+
                 GenerateGLTextureIfRequired();
                 int w = width;
                 int h = height;
@@ -80,6 +82,9 @@ namespace Microsoft.Xna.Framework.Graphics
                         h = h / 2;
                     ++level;
                 }
+
+                GL.BindTexture(TextureTarget.Texture2D, prevTexture);
+                GraphicsExtensions.CheckGLError();
             });
         }
 
