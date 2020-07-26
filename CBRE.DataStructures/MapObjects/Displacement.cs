@@ -245,7 +245,7 @@ namespace CBRE.DataStructures.MapObjects {
             }
         }
 
-        public override void CalculateTextureVector3s(bool minimizeTextureValues) {
+        public override void CalculateTextureCoordinates(bool minimizeTextureValues) {
             var list = new List<Vertex>();
             foreach (var p in Points) list.Add(p.CurrentPosition);
             list.ForEach(c => c.TextureU = c.TextureV = 0);

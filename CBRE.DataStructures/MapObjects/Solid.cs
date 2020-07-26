@@ -38,7 +38,7 @@ namespace CBRE.DataStructures.MapObjects {
                 f.Parent = e;
                 e.Faces.Add(f);
                 f.UpdateBoundingBox();
-                f.CalculateTextureVector3s(true);
+                f.CalculateTextureCoordinates(true);
             }
             CopyBase(e, generator);
             return e;
@@ -168,7 +168,7 @@ namespace CBRE.DataStructures.MapObjects {
                     break;
                 }
             }
-            front.Faces.Union(back.Faces).ToList().ForEach(x => x.CalculateTextureVector3s(true));
+            front.Faces.Union(back.Faces).ToList().ForEach(x => x.CalculateTextureCoordinates(true));
 
             return true;
         }

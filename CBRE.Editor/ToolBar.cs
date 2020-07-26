@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using CBRE.Editor.Tools;
+using CBRE.Editor.Tools.SelectTool;
+using CBRE.Editor.Tools.TextureTool;
+using CBRE.Editor.Tools.VMTool;
 using CBRE.Graphics;
 using ImGuiNET;
 using Num = System.Numerics;
@@ -12,13 +16,13 @@ namespace CBRE.Editor {
         public void InitToolBar() {
             ToolBarItems = new List<ToolBarItem>();
 
-            ToolBarItems.Add(new ToolBarItem("Select Tool", menuTextures["Tool_Select"]));
-            ToolBarItems.Add(new ToolBarItem("Camera", menuTextures["Tool_Camera"]));
-            ToolBarItems.Add(new ToolBarItem("Entity Tool", menuTextures["Tool_Entity"]));
-            ToolBarItems.Add(new ToolBarItem("Brush Tool", menuTextures["Tool_Brush"]));
-            ToolBarItems.Add(new ToolBarItem("Texture Application Tool", menuTextures["Tool_Texture"]));
-            ToolBarItems.Add(new ToolBarItem("Clip Tool", menuTextures["Tool_Clip"]));
-            ToolBarItems.Add(new ToolBarItem("Vertex Manipulation Tool", menuTextures["Tool_VM"]));
+            ToolBarItems.Add(new ToolBarItem(new SelectTool()));
+            ToolBarItems.Add(new ToolBarItem(new CameraTool()));
+            ToolBarItems.Add(new ToolBarItem(new EntityTool()));
+            ToolBarItems.Add(new ToolBarItem(new BrushTool()));
+            ToolBarItems.Add(new ToolBarItem(new TextureTool()));
+            ToolBarItems.Add(new ToolBarItem(new ClipTool()));
+            ToolBarItems.Add(new ToolBarItem(new VMTool()));
         }
 
         public void UpdateToolBar() {
@@ -38,10 +42,12 @@ namespace CBRE.Editor {
         public class ToolBarItem {
             public string ToolTip;
             public AsyncTexture Texture;
+            public BaseTool Tool;
 
-            public ToolBarItem(string toolTip, AsyncTexture texture) {
-                ToolTip = toolTip;
-                Texture = texture;
+            public ToolBarItem(BaseTool tool) {
+                ToolTip = tool.GetName();
+                Texture = MenuTextures[tool.GetIcon()];
+                Tool = tool;
             }
 
             public virtual void Draw() {

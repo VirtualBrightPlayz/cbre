@@ -13,6 +13,7 @@
     <ProjectReference Include="..\CBRE.Graphics\CBRE.Graphics.csproj" />
     <ProjectReference Include="..\CBRE.Providers\CBRE.Providers.csproj" />
     <ProjectReference Include="..\CBRE.Settings\CBRE.Settings.csproj" />
+    <ProjectReference Include="..\CBRE.UI\CBRE.UI.csproj" />
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 
 namespace CBRE.Settings {
@@ -106,8 +106,8 @@ namespace CBRE.Settings {
         [Description("Center 2D Views on Selection")]
         Center2DViewsOnSelection,
 
-        [Description("Go to Vector3s...")]
-        GoToVector3s,
+        [Description("Go to Coordinates...")]
+        GoToCoordinates,
         [Description("Go to Brush ID...")]
         GoToBrushID,
         [Description("Show Selected Brush ID")]

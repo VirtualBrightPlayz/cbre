@@ -207,7 +207,7 @@ namespace CBRE.DataStructures.MapObjects {
                     s.Faces.ForEach(f => {
                         if (f.Texture.Texture == null) {
                             f.Texture.Texture = textureAccessor(f.Texture.Name.ToLowerInvariant());
-                            f.CalculateTextureVector3s(true);
+                            f.CalculateTextureCoordinates(true);
                         }
                         if (disp && !(f is Displacement)) {
                             f.Opacity = 0;

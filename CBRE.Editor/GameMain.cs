@@ -26,7 +26,7 @@ namespace CBRE.Editor {
             IsMouseVisible = true;
         }
 
-        Dictionary<string, AsyncTexture> menuTextures;
+        public static Dictionary<string, AsyncTexture> MenuTextures;
 
         ImGuiStylePtr ImGuiStyle;
 
@@ -52,11 +52,11 @@ namespace CBRE.Editor {
             var colors = ImGuiStyle.Colors;
             colors[(int)ImGuiCol.FrameBg] = new Num.Vector4(0.05f, 0.05f, 0.07f, 1.0f);
 
-            menuTextures = new Dictionary<string, AsyncTexture>();
+            MenuTextures = new Dictionary<string, AsyncTexture>();
             string[] files = Directory.GetFiles("Resources");
             foreach (string file in files) {
                 if (!Path.GetExtension(file).Equals(".png", StringComparison.OrdinalIgnoreCase)) { continue; }
-                menuTextures.Add(Path.GetFileNameWithoutExtension(file),
+                MenuTextures.Add(Path.GetFileNameWithoutExtension(file),
                     LoadTexture(file));
             }
 

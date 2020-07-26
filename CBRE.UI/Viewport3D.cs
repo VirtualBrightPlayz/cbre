@@ -1,9 +1,6 @@
-﻿using CBRE.DataStructures.Geometric;
-using CBRE.Graphics;
-using CBRE.Graphics.Helpers;
-using OpenTK;
-using OpenTK.Graphics.OpenGL;
-using Matrix = CBRE.Graphics.Helpers.Matrix;
+﻿using System;
+using CBRE.DataStructures.Geometric;
+using CBRE.DataStructures.MapObjects;
 
 namespace CBRE.UI {
     public class Viewport3D : ViewportBase {
@@ -42,15 +39,10 @@ namespace CBRE.UI {
             Camera = new Camera();
         }
 
-        public Viewport3D(ViewType type, RenderContext context) : base(context) {
-            Type = type;
-            Camera = new Camera();
-        }
-
         public override void FocusOn(Box box) {
             var dist = System.Math.Max(System.Math.Max(box.Width, box.Length), box.Height);
-            var normal = Camera.Location - Camera.LookAt;
-            var v = new Vector(new Vector3((decimal)normal.X, (decimal)normal.Y, (decimal)normal.Z), dist);
+            var normal = Camera.EyePosition - Camera.LookPosition;
+            var v = new Vector(new Vector3(normal.X, normal.Y, normal.Z), dist);
             FocusOn(box.Center, new Vector3(v.X, v.Y, v.Z));
         }
 
@@ -60,41 +52,31 @@ namespace CBRE.UI {
 
         public void FocusOn(Vector3 coordinate, Vector3 distance) {
             var pos = coordinate + distance;
-            Camera.Location = new Vector3((float)pos.X, (float)pos.Y, (float)pos.Z);
-            Camera.LookAt = new Vector3((float)coordinate.X, (float)coordinate.Y, (float)coordinate.Z);
+            Camera.EyePosition = new Vector3(pos.X, pos.Y, pos.Z);
+            Camera.LookPosition = new Vector3(coordinate.X, coordinate.Y, coordinate.Z);
         }
 
-        public override Matrix4 GetViewportMatrix() {
+        public override Matrix GetViewportMatrix() {
             const float near = 0.1f;
             var ratio = Width / (float)Height;
             if (ratio <= 0) ratio = 1;
-            return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(Camera.FOV), ratio, near, Camera.ClipDistance);
+            throw new NotImplementedException();
+            //return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(Camera.FOV), ratio, near, Camera.ClipDistance);
         }
 
-        public override Matrix4 GetCameraMatrix() {
-            return Matrix4.LookAt(Camera.Location, Camera.LookAt, Vector3.UnitZ);
-        }
-
-        public override void SetViewport() {
-            base.SetViewport();
-            var fov = Camera == null ? 60 : Camera.FOV;
-            var clip = Camera == null ? 6000 : Camera.ClipDistance;
-            Viewport.Perspective(0, 0, Width, Height, fov, 0.1f, clip);
+        public override Matrix GetCameraMatrix() {
+            throw new NotImplementedException();
+            //return Matrix4.LookAt(Camera.Location, Camera.LookAt, Vector3.UnitZ);
         }
 
         protected override void UpdateBeforeClearViewport() {
-            Camera.Position();
+            throw new NotImplementedException();
             base.UpdateBeforeClearViewport();
         }
 
         protected override void UpdateAfterRender() {
             base.UpdateAfterRender();
-            Listeners.ForEach(x => x.Render3D());
-
-            Matrix.Set(MatrixMode.Modelview);
-            Matrix.Identity();
-            Viewport.Orthographic(0, 0, Width, Height);
-            Listeners.ForEach(x => x.Render2D());
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -106,12 +88,14 @@ namespace CBRE.UI {
         public Vector3 ScreenToWorld(Vector3 screen) {
             screen = new Vector3(screen.X, screen.Y, 1);
             var viewport = new[] { 0, 0, Width, Height };
+            throw new NotImplementedException();
+            /*
             var pm = Matrix4d.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(Camera.FOV), Width / (float)Height, 0.1f, 50000);
             var vm = Matrix4d.LookAt(
                 new Vector3d(Camera.Location.X, Camera.Location.Y, Camera.Location.Z),
                 new Vector3d(Camera.LookAt.X, Camera.LookAt.Y, Camera.LookAt.Z),
                 Vector3d.UnitZ);
-            return MathFunctions.Unproject(screen, viewport, pm, vm);
+            return MathFunctions.Unproject(screen, viewport, pm, vm);*/
         }
 
         /// <summary>
@@ -121,12 +105,14 @@ namespace CBRE.UI {
         /// <returns>The screen coordinate</returns>
         public Vector3 WorldToScreen(Vector3 world) {
             var viewport = new[] { 0, 0, Width, Height };
+            throw new NotImplementedException();
+            /*
             var pm = Matrix4d.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(Camera.FOV), Width / (float)Height, 0.1f, 50000);
             var vm = Matrix4d.LookAt(
                 new Vector3d(Camera.Location.X, Camera.Location.Y, Camera.Location.Z),
                 new Vector3d(Camera.LookAt.X, Camera.LookAt.Y, Camera.LookAt.Z),
                 Vector3d.UnitZ);
-            return MathFunctions.Project(world, viewport, pm, vm);
+            return MathFunctions.Project(world, viewport, pm, vm);*/
         }
 
         /// <summary>
@@ -142,6 +128,8 @@ namespace CBRE.UI {
         public Line CastRayFromScreen(int x, int y) {
             var near = new Vector3(x, Height - y, 0);
             var far = new Vector3(x, Height - y, 1);
+            throw new NotImplementedException();
+            /*
             var pm = Matrix4d.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(Camera.FOV), Width / (float)Height, 0.1f, 50000);
             var vm = Matrix4d.LookAt(
                 new Vector3d(Camera.Location.X, Camera.Location.Y, Camera.Location.Z),
@@ -150,7 +138,7 @@ namespace CBRE.UI {
             var viewport = new[] { 0, 0, Width, Height };
             var un = MathFunctions.Unproject(near, viewport, pm, vm);
             var uf = MathFunctions.Unproject(far, viewport, pm, vm);
-            return (un == null || uf == null) ? null : new Line(un, uf);
+            return (un == null || uf == null) ? null : new Line(un, uf);*/
         }
     }
 }

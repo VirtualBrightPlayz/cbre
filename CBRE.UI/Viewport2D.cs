@@ -1,9 +1,5 @@
 ﻿using CBRE.DataStructures.Geometric;
 using CBRE.Extensions;
-using CBRE.Graphics;
-using CBRE.Graphics.Helpers;
-using OpenTK;
-using OpenTK.Graphics.OpenGL;
 using System;
 using System.Drawing;
 using System.Linq;
@@ -27,11 +23,17 @@ namespace CBRE.UI {
             Side
         }
 
-        private static readonly Matrix4 TopMatrix = Matrix4.Identity;
-        private static readonly Matrix4 FrontMatrix = new Matrix4(Vector4.UnitZ, Vector4.UnitX, Vector4.UnitY, Vector4.UnitW);
-        private static readonly Matrix4 SideMatrix = new Matrix4(Vector4.UnitX, Vector4.UnitZ, Vector4.UnitY, Vector4.UnitW);
+        private static readonly Matrix TopMatrix = Matrix.Identity;
+        private static readonly Matrix FrontMatrix = new Matrix(0, 0, 1, 0,
+                                                                1, 0, 0, 0,
+                                                                0, 1, 0, 0,
+                                                                0, 0, 0, 1);
+        private static readonly Matrix SideMatrix = new Matrix(1, 0, 0, 0,
+                                                               0, 0, 1, 0,
+                                                               0, 1, 0, 0,
+                                                               0, 0, 0, 1);
 
-        private static Matrix4 GetMatrixFor(ViewDirection dir) {
+        private static Matrix GetMatrixFor(ViewDirection dir) {
             switch (dir) {
                 case ViewDirection.Top:
                     return TopMatrix;
@@ -104,8 +106,6 @@ namespace CBRE.UI {
             set {
                 var old = _position;
                 _position = value;
-                Listeners.OfType<IViewport2DEventListener>()
-                    .ToList().ForEach(l => l.PositionChanged(old, _position));
             }
         }
 
@@ -115,21 +115,12 @@ namespace CBRE.UI {
             set {
                 var old = _zoom;
                 _zoom = DMath.Clamp(value, 0.001m, 10000m);
-                Listeners.OfType<IViewport2DEventListener>()
-                    .ToList().ForEach(l => l.ZoomChanged(old, _zoom));
             }
         }
 
         private Vector3 CenterScreen { get; set; }
 
         public Viewport2D(ViewDirection direction) {
-            Zoom = 1;
-            Position = new Vector3(0, 0, 0);
-            Direction = direction;
-            CenterScreen = new Vector3(Width / 2m, Height / 2m, 0);
-        }
-
-        public Viewport2D(ViewDirection direction, RenderContext context) : base(context) {
             Zoom = 1;
             Position = new Vector3(0, 0, 0);
             Direction = direction;
@@ -156,30 +147,21 @@ namespace CBRE.UI {
             return ZeroUnusedVector3(c, Direction);
         }
 
-        public override void SetViewport() {
-            base.SetViewport();
-            Viewport.Orthographic(0, 0, Width, Height, -50000, 50000);
-        }
-
-        public override Matrix4 GetViewportMatrix() {
+        public override Matrix GetViewportMatrix() {
+            throw new NotImplementedException();
             const float near = -1000000;
             const float far = 1000000;
-            return Matrix4.CreateOrthographic(Width, Height, near, far);
+            //return Matrix.CreateOrthographic(Width, Height, near, far);
         }
 
-        public override Matrix4 GetCameraMatrix() {
-            var translate = Matrix4.CreateTranslation((float)-Position.X, (float)-Position.Y, 0);
-            var scale = Matrix4.CreateScale(new Vector3((float)Zoom, (float)Zoom, 0));
+        public override Matrix GetCameraMatrix() {
+            var translate = Matrix.Translation(new DataStructures.Geometric.Vector3(-Position.X, -Position.Y, 0));
+            var scale = Matrix.Scale(new Vector3(Zoom, Zoom, 0));
             return translate * scale;
         }
 
-        public override Matrix4 GetModelViewMatrix() {
+        public override Matrix GetModelViewMatrix() {
             return GetMatrixFor(Direction);
-        }
-
-        protected override void OnResize(EventArgs e) {
-            CenterScreen = new Vector3(Width / 2m, Height / 2m, 0);
-            base.OnResize(e);
         }
 
         public Vector3 ScreenToWorld(Point location) {
@@ -207,13 +189,11 @@ namespace CBRE.UI {
         }
 
         protected override void UpdateBeforeRender() {
-            GL.Scale(new Vector3((float)Zoom, (float)Zoom, 0));
-            GL.Translate((float)-Position.X, (float)-Position.Y, 0);
+            throw new NotImplementedException();
             base.UpdateBeforeRender();
         }
 
         protected override void UpdateAfterRender() {
-            Listeners.ForEach(x => x.Render2D());
             base.UpdateAfterRender();
         }
     }

@@ -165,7 +165,7 @@ namespace CBRE.DataStructures.MapObjects {
             Bottom
         }
 
-        public virtual void CalculateTextureVector3s(bool minimizeShiftValues) {
+        public virtual void CalculateTextureCoordinates(bool minimizeShiftValues) {
             if (minimizeShiftValues) MinimiseTextureShiftValues();
             Vertices.ForEach(c => c.TextureU = c.TextureV = 0);
 
@@ -200,7 +200,7 @@ namespace CBRE.DataStructures.MapObjects {
             Texture.VAxis = direction == Vector3.UnitZ ? -Vector3.UnitY : -Vector3.UnitZ;
             Texture.Rotation = 0;
 
-            CalculateTextureVector3s(true);
+            CalculateTextureCoordinates(true);
         }
 
         public void AlignTextureToFace() {
@@ -215,7 +215,7 @@ namespace CBRE.DataStructures.MapObjects {
             Texture.VAxis = Texture.UAxis.Cross(Plane.Normal).Normalise();
             Texture.Rotation = 0;
 
-            CalculateTextureVector3s(true);
+            CalculateTextureCoordinates(true);
         }
 
         public bool IsTextureAlignedToWorld() {
@@ -284,7 +284,7 @@ namespace CBRE.DataStructures.MapObjects {
             Texture.XScale = face.Texture.XScale;
             Texture.YScale = face.Texture.YScale;
 
-            CalculateTextureVector3s(true);
+            CalculateTextureCoordinates(true);
         }
 
         private void MinimiseTextureShiftValues() {
@@ -315,7 +315,7 @@ namespace CBRE.DataStructures.MapObjects {
             Texture.XShift = -minU / Texture.XScale;
             Texture.YShift = -minV / Texture.YScale;
 
-            CalculateTextureVector3s(true);
+            CalculateTextureCoordinates(true);
         }
 
         public void AlignTextureWithPointCloud(Cloud cloud, BoxAlignMode mode) {
@@ -349,7 +349,7 @@ namespace CBRE.DataStructures.MapObjects {
                     Texture.YShift = -maxV + Texture.Texture.Height;
                     break;
             }
-            CalculateTextureVector3s(true);
+            CalculateTextureCoordinates(true);
         }
 
         /// <summary>
@@ -365,7 +365,7 @@ namespace CBRE.DataStructures.MapObjects {
             Texture.VAxis = transform.Transform(Texture.VAxis);
             Texture.Rotation = rotate;
 
-            CalculateTextureVector3s(false);
+            CalculateTextureCoordinates(false);
         }
 
         #endregion
@@ -419,7 +419,7 @@ namespace CBRE.DataStructures.MapObjects {
                     }
                 }
             }
-            CalculateTextureVector3s(true);
+            CalculateTextureCoordinates(true);
             UpdateBoundingBox();
         }
 
