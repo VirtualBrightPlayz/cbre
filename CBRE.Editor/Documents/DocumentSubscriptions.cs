@@ -299,9 +299,9 @@ namespace CBRE.Editor.Documents {
 
         public void ApplyCurrentTextureToSelection() {
             if (_document.Selection.IsEmpty() || _document.Selection.InFaceSelection) return;
-            var texture = _document.TextureCollection.SelectedTexture;
+            var texture = TextureProvider.SelectedTexture;
             if (texture == null) return;
-            var ti = texture.GetTexture();
+            var ti = texture.Texture;
             if (ti == null) return;
             Action<Document, Face> action = (document, face) => {
                 face.Texture.Name = texture.Name;
@@ -899,7 +899,7 @@ namespace CBRE.Editor.Documents {
         }
 
         public void TextureSelected(TextureItem selection) {
-            _document.TextureCollection.SelectedTexture = selection;
+            TextureProvider.SelectedTexture = selection;
         }
 
         public void ViewportCreated(ViewportBase viewport) {

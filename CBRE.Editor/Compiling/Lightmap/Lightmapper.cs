@@ -1,7 +1,9 @@
 ﻿using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
+using CBRE.Graphics;
 using CBRE.Settings;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -100,9 +102,9 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
         }
 
-        public static void Render(Document document, out List<LMFace> faces, out int lmCount) {
-            var textureCollection = document.TextureCollection;
+        public static readonly RenderTarget2D[] Lightmaps = new RenderTarget2D[4];
 
+        public static void Render(Document document, out List<LMFace> faces, out int lmCount) {
             var map = document.Map;
 
             faces = new List<LMFace>();
@@ -175,11 +177,11 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
 
             float[][] buffers = new float[4][];
-            lock (textureCollection.Lightmaps) {
+            lock (Lightmaps) {
                 for (int i = 0; i < 4; i++) {
-                    textureCollection.Lightmaps[i]?.Dispose();
-                    textureCollection.Lightmaps[i] = new Graphics.RenderTargetTexture(totalTextureDims, totalTextureDims);
-                    buffers[i] = new float[textureCollection.Lightmaps[i].Width * textureCollection.Lightmaps[i].Height * 4];
+                    Lightmaps[i]?.Dispose();
+                    Lightmaps[i] = new RenderTarget2D(GlobalGraphics.GraphicsDevice, totalTextureDims, totalTextureDims);
+                    buffers[i] = new float[totalTextureDims * totalTextureDims * 4];
                 }
             }
 
@@ -301,7 +303,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 for (int i = 0; i < buffers[k].Length; i++) {
                     byteBuffer[i] = (byte)Math.Max(Math.Min(buffers[k][i] * 255.0f, 255.0f), 0.0f);
                 }
-                lock (textureCollection.Lightmaps) {
+                lock (Lightmaps) {
                     throw new NotImplementedException();
                     /*BitmapData bitmapData2 = textureCollection.Lightmaps[k].LockBits(new Rectangle(0, 0, totalTextureDims, totalTextureDims), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                     Marshal.Copy(byteBuffer, 0, bitmapData2.Scan0, byteBuffer.Length);
@@ -312,14 +314,14 @@ namespace CBRE.Editor.Compiling.Lightmap {
             faces.Clear();
             faces.AddRange(lmGroups.SelectMany(g => g.Faces));
 
-            lock (textureCollection.Lightmaps) {
+            lock (Lightmaps) {
                 throw new NotImplementedException();
                 /*document.TextureCollection.LightmapTextureOutdated = true;*/
         }
     }
 
     public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
-        lock (document.TextureCollection.Lightmaps) {
+        lock (Lightmaps) {
             throw new NotImplementedException();
             /*for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
                 string iPath = path + (threeBasisModel ? i.ToString() : "");
@@ -360,8 +362,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
         int writeY = group.writeY;
 
         int textureDims;
-        lock (doc.TextureCollection.Lightmaps) {
-            textureDims = doc.TextureCollection.Lightmaps[0].Width;
+        lock (Lightmaps) {
+            textureDims = Lightmaps[0].Width;
         }
 
         lights = lights.FindAll(x => {

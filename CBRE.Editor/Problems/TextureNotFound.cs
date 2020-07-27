@@ -1,6 +1,7 @@
 ﻿using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Actions;
 using CBRE.Editor.Actions.MapObjects.Operations;
+using CBRE.Providers.Texture;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,12 +22,12 @@ namespace CBRE.Editor.Problems {
         public IAction Fix(Problem problem) {
             return new EditFace(problem.Faces, (d, x) => {
                 var ignored = "{#!~+-0123456789".ToCharArray();
-                var def = d.TextureCollection.GetAllBrowsableItems()
+                var def = TextureProvider.Packages.SelectMany(p => p.Items.Values)
                     .OrderBy(i => new string(i.Name.Where(c => !ignored.Contains(c)).ToArray()) + "Z")
                     .FirstOrDefault();
                 if (def != null) {
                     x.Texture.Name = def.Name;
-                    x.Texture.Texture = def.GetTexture();
+                    x.Texture.Texture = def.Texture;
                     x.CalculateTextureCoordinates(true);
                 }
             }, true);

@@ -127,7 +127,7 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         private void TextureApplied(object sender, TextureItem texture) {
-            var ti = texture.GetTexture();
+            var ti = texture.Texture;
             Action<Document, Face> action = (document, face) => {
                 face.Texture.Name = texture.Name;
                 face.Texture.Texture = ti;
@@ -384,11 +384,11 @@ namespace CBRE.Editor.Tools.TextureTool {
                     return HotkeyInterceptResult.Abort;
                 case HotkeysMediator.OperationsDelete:
                     var faces = Document.Selection.GetSelectedFaces().ToList();
-                    var removeFaceTexture = Document.TextureCollection.GetItem("tooltextures/remove_face");
+                    var removeFaceTexture = TextureProvider.GetItem("tooltextures/remove_face");
                     if (faces.Count > 0 && removeFaceTexture != null) {
                         Action<Document, Face> action = (doc, face) => {
                             face.Texture.Name = "tooltextures/remove_face";
-                            face.Texture.Texture = removeFaceTexture.GetTexture();
+                            face.Texture.Texture = removeFaceTexture.Texture;
                             face.CalculateTextureCoordinates(false);
                         };
                         Document.PerformAction("Apply texture", new EditFace(faces, action, true));

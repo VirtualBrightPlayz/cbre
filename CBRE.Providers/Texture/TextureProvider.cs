@@ -1,39 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using CBRE.Common;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Providers.Texture {
-    public abstract class TextureProvider {
-        private static readonly List<TextureProvider> RegisteredProviders;
-        private static readonly List<TextureCollection> Collections;
-        private static readonly List<TexturePackage> Packages;
+    public static class TextureProvider {
+        public static readonly List<TexturePackage> Packages;
+
+        public static TextureItem SelectedTexture;
 
         static TextureProvider() {
-            RegisteredProviders = new List<TextureProvider>();
-            Collections = new List<TextureCollection>();
             Packages = new List<TexturePackage>();
         }
 
-        private static string _cachePath;
-
         public static void SetCachePath(string path) {
-            _cachePath = path;
-            foreach (var p in RegisteredProviders) p.CachePath = _cachePath;
+            CachePath = path;
         }
-
-        #region Registration
-
-        public static void Register(TextureProvider provider) {
-            provider.CachePath = _cachePath;
-            RegisteredProviders.Add(provider);
-        }
-
-        public static void Deregister(TextureProvider provider) {
-            RegisteredProviders.Remove(provider);
-        }
-
-        #endregion
 
         public struct TextureCategory {
             public string Path;
@@ -41,52 +25,35 @@ namespace CBRE.Providers.Texture {
             public string Prefix;
         }
 
-        protected string CachePath { get; private set; }
-        public abstract IEnumerable<TexturePackage> CreatePackages(IEnumerable<TextureCategory> sourceRoots);
-        public abstract void DeletePackages(IEnumerable<TexturePackage> packages);
-        public abstract void LoadTextures(IEnumerable<TextureItem> items);
-        public abstract ITextureStreamSource GetStreamSource(int maxWidth, int maxHeight, IEnumerable<TexturePackage> packages);
+        private static string CachePath;
+        public static IEnumerable<TexturePackage> CreatePackages(IEnumerable<TextureCategory> sourceRoots) {
+            var dirs = sourceRoots.Where(sr => Directory.Exists(sr.Path));
 
-        public static TextureCollection CreateCollection(IEnumerable<TextureCategory> sourceRoots) {
-            var list = sourceRoots.ToList();
-            var pkgs = new List<TexturePackage>();
-            foreach (var provider in RegisteredProviders) {
-                pkgs.AddRange(provider.CreatePackages(list));
-            }
+            foreach (var dir in dirs) {
+                var tp = new TexturePackage(dir.Path, dir.CategoryName);
 
-            var tc = new TextureCollection(pkgs);
-            Packages.AddRange(pkgs);
-            Collections.Add(tc);
-            return tc;
-        }
+                var sprs = Directory.GetFiles(dir.Path, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".jpg") || s.EndsWith(".jpeg") || s.EndsWith(".png"));
+                if (!sprs.Any()) continue;
 
-        public static void DeleteCollection(TextureCollection collection) {
-            Collections.RemoveAll(x => x == collection);
-            var remove = Packages.Where(package => !Collections.Any(x => x.Packages.Contains(package))).ToList();
-            foreach (var package in remove) {
-                Packages.Remove(package);
-                package.Provider.DeletePackages(new[] { package });
-                package.Dispose();
+                foreach (var spr in sprs) {
+                    var rel = Path.GetFullPath(spr).Substring(dir.Path.Length).TrimStart('/', '\\').Replace('\\', '/');
+                    rel = rel.Replace(".jpg", "").Replace(".jpeg", "").Replace(".png", "").ToLowerInvariant();
+                    rel = dir.Prefix + rel;
+
+                    tp.AddTexture(new TextureItem(tp, rel.ToLowerInvariant(), Path.GetFullPath(spr)));
+                }
+                if (tp.Items.Any()) yield return tp;
             }
         }
 
-        public static void LoadTextureItem(TextureItem item) {
-            if (item == null || item.Package == null) return;
-            item.Package.Provider.LoadTextures(new[] { item });
-        }
+        public static void DeletePackages(IEnumerable<TexturePackage> packages) { }
 
-        public static void LoadTextureItems(IEnumerable<TextureItem> items) {
-            var list = items.ToList();
-
-            foreach (var g in list.GroupBy(x => x.Package.Provider)) {
-                LoadTextures(g.Key, g);
+        public static TextureItem GetItem(string name) {
+            string lowerName = name.ToLowerInvariant();
+            foreach (var p in Packages) {
+                if (p.Items.ContainsKey(lowerName)) { return p.Items[lowerName]; }
             }
-        }
-
-        private static void LoadTextures(TextureProvider provider, IEnumerable<TextureItem> items) {
-            var all = items.ToList();
-            if (!all.Any()) return;
-            provider.LoadTextures(all);
+            return null;
         }
     }
 }

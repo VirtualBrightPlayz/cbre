@@ -3,15 +3,13 @@ using System.Collections.Generic;
 
 namespace CBRE.Providers.Texture {
     public class TexturePackage : IDisposable {
-        internal TextureProvider Provider { get; private set; }
         public string PackageRoot { get; private set; }
         public string PackageRelativePath { get; private set; }
         public Dictionary<string, TextureItem> Items { get; private set; }
         private readonly Dictionary<string, TextureItem> _loadedItems;
         public bool IsBrowsable { get; set; }
 
-        public TexturePackage(string packageRoot, string packageRelativePath, TextureProvider provider) {
-            Provider = provider;
+        public TexturePackage(string packageRoot, string packageRelativePath) {
             PackageRoot = packageRoot;
             PackageRelativePath = packageRelativePath;
             Items = new Dictionary<string, TextureItem>();

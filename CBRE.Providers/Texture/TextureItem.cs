@@ -6,7 +6,7 @@ namespace CBRE.Providers.Texture {
     public class TextureItem {
         public TexturePackage Package { get; private set; }
         public string Name { get; private set; }
-        public TextureFlags Flags { get; set; }
+        public string Filename { get; private set; }
 
         public TextureSubItem PrimarySubItem {
             get { return _subItems.ContainsKey(TextureSubItemType.Base) ? _subItems[TextureSubItemType.Base] : null; }
@@ -23,26 +23,11 @@ namespace CBRE.Providers.Texture {
 
         public readonly ITexture Texture;
 
-        public TextureItem(TexturePackage package, string name, TextureFlags flags, int width, int height) {
+        public TextureItem(TexturePackage package, string name, string filename) {
             Package = package;
             Name = name;
-            Flags = flags;
-            var baseItem = new TextureSubItem(TextureSubItemType.Base, this, name, width, height);
-            _subItems = new Dictionary<TextureSubItemType, TextureSubItem> { { TextureSubItemType.Base, baseItem } };
-        }
-
-        public TextureItem(TexturePackage package, string name, TextureFlags flags, string primarySubItemName, int width, int height) {
-            Package = package;
-            Name = name;
-            Flags = flags;
-            var baseItem = new TextureSubItem(TextureSubItemType.Base, this, primarySubItemName, width, height);
-            _subItems = new Dictionary<TextureSubItemType, TextureSubItem> { { TextureSubItemType.Base, baseItem } };
-        }
-
-        public TextureItem(TexturePackage package, string name, TextureFlags flags) {
-            Package = package;
-            Name = name;
-            Flags = flags;
+            Filename = filename;
+            Texture = new AsyncTexture(filename);
             _subItems = new Dictionary<TextureSubItemType, TextureSubItem>();
         }
 
@@ -50,10 +35,6 @@ namespace CBRE.Providers.Texture {
             var si = new TextureSubItem(type, this, name, width, height);
             _subItems.Add(type, si);
             return si;
-        }
-
-        public ITexture GetTexture() {
-            return Texture;
         }
     }
 }

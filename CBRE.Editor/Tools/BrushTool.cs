@@ -5,6 +5,7 @@ using CBRE.Editor.Actions;
 using CBRE.Editor.Actions.MapObjects.Operations;
 using CBRE.Editor.Actions.MapObjects.Selection;
 using CBRE.Editor.Brushes;
+using CBRE.Providers.Texture;
 using CBRE.Settings;
 using CBRE.UI;
 using System;
@@ -126,8 +127,8 @@ namespace CBRE.Editor.Tools
                 _bounds = new Box(bounds.Start, ((bounds.End - bounds.Start).Normalise() * 1000000m) + bounds.Start);
             }
             var brush = BrushManager.CurrentBrush;
-            var ti = Document.TextureCollection.SelectedTexture;
-            var texture = ti != null ? ti.GetTexture() : null;
+            var ti = TextureProvider.SelectedTexture;
+            var texture = ti != null ? ti.Texture : null;
             var created = brush.Create(idg, bounds, texture, BrushManager.RoundCreatedVertices ? 0 : 2).ToList();
             if (created.Count > 1)
             {

@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using CBRE.Providers.Texture;
 
 namespace CBRE.Settings {
     public class Directories {
@@ -41,6 +43,28 @@ namespace CBRE.Settings {
                 }
             }
             return null;
+        }
+
+        public static IEnumerable<TextureProvider.TextureCategory> GetTextureCategories() {
+            for (int i = 0; i < TextureDirs.Count; i++) {
+                string dir = TextureDirs[i];
+                yield return new TextureProvider.TextureCategory {
+                    Path = dir,
+                    CategoryName = $"Texture dir {i}"
+                };
+            }
+
+            string exeDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            yield return new TextureProvider.TextureCategory {
+                Path = Path.Combine(exeDir, "ToolTextures"),
+                CategoryName = "Tool textures",
+                Prefix = "tooltextures/"
+            };
+            yield return new TextureProvider.TextureCategory {
+                Path = Path.Combine(exeDir, "Sprites"),
+                CategoryName = "Sprites",
+                Prefix = "sprites/"
+            };
         }
     }
 }

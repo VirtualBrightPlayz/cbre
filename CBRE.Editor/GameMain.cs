@@ -1,4 +1,7 @@
-﻿using CBRE.Graphics;
+﻿using CBRE.DataStructures.MapObjects;
+using CBRE.Editor.Documents;
+using CBRE.Graphics;
+using CBRE.Providers.Map;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -55,14 +58,22 @@ namespace CBRE.Editor {
             MenuTextures = new Dictionary<string, AsyncTexture>();
             string[] files = Directory.GetFiles("Resources");
             foreach (string file in files) {
-                if (!Path.GetExtension(file).Equals(".png", StringComparison.OrdinalIgnoreCase)) { continue; }
-                MenuTextures.Add(Path.GetFileNameWithoutExtension(file),
+                if (!System.IO.Path.GetExtension(file).Equals(".png", StringComparison.OrdinalIgnoreCase)) { continue; }
+                MenuTextures.Add(System.IO.Path.GetFileNameWithoutExtension(file),
                     LoadTexture(file));
             }
 
             InitMenus();
             InitTopBar();
             InitToolBar();
+
+            MapProvider.Register(new VmfProvider());
+            MapProvider.Register(new RmfProvider());
+            MapProvider.Register(new MapFormatProvider());
+            MapProvider.Register(new L3DWProvider());
+
+            Map map = MapProvider.GetMapFromFile("D:/Admin/Downloads/room2_2.3dw");
+            DocumentManager.AddAndSwitch(new Document("room2_2.3dw", map));
 
             base.Initialize();
         }

@@ -32,7 +32,6 @@ namespace CBRE.Editor.Documents {
 
         public SelectionManager Selection { get; private set; }
         public HistoryManager History { get; private set; }
-        public TextureCollection TextureCollection { get; set; }
 
         private readonly DocumentSubscriptions _subscriptions;
         private readonly DocumentMemory _memory;
@@ -41,7 +40,6 @@ namespace CBRE.Editor.Documents {
             Map = new Map();
             Selection = new SelectionManager(this);
             History = new HistoryManager(this);
-            TextureCollection = new TextureCollection(new List<TexturePackage>());
         }
 
         public Document(string mapFile, Map map) {
@@ -67,40 +65,13 @@ namespace CBRE.Editor.Documents {
 
             GameData = new GameData();
 
-            TextureCollection = TextureProvider.CreateCollection(GetTextureCategories());
-            /* .Union(GameData.MaterialExclusions) */ // todo material exclusions
-
             var texList = Map.GetAllTextures();
-            var items = TextureCollection.GetItems(texList);
-            TextureProvider.LoadTextureItems(items);
 
             Map.PostLoadProcess(GameData, GetTexture, SettingsManager.GetSpecialTextureOpacity);
 
             if (MapFile != null) Mediator.Publish(EditorMediator.FileOpened, MapFile);
 
             //TODO: reimplement autosaving
-        }
-
-        public static IEnumerable<TextureProvider.TextureCategory> GetTextureCategories() {
-            for (int i = 0; i < Directories.TextureDirs.Count; i++) {
-                string dir = Directories.TextureDirs[i];
-                yield return new TextureProvider.TextureCategory {
-                    Path = dir,
-                    CategoryName = $"Texture dir {i}"
-                };
-            }
-
-            string exeDir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            yield return new TextureProvider.TextureCategory {
-                Path = Path.Combine(exeDir, "ToolTextures"),
-                CategoryName = "Tool textures",
-                Prefix = "tooltextures/"
-            };
-            yield return new TextureProvider.TextureCategory {
-                Path = Path.Combine(exeDir, "Sprites"),
-                CategoryName = "Sprites",
-                Prefix = "sprites/"
-            };
         }
 
         public void SetMemory<T>(string name, T obj) {
@@ -122,7 +93,7 @@ namespace CBRE.Editor.Documents {
 
             _subscriptions.Subscribe();
 
-            RenderAll();
+            /*RenderAll();*/
         }
 
         public void SetInactive() {
@@ -137,7 +108,6 @@ namespace CBRE.Editor.Documents {
 
         public void Close() {
             Scheduler.Clear(this);
-            TextureProvider.DeleteCollection(TextureCollection);
         }
 
         public bool SaveFile(string path = null, bool forceOverride = false, bool switchPath = true) {
@@ -316,7 +286,8 @@ namespace CBRE.Editor.Documents {
         }
 
         public ITexture GetTexture(string name) {
-            throw new NotImplementedException();
+            TextureItem item = TextureProvider.GetItem(name);
+            return item?.Texture;
         }
 
         public void RenderAll() {
@@ -356,11 +327,6 @@ namespace CBRE.Editor.Documents {
 
         public IEnumerable<string> GetUsedTextures() {
             return Map.WorldSpawn.Find(x => x is Solid).OfType<Solid>().SelectMany(x => x.Faces).Select(x => x.Texture.Name).Distinct();
-        }
-
-        public IEnumerable<TexturePackage> GetUsedTexturePackages() {
-            var used = GetUsedTextures().ToList();
-            return TextureCollection.Packages.Where(x => used.Any(x.HasTexture));
         }
     }
 }

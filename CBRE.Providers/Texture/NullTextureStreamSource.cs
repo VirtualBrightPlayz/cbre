@@ -17,7 +17,7 @@ namespace CBRE.Providers.Texture {
         }
 
         public bool HasImage(TextureItem item) {
-            return item.Flags.HasFlag(TextureFlags.Missing);
+            return item.Texture != null;
         }
 
         public void Dispose() {

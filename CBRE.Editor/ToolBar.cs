@@ -57,6 +57,13 @@ namespace CBRE.Editor {
                 } else {
                     pressed = ImGui.Button("", new Num.Vector2(40, 38));
                 }
+                if (ImGui.IsItemHovered()) {
+                    ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.One * 4);
+                    ImGui.BeginTooltip();
+                    ImGui.SetTooltip(ToolTip);
+                    ImGui.EndTooltip();
+                    ImGui.PopStyleVar();
+                }
             }
         }
     }
