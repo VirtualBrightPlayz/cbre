@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CBRE.Common;
 using ImGuiNET;
@@ -21,16 +22,16 @@ namespace CBRE.Graphics {
         private Texture2D monoGameTexture;
         private IntPtr imGuiTexture;
 
+        private static long activeTasks;
+
         public Texture2D MonoGameTexture {
             get {
-                CheckTaskStatus();
                 return monoGameTexture;
             }
         }
 
         public IntPtr ImGuiTexture {
             get {
-                CheckTaskStatus();
                 return imGuiTexture;
             }
         }
@@ -51,25 +52,30 @@ namespace CBRE.Graphics {
 
             Filename = filename;
             task = tsk ?? Load();
+            TaskPool.Add("AsyncTexture task", task, (t) => { CheckTaskStatus(); });
         }
 
         private async Task<Data> Load() {
             await Task.Yield();
-            using (var stream = new FileStream(Filename, FileMode.Open)) {
-                var bytes = Texture2D.TextureDataFromStream(stream, out int width, out int height, out _);
+            while (Interlocked.Read(ref activeTasks) > 10) {
+                await Task.Delay(1000);
+            }
+            Interlocked.Increment(ref activeTasks);
+            try {
+                using (var stream = new FileStream(Filename, FileMode.Open)) {
+                    var bytes = Texture2D.TextureDataFromStream(stream, out int width, out int height, out _);
 
-                bool compressed = false;
-                if ((width > 64 || height > 64) &&
-                    (width&0x03)==0 && (height&0x03)==0) {
-                    bytes = CompressDxt5(bytes, width, height);
-                    compressed = true;
+                    bool compressed = false;
+                    if ((width > 64 || height > 64) &&
+                        (width & 0x03) == 0 && (height & 0x03) == 0) {
+                        bytes = CompressDxt5(bytes, width, height);
+                        compressed = true;
+                    }
+
+                    return new Data { Bytes = bytes, Width = width, Height = height, Compressed = compressed };
                 }
-
-#if DEBUG
-                await Task.Delay((int)(((uint)Filename.GetHashCode()) % 2000));
-#endif
-
-                return new Data { Bytes = bytes, Width = width, Height = height, Compressed = compressed };
+            } finally {
+                Interlocked.Decrement(ref activeTasks);
             }
         }
 
@@ -83,6 +89,7 @@ namespace CBRE.Graphics {
 
                 imGuiTexture = GlobalGraphics.ImGuiRenderer.BindTexture(monoGameTexture);
 
+                task.Dispose();
                 task = null;
             }
         }
@@ -90,6 +97,7 @@ namespace CBRE.Graphics {
         public void Dispose() {
             if (task != null) {
                 task.Wait();
+                task.Dispose();
             }
 
             if (imGuiTexture != IntPtr.Zero) {

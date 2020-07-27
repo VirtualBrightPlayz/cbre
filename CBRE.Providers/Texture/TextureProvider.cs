@@ -26,7 +26,7 @@ namespace CBRE.Providers.Texture {
         }
 
         private static string CachePath;
-        public static IEnumerable<TexturePackage> CreatePackages(IEnumerable<TextureCategory> sourceRoots) {
+        public static void CreatePackages(IEnumerable<TextureCategory> sourceRoots) {
             var dirs = sourceRoots.Where(sr => Directory.Exists(sr.Path));
 
             foreach (var dir in dirs) {
@@ -42,7 +42,7 @@ namespace CBRE.Providers.Texture {
 
                     tp.AddTexture(new TextureItem(tp, rel.ToLowerInvariant(), Path.GetFullPath(spr)));
                 }
-                if (tp.Items.Any()) yield return tp;
+                if (tp.Items.Any()) { Packages.Add(tp); }
             }
         }
 

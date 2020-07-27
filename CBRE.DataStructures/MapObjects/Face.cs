@@ -288,7 +288,8 @@ namespace CBRE.DataStructures.MapObjects {
         }
 
         private void MinimiseTextureShiftValues() {
-            if (Texture.Texture == null) return;
+            if (Texture.Texture == null) { return; }
+            if (Texture.Texture.Width <= 0 || Texture.Texture.Height <= 0) { return; }
             // Keep the shift values to a minimum
             Texture.XShift = Texture.XShift % Texture.Texture.Width;
             Texture.YShift = Texture.YShift % Texture.Texture.Height;

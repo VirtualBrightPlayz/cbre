@@ -1,7 +1,10 @@
-﻿using CBRE.DataStructures.MapObjects;
+﻿using CBRE.Common;
+using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Graphics;
 using CBRE.Providers.Map;
+using CBRE.Providers.Texture;
+using CBRE.Settings;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -35,6 +38,8 @@ namespace CBRE.Editor {
 
         protected override void Initialize()
         {
+            SettingsManager.Read();
+
             _imGuiRenderer = new ImGuiRenderer(this);
             _imGuiRenderer.RebuildFontAtlas();
 
@@ -67,6 +72,8 @@ namespace CBRE.Editor {
             InitTopBar();
             InitToolBar();
 
+            TextureProvider.CreatePackages(Directories.GetTextureCategories());
+
             MapProvider.Register(new VmfProvider());
             MapProvider.Register(new RmfProvider());
             MapProvider.Register(new MapFormatProvider());
@@ -89,6 +96,8 @@ namespace CBRE.Editor {
 
         protected override void Draw(GameTime gameTime)
         {
+            TaskPool.Update();
+
             GraphicsDevice.Clear(Color.DarkSlateGray);
 
             // Call BeforeLayout first to set things up
