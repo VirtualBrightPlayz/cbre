@@ -52,13 +52,15 @@ namespace CBRE.Graphics {
 
             Filename = filename;
             task = tsk ?? Load();
-            TaskPool.Add("AsyncTexture task", task, (t) => { CheckTaskStatus(); });
+            TaskPool.Add("AsyncTexture task", task, (t) => {
+                CheckTaskStatus();
+            });
         }
 
         private async Task<Data> Load() {
             await Task.Yield();
             while (Interlocked.Read(ref activeTasks) > 10) {
-                await Task.Delay(1000);
+                await Task.Delay(200);
             }
             Interlocked.Increment(ref activeTasks);
             try {
@@ -98,6 +100,7 @@ namespace CBRE.Graphics {
             if (task != null) {
                 task.Wait();
                 task.Dispose();
+                task = null;
             }
 
             if (imGuiTexture != IntPtr.Zero) {
