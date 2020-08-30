@@ -4,7 +4,7 @@ using CBRE.Editor.Documents;
 using CBRE.Extensions;
 using CBRE.Graphics;
 using CBRE.Settings;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

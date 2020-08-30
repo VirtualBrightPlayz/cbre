@@ -6,13 +6,13 @@ using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Actions;
 using CBRE.Editor.Editing;
 using CBRE.Editor.History;
+using CBRE.Editor.Rendering;
 using CBRE.Editor.Settings;
 using CBRE.Editor.Tools;
 using CBRE.Providers.Map;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
 using CBRE.Settings.Models;
-using CBRE.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -32,6 +32,8 @@ namespace CBRE.Editor.Documents {
 
         public SelectionManager Selection { get; private set; }
         public HistoryManager History { get; private set; }
+
+        public BrushRenderer BrushRenderer { get; private set; }
 
         private readonly DocumentSubscriptions _subscriptions;
         private readonly DocumentMemory _memory;
@@ -70,6 +72,8 @@ namespace CBRE.Editor.Documents {
             Map.PostLoadProcess(GameData, GetTexture, SettingsManager.GetSpecialTextureOpacity);
 
             if (MapFile != null) Mediator.Publish(EditorMediator.FileOpened, MapFile);
+
+            BrushRenderer = new BrushRenderer(this);
 
             //TODO: reimplement autosaving
         }

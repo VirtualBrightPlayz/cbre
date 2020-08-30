@@ -1,6 +1,6 @@
 ﻿using CBRE.Common.Mediator;
 using CBRE.DataStructures.Geometric;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System;
 using System.Drawing;
 using System.Linq;

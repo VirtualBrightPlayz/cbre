@@ -1,7 +1,7 @@
 ﻿using CBRE.Common.Mediator;
 using CBRE.DataStructures.Geometric;
 using CBRE.Graphics;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

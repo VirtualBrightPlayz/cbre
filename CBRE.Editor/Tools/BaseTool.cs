@@ -4,7 +4,7 @@ using CBRE.DataStructures.MapObjects;
 using CBRE.Extensions;
 using CBRE.Graphics;
 using CBRE.Settings;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;

@@ -2,7 +2,7 @@
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Tools.Widgets;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -9,7 +9,7 @@ using CBRE.Editor.Documents;
 using CBRE.Editor.History;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

@@ -107,7 +107,7 @@ namespace CBRE.SMFConverter {
                 }
                 for (int j = 0; j < vertexCount; j++) {
                     Vector2D vertexTexCoords = reader.ReadVector2D();
-                    mesh.TextureVector3Channels[0].Add(new Vector3D(vertexTexCoords, 0.0f));
+                    mesh.TextureCoordinateChannels[0].Add(new Vector3D(vertexTexCoords, 0.0f));
                 }
                 mesh.UVComponentCount[0] = 2;
 

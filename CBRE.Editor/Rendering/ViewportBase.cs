@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-namespace CBRE.UI {
+namespace CBRE.Editor.Rendering {
     public class ViewportBase {
         private Stopwatch _stopwatch;
         public bool IsFocused { get; private set; }

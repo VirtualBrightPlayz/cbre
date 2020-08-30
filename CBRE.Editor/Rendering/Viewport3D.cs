@@ -2,7 +2,7 @@
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 
-namespace CBRE.UI {
+namespace CBRE.Editor.Rendering {
     public class Viewport3D : ViewportBase {
         public enum ViewType {
             /// <summary>

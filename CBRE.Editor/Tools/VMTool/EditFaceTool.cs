@@ -1,7 +1,7 @@
 ﻿using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.DataStructures.Transformations;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System.Collections.Generic;
 using System.Linq;
 

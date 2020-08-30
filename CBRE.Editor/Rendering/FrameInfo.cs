@@ -1,4 +1,4 @@
-namespace CBRE.UI {
+﻿namespace CBRE.Editor.Rendering {
     public class FrameInfo {
         public long Milliseconds { get; private set; }
 

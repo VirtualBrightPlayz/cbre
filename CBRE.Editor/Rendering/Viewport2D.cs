@@ -4,7 +4,7 @@ using System;
 using System.Drawing;
 using System.Linq;
 
-namespace CBRE.UI {
+namespace CBRE.Editor.Rendering {
     public class Viewport2D : ViewportBase {
         public enum ViewDirection {
             /// <summary>

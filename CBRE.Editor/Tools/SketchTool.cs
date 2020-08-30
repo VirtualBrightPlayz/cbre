@@ -6,7 +6,7 @@ using CBRE.Editor.Actions.MapObjects.Operations;
 using CBRE.Editor.Actions.MapObjects.Selection;
 using CBRE.Editor.Brushes;
 using CBRE.Settings;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Drawing;

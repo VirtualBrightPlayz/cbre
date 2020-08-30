@@ -1,7 +1,7 @@
 ﻿using CBRE.DataStructures.Geometric;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Tools.Widgets;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System.Collections.Generic;
 
 namespace CBRE.Editor.Tools.SelectTool.TransformationTools

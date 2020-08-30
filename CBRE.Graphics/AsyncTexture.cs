@@ -70,7 +70,9 @@ namespace CBRE.Graphics {
                     bool compressed = false;
                     if ((width > 64 || height > 64) &&
                         (width & 0x03) == 0 && (height & 0x03) == 0) {
+                        var prevBytes = bytes;
                         bytes = CompressDxt5(bytes, width, height);
+                        Array.Resize(ref prevBytes, 0);
                         compressed = true;
                     }
 
@@ -88,6 +90,8 @@ namespace CBRE.Graphics {
                 Data data = task.Result;
                 monoGameTexture = new Texture2D(GlobalGraphics.GraphicsDevice, data.Width, data.Height, false, data.Compressed ? SurfaceFormat.Dxt5 : SurfaceFormat.Color);
                 monoGameTexture.SetData(data.Bytes);
+
+                Array.Resize(ref data.Bytes, 0);
 
                 imGuiTexture = GlobalGraphics.ImGuiRenderer.BindTexture(monoGameTexture);
 

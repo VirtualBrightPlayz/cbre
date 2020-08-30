@@ -11,7 +11,7 @@ using CBRE.Editor.Tools.SelectTool.TransformationTools;
 using CBRE.Editor.Tools.Widgets;
 using CBRE.Graphics;
 using CBRE.Settings;
-using CBRE.UI;
+using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
