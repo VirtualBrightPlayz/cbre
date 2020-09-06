@@ -1,5 +1,8 @@
 ﻿using CBRE.DataStructures.Geometric;
+using CBRE.Editor.Documents;
 using CBRE.Extensions;
+using CBRE.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Drawing;
 using System.Linq;
@@ -121,7 +124,7 @@ namespace CBRE.Editor.Rendering {
         private Vector3 CenterScreen { get; set; }
 
         public Viewport2D(ViewDirection direction) {
-            Zoom = 1;
+            Zoom = 0.5m;
             Position = new Vector3(0, 0, 0);
             Direction = direction;
             CenterScreen = new Vector3(Width / 2m, Height / 2m, 0);
@@ -195,6 +198,30 @@ namespace CBRE.Editor.Rendering {
 
         protected override void UpdateAfterRender() {
             base.UpdateAfterRender();
+        }
+
+        public override void Render() {
+            if (DocumentManager.CurrentDocument != null) {
+                var brushRenderer = DocumentManager.CurrentDocument.BrushRenderer;
+                brushRenderer.Projection = Microsoft.Xna.Framework.Matrix.CreateOrthographic((float)Width, (float)Height, -100000.0f, 100000.0f);
+                var matrix = GetModelViewMatrix();
+
+                brushRenderer.View = new Microsoft.Xna.Framework.Matrix(
+                    (float)matrix[0], (float)matrix[1], (float)matrix[2], (float)matrix[3],
+                    (float)matrix[4], (float)matrix[5], (float)matrix[6], (float)matrix[7],
+                    (float)matrix[8], (float)matrix[9], (float)matrix[10], (float)matrix[11],
+                    (float)matrix[12], (float)matrix[13], (float)matrix[14], (float)matrix[15]);
+                brushRenderer.World = Microsoft.Xna.Framework.Matrix.CreateScale((float)Zoom);
+
+                GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
+                GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
+                GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
+                brushRenderer.RenderWireframe();
+
+                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+            }
         }
     }
 }

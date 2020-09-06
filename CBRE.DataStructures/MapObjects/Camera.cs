@@ -10,7 +10,7 @@ namespace CBRE.DataStructures.MapObjects {
 
         public Camera() {
             EyePosition = new Vector3(0, 0, 0);
-            LookPosition = new Vector3(0, 0, 0);
+            LookPosition = new Vector3(0, 1, 0);
         }
 
         protected Camera(SerializationInfo info, StreamingContext context) {

@@ -5,13 +5,15 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 namespace CBRE.Editor.Rendering {
-    public class ViewportBase {
+    public abstract class ViewportBase {
         private Stopwatch _stopwatch;
         public bool IsFocused { get; private set; }
         private int UnfocusedUpdateCounter { get; set; }
 
         private object _inputLock;
 
+        public int X { get; set; }
+        public int Y { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
 
@@ -102,5 +104,7 @@ namespace CBRE.Editor.Rendering {
         protected virtual void UpdateAfterRender() {
 
         }
+
+        public abstract void Render();
     }
 }

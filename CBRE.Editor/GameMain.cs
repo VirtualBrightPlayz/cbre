@@ -45,7 +45,7 @@ namespace CBRE.Editor {
             _imGuiRenderer = new ImGuiRenderer(this);
             _imGuiRenderer.RebuildFontAtlas();
 
-            GlobalGraphics.Set(GraphicsDevice, _imGuiRenderer);
+            GlobalGraphics.Set(GraphicsDevice, Window, _imGuiRenderer);
 
             ImGuiStyle = ImGui.GetStyle();
             ImGuiStyle.ChildRounding = 0;
@@ -84,6 +84,8 @@ namespace CBRE.Editor {
             Map map = MapProvider.GetMapFromFile("D:/Admin/Downloads/room2_2.3dw");
             DocumentManager.AddAndSwitch(new Document("room2_2.3dw", map));
 
+            ViewportManager.Init();
+
             base.Initialize();
         }
 
@@ -98,6 +100,8 @@ namespace CBRE.Editor {
 
         protected override void Draw(GameTime gameTime)
         {
+            GlobalGraphics.GraphicsDevice.Viewport = new Viewport(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
+
             TaskPool.Update();
 
             GraphicsDevice.Clear(new Color(50, 50, 60));
@@ -111,24 +115,7 @@ namespace CBRE.Editor {
             // Call AfterLayout now to finish up and draw all the things
             _imGuiRenderer.AfterLayout();
 
-            if (DocumentManager.CurrentDocument != null) {
-                var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
-                GlobalGraphics.GraphicsDevice.Viewport = new Viewport(46, 47, (Window.ClientBounds.Width - 46) / 2, (Window.ClientBounds.Height - 47) / 2);
-                var brushRenderer = DocumentManager.CurrentDocument.BrushRenderer;
-                brushRenderer.Projection = Matrix.CreatePerspectiveFieldOfView((float)Math.PI * 0.5f, GlobalGraphics.GraphicsDevice.Viewport.AspectRatio, 1.0f, 10000.0f);
-                brushRenderer.View = Matrix.CreateLookAt(new Vector3(0, 0, 100), new Vector3(0, 1, 100), new Vector3(0, 0, 1));
-                brushRenderer.World = Matrix.Identity;
-
-                GraphicsDevice.BlendFactor = Color.White;
-                GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-                GraphicsDevice.RasterizerState = RasterizerState.CullNone;
-                GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-
-                brushRenderer.RenderSolidUntextured();
-                GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
-
-                GraphicsDevice.DepthStencilState = DepthStencilState.None;
-            }
+            ViewportManager.Render();
 
             base.Draw(gameTime);
         }

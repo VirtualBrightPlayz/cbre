@@ -1,6 +1,9 @@
 ﻿using System;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
+using CBRE.Editor.Documents;
+using CBRE.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Rendering {
     public class Viewport3D : ViewportBase {
@@ -139,6 +142,27 @@ namespace CBRE.Editor.Rendering {
             var un = MathFunctions.Unproject(near, viewport, pm, vm);
             var uf = MathFunctions.Unproject(far, viewport, pm, vm);
             return (un == null || uf == null) ? null : new Line(un, uf);*/
+        }
+
+        public override void Render() {
+            if (DocumentManager.CurrentDocument != null) {
+                var brushRenderer = DocumentManager.CurrentDocument.BrushRenderer;
+                brushRenderer.Projection = Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView((float)Math.PI * 0.5f, (float)Width / (float)Height, 1.0f, 10000.0f);
+                Microsoft.Xna.Framework.Vector3 eyePos = new Microsoft.Xna.Framework.Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z);
+                Microsoft.Xna.Framework.Vector3 lookPos = new Microsoft.Xna.Framework.Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z);
+                Microsoft.Xna.Framework.Vector3 upVector = new Microsoft.Xna.Framework.Vector3(0,0,1);
+                brushRenderer.View = Microsoft.Xna.Framework.Matrix.CreateLookAt(eyePos, lookPos, upVector);
+                brushRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
+
+                GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
+                GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
+                GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
+                brushRenderer.RenderTextured();
+
+                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+            }
         }
     }
 }
