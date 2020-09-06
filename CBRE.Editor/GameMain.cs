@@ -106,6 +106,8 @@ namespace CBRE.Editor {
 
             GraphicsDevice.Clear(new Color(50, 50, 60));
 
+            ViewportManager.Render();
+
             // Call BeforeLayout first to set things up
             _imGuiRenderer.BeforeLayout(gameTime);
 
@@ -114,8 +116,6 @@ namespace CBRE.Editor {
 
             // Call AfterLayout now to finish up and draw all the things
             _imGuiRenderer.AfterLayout();
-
-            ViewportManager.Render();
 
             base.Draw(gameTime);
         }
