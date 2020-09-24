@@ -84,7 +84,7 @@ namespace CBRE.Editor.Tools
         /*public override IEnumerable<KeyValuePair<string, Control>> GetSidebarControls()
         {
             yield return new KeyValuePair<string, Control>(GetName(), BrushManager.SidebarControl);
-        }
+        }*/
 
         public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
         {
@@ -144,7 +144,7 @@ namespace CBRE.Editor.Tools
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        }*/
+        }
 
         private void CreateBrush(Polygon poly, decimal depth)
         {
@@ -167,7 +167,7 @@ namespace CBRE.Editor.Tools
             return null;
         }
 
-        /*public override void MouseClick(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             //
         }
@@ -199,7 +199,7 @@ namespace CBRE.Editor.Tools
         public override void MouseWheel(ViewportBase viewport, ViewportEvent e)
         {
             //
-        }*/
+        }
 
         private void ExpandBase(Vector3 endPoint)
         {
@@ -230,7 +230,7 @@ namespace CBRE.Editor.Tools
             _base.Vertices[3] = _base.Plane.GetIntersectionPoint(liney, true, true);
         }
 
-        /*public override void MouseMove(ViewportBase viewport, ViewportEvent e)
+        public override void MouseMove(ViewportBase viewport, ViewportEvent e)
         {
             var vp = viewport as Viewport3D;
             if (vp == null) return;
@@ -323,7 +323,7 @@ namespace CBRE.Editor.Tools
         public override void KeyUp(ViewportBase viewport, ViewportEvent e)
         {
             //
-        }*/
+        }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {

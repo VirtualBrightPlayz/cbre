@@ -250,8 +250,8 @@ namespace CBRE.Editor.Documents {
             if (!Map.SnapToGrid) return c;
 
             bool snap = true;
-            /*var snap = (Select.SnapStyle == SnapStyle.SnapOnAlt && KeyboardState.Alt) ||
-                       (Select.SnapStyle == SnapStyle.SnapOffAlt && !KeyboardState.Alt);*/
+            /*var snap = (Select.SnapStyle == SnapStyle.SnapOnAlt && ViewportManager.Alt) ||
+                       (Select.SnapStyle == SnapStyle.SnapOffAlt && !ViewportManager.Alt);*/
 
             return snap ? c.Snap(spacing == 0 ? Map.GridSpacing : spacing) : c;
         }

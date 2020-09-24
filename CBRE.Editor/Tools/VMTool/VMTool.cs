@@ -12,6 +12,7 @@ using System.Drawing;
 using System.Linq;
 using Select = CBRE.Settings.Select;
 using View = CBRE.Settings.View;
+using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Tools.VMTool
 {
@@ -249,7 +250,7 @@ namespace CBRE.Editor.Tools.VMTool
             return (from point in Points
                     let c = viewport.Flatten(point.Vector3)
                     where p.X >= c.X - d && p.X <= c.X + d && p.Y >= c.Y - d && p.Y <= c.Y + d
-                    let unused = viewport.GetUnusedVector3(point.Vector3)
+                    let unused = viewport.GetUnusedCoordinate(point.Vector3)
                     orderby unused.X + unused.Y + unused.Z descending
                     select point).ToList();
         }
@@ -483,7 +484,7 @@ namespace CBRE.Editor.Tools.VMTool
 
         private bool _clickSelectionDone = false;
 
-        /*private void MouseDown(Viewport3D vp, ViewportEvent e)
+        private void MouseDown(Viewport3D vp, ViewportEvent e)
         {
             if (!_currentTool.NoSelection())
             {
@@ -495,14 +496,14 @@ namespace CBRE.Editor.Tools.VMTool
                     var vtx = vtxs.First();
 
                     // Mouse down on a point
-                    if (vtx.IsSelected && KeyboardState.Ctrl && _currentTool.ShouldDeselect(vtxs))
+                    if (vtx.IsSelected && ViewportManager.Ctrl && _currentTool.ShouldDeselect(vtxs))
                     {
                         // If the vertex is selected and ctrl is down, deselect the vertices
                         vtxs.ForEach(x => x.IsSelected = false);
                     }
                     else
                     {
-                        if (!vtx.IsSelected && !KeyboardState.Ctrl && _currentTool.ShouldDeselect(vtxs))
+                        if (!vtx.IsSelected && !ViewportManager.Ctrl && _currentTool.ShouldDeselect(vtxs))
                         {
                             // If we aren't clicking on a selected point and ctrl is not down, deselect the others
                             Points.ForEach(x => x.IsSelected = false);
@@ -517,7 +518,7 @@ namespace CBRE.Editor.Tools.VMTool
                 }
 
                 // Nothing clicked
-                if (!KeyboardState.Ctrl)
+                if (!ViewportManager.Ctrl)
                 {
                     // Deselect all the points if not ctrl-ing
                     Points.ForEach(x => x.IsSelected = false);
@@ -538,7 +539,7 @@ namespace CBRE.Editor.Tools.VMTool
 
                 if (solid != null)
                 {
-                    if (solid.IsSelected && KeyboardState.Ctrl)
+                    if (solid.IsSelected && ViewportManager.Ctrl)
                     {
                         // deselect solid
                         var select = new MapObject[0];
@@ -549,7 +550,7 @@ namespace CBRE.Editor.Tools.VMTool
                     {
                         // select solid
                         var select = new[] { solid };
-                        var deselect = !KeyboardState.Ctrl ? Document.Selection.GetSelectedObjects() : new MapObject[0];
+                        var deselect = !ViewportManager.Ctrl ? Document.Selection.GetSelectedObjects() : new MapObject[0];
                         Document.PerformAction("Select VM solid", new ChangeSelection(select, deselect));
                     }
 
@@ -589,7 +590,7 @@ namespace CBRE.Editor.Tools.VMTool
             if (!vtxs.Any())
             {
                 // Nothing clicked
-                if (!KeyboardState.Ctrl)
+                if (!ViewportManager.Ctrl)
                 {
                     // Deselect all the points if not ctrl-ing
                     Points.ForEach(x => x.IsSelected = false);
@@ -614,7 +615,7 @@ namespace CBRE.Editor.Tools.VMTool
                 {
                     // select solid
                     var select = new[] { solid };
-                    var deselect = !KeyboardState.Ctrl ? Document.Selection.GetSelectedObjects() : new MapObject[0];
+                    var deselect = !ViewportManager.Ctrl ? Document.Selection.GetSelectedObjects() : new MapObject[0];
                     Document.PerformAction("Select VM solid", new ChangeSelection(select, deselect));
 
                     // Don't do other click operations
@@ -663,7 +664,7 @@ namespace CBRE.Editor.Tools.VMTool
 
             var vtx = vertices.First();
             // Shift selects only the topmost point
-            if (KeyboardState.Shift)
+            if (ViewportManager.Shift)
             {
                 vertices.Clear();
                 vertices.Add(vtx);
@@ -673,14 +674,14 @@ namespace CBRE.Editor.Tools.VMTool
             BoxDrawnCancel(vp);
 
             // Mouse down on a point
-            if (vtx.IsSelected && KeyboardState.Ctrl && _currentTool.ShouldDeselect(vertices))
+            if (vtx.IsSelected && ViewportManager.Ctrl && _currentTool.ShouldDeselect(vertices))
             {
                 // If the vertex is selected and ctrl is down, deselect the vertices
                 vertices.ForEach(x => x.IsSelected = false);
             }
             else
             {
-                if (!vtx.IsSelected && !KeyboardState.Ctrl && _currentTool.ShouldDeselect(vertices))
+                if (!vtx.IsSelected && !ViewportManager.Ctrl && _currentTool.ShouldDeselect(vertices))
                 {
                     // If we aren't clicking on a selected point and ctrl is not down, deselect the others
                     Points.ForEach(x => x.IsSelected = false);
@@ -708,7 +709,7 @@ namespace CBRE.Editor.Tools.VMTool
 
             if (!e.Handled)
             {
-                if (MoveSelection != null && !KeyboardState.Ctrl)
+                if (MoveSelection != null && !ViewportManager.Ctrl)
                 {
                     // If we were clicking on a point, and the mouse hasn't moved yet,
                     // and ctrl is not down, deselect the other points.
@@ -757,14 +758,14 @@ namespace CBRE.Editor.Tools.VMTool
             {
                 // Not moving a point, just test for the cursor.
                 var vtxs = _currentTool.GetVerticesAtPoint(e.X, viewport.Height - e.Y, viewport);
-                if (vtxs.Any()) viewport.Cursor = Cursors.Cross;
-                else if (viewport.Cursor == Cursors.Cross) viewport.Cursor = Cursors.Default;
+                if (vtxs.Any()) viewport.Cursor = MouseCursor.Crosshair;
+                else if (viewport.Cursor == MouseCursor.Crosshair) viewport.Cursor = MouseCursor.Arrow;
             }
             else
             {
                 // Moving a point, get the delta moved
                 var point = SnapIfNeeded(viewport.Expand(viewport.ScreenToWorld(e.X, viewport.Height - e.Y)));
-                if (!KeyboardState.Alt && KeyboardState.Shift)
+                if (!ViewportManager.Alt && ViewportManager.Shift)
                 {
                     // If shift is down, retain the offset the point was at before (relative to the grid)
                     point += _snapPointOffset;
@@ -775,7 +776,7 @@ namespace CBRE.Editor.Tools.VMTool
                 UpdateMidpoints();
                 MoveSelection = null;
             }
-        }*/
+        }
 
         public override HotkeyInterceptResult InterceptHotkey(HotkeysMediator hotkeyMessage, object parameters)
         {
@@ -954,7 +955,7 @@ namespace CBRE.Editor.Tools.VMTool
             base.Render(viewport);
         }
 
-        /*public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
+        public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
         {
             if (_currentTool != null) _currentTool.MouseEnter(viewport, e);
             if (e.Handled) return;
@@ -987,7 +988,7 @@ namespace CBRE.Editor.Tools.VMTool
             if (_currentTool != null) _currentTool.KeyUp(viewport, e);
             if (e.Handled) return;
             base.KeyUp(viewport, e);
-        }*/
+        }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {

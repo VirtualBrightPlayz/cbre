@@ -166,7 +166,7 @@ Move the origin point around by *clicking and dragging* it.";
             /*Editor.Instance.CaptureAltPresses = false;*/
         }
 
-        /*public override void MouseClick(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
 
         }
@@ -225,7 +225,7 @@ Move the origin point around by *clicking and dragging* it.";
         public override void KeyUp(ViewportBase viewport, ViewportEvent e)
         {
 
-        }*/
+        }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {

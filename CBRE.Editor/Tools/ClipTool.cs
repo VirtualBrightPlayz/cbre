@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Tools
 {
@@ -85,7 +86,7 @@ namespace CBRE.Editor.Tools
             return ClipState.None;
         }
 
-        /*public override void MouseDown(ViewportBase vp, ViewportEvent e)
+        public override void MouseDown(ViewportBase vp, ViewportEvent e)
         {
             if (!(vp is Viewport2D)) return;
             var viewport = (Viewport2D)vp;
@@ -130,7 +131,7 @@ namespace CBRE.Editor.Tools
                 _state = ClipState.Drawn;
             }
 
-            Editor.Instance.CaptureAltPresses = false;
+            //Editor.Instance.CaptureAltPresses = false;
         }
 
         public override void MouseMove(ViewportBase vp, ViewportEvent e)
@@ -151,7 +152,7 @@ namespace CBRE.Editor.Tools
             {
                 // Move point 1
                 var cp1 = viewport.GetUnusedCoordinate(_clipPlanePoint1) + point;
-                if (KeyboardState.Ctrl)
+                if (ViewportManager.Ctrl)
                 {
                     var diff = _clipPlanePoint1 - cp1;
                     _clipPlanePoint2 -= diff;
@@ -163,7 +164,7 @@ namespace CBRE.Editor.Tools
             {
                 // Move point 2
                 var cp2 = viewport.GetUnusedCoordinate(_clipPlanePoint2) + point;
-                if (KeyboardState.Ctrl)
+                if (ViewportManager.Ctrl)
                 {
                     var diff = _clipPlanePoint2 - cp2;
                     _clipPlanePoint1 -= diff;
@@ -175,7 +176,7 @@ namespace CBRE.Editor.Tools
             {
                 // Move point 3
                 var cp3 = viewport.GetUnusedCoordinate(_clipPlanePoint3) + point;
-                if (KeyboardState.Ctrl)
+                if (ViewportManager.Ctrl)
                 {
                     var diff = _clipPlanePoint3 - cp3;
                     _clipPlanePoint1 -= diff;
@@ -184,15 +185,15 @@ namespace CBRE.Editor.Tools
                 _clipPlanePoint3 = cp3;
             }
 
-            Editor.Instance.CaptureAltPresses = _state != ClipState.None && _state != ClipState.Drawn;
+            //Editor.Instance.CaptureAltPresses = _state != ClipState.None && _state != ClipState.Drawn;
 
             if (st != ClipState.None || (_state != ClipState.None && _state != ClipState.Drawn))
             {
-                viewport.Cursor = Cursors.Cross;
+                viewport.Cursor = MouseCursor.Crosshair;
             }
             else
             {
-                viewport.Cursor = Cursors.Default;
+                viewport.Cursor = MouseCursor.Arrow;
             }
         }
 
@@ -212,7 +213,7 @@ namespace CBRE.Editor.Tools
                 _clipPlanePoint1 = _clipPlanePoint2 = _clipPlanePoint3 = _drawingPoint = null;
                 _state = _prevState = ClipState.None;
             }
-        }*/
+        }
 
         private void PerformClip()
         {
@@ -385,7 +386,7 @@ namespace CBRE.Editor.Tools
             }*/
         }
 
-        /*public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
+        public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
         {
             //
         }
@@ -408,7 +409,7 @@ namespace CBRE.Editor.Tools
         public override void KeyUp(ViewportBase viewport, ViewportEvent e)
         {
             //
-        }*/
+        }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {

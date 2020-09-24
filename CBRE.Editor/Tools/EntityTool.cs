@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Select = CBRE.Settings.Select;
+using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Tools
 {
@@ -113,14 +114,14 @@ namespace CBRE.Editor.Tools
             return HotkeyTool.Entity;
         }
 
-        /*public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
+        public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
         {
-            viewport.Cursor = Cursors.Default;
+            viewport.Cursor = MouseCursor.Arrow;
         }
 
         public override void MouseLeave(ViewportBase viewport, ViewportEvent e)
         {
-            viewport.Cursor = Cursors.Default;
+            viewport.Cursor = MouseCursor.Arrow;
         }
 
         public override void MouseDown(ViewportBase viewport, ViewportEvent e)
@@ -186,7 +187,7 @@ namespace CBRE.Editor.Tools
 
         public override void MouseMove(ViewportBase viewport, ViewportEvent e)
         {
-            if (!(viewport is Viewport2D) || !Control.MouseButtons.HasFlag(MouseButtons.Left)) return;
+            if (!(viewport is Viewport2D) || !e.Button.HasFlag(MouseButtons.Left)) return;
             if (_state != EntityState.Moving) return;
             var vp = viewport as Viewport2D;
             var loc = SnapIfNeeded(vp.ScreenToWorld(e.X, vp.Height - e.Y));
@@ -210,7 +211,7 @@ namespace CBRE.Editor.Tools
                     _state = EntityState.None;
                     break;
             }
-        }*/
+        }
 
         private void CreateEntity(Vector3 origin, GameDataObject gd = null)
         {
@@ -245,10 +246,10 @@ namespace CBRE.Editor.Tools
             }*/
         }
 
-        /*public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
         {
             //
-        }*/
+        }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {

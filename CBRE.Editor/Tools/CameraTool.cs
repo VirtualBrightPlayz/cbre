@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Camera = CBRE.DataStructures.MapObjects.Camera;
+using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Tools
 {
@@ -142,7 +143,7 @@ namespace CBRE.Editor.Tools
             }
         }
 
-        /*public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
+        public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
         {
             //
         }
@@ -157,7 +158,7 @@ namespace CBRE.Editor.Tools
             var vp = viewport as Viewport2D;
             if (vp == null) return;
             _state = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
-            if (_state == State.None && KeyboardState.Shift)
+            if (_state == State.None && ViewportManager.Shift)
             {
                 var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
                 _stateCamera = new Camera { EyePosition = p, LookPosition = p + Vector3.UnitX * 1.5m * Document.Map.GridSpacing };
@@ -198,25 +199,25 @@ namespace CBRE.Editor.Tools
             if (vp == null) return;
 
             var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
-            var cursor = Cursors.Default;
+            var cursor = MouseCursor.Arrow;
 
             switch (_state)
             {
                 case State.None:
                     var st = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
-                    if (st != State.None) cursor = Cursors.SizeAll;
+                    if (st != State.None) cursor = MouseCursor.SizeAll;
                     break;
                 case State.MovingPosition:
                     if (_stateCamera == null) break;
                     var newEye = vp.GetUnusedCoordinate(_stateCamera.EyePosition) + p;
-                    if (KeyboardState.Ctrl) _stateCamera.LookPosition += (newEye - _stateCamera.EyePosition);
+                    if (ViewportManager.Ctrl) _stateCamera.LookPosition += (newEye - _stateCamera.EyePosition);
                     _stateCamera.EyePosition = newEye;
                     SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
                     break;
                 case State.MovingLook:
                     if (_stateCamera == null) break;
                     var newLook = vp.GetUnusedCoordinate(_stateCamera.LookPosition) + p;
-                    if (KeyboardState.Ctrl) _stateCamera.EyePosition += (newLook - _stateCamera.LookPosition);
+                    if (ViewportManager.Ctrl) _stateCamera.EyePosition += (newLook - _stateCamera.LookPosition);
                     _stateCamera.LookPosition = newLook;
                     SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
                     break;
@@ -237,7 +238,7 @@ namespace CBRE.Editor.Tools
         public override void KeyUp(ViewportBase viewport, ViewportEvent e)
         {
             //
-        }*/
+        }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Tools.SelectTool
 {
@@ -37,7 +38,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         //private readonly SelectToolSidebarPanel _sidebarPanel;
 
-        private Matrix CurrentTransform { get; set; }
+        private Matrix? CurrentTransform { get; set; }
 
         public SelectTool()
         {
@@ -227,7 +228,7 @@ namespace CBRE.Editor.Tools.SelectTool
         #endregion
 
         #region Widget
-        /*private bool WidgetAction(Action<Widget, ViewportBase, ViewportEvent> action, ViewportBase viewport, ViewportEvent ev)
+        private bool WidgetAction(Action<Widget, ViewportBase, ViewportEvent> action, ViewportBase viewport, ViewportEvent ev)
         {
             if (_widgets == null) return false;
             foreach (var widget in _widgets)
@@ -272,7 +273,7 @@ namespace CBRE.Editor.Tools.SelectTool
         {
             if (WidgetAction((w, vp, ev) => w.MouseLeave(vp, ev), viewport, e)) return;
             base.MouseLeave(viewport, e);
-        }*/
+        }
 
         public override void PreRender(ViewportBase viewport)
         {
@@ -348,34 +349,32 @@ namespace CBRE.Editor.Tools.SelectTool
         #endregion
 
         #region Double Click
-        /*public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
+        public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             // Don't show Object Properties while navigating the view, because mouse cursor will be hidden
-            if (KeyboardState.IsKeyDown(Keys.Space)) return;
+            var keyboardState = Keyboard.GetState();
+            if (keyboardState.IsKeyDown(Keys.Space)) { return; }
 
-            if (WidgetAction((w, vp, ev) => w.MouseDoubleClick(vp, ev), viewport, e)) return;
+            if (WidgetAction((w, vp, ev) => w.MouseDoubleClick(vp, ev), viewport, e)) { return; }
 
-            if (CBRE.Settings.Select.DoubleClick3DAction == DoubleClick3DAction.Nothing) return;
-            if (viewport is Viewport3D && !Document.Selection.IsEmpty())
-            {
-                if (CBRE.Settings.Select.DoubleClick3DAction == DoubleClick3DAction.ObjectProperties && !ObjectPropertiesDialog.IsShowing)
-                {
+            if (CBRE.Settings.Select.DoubleClick3DAction == DoubleClick3DAction.Nothing) { return; }
+            if (viewport is Viewport3D && !Document.Selection.IsEmpty()) {
+                if (CBRE.Settings.Select.DoubleClick3DAction == DoubleClick3DAction.ObjectProperties /*&& !ObjectPropertiesDialog.IsShowing*/) {
                     Mediator.Publish(HotkeysMediator.ObjectProperties);
                 }
-                else if (CBRE.Settings.Select.DoubleClick3DAction == DoubleClick3DAction.TextureTool)
-                {
+                else if (CBRE.Settings.Select.DoubleClick3DAction == DoubleClick3DAction.TextureTool) {
                     Mediator.Publish(HotkeysMediator.SwitchTool, HotkeyTool.Texture);
                 }
             }
-        }*/
+        }
         #endregion
 
         #region 3D interaction
 
-        /*protected override void MouseMove3D(Viewport3D viewport, ViewportEvent e)
+        protected override void MouseMove3D(Viewport3D viewport, ViewportEvent e)
         {
             base.MouseMove3D(viewport, e);
-        }*/
+        }
 
         private Vector3 GetIntersectionPoint(MapObject obj, Line line)
         {
@@ -391,7 +390,6 @@ namespace CBRE.Editor.Tools.SelectTool
                 .FirstOrDefault();
         }
 
-        /*
         /// <summary>
         /// When the mouse is pressed in the 3D view, we want to select the clicked object.
         /// </summary>
@@ -399,8 +397,9 @@ namespace CBRE.Editor.Tools.SelectTool
         /// <param name="e">The click event</param>
         protected override void MouseDown3D(Viewport3D viewport, ViewportEvent e)
         {
+            var keyboardState = Keyboard.GetState();
             // Do not perform selection if space is down
-            if (CBRE.Settings.View.Camera3DPanRequiresMouseClick && KeyboardState.IsKeyDown(Keys.Space)) return;
+            if (CBRE.Settings.View.Camera3DPanRequiresMouseClick && keyboardState.IsKeyDown(Keys.Space)) return;
 
             // First, get the ray that is cast from the clicked point along the viewport frustrum
             var ray = viewport.CastRayFromScreen(e.X, e.Y);
@@ -421,8 +420,8 @@ namespace CBRE.Editor.Tools.SelectTool
 
             // If Ctrl is down and the object is already selected, we should deselect it instead.
             var list = new[] { ChosenItemFor3DSelection };
-            var desel = ChosenItemFor3DSelection != null && KeyboardState.Ctrl && ChosenItemFor3DSelection.IsSelected;
-            SetSelected(desel ? list : null, desel ? null : list, !KeyboardState.Ctrl, IgnoreGrouping());
+            var desel = ChosenItemFor3DSelection != null && ViewportManager.Ctrl && ChosenItemFor3DSelection.IsSelected;
+            SetSelected(desel ? list : null, desel ? null : list, !ViewportManager.Ctrl, IgnoreGrouping());
 
             State.ActiveViewport = null;
         }
@@ -480,7 +479,7 @@ namespace CBRE.Editor.Tools.SelectTool
             SetSelected(desel, sel, false, IgnoreGrouping());
 
             State.ActiveViewport = null;
-        }*/
+        }
 
         /// <summary>
         /// The select tool captures the mouse wheel when the mouse is down in the 3D viewport
@@ -502,7 +501,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         #region 2D interaction
 
-        /*protected override Cursor CursorForHandle(ResizeHandle handle)
+        protected override MouseCursor CursorForHandle(ResizeHandle handle)
         {
             var def = base.CursorForHandle(handle);
             return _currentTool == null || handle == ResizeHandle.Center
@@ -525,7 +524,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
             var padding = 7 / viewport.Zoom;
 
-            viewport.Cursor = Cursors.Default;
+            viewport.Cursor = MouseCursor.Arrow;
             State.Action = BoxAction.Drawn;
             State.ActiveViewport = null;
 
@@ -568,7 +567,7 @@ namespace CBRE.Editor.Tools.SelectTool
         protected override void LeftMouseDownToDraw(Viewport2D viewport, ViewportEvent e)
         {
             // If we've clicked outside a selection box and not holding down control, clear the selection
-            if (!Document.Selection.IsEmpty() && !KeyboardState.Ctrl)
+            if (!Document.Selection.IsEmpty() && !ViewportManager.Ctrl)
             {
                 SetSelected(null, null, true, IgnoreGrouping());
             }
@@ -619,7 +618,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
             if (_currentTool == null) return;
 
-            if (KeyboardState.Ctrl)
+            if (ViewportManager.Ctrl)
             {
                 var seltest = SelectionTest(viewport, e);
                 if (seltest != null)
@@ -636,7 +635,7 @@ namespace CBRE.Editor.Tools.SelectTool
             SetCurrentTool(_tools[(idx + 1) % _tools.Count]);
         }
 
-        private Matrix4? GetTransformMatrix(Viewport2D viewport, ViewportEvent e)
+        private Matrix GetTransformMatrix(Viewport2D viewport, ViewportEvent e)
         {
             if (_currentTool == null) return null;
             return State.Handle == ResizeHandle.Center
@@ -663,17 +662,17 @@ namespace CBRE.Editor.Tools.SelectTool
 
             // Execute the transform on the selection
             var transformation = GetTransformMatrix(viewport, e);
-            if (transformation.HasValue)
+            if (transformation != null)
             {
-                var createClone = KeyboardState.Shift && State.Handle == ResizeHandle.Center;
-                ExecuteTransform(_currentTool.GetTransformName(), CreateMatrixMultTransformation(transformation.Value), createClone);
+                var createClone = ViewportManager.Shift && State.Handle == ResizeHandle.Center;
+                ExecuteTransform(_currentTool.GetTransformName(), CreateMatrixMultTransformation(transformation), createClone);
             }
             Document.EndSelectionTransform();
             State.ActiveViewport = null;
             State.Action = BoxAction.Drawn;
 
             SelectionChanged();
-        }*/
+        }
 
         protected override Vector3 GetResizeOrigin(Viewport2D viewport)
         {
@@ -688,7 +687,7 @@ namespace CBRE.Editor.Tools.SelectTool
             return base.GetResizeOrigin(viewport);
         }
 
-        /*protected override void MouseDraggingToResize(Viewport2D viewport, ViewportEvent e)
+        protected override void MouseDraggingToResize(Viewport2D viewport, ViewportEvent e)
         {
             if (_currentTool == null)
             {
@@ -698,11 +697,11 @@ namespace CBRE.Editor.Tools.SelectTool
 
             State.Action = BoxAction.Resizing;
             CurrentTransform = GetTransformMatrix(viewport, e);
-            if (CurrentTransform.HasValue)
+            if (CurrentTransform != null)
             {
-                Document.SetSelectListTransform(CurrentTransform.Value);
+                Document.SetSelectListTransform(CurrentTransform);
                 var box = new Box(State.PreTransformBoxStart, State.PreTransformBoxEnd);
-                var trans = CreateMatrixMultTransformation(CurrentTransform.Value);
+                var trans = CreateMatrixMultTransformation(CurrentTransform);
                 Mediator.Publish(EditorMediator.SelectionBoxChanged, box.Transform(trans));
             }
             else
@@ -718,12 +717,12 @@ namespace CBRE.Editor.Tools.SelectTool
             if (nudge != null && vp != null && (State.Action == BoxAction.ReadyToResize || State.Action == BoxAction.Drawn) && !Document.Selection.IsEmpty())
             {
                 var translate = vp.Expand(nudge);
-                var transformation = Matrix4.CreateTranslation((float)translate.X, (float)translate.Y, (float)translate.Z);
-                ExecuteTransform("Nudge", CreateMatrixMultTransformation(transformation), KeyboardState.Shift);
+                var transformation = Matrix.Translation(translate);
+                ExecuteTransform("Nudge", CreateMatrixMultTransformation(transformation), ViewportManager.Shift);
                 SelectionChanged();
             }
             base.KeyDown(viewport, e);
-        }*/
+        }
 
         #endregion
 
@@ -747,7 +746,7 @@ namespace CBRE.Editor.Tools.SelectTool
                 // Otherwise, select all brushes that intersect with the box
                 Func<Box, IEnumerable<MapObject>> selector = x => Document.Map.WorldSpawn.GetAllNodesIntersectingWith(x);
                 if (CBRE.Settings.Select.BoxSelectByCenterHandlesOnly) selector = x => Document.Map.WorldSpawn.GetAllNodesWithCentersContainedWithin(x);
-                if (KeyboardState.Shift) selector = x => Document.Map.WorldSpawn.GetAllNodesContainedWithin(x);
+                if (ViewportManager.Shift) selector = x => Document.Map.WorldSpawn.GetAllNodesContainedWithin(x);
 
                 var nodes = selector(boundingbox).ToList();
                 SetSelected(null, nodes, false, IgnoreGrouping());

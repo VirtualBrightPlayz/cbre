@@ -13,6 +13,17 @@ namespace CBRE.Editor {
     partial class GameMain {
         public List<ToolBarItem> ToolBarItems;
 
+        private int selectedToolIndex = 0;
+
+        public BaseTool SelectedTool {
+            get {
+                return ToolBarItems[selectedToolIndex].Tool;
+            }
+            set {
+                selectedToolIndex = ToolBarItems.FindIndex(tbi => tbi.Tool == value);
+            }
+        }
+
         public void InitToolBar() {
             ToolBarItems = new List<ToolBarItem>();
 
@@ -51,18 +62,34 @@ namespace CBRE.Editor {
             }
 
             public virtual void Draw() {
+                bool isSelected = GameMain.Instance.SelectedTool == Tool;
+                if (isSelected) {
+                    ImGui.PushStyleColor(ImGuiCol.Button, new Num.Vector4(0.3f, 0.6f, 0.7f, 1.0f));
+                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Num.Vector4(0.15f, 0.3f, 0.4f, 1.0f));
+                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Num.Vector4(0.45f, 0.9f, 1.0f, 1.0f));
+                }
+
                 bool pressed;
                 if (Texture.ImGuiTexture != IntPtr.Zero) {
                     pressed = ImGui.ImageButton(Texture.ImGuiTexture, new Num.Vector2(32, 32));
                 } else {
                     pressed = ImGui.Button("", new Num.Vector2(40, 38));
                 }
+
+                if (pressed) {
+                    GameMain.Instance.SelectedTool = Tool;
+                }
+
                 if (ImGui.IsItemHovered()) {
                     ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.One * 4);
                     ImGui.BeginTooltip();
                     ImGui.SetTooltip(ToolTip);
                     ImGui.EndTooltip();
                     ImGui.PopStyleVar();
+                }
+
+                if (isSelected) {
+                    ImGui.PopStyleColor(3);
                 }
             }
         }

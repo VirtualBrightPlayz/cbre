@@ -250,13 +250,14 @@ namespace CBRE.Editor.Tools.TextureTool {
             /*_form.SelectionChanged();*/
         }
 
-        /*public override void MouseDown(ViewportBase viewport, ViewportEvent e) {
-            var vp = viewport as Viewport3D;
+        public override void MouseDown(ViewportBase viewport, ViewportEvent e) {
+            throw new NotImplementedException();
+            /*var vp = viewport as Viewport3D;
             if (vp == null || (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right)) return;
 
             var behaviour = e.Button == MouseButtons.Left
-                                ? _form.GetLeftClickBehaviour(KeyboardState.Ctrl, KeyboardState.Shift, KeyboardState.Alt)
-                                : _form.GetRightClickBehaviour(KeyboardState.Ctrl, KeyboardState.Shift, KeyboardState.Alt);
+                                ? _form.GetLeftClickBehaviour(ViewportManager.Ctrl, ViewportManager.Shift, ViewportManager.Alt)
+                                : _form.GetRightClickBehaviour(ViewportManager.Ctrl, ViewportManager.Shift, ViewportManager.Alt);
 
             var ray = vp.CastRayFromScreen(e.X, e.Y);
             var hits = Document.Map.WorldSpawn.GetAllNodesIntersectingWith(ray).OfType<Solid>();
@@ -270,7 +271,7 @@ namespace CBRE.Editor.Tools.TextureTool {
             if (clickedFace == null) return;
 
             var faces = new List<Face>();
-            if (KeyboardState.Shift) faces.AddRange(clickedFace.Parent.Faces);
+            if (ViewportManager.Shift) faces.AddRange(clickedFace.Parent.Faces);
             else faces.Add(clickedFace);
 
             var firstSelected = Document.Selection.GetSelectedFaces().FirstOrDefault();
@@ -279,8 +280,8 @@ namespace CBRE.Editor.Tools.TextureTool {
             var ac = new ActionCollection();
 
             var select = new ChangeFaceSelection(
-                KeyboardState.Ctrl ? faces.Where(x => !x.IsSelected) : faces,
-                KeyboardState.Ctrl ? faces.Where(x => x.IsSelected) : Document.Selection.GetSelectedFaces().Where(x => !faces.Contains(x)));
+                ViewportManager.Ctrl ? faces.Where(x => !x.IsSelected) : faces,
+                ViewportManager.Ctrl ? faces.Where(x => x.IsSelected) : Document.Selection.GetSelectedFaces().Where(x => !faces.Contains(x)));
 
             Action lift = () => {
                 if (firstClicked == null) return;
@@ -327,9 +328,9 @@ namespace CBRE.Editor.Tools.TextureTool {
                     var right = vp.Camera.GetRight();
                     var up = vp.Camera.GetUp();
                     var loc = vp.Camera.Location;
-                    var point = new Coordinate((decimal)loc.X, (decimal)loc.Y, (decimal)loc.Z);
-                    var uaxis = new Coordinate((decimal)right.X, (decimal)right.Y, (decimal)right.Z);
-                    var vaxis = new Coordinate((decimal)up.X, (decimal)up.Y, (decimal)up.Z);
+                    var point = new Vector3((decimal)loc.X, (decimal)loc.Y, (decimal)loc.Z);
+                    var uaxis = new Vector3((decimal)right.X, (decimal)right.Y, (decimal)right.Z);
+                    var vaxis = new Vector3((decimal)up.X, (decimal)up.Y, (decimal)up.Z);
                     ac.Add(new EditFace(faces, (document, face) => {
                         face.Texture.XScale = 1;
                         face.Texture.YScale = 1;
@@ -346,12 +347,12 @@ namespace CBRE.Editor.Tools.TextureTool {
             }
             if (!ac.IsEmpty()) {
                 Document.PerformAction("Texture selection", ac);
-            }
+            }*/
         }
 
         public override void KeyDown(ViewportBase viewport, ViewportEvent e) {
             //throw new NotImplementedException();
-        }*/
+        }
 
         public override void Render(ViewportBase viewport) {
             if (Document.Map.HideFaceMask) return;
@@ -403,7 +404,7 @@ namespace CBRE.Editor.Tools.TextureTool {
 
         }
 
-        /*public override void MouseEnter(ViewportBase viewport, ViewportEvent e) {
+        public override void MouseEnter(ViewportBase viewport, ViewportEvent e) {
             //
         }
 
@@ -437,7 +438,7 @@ namespace CBRE.Editor.Tools.TextureTool {
 
         public override void KeyUp(ViewportBase viewport, ViewportEvent e) {
             //
-        }*/
+        }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame) {
             //

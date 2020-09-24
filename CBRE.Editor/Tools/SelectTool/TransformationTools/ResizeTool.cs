@@ -6,6 +6,7 @@ using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Tools.SelectTool.TransformationTools
 {
@@ -30,22 +31,22 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             return "Resize";
         }
 
-        /*public override Cursor CursorForHandle(BaseBoxTool.ResizeHandle handle)
+        public override MouseCursor CursorForHandle(BaseBoxTool.ResizeHandle handle)
         {
             return null;
-        }*/
+        }
 
         #region 2D Transformation Matrix
-        /*public override Matrix4? GetTransformationMatrix(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document doc, IEnumerable<Widget> activeWidgets)
+        public override Matrix GetTransformationMatrix(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document doc, IEnumerable<Widget> activeWidgets)
         {
             var coords = GetBoxCoordinatesForSelectionResize(viewport, e, state, doc);
             state.BoxStart = coords.Item1;
             state.BoxEnd = coords.Item2;
-            Matrix4 resizeMatrix;
+            Matrix resizeMatrix;
             if (state.Handle == BaseBoxTool.ResizeHandle.Center)
             {
                 var movement = state.BoxStart - state.PreTransformBoxStart;
-                resizeMatrix = Matrix4.CreateTranslation((float)movement.X, (float)movement.Y, (float)movement.Z);
+                resizeMatrix = Matrix.Translation(movement);
             }
             else
             {
@@ -54,12 +55,12 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
                 resize = resize.ComponentDivide(state.PreTransformBoxEnd - state.PreTransformBoxStart);
                 resize += new Vector3(1, 1, 1);
                 var offset = -GetOriginForTransform(viewport, state);
-                var trans = Matrix4.CreateTranslation((float)offset.X, (float)offset.Y, (float)offset.Z);
-                var scale = Matrix4.Mult(trans, Matrix4.CreateScale((float)resize.X, (float)resize.Y, (float)resize.Z));
-                resizeMatrix = Matrix4.Mult(scale, Matrix4.Invert(trans));
+                var trans = Matrix.Translation(offset);
+                var scale = trans * Matrix.Scale(resize);
+                resizeMatrix = scale * trans.Inverse();
             }
             return resizeMatrix;
-        }*/
+        }
 
         private Vector3 GetResizeOrigin(Viewport2D viewport, BaseBoxTool.BoxState state, Document document)
         {
@@ -75,7 +76,7 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             return points.OrderBy(x => (state.MoveStart - x).LengthSquared()).First();
         }
 
-        /*private Vector3 GetResizeDistance(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document document)
+        private Vector3 GetResizeDistance(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document document)
         {
             var origin = GetResizeOrigin(viewport, state, document);
             if (origin == null) return null;
@@ -96,7 +97,7 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             var oend = viewport.Flatten(state.PreTransformBoxEnd ?? Vector3.Zero);
             var owidth = oend.X - ostart.X;
             var oheight = oend.Y - ostart.Y;
-            var proportional = KeyboardState.Ctrl && state.Action == BaseBoxTool.BoxAction.Resizing && owidth != 0 && oheight != 0;
+            var proportional = ViewportManager.Ctrl && state.Action == BaseBoxTool.BoxAction.Resizing && owidth != 0 && oheight != 0;
 
             switch (state.Handle)
             {
@@ -172,7 +173,7 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             cstart = viewport.Expand(cstart) + viewport.GetUnusedCoordinate(state.BoxStart);
             cend = viewport.Expand(cend) + viewport.GetUnusedCoordinate(state.BoxEnd);
             return Tuple.Create(cstart, cend);
-        }*/
+        }
 
         private static Vector3 GetOriginForTransform(Viewport2D viewport, BaseBoxTool.BoxState state)
         {

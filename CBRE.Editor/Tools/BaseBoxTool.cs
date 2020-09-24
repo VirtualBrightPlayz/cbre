@@ -1,6 +1,7 @@
 ﻿using CBRE.Common.Mediator;
 using CBRE.DataStructures.Geometric;
 using CBRE.Editor.Rendering;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Drawing;
 using System.Linq;
@@ -175,7 +176,6 @@ namespace CBRE.Editor.Tools
                                  : new Box(State.BoxStart, State.BoxEnd));
         }
 
-        /*
         // Mouse Down
         public override void MouseDown(ViewportBase viewport, ViewportEvent e)
         {
@@ -234,7 +234,7 @@ namespace CBRE.Editor.Tools
         public override void MouseUp(ViewportBase viewport, ViewportEvent e)
         {
             if (viewport is Viewport3D) MouseUp3D((Viewport3D)viewport, e);
-            Editor.Instance.CaptureAltPresses = false;
+            //Editor.Instance.CaptureAltPresses = false;
             if (e.Button != MouseButtons.Left) return;
             if (!(viewport is Viewport2D)) return;
             var vp = (Viewport2D)viewport;
@@ -308,7 +308,7 @@ namespace CBRE.Editor.Tools
             {
                 case BoxAction.Drawing:
                 case BoxAction.DownToDraw:
-                    Editor.Instance.CaptureAltPresses = true;
+                    //Editor.Instance.CaptureAltPresses = true;
                     MouseDraggingToDraw(vp, e);
                     break;
                 case BoxAction.Drawn:
@@ -317,7 +317,7 @@ namespace CBRE.Editor.Tools
                     break;
                 case BoxAction.DownToResize:
                 case BoxAction.Resizing:
-                    Editor.Instance.CaptureAltPresses = true;
+                    //Editor.Instance.CaptureAltPresses = true;
                     MouseDraggingToResize(vp, e);
                     break;
             }
@@ -346,26 +346,26 @@ namespace CBRE.Editor.Tools
             OnBoxChanged();
         }
 
-        protected virtual Cursor CursorForHandle(ResizeHandle handle)
+        protected virtual MouseCursor CursorForHandle(ResizeHandle handle)
         {
             switch (handle)
             {
                 case ResizeHandle.TopLeft:
                 case ResizeHandle.BottomRight:
-                    return Cursors.SizeNWSE;
+                    return MouseCursor.SizeNWSE;
                 case ResizeHandle.TopRight:
                 case ResizeHandle.BottomLeft:
-                    return Cursors.SizeNESW;
+                    return MouseCursor.SizeNESW;
                 case ResizeHandle.Top:
                 case ResizeHandle.Bottom:
-                    return Cursors.SizeNS;
+                    return MouseCursor.SizeNS;
                 case ResizeHandle.Left:
                 case ResizeHandle.Right:
-                    return Cursors.SizeWE;
+                    return MouseCursor.SizeWE;
                 case ResizeHandle.Center:
-                    return Cursors.SizeAll;
+                    return MouseCursor.SizeAll;
                 default:
-                    return Cursors.Default;
+                    return MouseCursor.Arrow;
             }
         }
 
@@ -384,7 +384,7 @@ namespace CBRE.Editor.Tools
             }
             else
             {
-                viewport.Cursor = Cursors.Default;
+                viewport.Cursor = MouseCursor.Arrow;
                 State.Action = BoxAction.Drawn;
                 State.ActiveViewport = null;
             }
@@ -394,8 +394,6 @@ namespace CBRE.Editor.Tools
         {
             // Nope.
         }
-        
-        */
 
         protected virtual Vector3 GetResizeOrigin(Viewport2D viewport)
         {
@@ -406,7 +404,6 @@ namespace CBRE.Editor.Tools
             return points.OrderBy(x => (State.MoveStart - x).LengthSquared()).First();
         }
 
-        /*
         protected virtual Vector3 GetResizeDistance(Viewport2D viewport, ViewportEvent e)
         {
             var origin = GetResizeOrigin(viewport);
@@ -428,7 +425,7 @@ namespace CBRE.Editor.Tools
             var oend = viewport.Flatten(State.PreTransformBoxEnd ?? Vector3.Zero);
             var owidth = oend.X - ostart.X;
             var oheight = oend.Y - ostart.Y;
-            var proportional = KeyboardState.Ctrl && State.Action == BoxAction.Resizing && owidth != 0 && oheight != 0;
+            var proportional = ViewportManager.Ctrl && State.Action == BoxAction.Resizing && owidth != 0 && oheight != 0;
 
             switch (State.Handle)
             {
@@ -521,7 +518,7 @@ namespace CBRE.Editor.Tools
                     BoxDrawnCancel(viewport);
                     break;
             }
-        }*/
+        }
 
         public virtual void BoxDrawnConfirm(ViewportBase viewport)
         {
@@ -541,10 +538,10 @@ namespace CBRE.Editor.Tools
             State.ActiveViewport = null;*/
         }
 
-        /*public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
         {
             // Probably not needed
-        }*/
+        }
 
         #region Rendering
         /*
@@ -842,17 +839,15 @@ namespace CBRE.Editor.Tools
 
         }
 
-        /*
         public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
         {
-            if (State.ActiveViewport != null) State.ActiveViewport.Cursor = Cursors.Default;
+            if (State.ActiveViewport != null) State.ActiveViewport.Cursor = MouseCursor.Arrow;
         }
 
         public override void MouseLeave(ViewportBase viewport, ViewportEvent e)
         {
-            if (State.ActiveViewport != null) State.ActiveViewport.Cursor = Cursors.Default;
+            if (State.ActiveViewport != null) State.ActiveViewport.Cursor = MouseCursor.Arrow;
         }
-        */
 
         protected bool GetSelectionBox(out Box boundingbox)
         {

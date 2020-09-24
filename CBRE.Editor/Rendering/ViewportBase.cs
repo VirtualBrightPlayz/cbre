@@ -1,4 +1,5 @@
 ﻿using CBRE.DataStructures.Geometric;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,6 +17,8 @@ namespace CBRE.Editor.Rendering {
         public int Y { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
+
+        public MouseCursor Cursor { get; set; }
 
         public bool IsUnlocked(object context) {
             return _inputLock == null || _inputLock == context;
@@ -65,16 +68,16 @@ namespace CBRE.Editor.Rendering {
             _stopwatch = new Stopwatch();
         }
 
-        public virtual Matrix GetViewportMatrix() {
-            return Matrix.Identity;
+        public virtual Microsoft.Xna.Framework.Matrix GetViewportMatrix() {
+            return Microsoft.Xna.Framework.Matrix.Identity;
         }
 
-        public virtual Matrix GetCameraMatrix() {
-            return Matrix.Identity;
+        public virtual Microsoft.Xna.Framework.Matrix GetCameraMatrix() {
+            return Microsoft.Xna.Framework.Matrix.Identity;
         }
 
-        public virtual Matrix GetModelViewMatrix() {
-            return Matrix.Identity;
+        public virtual Microsoft.Xna.Framework.Matrix GetModelViewMatrix() {
+            return Microsoft.Xna.Framework.Matrix.Identity;
         }
 
         public virtual void FocusOn(Box box) {

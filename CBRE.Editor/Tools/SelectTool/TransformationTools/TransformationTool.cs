@@ -4,16 +4,17 @@ using CBRE.Editor.Tools.Widgets;
 using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Tools.SelectTool.TransformationTools
 {
     public abstract class TransformationTool
     {
-        //public abstract Matrix GetTransformationMatrix(Viewport2D viewport, ViewportEvent mouseEventArgs, BaseBoxTool.BoxState state, Document doc, IEnumerable<Widget> activeWidgets);
+        public abstract Matrix GetTransformationMatrix(Viewport2D viewport, ViewportEvent mouseEventArgs, BaseBoxTool.BoxState state, Document doc, IEnumerable<Widget> activeWidgets);
         public abstract bool RenderCircleHandles { get; }
         public abstract bool FilterHandle(BaseBoxTool.ResizeHandle handle);
         public abstract string GetTransformName();
-        //public abstract Cursor CursorForHandle(BaseBoxTool.ResizeHandle handle);
+        public abstract MouseCursor CursorForHandle(BaseBoxTool.ResizeHandle handle);
         public abstract IEnumerable<Widget> GetWidgets(Document document);
 
         /// <summary>

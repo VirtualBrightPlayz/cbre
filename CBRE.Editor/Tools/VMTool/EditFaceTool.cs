@@ -147,7 +147,7 @@ namespace CBRE.Editor.Tools.VMTool
 
         }
 
-        /*public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
+        public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
         {
 
         }
@@ -176,15 +176,15 @@ namespace CBRE.Editor.Tools.VMTool
             var faces = new List<Face>();
             if (clickedFace != null)
             {
-                if (KeyboardState.Shift) faces.AddRange(clickedFace.Parent.Faces);
+                if (ViewportManager.Shift) faces.AddRange(clickedFace.Parent.Faces);
                 else faces.Add(clickedFace);
             }
 
-            if (!KeyboardState.Ctrl) _selection.Clear();
+            if (!ViewportManager.Ctrl) _selection.Clear();
             _selection.AddRange(faces);
 
             UpdateSelection();
-        }*/
+        }
 
         private void UpdateSelection()
         {
@@ -195,7 +195,7 @@ namespace CBRE.Editor.Tools.VMTool
             }
         }
 
-        /*public override void MouseClick(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             // Not used
         }
@@ -233,7 +233,7 @@ namespace CBRE.Editor.Tools.VMTool
         public override void KeyUp(ViewportBase viewport, ViewportEvent e)
         {
 
-        }*/
+        }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {

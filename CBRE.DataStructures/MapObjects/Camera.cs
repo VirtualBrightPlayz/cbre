@@ -8,9 +8,12 @@ namespace CBRE.DataStructures.MapObjects {
         public Vector3 EyePosition { get; set; }
         public Vector3 LookPosition { get; set; }
 
+        public decimal FOV { get; set; }
+
         public Camera() {
             EyePosition = new Vector3(0, 0, 0);
             LookPosition = new Vector3(0, 1, 0);
+            FOV = 90m;
         }
 
         protected Camera(SerializationInfo info, StreamingContext context) {

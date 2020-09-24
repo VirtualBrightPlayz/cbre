@@ -226,7 +226,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
             /*Editor.Instance.CaptureAltPresses = false;*/
         }
 
-        /*public override void MouseClick(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
 
         }
@@ -234,7 +234,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             // Not used
-        }*/
+        }
 
         private bool CanMerge()
         {
@@ -298,7 +298,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
             MainTool.SetDirty(true, true);
         }
 
-        /*public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
+        public override void MouseEnter(ViewportBase viewport, ViewportEvent e)
         {
 
         }
@@ -352,7 +352,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
         public override void KeyUp(ViewportBase viewport, ViewportEvent e)
         {
 
-        }*/
+        }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {

@@ -59,17 +59,18 @@ namespace CBRE.Editor.Rendering {
             Camera.LookPosition = new Vector3(coordinate.X, coordinate.Y, coordinate.Z);
         }
 
-        public override Matrix GetViewportMatrix() {
+        public override Microsoft.Xna.Framework.Matrix GetViewportMatrix() {
             const float near = 0.1f;
             var ratio = Width / (float)Height;
             if (ratio <= 0) ratio = 1;
-            throw new NotImplementedException();
-            //return Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(Camera.FOV), ratio, near, Camera.ClipDistance);
+            return Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), ratio, near, 10000.0f);
         }
 
-        public override Matrix GetCameraMatrix() {
-            throw new NotImplementedException();
-            //return Matrix4.LookAt(Camera.Location, Camera.LookAt, Vector3.UnitZ);
+        public override Microsoft.Xna.Framework.Matrix GetCameraMatrix() {
+            Microsoft.Xna.Framework.Vector3 eyePos = new Microsoft.Xna.Framework.Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z);
+            Microsoft.Xna.Framework.Vector3 lookPos = new Microsoft.Xna.Framework.Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z);
+            Microsoft.Xna.Framework.Vector3 upVector = new Microsoft.Xna.Framework.Vector3(0, 0, 1);
+            return Microsoft.Xna.Framework.Matrix.CreateLookAt(eyePos, lookPos, upVector);
         }
 
         protected override void UpdateBeforeClearViewport() {
@@ -147,11 +148,8 @@ namespace CBRE.Editor.Rendering {
         public override void Render() {
             if (DocumentManager.CurrentDocument != null) {
                 var brushRenderer = DocumentManager.CurrentDocument.BrushRenderer;
-                brushRenderer.Projection = Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView((float)Math.PI * 0.5f, (float)Width / (float)Height, 1.0f, 10000.0f);
-                Microsoft.Xna.Framework.Vector3 eyePos = new Microsoft.Xna.Framework.Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z);
-                Microsoft.Xna.Framework.Vector3 lookPos = new Microsoft.Xna.Framework.Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z);
-                Microsoft.Xna.Framework.Vector3 upVector = new Microsoft.Xna.Framework.Vector3(0,0,1);
-                brushRenderer.View = Microsoft.Xna.Framework.Matrix.CreateLookAt(eyePos, lookPos, upVector);
+                brushRenderer.Projection = GetViewportMatrix();
+                brushRenderer.View = GetCameraMatrix();
                 brushRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
 
                 GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;

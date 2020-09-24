@@ -75,7 +75,7 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        private static Vector3 GetUnusedVector3(Vector3 c, ViewDirection direction) {
+        private static Vector3 GetUnusedCoordinate(Vector3 c, ViewDirection direction) {
             switch (direction) {
                 case ViewDirection.Top:
                     return new Vector3(0, 0, c.Z);
@@ -88,7 +88,7 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        private static Vector3 ZeroUnusedVector3(Vector3 c, ViewDirection direction) {
+        private static Vector3 ZeroUnusedCoordinate(Vector3 c, ViewDirection direction) {
             switch (direction) {
                 case ViewDirection.Top:
                     return new Vector3(c.X, c.Y, 0);
@@ -142,29 +142,33 @@ namespace CBRE.Editor.Rendering {
             return Expand(c, Direction);
         }
 
-        public Vector3 GetUnusedVector3(Vector3 c) {
-            return GetUnusedVector3(c, Direction);
+        public Vector3 GetUnusedCoordinate(Vector3 c) {
+            return GetUnusedCoordinate(c, Direction);
         }
 
-        public Vector3 ZeroUnusedVector3(Vector3 c) {
-            return ZeroUnusedVector3(c, Direction);
+        public Vector3 ZeroUnusedCoordinate(Vector3 c) {
+            return ZeroUnusedCoordinate(c, Direction);
         }
 
-        public override Matrix GetViewportMatrix() {
-            throw new NotImplementedException();
+        public override Microsoft.Xna.Framework.Matrix GetViewportMatrix() {
             const float near = -1000000;
             const float far = 1000000;
-            //return Matrix.CreateOrthographic(Width, Height, near, far);
+            return Microsoft.Xna.Framework.Matrix.CreateOrthographic((float)Width, (float)Height, near, far);
         }
 
-        public override Matrix GetCameraMatrix() {
-            var translate = Matrix.Translation(new DataStructures.Geometric.Vector3(-Position.X, -Position.Y, 0));
-            var scale = Matrix.Scale(new Vector3(Zoom, Zoom, 0));
+        public override Microsoft.Xna.Framework.Matrix GetCameraMatrix() {
+            var translate = Microsoft.Xna.Framework.Matrix.CreateTranslation(-(float)Position.X, -(float)Position.Y, 0f);
+            var scale = Microsoft.Xna.Framework.Matrix.CreateScale((float)Zoom, (float)Zoom, 0);
             return translate * scale;
         }
 
-        public override Matrix GetModelViewMatrix() {
-            return GetMatrixFor(Direction);
+        public override Microsoft.Xna.Framework.Matrix GetModelViewMatrix() {
+            var modelViewMatrix = GetMatrixFor(Direction);
+            return new Microsoft.Xna.Framework.Matrix(
+                    (float)modelViewMatrix[0], (float)modelViewMatrix[1], (float)modelViewMatrix[2], (float)modelViewMatrix[3],
+                    (float)modelViewMatrix[4], (float)modelViewMatrix[5], (float)modelViewMatrix[6], (float)modelViewMatrix[7],
+                    (float)modelViewMatrix[8], (float)modelViewMatrix[9], (float)modelViewMatrix[10], (float)modelViewMatrix[11],
+                    (float)modelViewMatrix[12], (float)modelViewMatrix[13], (float)modelViewMatrix[14], (float)modelViewMatrix[15]);
         }
 
         public Vector3 ScreenToWorld(Point location) {
@@ -203,15 +207,9 @@ namespace CBRE.Editor.Rendering {
         public override void Render() {
             if (DocumentManager.CurrentDocument != null) {
                 var brushRenderer = DocumentManager.CurrentDocument.BrushRenderer;
-                brushRenderer.Projection = Microsoft.Xna.Framework.Matrix.CreateOrthographic((float)Width, (float)Height, -100000.0f, 100000.0f);
-                var matrix = GetModelViewMatrix();
-
-                brushRenderer.View = new Microsoft.Xna.Framework.Matrix(
-                    (float)matrix[0], (float)matrix[1], (float)matrix[2], (float)matrix[3],
-                    (float)matrix[4], (float)matrix[5], (float)matrix[6], (float)matrix[7],
-                    (float)matrix[8], (float)matrix[9], (float)matrix[10], (float)matrix[11],
-                    (float)matrix[12], (float)matrix[13], (float)matrix[14], (float)matrix[15]);
-                brushRenderer.World = Microsoft.Xna.Framework.Matrix.CreateScale((float)Zoom);
+                brushRenderer.Projection = GetViewportMatrix();
+                brushRenderer.View = GetModelViewMatrix() * GetCameraMatrix();
+                brushRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
 
                 GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
                 GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;

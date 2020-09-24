@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Tools.Widgets
 {
@@ -183,7 +184,7 @@ namespace CBRE.Editor.Tools.Widgets
             var angle = DMath.Acos(Math.Max(-1, Math.Min(1, origv.Dot(newv))));
             if ((origv.Cross(newv).Z < 0)) angle = 2 * DMath.PI - angle;
 
-            var shf = KeyboardState.Shift;
+            var shf = ViewportManager.Shift;
             var def = Select.RotationStyle;
             var snap = (def == RotationStyle.SnapOnShift && shf) || (def == RotationStyle.SnapOffShift && !shf);
             if (snap)
@@ -221,7 +222,7 @@ namespace CBRE.Editor.Tools.Widgets
             return Matrix4.Mult(rot, Matrix4.Invert(mov));*/
         }
 
-        /*private bool MouseOver(CircleType type, ViewportEvent ev, Viewport3D viewport)
+        private bool MouseOver(CircleType type, ViewportEvent ev, Viewport3D viewport)
         {
             var cache = _cachedLines.FirstOrDefault(x => x.Viewport3D == viewport);
             if (cache == null) return false;
@@ -243,7 +244,7 @@ namespace CBRE.Editor.Tools.Widgets
 
         public override void MouseLeave(ViewportBase viewport, ViewportEvent e)
         {
-            viewport.Cursor = Cursors.Default;
+            viewport.Cursor = MouseCursor.Arrow;
         }
 
         public override void MouseMove(ViewportBase viewport, ViewportEvent e)
@@ -260,12 +261,12 @@ namespace CBRE.Editor.Tools.Widgets
                 }
                 else if (MouseOverPivot(vp2, e))
                 {
-                    vp2.Cursor = Cursors.Cross;
+                    vp2.Cursor = MouseCursor.Crosshair;
                     e.Handled = true;
                 }
                 else
                 {
-                    vp2.Cursor = Cursors.Default;
+                    vp2.Cursor = MouseCursor.Arrow;
                 }
                 return;
             }
@@ -347,7 +348,7 @@ namespace CBRE.Editor.Tools.Widgets
         {
             if (viewport != _activeViewport) return;
             if (_mouseDown != CircleType.None) ve.Handled = true;
-        }*/
+        }
 
         public override void Render(ViewportBase viewport)
         {

@@ -6,6 +6,8 @@ using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
+using CBRE.DataStructures.Geometric;
 
 namespace CBRE.Editor.Tools.SelectTool.TransformationTools
 {
@@ -32,13 +34,13 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             return "Rotate";
         }
 
-        /*public override Cursor CursorForHandle(BaseBoxTool.ResizeHandle handle)
+        public override MouseCursor CursorForHandle(BaseBoxTool.ResizeHandle handle)
         {
-            return CBRECursors.RotateCursor;
-        }*/
+            return GameMain.Instance.RotateCursor;
+        }
 
         #region 2D Transformation Matrix
-        /*public override Matrix4? GetTransformationMatrix(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document doc, IEnumerable<Widget> activeWidgets)
+        public override Matrix GetTransformationMatrix(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document doc, IEnumerable<Widget> activeWidgets)
         {
             var origin = viewport.ZeroUnusedCoordinate((state.PreTransformBoxStart + state.PreTransformBoxEnd) / 2);
             var rw = activeWidgets.OfType<RotationWidget>().FirstOrDefault();
@@ -52,7 +54,7 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             var angle = DMath.Acos(Math.Max(-1, Math.Min(1, origv.Dot(newv))));
             if ((origv.Cross(newv).Z < 0)) angle = 2 * DMath.PI - angle;
 
-            var shf = KeyboardState.Shift;
+            var shf = ViewportManager.Shift;
             var def = Select.RotationStyle;
             var snap = (def == RotationStyle.SnapOnShift && shf) || (def == RotationStyle.SnapOffShift && !shf);
             if (snap)
@@ -62,15 +64,15 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
                 angle = rnd * (DMath.PI / 180);
             }
 
-            Matrix4 rotm;
-            if (viewport.Direction == Viewport2D.ViewDirection.Top) rotm = Matrix4.CreateRotationZ((float)angle);
-            else if (viewport.Direction == Viewport2D.ViewDirection.Front) rotm = Matrix4.CreateRotationX((float)angle);
-            else rotm = Matrix4.CreateRotationY((float)-angle); // The Y axis rotation goes in the reverse direction for whatever reason
+            Matrix rotm;
+            if (viewport.Direction == Viewport2D.ViewDirection.Top) rotm = Matrix.RotationZ(angle);
+            else if (viewport.Direction == Viewport2D.ViewDirection.Front) rotm = Matrix.RotationX(angle);
+            else rotm = Matrix.RotationY(-angle); // The Y axis rotation goes in the reverse direction for whatever reason
 
-            var mov = Matrix4.CreateTranslation((float)-origin.X, (float)-origin.Y, (float)-origin.Z);
-            var rot = Matrix4.Mult(mov, rotm);
-            return Matrix4.Mult(rot, Matrix4.Invert(mov));
-        }*/
+            var mov = Matrix.Translation(-origin);
+            var rot = mov * rotm;
+            return rot * mov.Inverse();
+        }
         #endregion 2D Transformation Matrix
 
         public override IEnumerable<Widget> GetWidgets(Document document)

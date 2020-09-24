@@ -8,6 +8,7 @@ using CBRE.Editor.Rendering;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Tools
 {
@@ -31,8 +32,8 @@ namespace CBRE.Editor.Tools
 
             bool snap = true;
             /* TODO: reimplement
-            var snap = (Select.SnapStyle == SnapStyle.SnapOnAlt && KeyboardState.Alt) ||
-                       (Select.SnapStyle == SnapStyle.SnapOffAlt && !KeyboardState.Alt);*/
+            var snap = (Select.SnapStyle == SnapStyle.SnapOnAlt && ViewportManager.Alt) ||
+                       (Select.SnapStyle == SnapStyle.SnapOffAlt && !ViewportManager.Alt);*/
 
             if (!snap) return c;
 
@@ -86,10 +87,11 @@ namespace CBRE.Editor.Tools
             return closest;
         }
 
-        /*protected Vector3 GetNudgeValue(Keys k)
+        protected Vector3 GetNudgeValue(Keys k)
         {
             if (!Select.ArrowKeysNudgeSelection) return null;
-            var ctrl = KeyboardState.Ctrl;
+            var keyboardState = Keyboard.GetState();
+            var ctrl = keyboardState.IsKeyDown(Keys.LeftControl) || keyboardState.IsKeyDown(Keys.RightControl);
             var gridoff = Select.NudgeStyle == NudgeStyle.GridOffCtrl;
             var grid = (gridoff && !ctrl) || (!gridoff && ctrl);
             var val = grid ? Document.Map.GridSpacing : Select.NudgeUnits;
@@ -105,7 +107,7 @@ namespace CBRE.Editor.Tools
                     return new Vector3(0, -val, 0);
             }
             return null;
-        }*/
+        }
 
         protected Documents.Document Document { get; set; }
         public ViewportBase Viewport { get; set; }
@@ -153,7 +155,7 @@ namespace CBRE.Editor.Tools
             Mediator.ExecuteDefault(this, message, data);
         }
 
-        /*public abstract void MouseEnter(ViewportBase viewport, ViewportEvent e);
+        public abstract void MouseEnter(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseLeave(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseDown(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseClick(ViewportBase viewport, ViewportEvent e);
@@ -163,7 +165,7 @@ namespace CBRE.Editor.Tools
         public abstract void MouseMove(ViewportBase viewport, ViewportEvent e);
         public abstract void KeyPress(ViewportBase viewport, ViewportEvent e);
         public abstract void KeyDown(ViewportBase viewport, ViewportEvent e);
-        public abstract void KeyUp(ViewportBase viewport, ViewportEvent e);*/
+        public abstract void KeyUp(ViewportBase viewport, ViewportEvent e);
         public abstract void UpdateFrame(ViewportBase viewport, FrameInfo frame);
         public abstract void Render(ViewportBase viewport);
 

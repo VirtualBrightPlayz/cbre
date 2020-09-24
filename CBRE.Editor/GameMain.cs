@@ -9,6 +9,7 @@ using CBRE.Settings;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,15 +19,32 @@ using Num = System.Numerics;
 namespace CBRE.Editor {
     partial class GameMain : Game
     {
+        public static GameMain Instance { get; private set; }
+
         private GraphicsDeviceManager _graphics;
         private ImGuiRenderer _imGuiRenderer;
 
+        private AsyncTexture rotateCursorTexture;
+        private MouseCursor rotateCursor;
+        public MouseCursor RotateCursor {
+            get {
+                if (rotateCursor != null) { return rotateCursor; }
+                if (rotateCursorTexture?.MonoGameTexture != null) {
+                    rotateCursor = MouseCursor.FromTexture2D(rotateCursorTexture.MonoGameTexture, 8, 8);
+                    return rotateCursor;
+                }
+                return MouseCursor.Arrow;
+            }
+        }
+
         public GameMain()
         {
+            Instance = this;
+
             _graphics = new GraphicsDeviceManager(this);
             _graphics.PreferredBackBufferWidth = 1600;
             _graphics.PreferredBackBufferHeight = 900;
-            _graphics.PreferMultiSampling = true;
+            _graphics.PreferMultiSampling = false;
             _graphics.SynchronizeWithVerticalRetrace = false;
             _graphics.ApplyChanges();
             Window.AllowUserResizing = true;
