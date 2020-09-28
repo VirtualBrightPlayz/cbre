@@ -81,26 +81,26 @@ namespace CBRE.Editor.Tools
 
         private Tuple<Vector3, Vector3> GetViewportCamera()
         {
-            throw new NotImplementedException();
-            /*var cam = ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();
+            var cam = ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();
             if (cam == null) return null;
 
-            var pos = new Vector3((decimal)cam.Location.X, (decimal)cam.Location.Y, (decimal)cam.Location.Z);
-            var look = new Vector3((decimal)cam.LookAt.X, (decimal)cam.LookAt.Y, (decimal)cam.LookAt.Z);
+            var pos = cam.EyePosition;
+            var look = cam.LookPosition;
 
             var dir = (look - pos).Normalise() * 20;
-            return Tuple.Create(pos, pos + dir);*/
+            return Tuple.Create(pos, pos + dir);
         }
 
         private void SetViewportCamera(Vector3 position, Vector3 look)
         {
-            throw new NotImplementedException();
-            /*var cam = ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();
+            var cam = ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();
             if (cam == null) return;
 
             look = (look - position).Normalise() + position;
-            cam.Location = new Vector3((float)position.X, (float)position.Y, (float)position.Z);
-            cam.LookAt = new Vector3((float)look.X, (float)look.Y, (float)look.Z);*/
+            cam.EyePosition = position;
+            cam.LookPosition = look;
+
+            ViewportManager.MarkForRerender();
         }
 
         private State GetStateAtPoint(int x, int y, Viewport2D viewport, out Camera activeCamera)
@@ -195,34 +195,64 @@ namespace CBRE.Editor.Tools
 
         public override void MouseMove(ViewportBase viewport, ViewportEvent e)
         {
-            var vp = viewport as Viewport2D;
-            if (vp == null) return;
+            if (viewport is Viewport2D vp) {
+                var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
+                var cursor = MouseCursor.Arrow;
 
-            var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
-            var cursor = MouseCursor.Arrow;
+                switch (_state) {
+                    case State.None:
+                        var st = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
+                        if (st != State.None) cursor = MouseCursor.SizeAll;
+                        break;
+                    case State.MovingPosition:
+                        if (_stateCamera == null) break;
+                        var newEye = vp.GetUnusedCoordinate(_stateCamera.EyePosition) + p;
+                        if (ViewportManager.Ctrl) _stateCamera.LookPosition += (newEye - _stateCamera.EyePosition);
+                        _stateCamera.EyePosition = newEye;
+                        SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
+                        break;
+                    case State.MovingLook:
+                        if (_stateCamera == null) break;
+                        var newLook = vp.GetUnusedCoordinate(_stateCamera.LookPosition) + p;
+                        if (ViewportManager.Ctrl) _stateCamera.EyePosition += (newLook - _stateCamera.LookPosition);
+                        _stateCamera.LookPosition = newLook;
+                        SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
+                        break;
+                }
+                vp.Cursor = cursor;
+            } else if (viewport is Viewport3D vp3d) {
+                //if (!FreeLook) return;
 
-            switch (_state)
-            {
-                case State.None:
-                    var st = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
-                    if (st != State.None) cursor = MouseCursor.SizeAll;
-                    break;
-                case State.MovingPosition:
-                    if (_stateCamera == null) break;
-                    var newEye = vp.GetUnusedCoordinate(_stateCamera.EyePosition) + p;
-                    if (ViewportManager.Ctrl) _stateCamera.LookPosition += (newEye - _stateCamera.EyePosition);
-                    _stateCamera.EyePosition = newEye;
-                    SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
-                    break;
-                case State.MovingLook:
-                    if (_stateCamera == null) break;
-                    var newLook = vp.GetUnusedCoordinate(_stateCamera.LookPosition) + p;
-                    if (ViewportManager.Ctrl) _stateCamera.EyePosition += (newLook - _stateCamera.LookPosition);
-                    _stateCamera.LookPosition = newLook;
-                    SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
-                    break;
+                var camera = GetCameras().FirstOrDefault();
+
+                var left = e.Button.HasFlag(MouseButtons.Left);
+                var right = e.Button.HasFlag(MouseButtons.Right);
+                var updown = !left && right;
+                var forwardback = left && right;
+
+                int dx = -e.DeltaX; int dy = e.DeltaY;
+
+                if (CBRE.Settings.View.InvertX) dx = -dx;
+                if (CBRE.Settings.View.InvertY) dy = -dy;
+
+                if (updown) {
+                    camera.Strafe(-dx);
+                    camera.Ascend(-dy);
+                } else if (forwardback) {
+                    camera.Strafe(-dx);
+                    camera.Advance(-dy);
+                } else // left mouse or z-toggle
+                  {
+                    // Camera
+                    var fovdiv = (vp3d.Width / 60m) / 2.5m;
+                    camera.Pan(dx / fovdiv);
+                    camera.Tilt(dy / fovdiv);
+                }
+
+                ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
+                SetViewportCamera(camera.EyePosition, camera.LookPosition);
             }
-            vp.Cursor = cursor;
+
         }
 
         public override void KeyPress(ViewportBase viewport, ViewportEvent e)

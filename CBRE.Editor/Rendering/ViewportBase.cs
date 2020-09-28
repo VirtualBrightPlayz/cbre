@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 namespace CBRE.Editor.Rendering {
     public abstract class ViewportBase {
@@ -19,6 +18,10 @@ namespace CBRE.Editor.Rendering {
         public int Height { get; set; }
 
         public MouseCursor Cursor { get; set; }
+
+        public bool PrevMouseOver;
+        public int PrevMouseX;
+        public int PrevMouseY;
 
         public bool IsUnlocked(object context) {
             return _inputLock == null || _inputLock == context;

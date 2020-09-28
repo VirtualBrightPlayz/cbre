@@ -56,7 +56,7 @@ namespace CBRE.Editor.Rendering {
     }
 
     static class ViewportManager {
-        static ViewportBase[] Viewports = new ViewportBase[4];
+        public static ViewportBase[] Viewports { get; private set; } = new ViewportBase[4];
         static Vector2 splitPoint = new Vector2(0.45f, 0.55f);
         static VertexPositionColor[] backgroundVertices = new VertexPositionColor[12];
         static short[] backgroundIndices = new short[18];
@@ -176,6 +176,10 @@ namespace CBRE.Editor.Rendering {
             shouldRerender = true;
         }
 
+        public static void SetCursorPos(ViewportBase vp, int posX, int posY) {
+            Mouse.SetPosition(posX + vp.X, posY + vp.Y);
+        }
+
         public static void Update() {
             if (knownWindowWidth != GlobalGraphics.Window.ClientBounds.Width || knownWindowHeight != GlobalGraphics.Window.ClientBounds.Height) {
                 RebuildRenderTarget();
@@ -222,22 +226,55 @@ namespace CBRE.Editor.Rendering {
 
                 if (mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
                     mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
+                    int currMouseX = mouseState.X - Viewports[i].X;
+                    int currMouseY = mouseState.Y - Viewports[i].Y;
                     if (mouseHit) {
                         GameMain.Instance.SelectedTool?.MouseClick(Viewports[i], new ViewportEvent() {
                             Handled = false,
                             Button = MouseButtons.Left,
-                            X = mouseState.X - Viewports[i].X,
-                            Y = mouseState.Y - Viewports[i].Y
+                            X = currMouseX,
+                            Y = currMouseY,
+                            LastX = Viewports[i].PrevMouseX,
+                            LastY = Viewports[i].PrevMouseY,
+                            Clicks = 1
                         });
-                    } else if (mouseDown) {
+
                         GameMain.Instance.SelectedTool?.MouseDown(Viewports[i], new ViewportEvent() {
                             Handled = false,
                             Button = MouseButtons.Left,
-                            X = mouseState.X - Viewports[i].X,
-                            Y = mouseState.Y - Viewports[i].Y
+                            X = currMouseX,
+                            Y = currMouseY,
+                            LastX = Viewports[i].PrevMouseX,
+                            LastY = Viewports[i].PrevMouseY,
                         });
+                    } else if (mouseDown) {
+                        if (Viewports[i].PrevMouseX != currMouseX || Viewports[i].PrevMouseY != currMouseY) {
+                            GameMain.Instance.SelectedTool?.MouseMove(Viewports[i], new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Left,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = Viewports[i].PrevMouseX,
+                                LastY = Viewports[i].PrevMouseY,
+                            });
+                        }
                     }
                 }
+            }
+
+            mouseState = Mouse.GetState();
+
+            for (int i = 0; i < Viewports.Length; i++) {
+                if (Viewports[i] == null) { continue; }
+
+                bool mouseOver = false;
+                if (mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
+                    mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
+                    mouseOver = true;
+                }
+                Viewports[i].PrevMouseOver = mouseOver;
+                Viewports[i].PrevMouseX = mouseState.X - Viewports[i].X;
+                Viewports[i].PrevMouseY = mouseState.Y - Viewports[i].Y;
             }
 
             prevMouseDown = mouseDown;

@@ -147,6 +147,11 @@ namespace CBRE.Editor.Rendering {
 
         public override void Render() {
             if (DocumentManager.CurrentDocument != null) {
+                if (DocumentManager.CurrentDocument.Map.ActiveCamera != null) {
+                    Camera.EyePosition = DocumentManager.CurrentDocument.Map.ActiveCamera.EyePosition;
+                    Camera.LookPosition = DocumentManager.CurrentDocument.Map.ActiveCamera.LookPosition;
+                }
+
                 var brushRenderer = DocumentManager.CurrentDocument.BrushRenderer;
                 brushRenderer.Projection = GetViewportMatrix();
                 brushRenderer.View = GetCameraMatrix();
