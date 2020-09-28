@@ -156,7 +156,7 @@ namespace CBRE.Editor.Tools.SelectTool
         {
             if (tool != null) _lastTool = tool;
             _currentTool = tool;
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             /*_sidebarPanel.TransformationToolChanged(_currentTool);
             _widgets = (_currentTool == null || !CBRE.Settings.Select.Show3DSelectionWidgets) ? new List<Widget>() : _currentTool.GetWidgets(Document).ToList();
             foreach (var widget in _widgets)

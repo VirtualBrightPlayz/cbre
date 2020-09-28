@@ -63,7 +63,7 @@ namespace CBRE.Editor.Tools
 
         public override void DocumentChanged()
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             /*System.Threading.Tasks.Task.Factory.StartNew(BuildMenu);
             _sidebarPanel.RefreshEntities(Document);*/
         }

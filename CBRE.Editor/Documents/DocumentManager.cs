@@ -1,4 +1,5 @@
-using CBRE.Common.Mediator;
+﻿using CBRE.Common.Mediator;
+using CBRE.Editor.Rendering;
 using CBRE.Editor.Tools;
 using System.Collections.Generic;
 
@@ -56,6 +57,8 @@ namespace CBRE.Editor.Documents {
                 CurrentDocument.SetActive();
                 Mediator.Publish(EditorMediator.DocumentActivated, CurrentDocument);
             }
+
+            ViewportManager.MarkForRerender();
 
             Mediator.Publish(EditorMediator.UpdateMenu);
         }

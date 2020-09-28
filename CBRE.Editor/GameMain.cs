@@ -2,6 +2,7 @@
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
+using CBRE.Editor.Tools;
 using CBRE.Graphics;
 using CBRE.Providers.Map;
 using CBRE.Providers.Texture;
@@ -59,6 +60,7 @@ namespace CBRE.Editor {
         protected override void Initialize()
         {
             SettingsManager.Read();
+            ToolManager.Init();
 
             _imGuiRenderer = new ImGuiRenderer(this);
             _imGuiRenderer.RebuildFontAtlas();
@@ -99,8 +101,10 @@ namespace CBRE.Editor {
             MapProvider.Register(new MapFormatProvider());
             MapProvider.Register(new L3DWProvider());
 
-            Map map = MapProvider.GetMapFromFile("D:/Admin/Downloads/room2_2.3dw");
-            DocumentManager.AddAndSwitch(new Document("room2_2.3dw", map));
+            Map map = MapProvider.GetMapFromFile("D:/Admin/Downloads/gateA.3dw");
+            Map map2 = MapProvider.GetMapFromFile("D:/Admin/Downloads/room2_2.3dw");
+            DocumentManager.AddAndSwitch(new Document("gateA.3dw", map));
+            DocumentManager.Add(new Document("room2_2.3dw", map2));
 
             ViewportManager.Init();
 
@@ -116,6 +120,12 @@ namespace CBRE.Editor {
             base.LoadContent();
         }
 
+        protected override void Update(GameTime gameTime) {
+            base.Update(gameTime);
+
+            ViewportManager.Update();
+        }
+
         protected override void Draw(GameTime gameTime)
         {
             GlobalGraphics.GraphicsDevice.Viewport = new Viewport(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
@@ -124,7 +134,7 @@ namespace CBRE.Editor {
 
             GraphicsDevice.Clear(new Color(50, 50, 60));
 
-            ViewportManager.Render();
+            ViewportManager.DrawRenderTarget();
 
             // Call BeforeLayout first to set things up
             _imGuiRenderer.BeforeLayout(gameTime);
@@ -153,6 +163,18 @@ namespace CBRE.Editor {
                 UpdateMenus();
                 UpdateTopBar();
                 UpdateToolBar();
+                ImGui.SetCursorPos(new Num.Vector2(47, 47));
+                ImGui.BeginTabBar("doc_tabber");
+                for (int i=0;i<DocumentManager.Documents.Count;i++) {
+                    Document doc = DocumentManager.Documents[i];
+                    if (ImGui.BeginTabItem(doc.MapFileName)) {
+                        if (DocumentManager.CurrentDocument != doc) {
+                            DocumentManager.SwitchTo(doc);
+                        }
+                        ImGui.EndTabItem();
+                    }
+                }
+                ImGui.EndTabBar();
 
                 ImGui.End();
             }

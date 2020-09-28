@@ -17,8 +17,7 @@ namespace CBRE.Editor.Tools
             Tools = new List<BaseTool>();
         }
 
-        public static void Init()
-        {
+        public static void Init() {
             Tools.Add(new SelectTool.SelectTool());
             Tools.Add(new CameraTool());
             Tools.Add(new EntityTool());

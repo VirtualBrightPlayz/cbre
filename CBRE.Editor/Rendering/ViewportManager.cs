@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Editor.Rendering {
     public enum MouseButtons {
+        None = 0x0,
         Left = 0x1,
         Right = 0x2,
         Middle = 0x4,
@@ -63,9 +64,16 @@ namespace CBRE.Editor.Rendering {
 
         static bool prevMouseDown; static bool draggingX; static bool draggingY;
 
+        public static RenderTarget2D renderTarget { get; private set; }
+        private static VertexPositionTexture[] renderTargetGeom;
+        static BasicEffect renderTargetEffect = null;
+
         public static bool Ctrl { get; private set; }
         public static bool Shift { get; private set; }
         public static bool Alt { get; private set; }
+
+
+        readonly static Point vpStartPoint = new Point(46, 66);
 
         public static void Init() {
             prevMouseDown = false;
@@ -83,20 +91,26 @@ namespace CBRE.Editor.Rendering {
             backgroundEffect.TextureEnabled = false;
             backgroundEffect.VertexColorEnabled = true;
 
-            backgroundVertices[0] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.Black };
-            backgroundVertices[1] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.Black };
-            backgroundVertices[2] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.Black };
-            backgroundVertices[3] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.Black };
+            renderTargetEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+            renderTargetEffect.World = Matrix.Identity;
+            renderTargetEffect.View = Matrix.Identity;
+            renderTargetEffect.TextureEnabled = true;
+            renderTargetEffect.VertexColorEnabled = false;
 
-            backgroundVertices[4] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.White };
-            backgroundVertices[5] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.White };
-            backgroundVertices[6] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.Gray };
-            backgroundVertices[7] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.Gray };
+            backgroundVertices[0] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.Black };
+            backgroundVertices[1] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.Black };
+            backgroundVertices[2] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.Black };
+            backgroundVertices[3] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.Black };
 
-            backgroundVertices[8] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.White };
-            backgroundVertices[9] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.White };
-            backgroundVertices[10] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.Gray };
-            backgroundVertices[11] = new VertexPositionColor() { Position = new Vector3(46, 47, 0), Color = Color.Gray };
+            backgroundVertices[4] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.White };
+            backgroundVertices[5] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.White };
+            backgroundVertices[6] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.Gray };
+            backgroundVertices[7] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.Gray };
+
+            backgroundVertices[8] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.White };
+            backgroundVertices[9] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.White };
+            backgroundVertices[10] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.Gray };
+            backgroundVertices[11] = new VertexPositionColor() { Position = new Vector3(0, 0, 0), Color = Color.Gray };
 
             backgroundIndices[0] = 0;
             backgroundIndices[1] = 1;
@@ -118,77 +132,174 @@ namespace CBRE.Editor.Rendering {
             backgroundIndices[15] = 9;
             backgroundIndices[16] = 10;
             backgroundIndices[17] = 11;
+
+            RebuildRenderTarget();
+
+            AsyncTexture.LoadCallback = MarkForRerender;
         }
 
-        public static void Render() {
+        private static int knownWindowWidth = 0;
+        private static int knownWindowHeight = 0;
+
+        private static void RebuildRenderTarget() {
+            renderTargetGeom = new VertexPositionTexture[] {
+                new VertexPositionTexture(new Vector3(vpStartPoint.X, vpStartPoint.Y, 0), new Vector2(0, 0)),
+                new VertexPositionTexture(new Vector3(GlobalGraphics.Window.ClientBounds.Width, vpStartPoint.Y, 0), new Vector2(1, 0)),
+                new VertexPositionTexture(new Vector3(vpStartPoint.X, GlobalGraphics.Window.ClientBounds.Height, 0), new Vector2(0, 1)),
+                new VertexPositionTexture(new Vector3(GlobalGraphics.Window.ClientBounds.Width, GlobalGraphics.Window.ClientBounds.Height, 0), new Vector2(1, 1)),
+            };
+            knownWindowWidth = GlobalGraphics.Window.ClientBounds.Width;
+            knownWindowHeight = GlobalGraphics.Window.ClientBounds.Height;
+            renderTargetEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, GlobalGraphics.Window.ClientBounds.Width + 0.5f, GlobalGraphics.Window.ClientBounds.Height + 0.5f, 0.5f, -1f, 1f);
+            renderTarget?.Dispose();
+            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X, GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y, false, SurfaceFormat.Color, DepthFormat.Depth24);
+
+            int splitX = (int)((GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
+            int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
+            for (int i = 0; i < Viewports.Length; i++) {
+                if (Viewports[i] == null) { continue; }
+                bool left = i % 2 == 0;
+                bool top = i < 2;
+
+                Viewports[i].X = left ? vpStartPoint.X : splitX + 3;
+                Viewports[i].Y = top ? vpStartPoint.Y : splitY + 3;
+                Viewports[i].Width = left ? splitX - vpStartPoint.X - 4 : renderTarget.Width - (splitX - vpStartPoint.X + 3);
+                Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
+            }
+
+            Render();
+        }
+
+        private static bool shouldRerender = false;
+
+        public static void MarkForRerender() {
+            shouldRerender = true;
+        }
+
+        public static void Update() {
+            if (knownWindowWidth != GlobalGraphics.Window.ClientBounds.Width || knownWindowHeight != GlobalGraphics.Window.ClientBounds.Height) {
+                RebuildRenderTarget();
+            }
+            if (shouldRerender) { Render(); }
+
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
             bool mouseDown = mouseState.LeftButton == ButtonState.Pressed;
+            bool mouseHit = mouseDown && !prevMouseDown;
             Ctrl = keyboardState.IsKeyDown(Keys.LeftControl) || keyboardState.IsKeyDown(Keys.RightControl);
             Shift = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
             Alt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
 
-            var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
-            int splitX = (int)((GlobalGraphics.Window.ClientBounds.Width - 46.0f) * splitPoint.X) + 46;
-            int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - 47.0f) * splitPoint.Y) + 47;
+            int splitX = (int)((GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
+            int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
 
             if (!mouseDown) { draggingX = false; draggingY = false; }
-            if (mouseDown && !prevMouseDown) {
+            if (mouseHit) {
                 draggingX = (mouseState.X >= (splitX - 3)) && (mouseState.X <= (splitX + 2));
                 draggingY = (mouseState.Y >= (splitY - 3)) && (mouseState.Y <= (splitY + 2));
             }
 
             if (draggingX) {
-                splitPoint.X = (mouseState.X - 46.0f) / (GlobalGraphics.Window.ClientBounds.Width - 46.0f);
+                splitPoint.X = (float)(mouseState.X - vpStartPoint.X) / (GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X);
                 splitPoint.X = Math.Clamp(splitPoint.X, 0.01f, 0.99f);
+                MarkForRerender();
             }
             if (draggingY) {
-                splitPoint.Y = (mouseState.Y - 47.0f) / (GlobalGraphics.Window.ClientBounds.Height - 47.0f);
+                splitPoint.Y = (float)(mouseState.Y - vpStartPoint.Y) / (GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y);
                 splitPoint.Y = Math.Clamp(splitPoint.Y, 0.01f, 0.99f);
+                MarkForRerender();
             }
 
-            backgroundEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, GlobalGraphics.Window.ClientBounds.Width + 0.5f, GlobalGraphics.Window.ClientBounds.Height + 0.5f, 0.5f, -1f, 1f);
+            for (int i = 0; i < Viewports.Length; i++) {
+                if (Viewports[i] == null) { continue; }
+                bool left = i % 2 == 0;
+                bool top = i < 2;
 
-            backgroundVertices[1].Position.X = GlobalGraphics.Window.ClientBounds.Width;
-            backgroundVertices[2].Position.Y = GlobalGraphics.Window.ClientBounds.Height;
-            backgroundVertices[3].Position.X = GlobalGraphics.Window.ClientBounds.Width;
-            backgroundVertices[3].Position.Y = GlobalGraphics.Window.ClientBounds.Height;
+                Viewports[i].X = left ? vpStartPoint.X : splitX + 3;
+                Viewports[i].Y = top ? vpStartPoint.Y : splitY + 3;
+                Viewports[i].Width = left ? splitX - vpStartPoint.X - 4 : renderTarget.Width - (splitX - vpStartPoint.X + 3);
+                Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
+
+                if (mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
+                    mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
+                    if (mouseHit) {
+                        GameMain.Instance.SelectedTool?.MouseClick(Viewports[i], new ViewportEvent() {
+                            Handled = false,
+                            Button = MouseButtons.Left,
+                            X = mouseState.X - Viewports[i].X,
+                            Y = mouseState.Y - Viewports[i].Y
+                        });
+                    } else if (mouseDown) {
+                        GameMain.Instance.SelectedTool?.MouseDown(Viewports[i], new ViewportEvent() {
+                            Handled = false,
+                            Button = MouseButtons.Left,
+                            X = mouseState.X - Viewports[i].X,
+                            Y = mouseState.Y - Viewports[i].Y
+                        });
+                    }
+                }
+            }
+
+            prevMouseDown = mouseDown;
+        }
+
+        public static void Render() {
+            shouldRerender = false;
+
+            int splitX = (int)((GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X) * splitPoint.X);
+            int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y) * splitPoint.Y);
+
+            GlobalGraphics.GraphicsDevice.SetRenderTarget(renderTarget);
+            GlobalGraphics.GraphicsDevice.Clear(Color.Black);
+
+            var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
+
+            backgroundEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, renderTarget.Width + 0.5f, renderTarget.Height + 0.5f, 0.5f, -1f, 1f);
+
+            backgroundVertices[1].Position.X = renderTarget.Width;
+            backgroundVertices[2].Position.Y = renderTarget.Height;
+            backgroundVertices[3].Position.X = renderTarget.Width;
+            backgroundVertices[3].Position.Y = renderTarget.Height;
 
             backgroundVertices[4].Position.X = splitX - 3;
             backgroundVertices[5].Position.X = splitX + 2;
             backgroundVertices[6].Position.X = splitX - 3;
             backgroundVertices[7].Position.X = splitX + 2;
-            backgroundVertices[6].Position.Y = GlobalGraphics.Window.ClientBounds.Height;
-            backgroundVertices[7].Position.Y = GlobalGraphics.Window.ClientBounds.Height;
+            backgroundVertices[6].Position.Y = renderTarget.Height;
+            backgroundVertices[7].Position.Y = renderTarget.Height;
 
             backgroundVertices[8].Position.Y = splitY - 3;
             backgroundVertices[9].Position.Y = splitY - 3;
             backgroundVertices[10].Position.Y = splitY + 2;
             backgroundVertices[11].Position.Y = splitY + 2;
-            backgroundVertices[9].Position.X = GlobalGraphics.Window.ClientBounds.Width;
-            backgroundVertices[11].Position.X = GlobalGraphics.Window.ClientBounds.Width;
+            backgroundVertices[9].Position.X = renderTarget.Width;
+            backgroundVertices[11].Position.X = renderTarget.Width;
 
-            GlobalGraphics.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GlobalGraphics.Window.ClientBounds.Width, GlobalGraphics.Window.ClientBounds.Height);
+            GlobalGraphics.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, renderTarget.Width, renderTarget.Height);
             GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             backgroundEffect.CurrentTechnique.Passes[0].Apply();
             GlobalGraphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, backgroundVertices, 0, 12, backgroundIndices, 0, 6);
 
             for (int i=0;i<Viewports.Length;i++) {
-                if (Viewports[i] == null) { return; }
-                bool left = i % 2 == 0;
-                bool top = i < 2;
+                if (Viewports[i] == null) { continue; }
 
-                Viewports[i].X = left ? 46 : splitX + 3;
-                Viewports[i].Y = top ? 47 : splitY + 3;
-                Viewports[i].Width = left ? splitX-50 : GlobalGraphics.Window.ClientBounds.Width - (splitX + 3);
-                Viewports[i].Height = top ? splitY-51 : GlobalGraphics.Window.ClientBounds.Height - (splitY + 3);
+                GlobalGraphics.GraphicsDevice.Viewport = new Viewport(Viewports[i].X - vpStartPoint.X, Viewports[i].Y - vpStartPoint.Y, Viewports[i].Width, Viewports[i].Height);
 
-                GlobalGraphics.GraphicsDevice.Viewport = new Viewport(Viewports[i].X, Viewports[i].Y, Viewports[i].Width, Viewports[i].Height);
                 Viewports[i].Render();
             }
             GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
 
-            prevMouseDown = mouseDown;
+            GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
+        }
+
+        public static void DrawRenderTarget() {
+            var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
+            GlobalGraphics.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GlobalGraphics.Window.ClientBounds.Width, GlobalGraphics.Window.ClientBounds.Height);
+            GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+            renderTargetEffect.Texture = renderTarget;
+            renderTargetEffect.CurrentTechnique.Passes[0].Apply();
+            GlobalGraphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, renderTargetGeom, 0, 2, VertexPositionTexture.VertexDeclaration);
+            GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
         }
     }
 }

@@ -13,13 +13,16 @@ namespace CBRE.Editor {
     partial class GameMain {
         public List<ToolBarItem> ToolBarItems;
 
-        private int selectedToolIndex = 0;
+        private int selectedToolIndex = -1;
 
         public BaseTool SelectedTool {
             get {
+                if (selectedToolIndex < 0) { return null; }
                 return ToolBarItems[selectedToolIndex].Tool;
             }
             set {
+                SelectedTool?.ToolDeselected(false);
+                value?.ToolSelected(false);
                 selectedToolIndex = ToolBarItems.FindIndex(tbi => tbi.Tool == value);
             }
         }
@@ -27,13 +30,9 @@ namespace CBRE.Editor {
         public void InitToolBar() {
             ToolBarItems = new List<ToolBarItem>();
 
-            ToolBarItems.Add(new ToolBarItem(new SelectTool()));
-            ToolBarItems.Add(new ToolBarItem(new CameraTool()));
-            ToolBarItems.Add(new ToolBarItem(new EntityTool()));
-            ToolBarItems.Add(new ToolBarItem(new BrushTool()));
-            ToolBarItems.Add(new ToolBarItem(new TextureTool()));
-            ToolBarItems.Add(new ToolBarItem(new ClipTool()));
-            ToolBarItems.Add(new ToolBarItem(new VMTool()));
+            for (int i=0;i<ToolManager.Tools.Count;i++) {
+                ToolBarItems.Add(new ToolBarItem(ToolManager.Tools[i]));
+            }
         }
 
         public void UpdateToolBar() {
@@ -76,7 +75,7 @@ namespace CBRE.Editor {
                     pressed = ImGui.Button("", new Num.Vector2(40, 38));
                 }
 
-                if (pressed) {
+                if (pressed && GameMain.Instance.SelectedTool != Tool) {
                     GameMain.Instance.SelectedTool = Tool;
                 }
 

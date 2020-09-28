@@ -65,7 +65,7 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         public override void DocumentChanged() {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             /*_form.Document = Document;*/
         }
 
