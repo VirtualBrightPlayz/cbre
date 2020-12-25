@@ -132,8 +132,8 @@ namespace Microsoft.Xna.Framework.Graphics
 #if !ANDROID
                     // Required to make sure that any texture uploads on a thread are completed
                     // before the main thread tries to use the texture.
-                    GL.Finish();
-                    GraphicsExtensions.CheckGLError();
+                    //GL.Finish();
+                    //GraphicsExtensions.CheckGLError();
 #endif
                     // Restore the bound texture.
                     if (prevTexture != glTexture)
