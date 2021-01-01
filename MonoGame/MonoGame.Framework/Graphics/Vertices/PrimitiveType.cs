@@ -1,4 +1,4 @@
-// MonoGame - Copyright (C) The MonoGame Team
+﻿// MonoGame - Copyright (C) The MonoGame Team
 // This file is subject to the terms and conditions defined in
 // file 'LICENSE.txt', which is part of this source code package.
 
@@ -10,6 +10,11 @@ namespace Microsoft.Xna.Framework.Graphics
 	public enum PrimitiveType
 	{
         /// <summary>
+        /// Renders the vertices as a sequences of points.
+        /// </summary>
+        PointList,
+
+        /// <summary>
         /// Renders the specified vertices as a sequence of isolated triangles. Each group of three vertices defines a separate triangle. Back-face culling is affected by the current winding-order render state.
         /// </summary>
 		TriangleList,
@@ -20,6 +25,16 @@ namespace Microsoft.Xna.Framework.Graphics
 		TriangleStrip,
 
         /// <summary>
+        /// Renders the vertices as a triangle fan.
+        /// </summary>
+        TriangleFan,
+
+        /// <summary>
+        /// Renders the vertices as a sequence of quads.
+        /// </summary>
+        QuadList,
+
+        /// <summary>
         /// Renders the vertices as a list of isolated straight line segments; the count may be any positive integer.
         /// </summary>
 		LineList,
@@ -28,5 +43,10 @@ namespace Microsoft.Xna.Framework.Graphics
         /// Renders the vertices as a single polyline; the count may be any positive integer.
         /// </summary>
 		LineStrip,
+
+        /// <summary>
+        /// Renders the vertices as a loop of lines.
+        /// </summary>
+        LineLoop,
 	}
 }

@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Graphics;
+using CBRE.Graphics;
 
 namespace CBRE.Editor.Tools
 {
@@ -265,32 +267,31 @@ namespace CBRE.Editor.Tools
             var p2 = vp.Flatten(_clipPlanePoint2);
             var p3 = vp.Flatten(_clipPlanePoint3);
 
-            throw new NotImplementedException();
-            /*// Draw points
-            GL.Begin(PrimitiveType.Quads);
-            GL.Color3(Color.White);
-            GLX.Square(new Vector2d(p1.DX, p1.DY), 4, z, true);
-            GLX.Square(new Vector2d(p2.DX, p2.DY), 4, z, true);
-            GLX.Square(new Vector2d(p3.DX, p3.DY), 4, z, true);
-            GL.End();
+            // Draw points
+            PrimitiveDrawing.Begin(PrimitiveType.QuadList);
+            PrimitiveDrawing.SetColor(Color.White);
+            PrimitiveDrawing.Square(new Vector3(p1.X, p1.Y, (decimal)z), 4);
+            PrimitiveDrawing.Square(new Vector3(p2.X, p2.Y, (decimal)z), 4);
+            PrimitiveDrawing.Square(new Vector3(p3.X, p3.Y, (decimal)z), 4);
+            PrimitiveDrawing.End();
 
-            GL.Enable(EnableCap.LineSmooth);
-            GL.Hint(HintTarget.LineSmoothHint, HintMode.Nicest);
+            /*GL.Enable(EnableCap.LineSmooth);
+            GL.Hint(HintTarget.LineSmoothHint, HintMode.Nicest);*/
 
             // Draw lines between points and point outlines
-            GL.Begin(PrimitiveType.Lines);
-            GL.Color3(Color.White);
-            GL.Vertex2(p1.DX, p1.DY);
-            GL.Vertex2(p2.DX, p2.DY);
-            GL.Vertex2(p2.DX, p2.DY);
-            GL.Vertex2(p3.DX, p3.DY);
-            GL.Vertex2(p3.DX, p3.DY);
-            GL.Vertex2(p1.DX, p1.DY);
-            GL.Color3(Color.Black);
-            GLX.Square(new Vector2d(p1.DX, p1.DY), 4, z);
-            GLX.Square(new Vector2d(p2.DX, p2.DY), 4, z);
-            GLX.Square(new Vector2d(p3.DX, p3.DY), 4, z);
-            GL.End();
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            PrimitiveDrawing.SetColor(Color.White);
+            PrimitiveDrawing.Vertex2(p1.DX, p1.DY);
+            PrimitiveDrawing.Vertex2(p2.DX, p2.DY);
+            PrimitiveDrawing.Vertex2(p2.DX, p2.DY);
+            PrimitiveDrawing.Vertex2(p3.DX, p3.DY);
+            PrimitiveDrawing.Vertex2(p3.DX, p3.DY);
+            PrimitiveDrawing.Vertex2(p1.DX, p1.DY);
+            PrimitiveDrawing.SetColor(Color.Black);
+            PrimitiveDrawing.Square(new Vector3(p1.X, p1.Y, (decimal)z), 4);
+            PrimitiveDrawing.Square(new Vector3(p2.X, p2.Y, (decimal)z), 4);
+            PrimitiveDrawing.Square(new Vector3(p3.X, p3.Y, (decimal)z), 4);
+            PrimitiveDrawing.End();
 
             // Draw the clipped brushes
             if (!_clipPlanePoint1.EquivalentTo(_clipPlanePoint2)
@@ -309,6 +310,7 @@ namespace CBRE.Editor.Tools
                         if (_side != ClipSide.Back) faces.AddRange(front.Faces);
                     }
                 }
+                /* TODO: reimplement
                 GL.LineWidth(2);
                 GL.Color3(Color.White);
                 Matrix.Push();
@@ -316,10 +318,10 @@ namespace CBRE.Editor.Tools
                 GL.MultMatrix(ref mat);
                 Rendering.Immediate.MapObjectRenderer.DrawWireframe(faces, true, false);
                 Matrix.Pop();
-                GL.LineWidth(1);
+                GL.LineWidth(1);*/
             }
 
-            GL.Hint(HintTarget.LineSmoothHint, HintMode.Fastest);
+            /*GL.Hint(HintTarget.LineSmoothHint, HintMode.Fastest);
             GL.Disable(EnableCap.LineSmooth);*/
 
         }

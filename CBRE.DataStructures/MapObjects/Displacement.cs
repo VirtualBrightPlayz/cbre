@@ -142,13 +142,13 @@ namespace CBRE.DataStructures.MapObjects {
             var dist2 = (corners[2] - corners[3]) / res;
             var elev = Plane.Normal * Elevation;
             for (var i = 0; i < size; i++) {
-                var rowStart = corners[0] + i * dist1;
-                var rowEnd = corners[3] + i * dist2;
+                var rowStart = corners[0] + (decimal)i * dist1;
+                var rowEnd = corners[3] + (decimal)i * dist2;
                 // Get the step between each point in this row
                 var dist3 = (rowEnd - rowStart) / res;
                 for (var j = 0; j < size; j++) {
                     var point = Points[i, j];
-                    point.InitialPosition = rowStart + j * dist3;
+                    point.InitialPosition = rowStart + (decimal)j * dist3;
                     point.CurrentPosition.Location = point.InitialPosition
                                                      + point.OffsetDisplacement
                                                      + point.Displacement

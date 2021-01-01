@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Linq;
 using Camera = CBRE.DataStructures.MapObjects.Camera;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Tools
 {
@@ -155,22 +156,21 @@ namespace CBRE.Editor.Tools
 
         public override void MouseDown(ViewportBase viewport, ViewportEvent e)
         {
-            var vp = viewport as Viewport2D;
-            if (vp == null) return;
-            _state = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
-            if (_state == State.None && ViewportManager.Shift)
-            {
-                var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
-                _stateCamera = new Camera { EyePosition = p, LookPosition = p + Vector3.UnitX * 1.5m * Document.Map.GridSpacing };
-                Document.Map.Cameras.Add(_stateCamera);
-                _state = State.MovingLook;
+            if (viewport is Viewport2D vp) {
+                _state = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
+                if (_state == State.None && ViewportManager.Shift) {
+                    var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
+                    _stateCamera = new Camera { EyePosition = p, LookPosition = p + Vector3.UnitX * 1.5m * Document.Map.GridSpacing };
+                    Document.Map.Cameras.Add(_stateCamera);
+                    _state = State.MovingLook;
+                }
+                if (_stateCamera != null) {
+                    SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
+                    Document.Map.ActiveCamera = _stateCamera;
+                }
+            } else if (viewport is Viewport3D vp3d) {
+                ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
             }
-            if (_stateCamera != null)
-            {
-                SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
-                Document.Map.ActiveCamera = _stateCamera;
-            }
-
         }
 
         public override void MouseClick(ViewportBase viewport, ViewportEvent e)
@@ -285,39 +285,38 @@ namespace CBRE.Editor.Tools
 
             var z = (double)vp.Zoom;
 
-            throw new NotImplementedException();
             /*GL.Enable(EnableCap.LineSmooth);
-            GL.Hint(HintTarget.LineSmoothHint, HintMode.Nicest);
+            GL.Hint(HintTarget.LineSmoothHint, HintMode.Nicest);*/
 
             // Draw lines between points and point outlines
-            GL.Begin(PrimitiveType.Lines);
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
 
             foreach (var camera in cams)
             {
                 var p1 = vp.Flatten(camera.EyePosition);
                 var p2 = vp.Flatten(camera.LookPosition);
 
-                GL.Color3(camera == Document.Map.ActiveCamera ? Color.Red : Color.Cyan);
-                GL.Vertex2(p1.DX, p1.DY);
-                GL.Vertex2(p2.DX, p2.DY);
-                GL.Vertex2(p2.DX, p2.DY);
-                GL.Vertex2(p1.DX, p1.DY);
+                PrimitiveDrawing.SetColor(camera == Document.Map.ActiveCamera ? Color.Red : Color.Cyan);
+                PrimitiveDrawing.Vertex2(p1.DX, p1.DY);
+                PrimitiveDrawing.Vertex2(p2.DX, p2.DY);
+                PrimitiveDrawing.Vertex2(p2.DX, p2.DY);
+                PrimitiveDrawing.Vertex2(p1.DX, p1.DY);
             }
 
-            GL.End();
+            PrimitiveDrawing.End();
 
-            GL.Enable(EnableCap.PolygonSmooth);
-            GL.Hint(HintTarget.PolygonSmoothHint, HintMode.Nicest);
+            /*GL.Enable(EnableCap.PolygonSmooth);
+            GL.Hint(HintTarget.PolygonSmoothHint, HintMode.Nicest);*/
 
             foreach (var camera in cams)
             {
                 var p1 = vp.Flatten(camera.EyePosition);
 
                 // Position circle
-                GL.Begin(PrimitiveType.Polygon);
-                GL.Color3(camera == Document.Map.ActiveCamera ? Color.DarkOrange : Color.LawnGreen);
-                GLX.Circle(new Vector2d(p1.DX, p1.DY), 4, z, loop: true);
-                GL.End();
+                PrimitiveDrawing.Begin(PrimitiveType.TriangleFan);
+                PrimitiveDrawing.SetColor(camera == Document.Map.ActiveCamera ? Color.DarkOrange : Color.LawnGreen);
+                PrimitiveDrawing.Circle(new Vector3(p1.X, p1.Y, (decimal)z), 4);
+                PrimitiveDrawing.End();
             }
             foreach (var camera in cams)
             {
@@ -329,17 +328,17 @@ namespace CBRE.Editor.Tools
                 var cp = new Vector3(-dir.Y, dir.X, 0).Normalise();
 
                 // Direction Triangle
-                GL.Begin(PrimitiveType.Triangles);
-                GL.Color3(camera == Document.Map.ActiveCamera ? Color.Red : Color.Cyan);
+                PrimitiveDrawing.Begin(PrimitiveType.TriangleList);
+                PrimitiveDrawing.SetColor(camera == Document.Map.ActiveCamera ? Color.Red : Color.Cyan);
                 Coord(p2 - (dir - cp) * multiplier);
                 Coord(p2 - (dir + cp) * multiplier);
                 Coord(p2 + dir * 1.5m * multiplier);
-                GL.End();
+                PrimitiveDrawing.End();
             }
 
-            GL.Disable(EnableCap.PolygonSmooth);
+            //GL.Disable(EnableCap.PolygonSmooth);
 
-            GL.Begin(PrimitiveType.Lines);
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
 
             foreach (var camera in cams)
             {
@@ -350,8 +349,8 @@ namespace CBRE.Editor.Tools
                 var dir = (p2 - p1).Normalise();
                 var cp = new Vector3(-dir.Y, dir.X, 0).Normalise();
 
-                GL.Color3(Color.Black);
-                GLX.Circle(new Vector2d(p1.DX, p1.DY), 4, z);
+                PrimitiveDrawing.SetColor(Color.Black);
+                PrimitiveDrawing.Circle(new Vector3(p1.X, p1.Y, (decimal)z), 4);
                 Coord(p2 + dir * 1.5m * multiplier);
                 Coord(p2 - (dir + cp) * multiplier);
                 Coord(p2 - (dir + cp) * multiplier);
@@ -360,15 +359,15 @@ namespace CBRE.Editor.Tools
                 Coord(p2 + dir * 1.5m * multiplier);
             }
 
-            GL.End();
+            PrimitiveDrawing.End();
 
-            GL.Disable(EnableCap.LineSmooth);*/
+            //GL.Disable(EnableCap.LineSmooth);
         }
 
-        /*protected static void Coord(Vector3 c)
+        protected static void Coord(Vector3 c)
         {
-            GL.Vertex3(c.DX, c.DY, c.DZ);
-        }*/
+            PrimitiveDrawing.Vertex3(new Microsoft.Xna.Framework.Vector3((float)c.DX, (float)c.DY, (float)c.DZ));
+        }
 
         public override HotkeyInterceptResult InterceptHotkey(HotkeysMediator hotkeyMessage, object parameters)
         {

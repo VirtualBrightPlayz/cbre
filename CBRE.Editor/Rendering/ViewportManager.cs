@@ -62,7 +62,10 @@ namespace CBRE.Editor.Rendering {
         static short[] backgroundIndices = new short[18];
         static BasicEffect backgroundEffect = null;
 
-        static bool prevMouseDown; static bool draggingX; static bool draggingY;
+        static bool prevMouseDown;
+        
+        static bool draggingCenterX; static bool draggingCenterY;
+        static int draggingViewport;
 
         public static RenderTarget2D renderTarget { get; private set; }
         private static VertexPositionTexture[] renderTargetGeom;
@@ -77,8 +80,9 @@ namespace CBRE.Editor.Rendering {
 
         public static void Init() {
             prevMouseDown = false;
-            draggingX = false;
-            draggingY = false;
+            draggingCenterX = false;
+            draggingCenterY = false;
+            draggingViewport = -1;
 
             Viewports[0] = new Viewport3D(Viewport3D.ViewType.Shaded);
             Viewports[1] = new Viewport2D(Viewport2D.ViewDirection.Top);
@@ -197,18 +201,22 @@ namespace CBRE.Editor.Rendering {
             int splitX = (int)((GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
             int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
 
-            if (!mouseDown) { draggingX = false; draggingY = false; }
+            if (!mouseDown) {
+                draggingCenterX = false;
+                draggingCenterY = false;
+                draggingViewport = -1;
+            }
             if (mouseHit) {
-                draggingX = (mouseState.X >= (splitX - 3)) && (mouseState.X <= (splitX + 2));
-                draggingY = (mouseState.Y >= (splitY - 3)) && (mouseState.Y <= (splitY + 2));
+                draggingCenterX = (mouseState.X >= (splitX - 3)) && (mouseState.X <= (splitX + 2));
+                draggingCenterY = (mouseState.Y >= (splitY - 3)) && (mouseState.Y <= (splitY + 2));
             }
 
-            if (draggingX) {
+            if (draggingCenterX) {
                 splitPoint.X = (float)(mouseState.X - vpStartPoint.X) / (GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X);
                 splitPoint.X = Math.Clamp(splitPoint.X, 0.01f, 0.99f);
                 MarkForRerender();
             }
-            if (draggingY) {
+            if (draggingCenterY) {
                 splitPoint.Y = (float)(mouseState.Y - vpStartPoint.Y) / (GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y);
                 splitPoint.Y = Math.Clamp(splitPoint.Y, 0.01f, 0.99f);
                 MarkForRerender();
@@ -224,8 +232,15 @@ namespace CBRE.Editor.Rendering {
                 Viewports[i].Width = left ? splitX - vpStartPoint.X - 4 : renderTarget.Width - (splitX - vpStartPoint.X + 3);
                 Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
 
-                if (mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
-                    mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
+                if (!draggingCenterX && !draggingCenterY && draggingViewport < 0) {
+                    if (mouseDown &&
+                        mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
+                        mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
+                        draggingViewport = i;
+                    }
+                }
+
+                if (draggingViewport == i) {
                     int currMouseX = mouseState.X - Viewports[i].X;
                     int currMouseY = mouseState.Y - Viewports[i].Y;
                     if (mouseHit) {

@@ -224,8 +224,20 @@ namespace CBRE.DataStructures.Geometric {
             return new Vector3(c._x * f, c._y * f, c._z * f);
         }
 
+        public static Vector3 operator *(Vector3 c, double f) {
+            return c * (decimal)f;
+        }
+
+        public static Vector3 operator *(Vector3 c, int i) {
+            return c * (decimal)i;
+        }
+
         public static Vector3 operator *(decimal f, Vector3 c) {
             return c * f;
+        }
+
+        public static Vector3 operator *(double f, Vector3 c) {
+            return c * (decimal)f;
         }
 
         public Vector3 ComponentMultiply(Vector3 c) {

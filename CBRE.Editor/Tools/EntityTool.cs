@@ -14,6 +14,8 @@ using System.Drawing;
 using System.Linq;
 using Select = CBRE.Settings.Select;
 using Microsoft.Xna.Framework.Input;
+using CBRE.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Tools
 {
@@ -256,15 +258,6 @@ namespace CBRE.Editor.Tools
             //
         }
 
-        /*private static void Coord(Vector3 c)
-        {
-            GL.Vertex3(c.DX, c.DY, c.DZ);
-        }
-        private static void Coord(double x, double y, double z)
-        {
-            GL.Vertex3(x, y, z);
-        }*/
-
         public override void Render(ViewportBase viewport)
         {
             if (_state == EntityState.None) return;
@@ -272,27 +265,26 @@ namespace CBRE.Editor.Tools
             var high = Document.GameData.MapSizeHigh;
             var low = Document.GameData.MapSizeLow;
 
-            throw new NotImplementedException();
-            /*if (viewport is Viewport3D)
+            if (viewport is Viewport3D)
             {
                 var offset = new Vector3(20, 20, 20);
                 var start = _location - offset;
                 var end = _location + offset;
                 var box = new Box(start, end);
-                GL.Begin(PrimitiveType.Lines);
-                GL.Color3(Color.LimeGreen);
+                PrimitiveDrawing.Begin(PrimitiveType.LineList);
+                PrimitiveDrawing.SetColor(Color.LimeGreen);
                 foreach (var line in box.GetBoxLines())
                 {
-                    Coord(line.Start);
-                    Coord(line.End);
+                    PrimitiveDrawing.Vertex3(line.Start.DX, line.Start.DY, line.Start.DZ);
+                    PrimitiveDrawing.Vertex3(line.End.DX, line.End.DY, line.End.DZ);
                 }
-                Coord(low, _location.DY, _location.DZ);
-                Coord(high, _location.DY, _location.DZ);
-                Coord(_location.DX, low, _location.DZ);
-                Coord(_location.DX, high, _location.DZ);
-                Coord(_location.DX, _location.DY, low);
-                Coord(_location.DX, _location.DY, high);
-                GL.End();
+                PrimitiveDrawing.Vertex3(low, _location.DY, _location.DZ);
+                PrimitiveDrawing.Vertex3(high, _location.DY, _location.DZ);
+                PrimitiveDrawing.Vertex3(_location.DX, low, _location.DZ);
+                PrimitiveDrawing.Vertex3(_location.DX, high, _location.DZ);
+                PrimitiveDrawing.Vertex3(_location.DX, _location.DY, low);
+                PrimitiveDrawing.Vertex3(_location.DX, _location.DY, high);
+                PrimitiveDrawing.End();
             }
             else if (viewport is Viewport2D)
             {
@@ -301,21 +293,21 @@ namespace CBRE.Editor.Tools
                 var offset = new Vector3(units, units, units);
                 var start = vp.Flatten(_location - offset);
                 var end = vp.Flatten(_location + offset);
-                GL.Begin(PrimitiveType.LineLoop);
-                GL.Color3(Color.LimeGreen);
-                Coord(start.DX, start.DY, start.DZ);
-                Coord(end.DX, start.DY, start.DZ);
-                Coord(end.DX, end.DY, start.DZ);
-                Coord(start.DX, end.DY, start.DZ);
-                GL.End();
-                GL.Begin(PrimitiveType.Lines);
+                PrimitiveDrawing.Begin(PrimitiveType.LineLoop);
+                PrimitiveDrawing.SetColor(Color.LimeGreen);
+                PrimitiveDrawing.Vertex3(start.DX, start.DY, start.DZ);
+                PrimitiveDrawing.Vertex3(end.DX, start.DY, start.DZ);
+                PrimitiveDrawing.Vertex3(end.DX, end.DY, start.DZ);
+                PrimitiveDrawing.Vertex3(start.DX, end.DY, start.DZ);
+                PrimitiveDrawing.End();
+                PrimitiveDrawing.Begin(PrimitiveType.LineList);
                 var loc = vp.Flatten(_location);
-                Coord(low, loc.DY, 0);
-                Coord(high, loc.DY, 0);
-                Coord(loc.DX, low, 0);
-                Coord(loc.DX, high, 0);
-                GL.End();
-            }*/
+                PrimitiveDrawing.Vertex3(low, loc.DY, 0);
+                PrimitiveDrawing.Vertex3(high, loc.DY, 0);
+                PrimitiveDrawing.Vertex3(loc.DX, low, 0);
+                PrimitiveDrawing.Vertex3(loc.DX, high, 0);
+                PrimitiveDrawing.End();
+            }
         }
 
         public override HotkeyInterceptResult InterceptHotkey(HotkeysMediator hotkeyMessage, object parameters)

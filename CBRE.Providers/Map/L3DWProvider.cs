@@ -27,7 +27,7 @@ namespace CBRE.Providers.Map {
 
         protected override DataStructures.MapObjects.Map GetFromStream(Stream stream) {
             var map = new DataStructures.MapObjects.Map();
-            map.CordonBounds = new Box(Vector3.One * -16384, Vector3.One * 16384);
+            map.CordonBounds = new Box(Vector3.One * -16384m, Vector3.One * 16384m);
             BinaryReader br = new BinaryReader(stream);
 
             //header
@@ -426,7 +426,7 @@ namespace CBRE.Providers.Map {
             solid.Faces.Add(face);
             face.Parent = solid;
             var center = face.Vertices.Aggregate(Vector3.Zero, (sum, v) => sum + v.Location) / face.Vertices.Count;
-            var normalOffset = center - face.Plane.Normal * 5;
+            var normalOffset = center - face.Plane.Normal * 5m;
             if (face.Plane.Normal.Dot(offset - center) >= 0) { offset = normalOffset; }
             for (var i = 0; i < face.Vertices.Count; i++) {
                 var v1 = face.Vertices[i];

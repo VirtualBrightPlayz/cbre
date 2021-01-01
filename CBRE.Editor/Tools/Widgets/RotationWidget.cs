@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Tools.Widgets
 {
@@ -413,39 +414,36 @@ namespace CBRE.Editor.Tools.Widgets
                 c = Color.White;
             }
 
-            throw new NotImplementedException();
-            /*if (_activeViewport != viewport || _mouseDown != CircleType.Outer)
+            if (_activeViewport != viewport || _mouseDown != CircleType.Outer)
             {
-                GL.Begin(PrimitiveType.Lines);
+                PrimitiveDrawing.Begin(PrimitiveType.LineList);
 
-                var zero = new Vector3((float)_pivotPoint.DX, (float)_pivotPoint.DY, (float)_pivotPoint.DZ);
+                PrimitiveDrawing.SetColor(c);
+                PrimitiveDrawing.Vertex3(_pivotPoint - axis * 100000m);
+                PrimitiveDrawing.Vertex3(_pivotPoint + axis * 100000m);
 
-                GL.Color4(c);
-                GL.Vertex3(zero - axis * 100000);
-                GL.Vertex3(zero + axis * 100000);
-
-                GL.End();
+                PrimitiveDrawing.End();
             }
 
             if (_activeViewport == viewport)
             {
-                GL.Disable(EnableCap.DepthTest);
+                /*GL.Disable(EnableCap.DepthTest);
                 GL.Enable(EnableCap.LineStipple);
-                GL.LineStipple(5, 0xAAAA);
-                GL.Begin(PrimitiveType.Lines);
+                GL.LineStipple(5, 0xAAAA);*/
+                PrimitiveDrawing.Begin(PrimitiveType.LineList);
 
-                GL.Color4(Color.FromArgb(64, Color.Gray));
-                GL.Vertex3(_pivotPoint.ToVector3());
-                GL.Vertex3(viewport.ScreenToWorld(_mouseDownPoint).ToVector3());
+                PrimitiveDrawing.SetColor(Color.FromArgb(64, Color.Gray));
+                PrimitiveDrawing.Vertex3(_pivotPoint);
+                PrimitiveDrawing.Vertex3(viewport.ScreenToWorld(_mouseDownPoint));
 
-                GL.Color4(Color.LightGray);
-                GL.Vertex3(_pivotPoint.ToVector3());
-                GL.Vertex3(viewport.ScreenToWorld(_mouseMovePoint).ToVector3());
+                PrimitiveDrawing.SetColor(Color.LightGray);
+                PrimitiveDrawing.Vertex3(_pivotPoint);
+                PrimitiveDrawing.Vertex3(viewport.ScreenToWorld(_mouseMovePoint));
 
-                GL.End();
-                GL.Disable(EnableCap.LineStipple);
-                GL.Enable(EnableCap.DepthTest);
-            }*/
+                PrimitiveDrawing.End();
+                /*GL.Disable(EnableCap.LineStipple);
+                GL.Enable(EnableCap.DepthTest);*/
+            }
         }
 
         private void RenderCircleTypeNone(Viewport3D viewport, Document document)
@@ -462,55 +460,54 @@ namespace CBRE.Editor.Tools.Widgets
             var right = normal.Cross(Vector3.UnitZ).Normalise();
             var up = normal.Cross(right).Normalise();
 
-            throw new NotImplementedException();
             /*GL.Disable(EnableCap.DepthTest);
-            GL.Disable(EnableCap.Texture2D);
+            GL.Disable(EnableCap.Texture2D);*/
 
             const int sides = 32;
             const float diff = (float)(2 * Math.PI) / sides;
 
-            GL.Begin(PrimitiveType.Lines);
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
             for (var i = 0; i < sides; i++)
             {
-                var cos1 = (float)Math.Cos(diff * i);
-                var sin1 = (float)Math.Sin(diff * i);
-                var cos2 = (float)Math.Cos(diff * (i + 1));
-                var sin2 = (float)Math.Sin(diff * (i + 1));
-                GL.Color4(Color.DarkGray);
-                GL.Vertex3(origin + right * cos1 * radius + up * sin1 * radius);
-                GL.Vertex3(origin + right * cos2 * radius + up * sin2 * radius);
-                GL.Color4(_mouseOver == CircleType.Outer ? Color.White : Color.LightGray);
-                GL.Vertex3(origin + right * cos1 * radius * 1.2f + up * sin1 * radius * 1.2f);
-                GL.Vertex3(origin + right * cos2 * radius * 1.2f + up * sin2 * radius * 1.2f);
+                var cos1 = Math.Cos(diff * i);
+                var sin1 = Math.Sin(diff * i);
+                var cos2 = Math.Cos(diff * (i + 1));
+                var sin2 = Math.Sin(diff * (i + 1));
+                PrimitiveDrawing.SetColor(Color.DarkGray);
+                PrimitiveDrawing.Vertex3(origin + right * cos1 * radius + up * sin1 * radius);
+                PrimitiveDrawing.Vertex3(origin + right * cos2 * radius + up * sin2 * radius);
+                PrimitiveDrawing.SetColor(_mouseOver == CircleType.Outer ? Color.White : Color.LightGray);
+                PrimitiveDrawing.Vertex3(origin + right * cos1 * radius * 1.2f + up * sin1 * radius * 1.2f);
+                PrimitiveDrawing.Vertex3(origin + right * cos2 * radius * 1.2f + up * sin2 * radius * 1.2f);
             }
-            GL.End();
+            PrimitiveDrawing.End();
 
-            GL.Enable(EnableCap.ClipPlane0);
+            /*GL.Enable(EnableCap.ClipPlane0);
             GL.ClipPlane(ClipPlaneName.ClipPlane0, new double[] { normal.X, normal.Y, normal.Z, -Vector3.Dot(origin, normal) });
 
-            GL.LineWidth(2);
-            GL.Begin(PrimitiveType.Lines);
+            GL.LineWidth(2);*/
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
             for (var i = 0; i < sides; i++)
             {
-                var cos1 = (float)Math.Cos(diff * i) * radius;
-                var sin1 = (float)Math.Sin(diff * i) * radius;
-                var cos2 = (float)Math.Cos(diff * (i + 1)) * radius;
-                var sin2 = (float)Math.Sin(diff * (i + 1)) * radius;
+                var cos1 = Math.Cos(diff * i) * (double)radius;
+                var sin1 = Math.Sin(diff * i) * (double)radius;
+                var cos2 = Math.Cos(diff * (i + 1)) * (double)radius;
+                var sin2 = Math.Sin(diff * (i + 1)) * (double)radius;
 
-                GL.Color4(_mouseOver == CircleType.Z ? Color.Blue : Color.DarkBlue);
-                GL.Vertex3(origin + Vector3.UnitX * cos1 + Vector3.UnitY * sin1);
-                GL.Vertex3(origin + Vector3.UnitX * cos2 + Vector3.UnitY * sin2);
+                PrimitiveDrawing.SetColor(_mouseOver == CircleType.Z ? Color.Blue : Color.DarkBlue);
+                PrimitiveDrawing.Vertex3(origin + Vector3.UnitX * cos1 + Vector3.UnitY * sin1);
+                PrimitiveDrawing.Vertex3(origin + Vector3.UnitX * cos2 + Vector3.UnitY * sin2);
 
-                GL.Color4(_mouseOver == CircleType.X ? Color.Red : Color.DarkRed);
-                GL.Vertex3(origin + Vector3.UnitY * cos1 + Vector3.UnitZ * sin1);
-                GL.Vertex3(origin + Vector3.UnitY * cos2 + Vector3.UnitZ * sin2);
+                PrimitiveDrawing.SetColor(_mouseOver == CircleType.X ? Color.Red : Color.DarkRed);
+                PrimitiveDrawing.Vertex3(origin + Vector3.UnitY * cos1 + Vector3.UnitZ * sin1);
+                PrimitiveDrawing.Vertex3(origin + Vector3.UnitY * cos2 + Vector3.UnitZ * sin2);
 
-                GL.Color4(_mouseOver == CircleType.Y ? Color.Lime : Color.LimeGreen);
-                GL.Vertex3(origin + Vector3.UnitZ * cos1 + Vector3.UnitX * sin1);
-                GL.Vertex3(origin + Vector3.UnitZ * cos2 + Vector3.UnitX * sin2);
+                PrimitiveDrawing.SetColor(_mouseOver == CircleType.Y ? Color.Lime : Color.LimeGreen);
+                PrimitiveDrawing.Vertex3(origin + Vector3.UnitZ * cos1 + Vector3.UnitX * sin1);
+                PrimitiveDrawing.Vertex3(origin + Vector3.UnitZ * cos2 + Vector3.UnitX * sin2);
             }
-            GL.End();
-            GL.LineWidth(1);
+            PrimitiveDrawing.End();
+            /*GL.LineWidth(1);
 
             GL.Disable(EnableCap.ClipPlane0);
 

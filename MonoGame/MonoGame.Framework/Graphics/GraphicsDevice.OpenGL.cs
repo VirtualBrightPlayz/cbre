@@ -1,4 +1,4 @@
-// MonoGame - Copyright (C) The MonoGame Team
+﻿// MonoGame - Copyright (C) The MonoGame Team
 // This file is subject to the terms and conditions defined in
 // file 'LICENSE.txt', which is part of this source code package.
 
@@ -882,14 +882,22 @@ namespace Microsoft.Xna.Framework.Graphics
         {
             switch (primitiveType)
             {
+                case PrimitiveType.PointList:
+                    return GLPrimitiveType.Points;
                 case PrimitiveType.LineList:
                     return GLPrimitiveType.Lines;
+                case PrimitiveType.LineLoop:
+                    return GLPrimitiveType.LineLoop;
                 case PrimitiveType.LineStrip:
                     return GLPrimitiveType.LineStrip;
                 case PrimitiveType.TriangleList:
                     return GLPrimitiveType.Triangles;
                 case PrimitiveType.TriangleStrip:
                     return GLPrimitiveType.TriangleStrip;
+                case PrimitiveType.TriangleFan:
+                    return GLPrimitiveType.TriangleFan;
+                case PrimitiveType.QuadList:
+                    return GLPrimitiveType.Quads;
             }
 
             throw new ArgumentException();

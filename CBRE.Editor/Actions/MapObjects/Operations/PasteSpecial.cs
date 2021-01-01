@@ -79,8 +79,8 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
 
                 // Start at i = 1 so the original isn't duped with no offets
                 for (var i = 1; i <= _numCopies; i++) {
-                    var copyOrigin = origin + (_offset * i);
-                    var copyRotation = _rotation * i;
+                    var copyOrigin = origin + (_offset * (decimal)i);
+                    var copyRotation = _rotation * (decimal)i;
                     var copy = CreateCopy(document.Map.IDGenerator, copyOrigin, copyRotation, names, document.Map.GetTransformFlags()).ToList();
                     var grouped = GroupCopy(document.Map.IDGenerator, allGroup, copy);
                     objects.AddRange(grouped);

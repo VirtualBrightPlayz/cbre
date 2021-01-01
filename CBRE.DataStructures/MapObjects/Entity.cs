@@ -92,8 +92,8 @@ namespace CBRE.DataStructures.MapObjects {
                     sub = behav.GetVector3(0);
                     add = behav.GetVector3(1);
                 } else if (GameData.Name == "infodecal") {
-                    sub = Vector3.One * -4;
-                    add = Vector3.One * 4;
+                    sub = Vector3.One * -4m;
+                    add = Vector3.One * 4m;
                 }
                 BoundingBox = new Box(Origin + sub, Origin + add);
             } else if (Children.Any()) {

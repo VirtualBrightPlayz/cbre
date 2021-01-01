@@ -41,7 +41,7 @@ namespace CBRE.DataStructures.MapObjects {
             Show2DGrid = SnapToGrid = true;
             TextureLock = true;
             HideDisplacementSolids = true;
-            CordonBounds = new Box(Vector3.One * -1024, Vector3.One * 1024);
+            CordonBounds = new Box(Vector3.One * -1024m, Vector3.One * 1024m);
         }
 
         protected Map(SerializationInfo info, StreamingContext context) {
