@@ -60,7 +60,7 @@ namespace CBRE.Editor.Rendering {
         static Vector2 splitPoint = new Vector2(0.45f, 0.55f);
         static VertexPositionColor[] backgroundVertices = new VertexPositionColor[12];
         static short[] backgroundIndices = new short[18];
-        static BasicEffect backgroundEffect = null;
+        static BasicEffect basicEffect = null;
 
         static bool prevMouseDown;
         
@@ -89,11 +89,11 @@ namespace CBRE.Editor.Rendering {
             Viewports[2] = new Viewport2D(Viewport2D.ViewDirection.Side);
             Viewports[3] = new Viewport2D(Viewport2D.ViewDirection.Front);
 
-            backgroundEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
-            backgroundEffect.World = Matrix.Identity;
-            backgroundEffect.View = Matrix.Identity;
-            backgroundEffect.TextureEnabled = false;
-            backgroundEffect.VertexColorEnabled = true;
+            basicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+            basicEffect.World = Matrix.Identity;
+            basicEffect.View = Matrix.Identity;
+            basicEffect.TextureEnabled = false;
+            basicEffect.VertexColorEnabled = true;
 
             renderTargetEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
             renderTargetEffect.World = Matrix.Identity;
@@ -306,7 +306,7 @@ namespace CBRE.Editor.Rendering {
 
             var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
 
-            backgroundEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, renderTarget.Width + 0.5f, renderTarget.Height + 0.5f, 0.5f, -1f, 1f);
+            basicEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, renderTarget.Width + 0.5f, renderTarget.Height + 0.5f, 0.5f, -1f, 1f);
 
             backgroundVertices[1].Position.X = renderTarget.Width;
             backgroundVertices[2].Position.Y = renderTarget.Height;
@@ -329,7 +329,7 @@ namespace CBRE.Editor.Rendering {
 
             GlobalGraphics.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, renderTarget.Width, renderTarget.Height);
             GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
-            backgroundEffect.CurrentTechnique.Passes[0].Apply();
+            basicEffect.CurrentTechnique.Passes[0].Apply();
             GlobalGraphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, backgroundVertices, 0, 12, backgroundIndices, 0, 6);
 
             for (int i=0;i<Viewports.Length;i++) {
@@ -338,6 +338,11 @@ namespace CBRE.Editor.Rendering {
                 GlobalGraphics.GraphicsDevice.Viewport = new Viewport(Viewports[i].X - vpStartPoint.X, Viewports[i].Y - vpStartPoint.Y, Viewports[i].Width, Viewports[i].Height);
 
                 Viewports[i].Render();
+                basicEffect.Projection = Viewports[i].GetViewportMatrix();
+                basicEffect.View = Viewports[i].GetCameraMatrix();
+                basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
+                basicEffect.CurrentTechnique.Passes[0].Apply();
+                GameMain.Instance.SelectedTool?.Render(Viewports[i]);
             }
             GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
 

@@ -101,6 +101,7 @@ namespace CBRE.Graphics {
                 vertices.ToArray(),
                 0,
                 primCount);
+            currentPrimitiveType = null;
         }
     }
 }

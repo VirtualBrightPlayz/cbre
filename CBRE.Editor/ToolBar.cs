@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using CBRE.Editor.Rendering;
 using CBRE.Editor.Tools;
 using CBRE.Editor.Tools.SelectTool;
 using CBRE.Editor.Tools.TextureTool;
@@ -77,6 +78,7 @@ namespace CBRE.Editor {
 
                 if (pressed && GameMain.Instance.SelectedTool != Tool) {
                     GameMain.Instance.SelectedTool = Tool;
+                    ViewportManager.MarkForRerender();
                 }
 
                 if (ImGui.IsItemHovered()) {
