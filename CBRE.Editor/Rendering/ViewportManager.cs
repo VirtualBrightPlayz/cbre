@@ -307,6 +307,8 @@ namespace CBRE.Editor.Rendering {
             var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
 
             basicEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, renderTarget.Width + 0.5f, renderTarget.Height + 0.5f, 0.5f, -1f, 1f);
+            basicEffect.View = Microsoft.Xna.Framework.Matrix.Identity;
+            basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
 
             backgroundVertices[1].Position.X = renderTarget.Width;
             backgroundVertices[2].Position.Y = renderTarget.Height;
@@ -350,13 +352,13 @@ namespace CBRE.Editor.Rendering {
         }
 
         public static void DrawRenderTarget() {
-            var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
+            //var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
             GlobalGraphics.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GlobalGraphics.Window.ClientBounds.Width, GlobalGraphics.Window.ClientBounds.Height);
             GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             renderTargetEffect.Texture = renderTarget;
             renderTargetEffect.CurrentTechnique.Passes[0].Apply();
             GlobalGraphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, renderTargetGeom, 0, 2, VertexPositionTexture.VertexDeclaration);
-            GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
+            //GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
         }
     }
 }
