@@ -345,7 +345,7 @@ namespace CBRE.Editor.Rendering {
                 basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
                 basicEffect.CurrentTechnique.Passes[0].Apply();
                 GameMain.Instance.SelectedTool?.Render(Viewports[i]);
-            }
+            } 
             GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
 
             GlobalGraphics.GraphicsDevice.SetRenderTarget(null);

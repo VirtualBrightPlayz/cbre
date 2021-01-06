@@ -106,7 +106,7 @@ namespace CBRE.Editor.Tools
 
         private State GetStateAtPoint(int x, int y, Viewport2D viewport, out Camera activeCamera)
         {
-            var d = 5 / viewport.Zoom;
+            var d = 5m / viewport.Zoom;
 
             foreach (var cam in GetCameras())
             {

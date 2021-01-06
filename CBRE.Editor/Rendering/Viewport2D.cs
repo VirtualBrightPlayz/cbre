@@ -121,13 +121,15 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        private Vector3 CenterScreen { get; set; }
+        private Vector3 CenterScreen {
+            get { return new Vector3(Width * 0.5m, Height * 0.5m, 0m); }
+        }
 
         public Viewport2D(ViewDirection direction) {
             Zoom = 0.5m;
             Position = new Vector3(0, 0, 0);
             Direction = direction;
-            CenterScreen = new Vector3(Width / 2m, Height / 2m, 0);
+            //CenterScreen = new Vector3(Width / 2m, Height / 2m, 0);
         }
 
         public override void FocusOn(Vector3 coordinate) {
