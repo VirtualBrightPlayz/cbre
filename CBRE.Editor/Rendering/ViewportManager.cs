@@ -62,8 +62,10 @@ namespace CBRE.Editor.Rendering {
         static short[] backgroundIndices = new short[18];
         static BasicEffect basicEffect = null;
 
-        static bool prevMouseDown;
-        
+        static bool prevMouse1Down;
+        static bool prevMouse3Down;
+        static int prevScrollWheelValue;
+
         static bool draggingCenterX; static bool draggingCenterY;
         static int draggingViewport;
 
@@ -79,7 +81,8 @@ namespace CBRE.Editor.Rendering {
         readonly static Point vpStartPoint = new Point(46, 66);
 
         public static void Init() {
-            prevMouseDown = false;
+            prevMouse1Down = false;
+            prevMouse3Down = false;
             draggingCenterX = false;
             draggingCenterY = false;
             draggingViewport = -1;
@@ -192,8 +195,11 @@ namespace CBRE.Editor.Rendering {
 
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
-            bool mouseDown = mouseState.LeftButton == ButtonState.Pressed;
-            bool mouseHit = mouseDown && !prevMouseDown;
+            bool mouse1Down = mouseState.LeftButton == ButtonState.Pressed;
+            bool mouse1Hit = mouse1Down && !prevMouse1Down;
+            bool mouse3Down = mouseState.MiddleButton == ButtonState.Pressed;
+            bool mouse3Hit = mouse3Down && !prevMouse3Down;
+            int scrollWheelValue = mouseState.ScrollWheelValue;
             Ctrl = keyboardState.IsKeyDown(Keys.LeftControl) || keyboardState.IsKeyDown(Keys.RightControl);
             Shift = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
             Alt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
@@ -201,12 +207,12 @@ namespace CBRE.Editor.Rendering {
             int splitX = (int)((GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
             int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
 
-            if (!mouseDown) {
+            if (!mouse1Down && !mouse3Down) {
                 draggingCenterX = false;
                 draggingCenterY = false;
                 draggingViewport = -1;
             }
-            if (mouseHit) {
+            if (mouse1Hit) {
                 draggingCenterX = (mouseState.X >= (splitX - 3)) && (mouseState.X <= (splitX + 2));
                 draggingCenterY = (mouseState.Y >= (splitY - 3)) && (mouseState.Y <= (splitY + 2));
             }
@@ -233,7 +239,7 @@ namespace CBRE.Editor.Rendering {
                 Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
 
                 if (!draggingCenterX && !draggingCenterY && draggingViewport < 0) {
-                    if (mouseDown &&
+                    if ((mouse1Down || mouse3Down) &&
                         mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
                         mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
                         draggingViewport = i;
@@ -243,7 +249,7 @@ namespace CBRE.Editor.Rendering {
                 if (draggingViewport == i) {
                     int currMouseX = mouseState.X - Viewports[i].X;
                     int currMouseY = mouseState.Y - Viewports[i].Y;
-                    if (mouseHit) {
+                    if (mouse1Hit) {
                         GameMain.Instance.SelectedTool?.MouseClick(Viewports[i], new ViewportEvent() {
                             Handled = false,
                             Button = MouseButtons.Left,
@@ -262,7 +268,7 @@ namespace CBRE.Editor.Rendering {
                             LastX = Viewports[i].PrevMouseX,
                             LastY = Viewports[i].PrevMouseY,
                         });
-                    } else if (mouseDown) {
+                    } else if (mouse1Down) {
                         if (Viewports[i].PrevMouseX != currMouseX || Viewports[i].PrevMouseY != currMouseY) {
                             GameMain.Instance.SelectedTool?.MouseMove(Viewports[i], new ViewportEvent() {
                                 Handled = false,
@@ -272,6 +278,13 @@ namespace CBRE.Editor.Rendering {
                                 LastX = Viewports[i].PrevMouseX,
                                 LastY = Viewports[i].PrevMouseY,
                             });
+                        }
+                    } else if (mouse3Down) {
+                        if (currMouseX >= 0 && currMouseY >= 0 && currMouseX <= Viewports[i].Width && currMouseY <= Viewports[i].Height) {
+                            if (Viewports[i] is Viewport2D vp) {
+                                shouldRerender = true;
+                                vp.Position -= new DataStructures.Geometric.Vector3((decimal)(currMouseX - vp.PrevMouseX) / vp.Zoom, -(decimal)(currMouseY - vp.PrevMouseY) / vp.Zoom, 0m);
+                            }
                         }
                     }
                 }
@@ -290,9 +303,26 @@ namespace CBRE.Editor.Rendering {
                 Viewports[i].PrevMouseOver = mouseOver;
                 Viewports[i].PrevMouseX = mouseState.X - Viewports[i].X;
                 Viewports[i].PrevMouseY = mouseState.Y - Viewports[i].Y;
+
+                if (mouseOver && scrollWheelValue != prevScrollWheelValue) {
+                    if (Viewports[i] is Viewport2D vp) {
+                        var pos0 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - Viewports[i].X, mouseState.Y - Viewports[i].Y));
+                        decimal scrollWheelDiff = (scrollWheelValue - prevScrollWheelValue) * 0.001m;
+                        if (scrollWheelDiff > 0m) {
+                            vp.Zoom *= 1.0m + scrollWheelDiff;
+                        } else {
+                            vp.Zoom /= 1.0m - scrollWheelDiff;
+                        }
+                        var pos1 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - Viewports[i].X, mouseState.Y - Viewports[i].Y));
+                        vp.Position -= new DataStructures.Geometric.Vector3(pos1.X - pos0.X, pos0.Y - pos1.Y, 0m);
+                        shouldRerender = true;
+                    }
+                }
             }
 
-            prevMouseDown = mouseDown;
+            prevMouse1Down = mouse1Down;
+            prevMouse3Down = mouse3Down;
+            prevScrollWheelValue = scrollWheelValue;
         }
 
         public static void Render() {
