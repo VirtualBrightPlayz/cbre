@@ -374,6 +374,7 @@ namespace CBRE.Editor.Rendering {
                 basicEffect.View = Viewports[i].GetCameraMatrix();
                 basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
                 basicEffect.CurrentTechnique.Passes[0].Apply();
+                Viewports[i].DrawGrid();
                 GameMain.Instance.SelectedTool?.Render(Viewports[i]);
             } 
             GlobalGraphics.GraphicsDevice.Viewport = prevViewport;

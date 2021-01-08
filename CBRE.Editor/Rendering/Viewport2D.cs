@@ -2,6 +2,7 @@
 using CBRE.Editor.Documents;
 using CBRE.Extensions;
 using CBRE.Graphics;
+using CBRE.Settings;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Drawing;
@@ -222,6 +223,43 @@ namespace CBRE.Editor.Rendering {
 
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             }
+        }
+
+        public override void DrawGrid() {
+            decimal gridSpacing = DocumentManager.CurrentDocument.Map.GridSpacing;
+            while (gridSpacing * Zoom < 4.0m) { gridSpacing *= 4m; }
+
+            int startX = (int)(Position.X - ((Width / 2) / Zoom));
+            int startY = (int)(Position.Y - ((Height / 2) / Zoom));
+            int endX = (int)(Position.X + ((Width / 2) / Zoom));
+            int endY = (int)(Position.Y + ((Height / 2) / Zoom));
+            startX = (int)(Math.Round(startX / gridSpacing) * gridSpacing) - (int)gridSpacing;
+            startY = (int)(Math.Round(startY / gridSpacing) * gridSpacing) - (int)gridSpacing;
+            endX = (int)(Math.Round(endX / gridSpacing) * gridSpacing) + (int)gridSpacing;
+            endY = (int)(Math.Round(endY / gridSpacing) * gridSpacing) + (int)gridSpacing;
+
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            for (int x = startX; x < endX; x += (int)gridSpacing) {
+                if (x == 0) {
+                    PrimitiveDrawing.SetColor(Grid.ZeroLines);
+                } else {
+                    PrimitiveDrawing.SetColor(Color.FromArgb(100, Color.White));
+                }
+                PrimitiveDrawing.Vertex2(x, startY);
+                PrimitiveDrawing.Vertex2(x, endY);
+            }
+
+            for (int y = startY; y < endY; y += (int)gridSpacing) {
+                if (y == 0) {
+                    PrimitiveDrawing.SetColor(Grid.ZeroLines);
+                } else {
+                    PrimitiveDrawing.SetColor(Color.FromArgb(100, Color.White));
+                }
+                PrimitiveDrawing.Vertex2(startX, y);
+                PrimitiveDrawing.Vertex2(endX, y);
+            }
+
+            PrimitiveDrawing.End();
         }
     }
 }

@@ -112,5 +112,7 @@ namespace CBRE.Editor.Rendering {
         }
 
         public abstract void Render();
+
+        public virtual void DrawGrid() { }
     }
 }
