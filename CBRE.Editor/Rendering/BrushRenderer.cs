@@ -131,15 +131,21 @@ namespace CBRE.Editor.Rendering {
                 vertexBuffer.SetData(vertices);
                 index3dBuffer.SetData(indices3d);
                 index2dBuffer.SetData(indices2d);
+
+                dirty = false;
             }
 
             public void AddFace(Face face) {
                 faces.Add(face);
-                dirty = true;
+                MarkDirty();
             }
 
             public void RemoveFace(Face face) {
                 faces.Remove(face);
+                MarkDirty();
+            }
+
+            public void MarkDirty() {
                 dirty = true;
             }
 
@@ -164,6 +170,12 @@ namespace CBRE.Editor.Rendering {
             public void Dispose() {
                 vertexBuffer?.Dispose();
                 index3dBuffer?.Dispose();
+            }
+        }
+
+        public void MarkDirty(string texName) {
+            if (brushGeom.TryGetValue(texName, out BrushGeometry geom)) {
+                geom.MarkDirty();
             }
         }
 

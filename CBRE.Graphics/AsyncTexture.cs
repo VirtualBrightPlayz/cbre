@@ -18,7 +18,7 @@ namespace CBRE.Graphics {
             public bool Compressed;
         }
 
-        public static Action LoadCallback = null;
+        public static Action<string> LoadCallback = null;
 
         private Task<Data> task;
         private Texture2D monoGameTexture;
@@ -56,7 +56,7 @@ namespace CBRE.Graphics {
             task = tsk ?? Load();
             TaskPool.Add("AsyncTexture task", task, (t) => {
                 CheckTaskStatus();
-                LoadCallback?.Invoke();
+                LoadCallback?.Invoke(Path.GetFileNameWithoutExtension(Filename));
             });
         }
 

@@ -142,7 +142,7 @@ namespace CBRE.Editor.Rendering {
 
             RebuildRenderTarget();
 
-            AsyncTexture.LoadCallback = MarkForRerender;
+            AsyncTexture.LoadCallback = TextureLoadCallback;
         }
 
         private static int knownWindowWidth = 0;
@@ -181,6 +181,11 @@ namespace CBRE.Editor.Rendering {
 
         public static void MarkForRerender() {
             shouldRerender = true;
+        }
+
+        public static void TextureLoadCallback(string texName) {
+            Documents.DocumentManager.Documents.ForEach(d => d.BrushRenderer.MarkDirty(texName));
+            MarkForRerender();
         }
 
         public static void SetCursorPos(ViewportBase vp, int posX, int posY) {
