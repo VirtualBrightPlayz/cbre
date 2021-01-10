@@ -169,6 +169,7 @@ namespace CBRE.Editor.Tools
                     Document.Map.ActiveCamera = _stateCamera;
                 }
             } else if (viewport is Viewport3D vp3d) {
+                _state = State.MovingLook;
                 ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
             }
         }
@@ -220,7 +221,7 @@ namespace CBRE.Editor.Tools
                         break;
                 }
                 vp.Cursor = cursor;
-            } else if (viewport is Viewport3D vp3d) {
+            } else if (viewport is Viewport3D vp3d && _state == State.MovingLook) {
                 //if (!FreeLook) return;
 
                 var camera = GetCameras().FirstOrDefault();

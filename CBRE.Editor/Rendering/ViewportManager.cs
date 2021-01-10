@@ -208,6 +208,17 @@ namespace CBRE.Editor.Rendering {
             int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
 
             if (!mouse1Down && !mouse3Down) {
+                if (draggingViewport >= 0) {
+                    GameMain.Instance.SelectedTool?.MouseUp(Viewports[draggingViewport], new ViewportEvent() {
+                        Handled = false,
+                        Button = MouseButtons.Left,
+                        X = mouseState.X - Viewports[draggingViewport].X,
+                        Y = mouseState.Y - Viewports[draggingViewport].Y,
+                        LastX = Viewports[draggingViewport].PrevMouseX,
+                        LastY = Viewports[draggingViewport].PrevMouseY,
+                    });
+                    MarkForRerender();
+                }
                 draggingCenterX = false;
                 draggingCenterY = false;
                 draggingViewport = -1;
@@ -238,17 +249,30 @@ namespace CBRE.Editor.Rendering {
                 Viewports[i].Width = left ? splitX - vpStartPoint.X - 4 : renderTarget.Width - (splitX - vpStartPoint.X + 3);
                 Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
 
-                if (!draggingCenterX && !draggingCenterY && draggingViewport < 0) {
-                    if ((mouse1Down || mouse3Down) &&
-                        mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
-                        mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
-                        draggingViewport = i;
+                int currMouseX = mouseState.X - Viewports[i].X;
+                int currMouseY = mouseState.Y - Viewports[i].Y;
+
+                if (mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
+                    mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
+                    if (Viewports[i].PrevMouseX != currMouseX || Viewports[i].PrevMouseY != currMouseY) {
+                        GameMain.Instance.SelectedTool?.MouseMove(Viewports[i], new ViewportEvent() {
+                            Handled = false,
+                            Button = MouseButtons.Left,
+                            X = currMouseX,
+                            Y = currMouseY,
+                            LastX = Viewports[i].PrevMouseX,
+                            LastY = Viewports[i].PrevMouseY,
+                        });
+                        MarkForRerender();
+                    }
+                    if (!draggingCenterX && !draggingCenterY && draggingViewport < 0) {
+                        if (mouse1Down || mouse3Down) {
+                            draggingViewport = i;
+                        }
                     }
                 }
 
                 if (draggingViewport == i) {
-                    int currMouseX = mouseState.X - Viewports[i].X;
-                    int currMouseY = mouseState.Y - Viewports[i].Y;
                     if (mouse1Hit) {
                         GameMain.Instance.SelectedTool?.MouseClick(Viewports[i], new ViewportEvent() {
                             Handled = false,
@@ -268,21 +292,11 @@ namespace CBRE.Editor.Rendering {
                             LastX = Viewports[i].PrevMouseX,
                             LastY = Viewports[i].PrevMouseY,
                         });
-                    } else if (mouse1Down) {
-                        if (Viewports[i].PrevMouseX != currMouseX || Viewports[i].PrevMouseY != currMouseY) {
-                            GameMain.Instance.SelectedTool?.MouseMove(Viewports[i], new ViewportEvent() {
-                                Handled = false,
-                                Button = MouseButtons.Left,
-                                X = currMouseX,
-                                Y = currMouseY,
-                                LastX = Viewports[i].PrevMouseX,
-                                LastY = Viewports[i].PrevMouseY,
-                            });
-                        }
-                    } else if (mouse3Down) {
+                    }
+                    if (mouse3Down) {
                         if (currMouseX >= 0 && currMouseY >= 0 && currMouseX <= Viewports[i].Width && currMouseY <= Viewports[i].Height) {
                             if (Viewports[i] is Viewport2D vp) {
-                                shouldRerender = true;
+                                MarkForRerender();
                                 vp.Position -= new DataStructures.Geometric.Vector3((decimal)(currMouseX - vp.PrevMouseX) / vp.Zoom, -(decimal)(currMouseY - vp.PrevMouseY) / vp.Zoom, 0m);
                             }
                         }
@@ -315,7 +329,7 @@ namespace CBRE.Editor.Rendering {
                         }
                         var pos1 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - Viewports[i].X, mouseState.Y - Viewports[i].Y));
                         vp.Position -= new DataStructures.Geometric.Vector3(pos1.X - pos0.X, pos0.Y - pos1.Y, 0m);
-                        shouldRerender = true;
+                        MarkForRerender();
                     }
                 }
             }

@@ -51,6 +51,8 @@ namespace CBRE.Editor.Tools.SelectTool
                          };
             _widgets = new List<Widget>();
 
+            SetCurrentTool(_tools.First());
+
             /*_sidebarPanel = new SelectToolSidebarPanel();
             _sidebarPanel.ChangeTransformationTool += (sender, type) =>
             {
@@ -157,14 +159,14 @@ namespace CBRE.Editor.Tools.SelectTool
             if (tool != null) _lastTool = tool;
             _currentTool = tool;
             //throw new NotImplementedException();
-            /*_sidebarPanel.TransformationToolChanged(_currentTool);
+            //_sidebarPanel.TransformationToolChanged(_currentTool);
             _widgets = (_currentTool == null || !CBRE.Settings.Select.Show3DSelectionWidgets) ? new List<Widget>() : _currentTool.GetWidgets(Document).ToList();
             foreach (var widget in _widgets)
             {
                 widget.OnTransforming = OnWidgetTransforming;
                 widget.OnTransformed = OnWidgetTransformed;
                 widget.SelectionChanged();
-            }*/
+            }
         }
 
         private void OnWidgetTransformed(Matrix transformation)
@@ -277,16 +279,14 @@ namespace CBRE.Editor.Tools.SelectTool
 
         public override void PreRender(ViewportBase viewport)
         {
-            throw new NotImplementedException();
-            /*WidgetAction((w, vp, ev) => w.PreRender(vp), viewport, null);
-            base.PreRender(viewport);*/
+            WidgetAction((w, vp, ev) => w.PreRender(vp), viewport, null);
+            base.PreRender(viewport);
         }
 
         public override void Render(ViewportBase viewport)
         {
-            throw new NotImplementedException();
-            /*WidgetAction((w, vp, ev) => w.Render(vp), viewport, null);
-            base.Render(viewport);*/
+            WidgetAction((w, vp, ev) => w.Render(vp), viewport, null);
+            base.Render(viewport);
         }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)

@@ -49,6 +49,22 @@ namespace CBRE.Graphics {
             Vertex3(position.DX, position.DY, position.DZ);
         }
 
+        public static void DottedLine(CBRE.DataStructures.Geometric.Vector3 pos0, CBRE.DataStructures.Geometric.Vector3 pos1, decimal subLen) {
+            decimal len = (pos1 - pos0).VectorMagnitude();
+            CBRE.DataStructures.Geometric.Vector3 vec = (pos1 - pos0) / len;
+            decimal acc = 0m;
+            while (acc < len) {
+                Vertex3(pos0 + vec * acc);
+                acc += subLen;
+                if (acc < len) {
+                    Vertex3(pos0 + vec * acc);
+                } else {
+                    Vertex3(pos1);
+                }
+                acc += subLen;
+            }
+        }
+
         public static void Circle(CBRE.DataStructures.Geometric.Vector3 position, double radius) {
             for (int i = 0; i < 12; i++) {
                 double cx = Math.Cos((double)i * Math.PI * 2.0 / 12.0) * radius;
@@ -96,11 +112,13 @@ namespace CBRE.Graphics {
                     break;
             }
 
-            GlobalGraphics.GraphicsDevice.DrawUserPrimitives(
-                currentPrimitiveType.Value,
-                vertices.ToArray(),
-                0,
-                primCount);
+            if (vertices.Count > 0) {
+                GlobalGraphics.GraphicsDevice.DrawUserPrimitives(
+                    currentPrimitiveType.Value,
+                    vertices.ToArray(),
+                    0,
+                    primCount);
+            }
             currentPrimitiveType = null;
         }
     }

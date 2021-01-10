@@ -1,6 +1,8 @@
 ﻿using CBRE.Common.Mediator;
 using CBRE.DataStructures.Geometric;
 using CBRE.Editor.Rendering;
+using CBRE.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Drawing;
@@ -86,6 +88,8 @@ namespace CBRE.Editor.Tools
                     if (flat.X == 1) SwapHandle("Left", "Right");
                     if (flat.Y == 1) SwapHandle("Top", "Bottom");
                 }
+
+                ViewportManager.MarkForRerender();
             }
 
             public void SwapHandle(string one, string two)
@@ -602,30 +606,21 @@ namespace CBRE.Editor.Tools
 
         protected virtual void RenderBox(Viewport2D viewport, Vector3 start, Vector3 end)
         {
-            throw new NotImplementedException();
-            /*
-            GL.Begin(PrimitiveType.Quads);
-            GL.Color4(GetRenderFillColour());
-            Coord(start.DX, start.DY, start.DZ);
-            Coord(end.DX, start.DY, start.DZ);
-            Coord(end.DX, end.DY, start.DZ);
-            Coord(start.DX, end.DY, start.DZ);
-            GL.End();
+            PrimitiveDrawing.Begin(PrimitiveType.QuadList);
+            PrimitiveDrawing.SetColor(GetRenderFillColour());
+            PrimitiveDrawing.Vertex3(start.DX, start.DY, start.DZ);
+            PrimitiveDrawing.Vertex3(end.DX, start.DY, start.DZ);
+            PrimitiveDrawing.Vertex3(end.DX, end.DY, start.DZ);
+            PrimitiveDrawing.Vertex3(start.DX, end.DY, start.DZ);
+            PrimitiveDrawing.End();
 
-            if (CBRE.Settings.View.DrawBoxDashedLines)
-            {
-                GL.LineStipple(4, 0xAAAA);
-                GL.Enable(EnableCap.LineStipple);
-            }
-
-            GL.Begin(PrimitiveType.LineLoop);
-            GL.Color3(GetRenderBoxColour());
-            Coord(start.DX, start.DY, start.DZ);
-            Coord(end.DX, start.DY, start.DZ);
-            Coord(end.DX, end.DY, start.DZ);
-            Coord(start.DX, end.DY, start.DZ);
-            GL.End();
-            GL.Disable(EnableCap.LineStipple);*/
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            PrimitiveDrawing.SetColor(GetRenderBoxColour());
+            PrimitiveDrawing.DottedLine(new Vector3(start.X, start.Y, start.Z), new Vector3(end.X, start.Y, start.Z), 8m);
+            PrimitiveDrawing.DottedLine(new Vector3(end.X, start.Y, start.Z), new Vector3(end.X, end.Y, start.Z), 8m);
+            PrimitiveDrawing.DottedLine(new Vector3(end.X, end.Y, start.Z), new Vector3(start.X, end.Y, start.Z), 8m);
+            PrimitiveDrawing.DottedLine(new Vector3(start.X, end.Y, start.Z), new Vector3(start.X, start.Y, start.Z), 8m);
+            PrimitiveDrawing.End();
         }
 
         protected virtual bool ShouldRenderSnapHandle(Viewport2D viewport)
@@ -641,14 +636,13 @@ namespace CBRE.Editor.Tools
             var dist = (double)(size / viewport.Zoom);
 
             var origin = start + viewport.Flatten(State.BoxStart - State.PreTransformBoxStart);
-            throw new NotImplementedException();
-            /*GL.Begin(PrimitiveType.Lines);
-            GL.Color4(GetRenderSnapHandleColour());
-            Coord(origin.DX - dist, origin.DY + dist, 0);
-            Coord(origin.DX + dist, origin.DY - dist, 0);
-            Coord(origin.DX + dist, origin.DY + dist, 0);
-            Coord(origin.DX - dist, origin.DY - dist, 0);
-            GL.End();*/
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            PrimitiveDrawing.SetColor(GetRenderSnapHandleColour());
+            PrimitiveDrawing.Vertex3(origin.DX - dist, origin.DY + dist, 0);
+            PrimitiveDrawing.Vertex3(origin.DX + dist, origin.DY - dist, 0);
+            PrimitiveDrawing.Vertex3(origin.DX + dist, origin.DY + dist, 0);
+            PrimitiveDrawing.Vertex3(origin.DX - dist, origin.DY - dist, 0);
+            PrimitiveDrawing.End();
         }
 
         protected virtual bool ShouldRenderResizeBox(Viewport2D viewport)
@@ -730,15 +724,14 @@ namespace CBRE.Editor.Tools
         protected virtual void RenderResizeBox(Viewport2D viewport, Vector3 start, Vector3 end)
         {
             var box = GetRenderResizeBox(start, end);
-            throw new NotImplementedException();
-            /*GL.Begin(PrimitiveType.Quads);
-            GL.Color4(FillColour);
+            PrimitiveDrawing.Begin(PrimitiveType.QuadList);
+            PrimitiveDrawing.SetColor(FillColour);
             double x1 = box[0], y1 = box[1], x2 = box[2], y2 = box[3];
-            Coord(x1, y1, 0);
-            Coord(x2, y1, 0);
-            Coord(x2, y2, 0);
-            Coord(x1, y2, 0);
-            GL.End();*/
+            PrimitiveDrawing.Vertex3(x1, y1, 0);
+            PrimitiveDrawing.Vertex3(x2, y1, 0);
+            PrimitiveDrawing.Vertex3(x2, y2, 0);
+            PrimitiveDrawing.Vertex3(x1, y2, 0);
+            PrimitiveDrawing.End();
         }
 
         protected void RenderBoxText(Viewport2D viewport, Vector3 boxStart, Vector3 boxEnd)
@@ -748,7 +741,8 @@ namespace CBRE.Editor.Tools
             var widthText = (Math.Round(boxEnd.X - boxStart.X, 1)).ToString("#.##");
             var heightText = (Math.Round(boxEnd.Y - boxStart.Y, 1)).ToString("#.##");
 
-            throw new NotImplementedException();
+            //TODO: implement
+            //throw new NotImplementedException();
             /*var wid = _printer.Measure(widthText, _printerFont, new RectangleF(0, 0, viewport.Width, viewport.Height));
             var hei = _printer.Measure(heightText, _printerFont, new RectangleF(0, 0, viewport.Width, viewport.Height));
 
@@ -812,16 +806,15 @@ namespace CBRE.Editor.Tools
         protected virtual void Render3DBox(Viewport3D viewport, Vector3 start, Vector3 end)
         {
             var box = new Box(start, end);
-            throw new NotImplementedException();
-            /*TextureHelper.Unbind();
-            GL.Begin(PrimitiveType.Lines);
-            GL.Color4(GetRenderBoxColour());
+
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            PrimitiveDrawing.SetColor(GetRenderBoxColour());
             foreach (var line in box.GetBoxLines())
             {
-                Coord(line.Start);
-                Coord(line.End);
+                PrimitiveDrawing.Vertex3(line.Start);
+                PrimitiveDrawing.Vertex3(line.End);
             }
-            GL.End();*/
+            PrimitiveDrawing.End();
         }
 
         protected virtual void Render3D(Viewport3D viewport)
