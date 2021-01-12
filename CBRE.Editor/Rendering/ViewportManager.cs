@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using CBRE.Graphics;
 using Microsoft.Xna.Framework;
@@ -65,6 +66,7 @@ namespace CBRE.Editor.Rendering {
         static bool prevMouse1Down;
         static bool prevMouse3Down;
         static int prevScrollWheelValue;
+        static Keys[] prevKeysDown;
 
         static bool draggingCenterX; static bool draggingCenterY;
         static int draggingViewport;
@@ -83,6 +85,7 @@ namespace CBRE.Editor.Rendering {
         public static void Init() {
             prevMouse1Down = false;
             prevMouse3Down = false;
+            prevKeysDown = new Keys[0];
             draggingCenterX = false;
             draggingCenterY = false;
             draggingViewport = -1;
@@ -193,6 +196,7 @@ namespace CBRE.Editor.Rendering {
         }
 
         public static void Update() {
+            GameMain.Instance.SelectedTool?.Update();
             if (knownWindowWidth != GlobalGraphics.Window.ClientBounds.Width || knownWindowHeight != GlobalGraphics.Window.ClientBounds.Height) {
                 RebuildRenderTarget();
             }
@@ -200,6 +204,7 @@ namespace CBRE.Editor.Rendering {
 
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
+            var keysDown = keyboardState.GetPressedKeys();
             bool mouse1Down = mouseState.LeftButton == ButtonState.Pressed;
             bool mouse1Hit = mouse1Down && !prevMouse1Down;
             bool mouse3Down = mouseState.MiddleButton == ButtonState.Pressed;
@@ -244,6 +249,20 @@ namespace CBRE.Editor.Rendering {
                 MarkForRerender();
             }
 
+            foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
+                GameMain.Instance.SelectedTool?.KeyDown(null, new ViewportEvent() {
+                    Handled = false,
+                    KeyCode = key
+                });
+            }
+
+            foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
+                GameMain.Instance.SelectedTool?.KeyUp(null, new ViewportEvent() {
+                    Handled = false,
+                    KeyCode = key
+                });
+            }
+
             for (int i = 0; i < Viewports.Length; i++) {
                 if (Viewports[i] == null) { continue; }
                 bool left = i % 2 == 0;
@@ -253,6 +272,8 @@ namespace CBRE.Editor.Rendering {
                 Viewports[i].Y = top ? vpStartPoint.Y : splitY + 3;
                 Viewports[i].Width = left ? splitX - vpStartPoint.X - 4 : renderTarget.Width - (splitX - vpStartPoint.X + 3);
                 Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
+
+                GameMain.Instance.SelectedTool?.UpdateFrame(Viewports[i], new FrameInfo(0)); //TODO: fix FrameInfo
 
                 int currMouseX = mouseState.X - Viewports[i].X;
                 int currMouseY = mouseState.Y - Viewports[i].Y;
@@ -274,6 +295,20 @@ namespace CBRE.Editor.Rendering {
                         if (mouse1Down || mouse3Down) {
                             draggingViewport = i;
                         }
+                    }
+
+                    foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
+                        GameMain.Instance.SelectedTool?.KeyDown(Viewports[i], new ViewportEvent() {
+                            Handled = false,
+                            KeyCode = key
+                        });
+                    }
+
+                    foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
+                        GameMain.Instance.SelectedTool?.KeyUp(Viewports[i], new ViewportEvent() {
+                            Handled = false,
+                            KeyCode = key
+                        });
                     }
                 }
 
@@ -341,6 +376,7 @@ namespace CBRE.Editor.Rendering {
 
             prevMouse1Down = mouse1Down;
             prevMouse3Down = mouse3Down;
+            prevKeysDown = keysDown;
             prevScrollWheelValue = scrollWheelValue;
         }
 

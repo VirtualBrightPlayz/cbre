@@ -169,6 +169,10 @@ namespace CBRE.Editor.Tools
         public abstract void UpdateFrame(ViewportBase viewport, FrameInfo frame);
         public abstract void Render(ViewportBase viewport);
 
+        public virtual void Update() {
+            return;
+        }
+
         public virtual void PreRender(ViewportBase viewport)
         {
             return;

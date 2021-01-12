@@ -19,15 +19,27 @@ namespace CBRE.Editor.Tools
         {
             None,
             MovingPosition,
-            MovingLook
+            MovingLook,
+            Moving3d
+        }
+
+        [Flags]
+        private enum MoveFlags {
+            None = 0x0,
+            Left = 0x1,
+            Right = 0x2,
+            Up = 0x4,
+            Down = 0x8
         }
 
         private State _state;
+        private MoveFlags _moveFlags;
         private Camera _stateCamera;
 
         public override void ToolSelected(bool preventHistory)
         {
             _state = State.None;
+            _moveFlags = MoveFlags.None;
             Mediator.Subscribe(HotkeysMediator.CameraNext, this);
             Mediator.Subscribe(HotkeysMediator.CameraPrevious, this);
         }
@@ -169,7 +181,7 @@ namespace CBRE.Editor.Tools
                     Document.Map.ActiveCamera = _stateCamera;
                 }
             } else if (viewport is Viewport3D vp3d) {
-                _state = State.MovingLook;
+                _state = State.Moving3d;
                 ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
             }
         }
@@ -221,7 +233,7 @@ namespace CBRE.Editor.Tools
                         break;
                 }
                 vp.Cursor = cursor;
-            } else if (viewport is Viewport3D vp3d && _state == State.MovingLook) {
+            } else if (viewport is Viewport3D vp3d && _state == State.Moving3d) {
                 //if (!FreeLook) return;
 
                 var camera = GetCameras().FirstOrDefault();
@@ -242,14 +254,12 @@ namespace CBRE.Editor.Tools
                 } else if (forwardback) {
                     camera.Strafe(-dx);
                     camera.Advance(-dy);
-                } else // left mouse or z-toggle
-                  {
-                    // Camera
+                } else { // left mouse or z-toggle
                     var fovdiv = (vp3d.Width / 60m) / 2.5m;
                     camera.Pan(dx / fovdiv);
                     camera.Tilt(dy / fovdiv);
                 }
-
+                
                 ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
                 SetViewportCamera(camera.EyePosition, camera.LookPosition);
             }
@@ -261,18 +271,48 @@ namespace CBRE.Editor.Tools
             //
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
-        {
-            //
+        public override void KeyDown(ViewportBase viewport, ViewportEvent e) {
+            if (viewport != null) { return; }
+            var moveFlags = MoveFlags.None;
+            if (e.KeyCode == Keys.A) { moveFlags |= MoveFlags.Left; }
+            if (e.KeyCode == Keys.D) { moveFlags |= MoveFlags.Right; }
+            if (e.KeyCode == Keys.W) { moveFlags |= MoveFlags.Up; }
+            if (e.KeyCode == Keys.S) { moveFlags |= MoveFlags.Down; }
+            _moveFlags |= moveFlags;
         }
 
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
-        {
-            //
+        public override void KeyUp(ViewportBase viewport, ViewportEvent e) {
+            if (viewport != null) { return; }
+            var moveFlags = MoveFlags.None;
+            if (e.KeyCode == Keys.A) { moveFlags |= MoveFlags.Left; }
+            if (e.KeyCode == Keys.D) { moveFlags |= MoveFlags.Right; }
+            if (e.KeyCode == Keys.W) { moveFlags |= MoveFlags.Up; }
+            if (e.KeyCode == Keys.S) { moveFlags |= MoveFlags.Down; }
+            _moveFlags &= ~moveFlags;
         }
 
-        public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
+        public override void Update()
         {
+            var camera = GetCameras().FirstOrDefault();
+            if (_moveFlags.HasFlag(MoveFlags.Left)) {
+                camera.Strafe(-5m);
+            }
+            if (_moveFlags.HasFlag(MoveFlags.Right)) {
+                camera.Strafe(5m);
+            }
+            if (_moveFlags.HasFlag(MoveFlags.Up)) {
+                camera.Advance(5m);
+            }
+            if (_moveFlags.HasFlag(MoveFlags.Down)) {
+                camera.Advance(-5m);
+            }
+            if (_moveFlags != MoveFlags.None) {
+                SetViewportCamera(camera.EyePosition, camera.LookPosition);
+                ViewportManager.MarkForRerender();
+            }
+        }
+
+        public override void UpdateFrame(ViewportBase viewport, FrameInfo frame) {
             //
         }
 
