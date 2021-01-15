@@ -906,7 +906,7 @@ namespace Microsoft.Xna.Framework.Graphics
         }
 
         [Conditional("DEBUG")]
-		[DebuggerHidden]
+        [DebuggerHidden]
         public static void CheckGLError()
         {
            var error = GL.GetError();

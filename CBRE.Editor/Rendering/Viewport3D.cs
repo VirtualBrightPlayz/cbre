@@ -159,7 +159,7 @@ namespace CBRE.Editor.Rendering {
 
                 GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
                 GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-                GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
                 brushRenderer.RenderTextured();

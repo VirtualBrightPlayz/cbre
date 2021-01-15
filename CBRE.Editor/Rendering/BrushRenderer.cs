@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using CBRE.Common;
@@ -13,6 +14,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace CBRE.Editor.Rendering {
     public class BrushRenderer {
         public BasicEffect BasicEffect;
+        public Effect TexturedShaded;
         public Document Document;
 
         public struct BrushVertex : IVertexType {
@@ -186,6 +188,11 @@ namespace CBRE.Editor.Rendering {
             Document = doc;
 
             BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+            using (var fs = File.OpenRead("Shaders/texturedShaded.mgfx")) {
+                byte[] bytes = new byte[fs.Length];
+                fs.Read(bytes, 0, bytes.Length);
+                TexturedShaded = new Effect(GlobalGraphics.GraphicsDevice, bytes);
+            }
 
             foreach (Solid solid in doc.Map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
                 solid.Faces.ForEach(f => AddFace(f));
@@ -212,18 +219,41 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        public Microsoft.Xna.Framework.Matrix World { get { return BasicEffect.World; } set { BasicEffect.World = value; } }
-        public Microsoft.Xna.Framework.Matrix View { get { return BasicEffect.View; } set { BasicEffect.View = value; } }
-        public Microsoft.Xna.Framework.Matrix Projection { get { return BasicEffect.Projection; } set { BasicEffect.Projection = value; } }
+        public Microsoft.Xna.Framework.Matrix World {
+            get { return BasicEffect.World; }
+            set {
+                BasicEffect.World = value;
+                TexturedShaded.Parameters["World"].SetValue(value);
+            }
+        }
+
+        public Microsoft.Xna.Framework.Matrix View {
+            get { return BasicEffect.View; }
+            set {
+                BasicEffect.View = value;
+                TexturedShaded.Parameters["View"].SetValue(value);
+            }
+        }
+
+        public Microsoft.Xna.Framework.Matrix Projection {
+            get { return BasicEffect.Projection; }
+            set {
+                BasicEffect.Projection = value;
+                TexturedShaded.Parameters["Projection"].SetValue(value);
+            }
+        }
 
         public void RenderTextured() {
             foreach (var kvp in brushGeom) {
                 TextureItem item = TextureProvider.GetItem(kvp.Key);
                 if (item != null && item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
-                    BasicEffect.VertexColorEnabled = false;
+                    BasicEffect.CurrentTechnique.Passes[0].Apply();
+                    TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
+                    TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                    /*BasicEffect.VertexColorEnabled = false;
                     BasicEffect.TextureEnabled = true;
                     BasicEffect.Texture = asyncTexture.MonoGameTexture;
-                    BasicEffect.CurrentTechnique.Passes[0].Apply();
+                    BasicEffect.CurrentTechnique.Passes[0].Apply();*/
                     kvp.Value.RenderSolid();
                 }
             }

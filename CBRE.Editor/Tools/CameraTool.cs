@@ -209,6 +209,7 @@ namespace CBRE.Editor.Tools
         public override void MouseMove(ViewportBase viewport, ViewportEvent e)
         {
             if (viewport is Viewport2D vp) {
+                _moveFlags = MoveFlags.None;
                 var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
                 var cursor = MouseCursor.Arrow;
 
@@ -272,7 +273,13 @@ namespace CBRE.Editor.Tools
         }
 
         public override void KeyDown(ViewportBase viewport, ViewportEvent e) {
-            if (viewport != null) { return; }
+            //
+        }
+        public override void KeyUp(ViewportBase viewport, ViewportEvent e) {
+            //
+        }
+
+        public override void KeyDown(ViewportEvent e) {
             var moveFlags = MoveFlags.None;
             if (e.KeyCode == Keys.A) { moveFlags |= MoveFlags.Left; }
             if (e.KeyCode == Keys.D) { moveFlags |= MoveFlags.Right; }
@@ -281,8 +288,7 @@ namespace CBRE.Editor.Tools
             _moveFlags |= moveFlags;
         }
 
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e) {
-            if (viewport != null) { return; }
+        public override void KeyUp(ViewportEvent e) {
             var moveFlags = MoveFlags.None;
             if (e.KeyCode == Keys.A) { moveFlags |= MoveFlags.Left; }
             if (e.KeyCode == Keys.D) { moveFlags |= MoveFlags.Right; }

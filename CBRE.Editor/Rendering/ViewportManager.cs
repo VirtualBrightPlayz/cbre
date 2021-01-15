@@ -250,14 +250,14 @@ namespace CBRE.Editor.Rendering {
             }
 
             foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
-                GameMain.Instance.SelectedTool?.KeyDown(null, new ViewportEvent() {
+                GameMain.Instance.SelectedTool?.KeyDown(new ViewportEvent() {
                     Handled = false,
                     KeyCode = key
                 });
             }
 
             foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
-                GameMain.Instance.SelectedTool?.KeyUp(null, new ViewportEvent() {
+                GameMain.Instance.SelectedTool?.KeyUp(new ViewportEvent() {
                     Handled = false,
                     KeyCode = key
                 });

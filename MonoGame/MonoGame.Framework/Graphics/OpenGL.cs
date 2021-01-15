@@ -875,7 +875,7 @@ namespace MonoGame.OpenGL
 
         [System.Security.SuppressUnmanagedCodeSecurity ()]
         [MonoNativeFunctionWrapper]
-        internal delegate void GetShaderInfoLogDelegate (int shader, int bufSize, IntPtr length, StringBuilder infoLog);
+        internal delegate void GetShaderInfoLogDelegate (int shader, int bufSize, IntPtr length, byte[] infoLog);
         internal static GetShaderInfoLogDelegate GetShaderInfoLogInternal;
 
         [System.Security.SuppressUnmanagedCodeSecurity ()]
@@ -1451,9 +1451,9 @@ namespace MonoGame.OpenGL
         internal static string GetShaderInfoLog (int shaderId) {
             int length = 0;
             GetShader(shaderId, ShaderParameter.LogLength, out length);
-            var sb = new StringBuilder();
+            var sb = new byte[length];
             GetShaderInfoLogInternal (shaderId, length, IntPtr.Zero, sb);
-            return sb.ToString();
+            return Encoding.UTF8.GetString(sb, 0, length-1);
         }
 
         internal unsafe static void ShaderSource(int shaderId, string code)

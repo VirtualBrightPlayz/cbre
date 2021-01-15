@@ -7,14 +7,7 @@ namespace CBRE.DataStructures.MapObjects {
     [Serializable]
     public class TextureReference : ISerializable {
         public string Name { get; set; }
-        private ITexture _texture;
-        public ITexture Texture {
-            get { return _texture; }
-            set {
-                _texture = value;
-                Name = _texture == null ? Name : _texture.Name;
-            }
-        }
+        public ITexture Texture { get; set; }
 
         public decimal Rotation { get; set; }
 
