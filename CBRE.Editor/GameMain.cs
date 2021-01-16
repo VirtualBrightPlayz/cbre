@@ -120,10 +120,14 @@ namespace CBRE.Editor {
             base.LoadContent();
         }
 
+        private Timing timing = new Timing();
+
         protected override void Update(GameTime gameTime) {
+            timing.StartMeasurement();
             base.Update(gameTime);
 
-            ViewportManager.Update();
+            timing.PerformTicks(ViewportManager.Update);
+            timing.EndMeasurement();
         }
 
         protected override void Draw(GameTime gameTime)
