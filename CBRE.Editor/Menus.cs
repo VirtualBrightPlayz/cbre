@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CBRE.Editor.Rendering;
 using CBRE.Graphics;
 using ImGuiNET;
 using Num = System.Numerics;
@@ -159,6 +160,7 @@ namespace CBRE.Editor {
             public override void Draw(bool topLevel) {
                 Num.Vector2 pos = ImGui.GetCursorPos() + ImGui.GetWindowPos();
                 if (ImGui.BeginMenu(GetDrawnText(topLevel))) {
+                    ViewportManager.TopMenuOpen = true;
                     Items.ForEach(it => it.Draw(false));
                     ImGui.EndMenu();
                 }

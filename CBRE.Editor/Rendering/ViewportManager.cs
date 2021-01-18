@@ -151,21 +151,26 @@ namespace CBRE.Editor.Rendering {
         private static int knownWindowWidth = 0;
         private static int knownWindowHeight = 0;
 
+        public static bool TopMenuOpen = false;
+
+        public static int Right { get { return GlobalGraphics.Window.ClientBounds.Width - 260; } }
+        public static int Bottom { get { return GlobalGraphics.Window.ClientBounds.Height; } }
+
         private static void RebuildRenderTarget() {
             renderTargetGeom = new VertexPositionTexture[] {
                 new VertexPositionTexture(new Vector3(vpStartPoint.X, vpStartPoint.Y, 0), new Vector2(0, 0)),
-                new VertexPositionTexture(new Vector3(GlobalGraphics.Window.ClientBounds.Width, vpStartPoint.Y, 0), new Vector2(1, 0)),
-                new VertexPositionTexture(new Vector3(vpStartPoint.X, GlobalGraphics.Window.ClientBounds.Height, 0), new Vector2(0, 1)),
-                new VertexPositionTexture(new Vector3(GlobalGraphics.Window.ClientBounds.Width, GlobalGraphics.Window.ClientBounds.Height, 0), new Vector2(1, 1)),
+                new VertexPositionTexture(new Vector3(Right, vpStartPoint.Y, 0), new Vector2(1, 0)),
+                new VertexPositionTexture(new Vector3(vpStartPoint.X, Bottom, 0), new Vector2(0, 1)),
+                new VertexPositionTexture(new Vector3(Right, Bottom, 0), new Vector2(1, 1)),
             };
-            knownWindowWidth = GlobalGraphics.Window.ClientBounds.Width;
-            knownWindowHeight = GlobalGraphics.Window.ClientBounds.Height;
+            knownWindowWidth = Right;
+            knownWindowHeight = Bottom;
             renderTargetEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, GlobalGraphics.Window.ClientBounds.Width + 0.5f, GlobalGraphics.Window.ClientBounds.Height + 0.5f, 0.5f, -1f, 1f);
             renderTarget?.Dispose();
-            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X, GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y, false, SurfaceFormat.Color, DepthFormat.Depth24);
+            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, Right - vpStartPoint.X, Bottom - vpStartPoint.Y, false, SurfaceFormat.Color, DepthFormat.Depth24);
 
-            int splitX = (int)((GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
-            int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
+            int splitX = (int)((Right - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
+            int splitY = (int)((Bottom - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
             for (int i = 0; i < Viewports.Length; i++) {
                 if (Viewports[i] == null) { continue; }
                 bool left = i % 2 == 0;
@@ -197,12 +202,17 @@ namespace CBRE.Editor.Rendering {
 
         public static void Update() {
             GameMain.Instance.SelectedTool?.Update();
-            if (knownWindowWidth != GlobalGraphics.Window.ClientBounds.Width || knownWindowHeight != GlobalGraphics.Window.ClientBounds.Height) {
+            if (knownWindowWidth != Right || knownWindowHeight != Bottom) {
                 RebuildRenderTarget();
             }
             if (shouldRerender) { Render(); }
-
             var mouseState = Mouse.GetState();
+            if (mouseState.X < vpStartPoint.X || mouseState.X > Right ||
+                mouseState.Y < vpStartPoint.Y || mouseState.Y > Bottom ||
+                TopMenuOpen) {
+                return;
+            }
+
             var keyboardState = Keyboard.GetState();
             var keysDown = keyboardState.GetPressedKeys();
             bool mouse1Down = mouseState.LeftButton == ButtonState.Pressed;
@@ -214,8 +224,8 @@ namespace CBRE.Editor.Rendering {
             Shift = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
             Alt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
 
-            int splitX = (int)((GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
-            int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
+            int splitX = (int)((Right - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
+            int splitY = (int)((Bottom - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
 
             if (!mouse1Down && !mouse3Down) {
                 if (draggingViewport >= 0) {
@@ -239,12 +249,12 @@ namespace CBRE.Editor.Rendering {
             }
 
             if (draggingCenterX) {
-                splitPoint.X = (float)(mouseState.X - vpStartPoint.X) / (GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X);
+                splitPoint.X = (float)(mouseState.X - vpStartPoint.X) / (Right - vpStartPoint.X);
                 splitPoint.X = Math.Clamp(splitPoint.X, 0.01f, 0.99f);
                 MarkForRerender();
             }
             if (draggingCenterY) {
-                splitPoint.Y = (float)(mouseState.Y - vpStartPoint.Y) / (GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y);
+                splitPoint.Y = (float)(mouseState.Y - vpStartPoint.Y) / (Bottom - vpStartPoint.Y);
                 splitPoint.Y = Math.Clamp(splitPoint.Y, 0.01f, 0.99f);
                 MarkForRerender();
             }
@@ -383,8 +393,8 @@ namespace CBRE.Editor.Rendering {
         public static void Render() {
             shouldRerender = false;
 
-            int splitX = (int)((GlobalGraphics.Window.ClientBounds.Width - vpStartPoint.X) * splitPoint.X);
-            int splitY = (int)((GlobalGraphics.Window.ClientBounds.Height - vpStartPoint.Y) * splitPoint.Y);
+            int splitX = (int)((Right - vpStartPoint.X) * splitPoint.X);
+            int splitY = (int)((Bottom - vpStartPoint.Y) * splitPoint.Y);
 
             GlobalGraphics.GraphicsDevice.SetRenderTarget(renderTarget);
             GlobalGraphics.GraphicsDevice.Clear(Color.Black);
@@ -438,13 +448,11 @@ namespace CBRE.Editor.Rendering {
         }
 
         public static void DrawRenderTarget() {
-            //var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
-            GlobalGraphics.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, GlobalGraphics.Window.ClientBounds.Width, GlobalGraphics.Window.ClientBounds.Height);
+            GlobalGraphics.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Right, Bottom);
             GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             renderTargetEffect.Texture = renderTarget;
             renderTargetEffect.CurrentTechnique.Passes[0].Apply();
             GlobalGraphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, renderTargetGeom, 0, 2, VertexPositionTexture.VertexDeclaration);
-            //GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
         }
     }
 }

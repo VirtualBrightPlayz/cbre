@@ -164,6 +164,7 @@ namespace CBRE.Editor {
                 ImGui.SetWindowPos(new Num.Vector2(-1, 0));
                 ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width + 2, Window.ClientBounds.Height));
 
+                ViewportManager.TopMenuOpen = false;
                 UpdateMenus();
                 UpdateTopBar();
                 UpdateToolBar();
