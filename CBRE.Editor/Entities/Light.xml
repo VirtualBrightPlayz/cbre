@@ -1,0 +1,24 @@
+<entity name="light">
+    <rmesh>
+        <write property="position" as="Vector3" />
+        <write property="range" as="float" />
+        <write property="color" as="b3dstring" />
+        <write property="intensity" as="float" />
+    </rmesh>
+
+    <properties>
+        <property name="position" type="Position" />
+        <property name="color" type="Color" default="255 255 255" />
+        <property name="range" type="float" default="100.0" />
+        <property name="intensity" type="float" default="1.0" />
+    </properties>
+
+    <sprite name="Sprites/lightbulb" color="color" />
+
+    <light type="point">
+        <position property="position" />
+        <color property="color" />
+        <range property="range" />
+        <intensity property="intensity" />
+    </light>
+</entity>

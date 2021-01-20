@@ -1,0 +1,11 @@
+<entity name="waypoint">
+    <rmesh>
+        <write property="position" as="Vector3" />
+    </rmesh>
+
+    <properties>
+        <property name="position" type="Position" />
+    </properties>
+    
+    <sprite name="Sprites/waypoint" />
+</entity>

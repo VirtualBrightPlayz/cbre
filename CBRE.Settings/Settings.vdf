@@ -34,46 +34,4 @@ Sledge
     RecentFiles
     {
     }
-    Game
-    {
-        "ID" "1"
-        "Name" "Half-Life"
-        "EngineID" "1"
-        "BuildID" "1"
-        "SteamInstall" "False"
-        "WonGameDir" "F:\Half-Life WON"
-        "SteamGameDir" "Half-Life"
-        "ModDir" "valve"
-        "MapDir" "D:\Github\sledge\_Resources\RMF"
-        "Autosave" "True"
-        "UseCustomAutosaveDir" "False"
-        "AutosaveDir" ""
-        "DefaultPointEntity" "info_player_start"
-        "DefaultBrushEntity" "trigger_once"
-        "DefaultTextureScale" "1"
-        "DefaultLightmapScale" "1"
-        Wads
-        {
-            "1" "F:\Half-Life WON\valve\decals.wad"
-            "2" "F:\Half-Life WON\valve\halflife.wad"
-            "3" "F:\Half-Life WON\valve\liquids.wad"
-            "4" "F:\Half-Life WON\valve\xeno.wad"
-            "5" "D:\Github\sledge\_Resources\WAD\verc_18.wad"
-        }
-        Fgds
-        {
-            "1" "D:\Github\sledge\_Resources\FGD\Half-Life.fgd"
-        }
-    }
-    Build
-    {
-        "ID" "1"
-        "Name" "VHLT"
-        "EngineID" "1"
-        "Path" "Z:\Half-Life\Build Programs\Vluzacn's ZHLT v30\tools"
-        "Bsp" "hlbsp.exe"
-        "Csg" "hlcsg.exe"
-        "Vis" "hlvis.exe"
-        "Rad" "hlrad.exe"
-    }
 }

@@ -1,0 +1,13 @@
+<entity name="screen">
+    <rmesh>
+        <write property="position" as="Vector3" />
+        <write property="imgpath" as="b3dstring" />
+    </rmesh>
+
+    <properties>
+        <property name="position" type="Position" />
+        <property name="imgpath" type="string" />
+    </properties>
+    
+    <sprite name="Sprites/screen" />
+</entity>
