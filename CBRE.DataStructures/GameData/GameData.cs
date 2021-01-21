@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace CBRE.DataStructures.GameData {
     public class GameData {
@@ -16,47 +18,10 @@ namespace CBRE.DataStructures.GameData {
             MapSizeLow = -16384;
             Classes = new List<GameDataObject>();
 
-            var lightDataObj = new GameDataObject("light", "Point light source.", ClassType.Point);
-            lightDataObj.Properties.Add(new Property("color", VariableType.Color255) { ShortDescription = "Color", DefaultValue = "255 255 255" });
-            lightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
-            lightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
-            lightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
-            lightDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/lightbulb.spr"));
-            Classes.Add(lightDataObj);
-
-            var spotlightDataObj = new GameDataObject("spotlight", "Self-explanatory.", ClassType.Point);
-            spotlightDataObj.Properties.Add(new Property("color", VariableType.Color255) { ShortDescription = "Color", DefaultValue = "255 255 255" });
-            spotlightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
-            spotlightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
-            spotlightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
-            spotlightDataObj.Properties.Add(new Property("innerconeangle", VariableType.Float) { ShortDescription = "Inner cone angle", DefaultValue = "45" });
-            spotlightDataObj.Properties.Add(new Property("outerconeangle", VariableType.Float) { ShortDescription = "Outer cone angle", DefaultValue = "90" });
-            spotlightDataObj.Properties.Add(new Property("angles", VariableType.Vector) { ShortDescription = "Rotation", DefaultValue = "0 0 0" });
-            Classes.Add(spotlightDataObj);
-
-            var waypointDataObj = new GameDataObject("waypoint", "AI waypoint.", ClassType.Point);
-            waypointDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/waypoint"));
-            Classes.Add(waypointDataObj);
-
-            var soundEmitterDataObj = new GameDataObject("soundemitter", "Self-explanatory.", ClassType.Point);
-            soundEmitterDataObj.Properties.Add(new Property("sound", VariableType.Integer) { ShortDescription = "Ambience index", DefaultValue = "1" });
-            soundEmitterDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/speaker.spr"));
-            Classes.Add(soundEmitterDataObj);
-
-            var modelDataObj = new GameDataObject("model", "Self-explanatory.", ClassType.Point);
-            modelDataObj.Properties.Add(new Property("file", VariableType.Other) { ShortDescription = "File", DefaultValue = "" });
-            modelDataObj.Properties.Add(new Property("angles", VariableType.Vector) { ShortDescription = "Rotation", DefaultValue = "0 0 0" });
-            modelDataObj.Properties.Add(new Property("scale", VariableType.Vector) { ShortDescription = "Scale", DefaultValue = "1 1 1" });
-            Classes.Add(modelDataObj);
-
-            var noShadowObj = new GameDataObject("noshadow", "Disables shadow casting for this brush.", ClassType.Solid);
-            Classes.Add(noShadowObj);
-
-            Property p = new Property("position", VariableType.Vector) { ShortDescription = "Position", DefaultValue = "0 0 0" };
-            foreach (GameDataObject gdo in Classes) {
-                if (gdo.ClassType != ClassType.Solid) {
-                    gdo.Properties.Add(p);
-                }
+            IEnumerable<string> entityFiles = Directory.EnumerateFiles("Entities/");
+            foreach (string entityFile in entityFiles) {
+                var doc = XDocument.Load(entityFile);
+                Classes.Add(new GameDataObject(doc.Root, ClassType.Point));
             }
 
             Includes = new List<string>();

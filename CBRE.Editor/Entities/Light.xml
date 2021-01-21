@@ -1,16 +1,18 @@
 <entity name="light">
     <rmesh>
-        <write property="position" as="Vector3" />
-        <write property="range" as="float" />
-        <write property="color" as="b3dstring" />
-        <write property="intensity" as="float" />
+        <condition property="hassprite" equals="True" />
+        <write property="position" as="Vector" />
+        <write property="range" as="Float" />
+        <write property="color" as="B3DString" />
+        <write property="intensity" as="Float" />
     </rmesh>
 
     <properties>
         <property name="position" type="Position" />
-        <property name="color" type="Color" default="255 255 255" />
-        <property name="range" type="float" default="100.0" />
-        <property name="intensity" type="float" default="1.0" />
+        <property name="color" type="Color255" default="255 255 255" />
+        <property name="range" type="Float" default="100.0" />
+        <property name="intensity" type="Float" default="1.0" />
+        <property name="hassprite" type="Boolean" default="true" />
     </properties>
 
     <sprite name="Sprites/lightbulb" color="color" />

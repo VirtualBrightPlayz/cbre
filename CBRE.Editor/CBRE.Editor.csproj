@@ -17,6 +17,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Entities\Light.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Entities\Screen.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Entities\SoundEmitter.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Entities\Waypoint.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\Arrow_Down.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

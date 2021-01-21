@@ -1,14 +1,14 @@
 <entity name="soundemitter">
     <rmesh>
-        <write property="position" as="Vector3" />
-        <write property="sound" as="int" />
-        <write property="range" as="float" />
+        <write property="position" as="Vector" />
+        <write property="sound" as="Integer" />
+        <write property="range" as="Float" />
     </rmesh>
 
     <properties>
         <property name="position" type="Position" />
-        <property name="sound" type="int" />
-        <property name="range" type="float" />
+        <property name="sound" type="Integer" />
+        <property name="range" type="Float" />
     </properties>
     
     <sprite name="Sprites/speaker" />

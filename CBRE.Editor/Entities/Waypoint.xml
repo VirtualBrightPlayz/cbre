@@ -1,6 +1,6 @@
 <entity name="waypoint">
     <rmesh>
-        <write property="position" as="Vector3" />
+        <write property="position" as="Vector" />
     </rmesh>
 
     <properties>
