@@ -152,9 +152,8 @@ namespace CBRE.Editor {
             base.Draw(gameTime);
         }
 
-        protected virtual void ImGuiLayout()
-        {
-            if (ImGui.Begin("main", ImGuiWindowFlags.NoBackground |
+        protected virtual void ImGuiLayout() {
+            if (ImGui.Begin("top", ImGuiWindowFlags.NoBackground |
                                     ImGuiWindowFlags.NoBringToFrontOnFocus |
                                     ImGuiWindowFlags.NoMove |
                                     ImGuiWindowFlags.NoDecoration |
@@ -162,15 +161,40 @@ namespace CBRE.Editor {
                                     ImGuiWindowFlags.NoScrollbar |
                                     ImGuiWindowFlags.NoScrollWithMouse)) {
                 ImGui.SetWindowPos(new Num.Vector2(-1, 0));
-                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width + 2, Window.ClientBounds.Height));
+                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width + 2, 47));
 
                 ViewportManager.TopMenuOpen = false;
                 UpdateMenus();
                 UpdateTopBar();
+
+                ImGui.End();
+            }
+
+            if (ImGui.Begin("tools", ImGuiWindowFlags.NoBackground |
+                                    ImGuiWindowFlags.NoBringToFrontOnFocus |
+                                    ImGuiWindowFlags.NoMove |
+                                    ImGuiWindowFlags.NoDecoration |
+                                    ImGuiWindowFlags.MenuBar |
+                                    ImGuiWindowFlags.NoScrollbar |
+                                    ImGuiWindowFlags.NoScrollWithMouse)) {
+                ImGui.SetWindowPos(new Num.Vector2(-1, 27));
+                ImGui.SetWindowSize(new Num.Vector2(47, Window.ClientBounds.Height - 27));
+
                 UpdateToolBar();
-                ImGui.SetCursorPos(new Num.Vector2(47, 47));
+
+                ImGui.End();
+            }
+            
+            if (ImGui.Begin("tabber", ImGuiWindowFlags.NoBackground |
+                                      ImGuiWindowFlags.NoBringToFrontOnFocus |
+                                      ImGuiWindowFlags.NoMove |
+                                      ImGuiWindowFlags.NoDecoration |
+                                      ImGuiWindowFlags.NoScrollbar |
+                                      ImGuiWindowFlags.NoScrollWithMouse)) {
+                ImGui.SetWindowPos(new Num.Vector2(47, 47));
+                ImGui.SetWindowSize(new Num.Vector2(ViewportManager.Right - 47, 30));
                 ImGui.BeginTabBar("doc_tabber");
-                for (int i=0;i<DocumentManager.Documents.Count;i++) {
+                for (int i = 0; i < DocumentManager.Documents.Count; i++) {
                     Document doc = DocumentManager.Documents[i];
                     if (ImGui.BeginTabItem(doc.MapFileName)) {
                         if (DocumentManager.CurrentDocument != doc) {
@@ -180,7 +204,20 @@ namespace CBRE.Editor {
                     }
                 }
                 ImGui.EndTabBar();
+            }
 
+            if (ImGui.Begin("tool_properties", ImGuiWindowFlags.NoBackground |
+                                               ImGuiWindowFlags.NoBringToFrontOnFocus |
+                                               ImGuiWindowFlags.NoMove |
+                                               ImGuiWindowFlags.NoDecoration |
+                                               ImGuiWindowFlags.NoScrollbar |
+                                               ImGuiWindowFlags.NoScrollWithMouse)) {
+                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, 27));
+                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 27));
+                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 27))) {
+                    
+                    ImGui.EndChildFrame();
+                }
                 ImGui.End();
             }
         }

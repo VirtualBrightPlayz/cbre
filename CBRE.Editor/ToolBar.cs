@@ -37,8 +37,6 @@ namespace CBRE.Editor {
         }
 
         public void UpdateToolBar() {
-            ImGui.SetCursorPos(new Num.Vector2(0, 47));
-
             if (ImGui.BeginChildFrame(2, new Num.Vector2(47, Window.ClientBounds.Height + 1))) {
                 ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(0, 1));
 
