@@ -212,10 +212,11 @@ namespace CBRE.Editor {
                                                ImGuiWindowFlags.NoDecoration |
                                                ImGuiWindowFlags.NoScrollbar |
                                                ImGuiWindowFlags.NoScrollWithMouse)) {
-                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, 27));
-                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 27));
-                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 27))) {
-                    
+                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, 47));
+                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47));
+                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47))) {
+                    SelectedTool?.UpdateGui();
+
                     ImGui.EndChildFrame();
                 }
                 ImGui.End();

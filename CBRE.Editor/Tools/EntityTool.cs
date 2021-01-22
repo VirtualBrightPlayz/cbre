@@ -16,6 +16,8 @@ using Select = CBRE.Settings.Select;
 using Microsoft.Xna.Framework.Input;
 using CBRE.Graphics;
 using Microsoft.Xna.Framework.Graphics;
+using ImGuiNET;
+using CBRE.Editor.Documents;
 
 namespace CBRE.Editor.Tools
 {
@@ -215,10 +217,26 @@ namespace CBRE.Editor.Tools
             }
         }
 
+        private GameDataObject selectedEntity = null;
+
+        public override void UpdateGui() {
+            if (DocumentManager.CurrentDocument == null) { return; }
+
+            if (ImGui.BeginCombo("Entity type", selectedEntity?.Name ?? "<none>")) {
+                var entityTypes = DocumentManager.CurrentDocument.GameData.Classes.Where(c => c.ClassType == ClassType.Point);
+                foreach (var entityType in entityTypes) {
+                    if (ImGui.Selectable(entityType.Name)) {
+                        selectedEntity = entityType;
+                    }
+                }
+
+                ImGui.EndCombo();
+            }
+        }
+
         private void CreateEntity(Vector3 origin, GameDataObject gd = null)
         {
-            throw new NotImplementedException();
-            /*if (gd == null) gd = _sidebarPanel.GetSelectedEntity();
+            if (gd == null) gd = selectedEntity;
             if (gd == null) return;
 
             var col = gd.Behaviours.Where(x => x.Name == "color").ToArray();
@@ -245,7 +263,7 @@ namespace CBRE.Editor.Tools
             if (Select.SwitchToSelectAfterEntity)
             {
                 Mediator.Publish(HotkeysMediator.SwitchTool, HotkeyTool.Selection);
-            }*/
+            }
         }
 
         public override void KeyUp(ViewportBase viewport, ViewportEvent e)

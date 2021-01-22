@@ -616,10 +616,10 @@ namespace CBRE.Editor.Tools
 
             PrimitiveDrawing.Begin(PrimitiveType.LineList);
             PrimitiveDrawing.SetColor(GetRenderBoxColour());
-            PrimitiveDrawing.DottedLine(new Vector3(start.X, start.Y, start.Z), new Vector3(end.X, start.Y, start.Z), 8m);
-            PrimitiveDrawing.DottedLine(new Vector3(end.X, start.Y, start.Z), new Vector3(end.X, end.Y, start.Z), 8m);
-            PrimitiveDrawing.DottedLine(new Vector3(end.X, end.Y, start.Z), new Vector3(start.X, end.Y, start.Z), 8m);
-            PrimitiveDrawing.DottedLine(new Vector3(start.X, end.Y, start.Z), new Vector3(start.X, start.Y, start.Z), 8m);
+            PrimitiveDrawing.DottedLine(new Vector3(start.X, start.Y, start.Z), new Vector3(end.X, start.Y, start.Z), 8m / viewport.Zoom);
+            PrimitiveDrawing.DottedLine(new Vector3(end.X, start.Y, start.Z), new Vector3(end.X, end.Y, start.Z), 8m / viewport.Zoom);
+            PrimitiveDrawing.DottedLine(new Vector3(end.X, end.Y, start.Z), new Vector3(start.X, end.Y, start.Z), 8m / viewport.Zoom);
+            PrimitiveDrawing.DottedLine(new Vector3(start.X, end.Y, start.Z), new Vector3(start.X, start.Y, start.Z), 8m / viewport.Zoom);
             PrimitiveDrawing.End();
         }
 

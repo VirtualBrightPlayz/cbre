@@ -440,6 +440,7 @@ namespace CBRE.Editor.Rendering {
                 basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
                 basicEffect.CurrentTechnique.Passes[0].Apply();
                 Viewports[i].DrawGrid();
+                GlobalGraphics.GraphicsDevice.DepthStencilState = Viewports[i] is Viewport3D ? DepthStencilState.Default : DepthStencilState.None;
                 GameMain.Instance.SelectedTool?.Render(Viewports[i]);
             } 
             GlobalGraphics.GraphicsDevice.Viewport = prevViewport;

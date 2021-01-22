@@ -291,9 +291,8 @@ namespace CBRE.Editor.Tools.SelectTool
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {
-            throw new NotImplementedException();
-            /*WidgetAction((w, vp, ev) => w.UpdateFrame(vp, frame), viewport, null);
-            base.UpdateFrame(viewport, frame);*/
+            WidgetAction((w, vp, ev) => w.UpdateFrame(vp, frame), viewport, null);
+            base.UpdateFrame(viewport, frame);
         }
 
         #endregion

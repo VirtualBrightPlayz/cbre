@@ -181,6 +181,10 @@ namespace CBRE.Editor.Tools
             return;
         }
 
+        public virtual void UpdateGui() {
+            return;
+        }
+
         public virtual void PreRender(ViewportBase viewport)
         {
             return;
