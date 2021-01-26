@@ -209,17 +209,17 @@ namespace CBRE.Editor.Rendering {
 
         public override void Render() {
             if (DocumentManager.CurrentDocument != null) {
-                var brushRenderer = DocumentManager.CurrentDocument.BrushRenderer;
-                brushRenderer.Projection = GetViewportMatrix();
-                brushRenderer.View = GetModelViewMatrix() * GetCameraMatrix();
-                brushRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
+                var ObjectRenderer = DocumentManager.CurrentDocument.ObjectRenderer;
+                ObjectRenderer.Projection = GetViewportMatrix();
+                ObjectRenderer.View = GetModelViewMatrix() * GetCameraMatrix();
+                ObjectRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
 
                 GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
                 GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
                 GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-                brushRenderer.RenderWireframe();
+                ObjectRenderer.RenderWireframe();
 
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             }

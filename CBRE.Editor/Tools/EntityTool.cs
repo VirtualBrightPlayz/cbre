@@ -236,6 +236,7 @@ namespace CBRE.Editor.Tools
 
         private void CreateEntity(Vector3 origin, GameDataObject gd = null)
         {
+            ViewportManager.MarkForRerender();
             if (gd == null) gd = selectedEntity;
             if (gd == null) return;
 
@@ -245,6 +246,7 @@ namespace CBRE.Editor.Tools
             var entity = new Entity(Document.Map.IDGenerator.GetNextObjectID())
             {
                 EntityData = new EntityData(gd),
+                GameData = gd,
                 ClassName = gd.Name,
                 Colour = colour,
                 Origin = origin

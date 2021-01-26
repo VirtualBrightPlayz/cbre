@@ -33,7 +33,7 @@ namespace CBRE.Editor.Documents {
         public SelectionManager Selection { get; private set; }
         public HistoryManager History { get; private set; }
 
-        public BrushRenderer BrushRenderer { get; private set; }
+        public ObjectRenderer ObjectRenderer { get; private set; }
 
         private readonly DocumentSubscriptions _subscriptions;
         private readonly DocumentMemory _memory;
@@ -73,7 +73,7 @@ namespace CBRE.Editor.Documents {
 
             if (MapFile != null) Mediator.Publish(EditorMediator.FileOpened, MapFile);
 
-            BrushRenderer = new BrushRenderer(this);
+            ObjectRenderer = new ObjectRenderer(this);
 
             //TODO: reimplement autosaving
         }
@@ -295,19 +295,25 @@ namespace CBRE.Editor.Documents {
         }
 
         public void RenderAll() {
-            throw new NotImplementedException();
+            ObjectRenderer.MarkDirty();
+            ViewportManager.MarkForRerender();
         }
 
         public void RenderSelection(IEnumerable<MapObject> objects) {
-            throw new NotImplementedException();
+            RenderObjects(objects);
         }
 
         public void RenderObjects(IEnumerable<MapObject> objects) {
-            throw new NotImplementedException();
+            var faces = objects.Where(obj => obj is Solid).SelectMany(obj => ((Solid)obj).Faces);
+            RenderFaces(faces);
         }
 
         public void RenderFaces(IEnumerable<Face> faces) {
-            throw new NotImplementedException();
+            var texNames = faces.Select(f => f.Texture.Name).Distinct();
+            foreach (var tex in texNames) {
+                ObjectRenderer.MarkDirty(tex);
+            }
+            ViewportManager.MarkForRerender();
         }
 
         public void Make3D(ViewportBase viewport, Viewport3D.ViewType type) {

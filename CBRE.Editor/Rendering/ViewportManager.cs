@@ -192,7 +192,7 @@ namespace CBRE.Editor.Rendering {
         }
 
         public static void TextureLoadCallback(string texName) {
-            Documents.DocumentManager.Documents.ForEach(d => d.BrushRenderer.MarkDirty(texName));
+            Documents.DocumentManager.Documents.ForEach(d => d.ObjectRenderer.MarkDirty(texName));
             MarkForRerender();
         }
 

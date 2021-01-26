@@ -152,17 +152,18 @@ namespace CBRE.Editor.Rendering {
                     Camera.LookPosition = DocumentManager.CurrentDocument.Map.ActiveCamera.LookPosition;
                 }
 
-                var brushRenderer = DocumentManager.CurrentDocument.BrushRenderer;
-                brushRenderer.Projection = GetViewportMatrix();
-                brushRenderer.View = GetCameraMatrix();
-                brushRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
+                var objectRenderer = DocumentManager.CurrentDocument.ObjectRenderer;
+                objectRenderer.Projection = GetViewportMatrix();
+                objectRenderer.View = GetCameraMatrix();
+                objectRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
+
 
                 GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
                 GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
                 GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-                brushRenderer.RenderTextured();
+                objectRenderer.RenderTextured();
 
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             }

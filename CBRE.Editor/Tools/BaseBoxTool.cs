@@ -548,17 +548,6 @@ namespace CBRE.Editor.Tools
         }
 
         #region Rendering
-        /*
-        protected static void Coord(double x, double y, double z)
-        {
-            GL.Vertex3(x, y, z);
-        }
-        protected static void Coord(Vector3 c)
-        {
-            GL.Vertex3(c.DX, c.DY, c.DZ);
-        }
-        */
-
         public override void Render(ViewportBase viewport)
         {
             if (viewport is Viewport2D) Render2D((Viewport2D)viewport);

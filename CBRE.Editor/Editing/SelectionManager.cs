@@ -33,6 +33,10 @@ namespace CBRE.Editor.Editing {
             return new List<Face>(SelectedFaces);
         }
 
+        public bool IsFaceSelected(Face face) {
+            return SelectedFaces.Contains(face);
+        }
+
         public void SwitchToFaceSelection() {
             if (InFaceSelection) return;
             foreach (var face in SelectedFaces) face.IsSelected = false;
