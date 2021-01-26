@@ -526,20 +526,17 @@ namespace CBRE.Editor.Tools
 
         public virtual void BoxDrawnConfirm(ViewportBase viewport)
         {
-            throw new NotImplementedException();
-            /*
-            if (State.ActiveViewport != null) State.ActiveViewport.Cursor = Cursors.Default;
+            if (State.ActiveViewport != null) State.ActiveViewport.Cursor = MouseCursor.Arrow;
             State.Action = BoxAction.ReadyToDraw;
-            State.ActiveViewport = null;*/
+            State.ActiveViewport = null;
         }
 
         public virtual void BoxDrawnCancel(ViewportBase viewport)
         {
             throw new NotImplementedException();
-            /*
-            if (State.ActiveViewport != null) State.ActiveViewport.Cursor = Cursors.Default;
+            if (State.ActiveViewport != null) State.ActiveViewport.Cursor = MouseCursor.Arrow;
             State.Action = BoxAction.ReadyToDraw;
-            State.ActiveViewport = null;*/
+            State.ActiveViewport = null;
         }
 
         public override void KeyUp(ViewportBase viewport, ViewportEvent e)

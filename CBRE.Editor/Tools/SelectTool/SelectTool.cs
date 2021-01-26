@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Tools.SelectTool
 {
@@ -733,8 +734,7 @@ namespace CBRE.Editor.Tools.SelectTool
         /// <param name="viewport">The viewport that the box was confirmed in</param>
         public override void BoxDrawnConfirm(ViewportBase viewport)
         {
-            throw new NotImplementedException();
-            /*// don't do anything if the current tool is not null
+            // don't do anything if the current tool is not null
             if (_currentTool != null) return;
 
             Box boundingbox;
@@ -751,7 +751,7 @@ namespace CBRE.Editor.Tools.SelectTool
                 SetSelected(null, nodes, false, IgnoreGrouping());
             }
             base.BoxDrawnConfirm(viewport);
-            SelectionChanged();*/
+            SelectionChanged();
         }
 
         public override void BoxDrawnCancel(ViewportBase viewport)
@@ -794,36 +794,34 @@ namespace CBRE.Editor.Tools.SelectTool
         /// <param name="end">The end of the box</param>
         private void RenderHandles(Viewport2D viewport, Vector3 start, Vector3 end)
         {
-            throw new NotImplementedException();
-            /*if (_currentTool == null) return;
+            if (_currentTool == null) return;
             var circles = _currentTool.RenderCircleHandles;
 
             // Get the filtered list of handles, and convert them to vector locations
-            var z = (double)viewport.Zoom;
+            var z = viewport.Zoom;
             var handles = _currentTool.GetHandles(start, end, viewport.Zoom)
                 .Where(x => _currentTool.FilterHandle(x.Item1))
-                .Select(x => new Vector2d((double)x.Item2, (double)x.Item3))
+                .Select(x => new Vector2d(x.Item2, x.Item3))
                 .ToList();
 
             // Draw the insides of the handles in white
-            GL.Color3(Color.White);
             foreach (var handle in handles)
             {
-                GL.Begin(PrimitiveType.Polygon);
-                if (circles) GLX.Circle(handle, 4, z, loop: true);
-                else GLX.Square(handle, 4, z, true);
-                GL.End();
+                PrimitiveDrawing.Begin(PrimitiveType.TriangleFan);
+                PrimitiveDrawing.SetColor(Color.White);
+                if (circles) PrimitiveDrawing.Circle(new Vector3(handle.X, handle.Y, z), (double)(4m / viewport.Zoom));
+                else PrimitiveDrawing.Square(new Vector3(handle.X, handle.Y, z), (double)(4m / viewport.Zoom));
+                PrimitiveDrawing.End();
             }
 
             // Draw the borders of the handles in black
-            GL.Color3(Color.Black);
-            GL.Begin(PrimitiveType.Lines);
-            foreach (var handle in handles)
-            {
-                if (circles) GLX.Circle(handle, 4, z);
-                else GLX.Square(handle, 4, z);
+            foreach (var handle in handles) {
+                PrimitiveDrawing.Begin(PrimitiveType.LineLoop);
+                PrimitiveDrawing.SetColor(Color.Black);
+                if (circles) PrimitiveDrawing.Circle(new Vector3(handle.X, handle.Y, z), (double)(4m / viewport.Zoom));
+                else PrimitiveDrawing.Square(new Vector3(handle.X, handle.Y, z), (double)(4m / viewport.Zoom));
+                PrimitiveDrawing.End();
             }
-            GL.End();*/
         }
 
         protected override void Render2D(Viewport2D viewport)
@@ -877,28 +875,18 @@ namespace CBRE.Editor.Tools.SelectTool
             var s = viewport.Flatten(box.Start);
             var e = viewport.Flatten(box.End);
 
-            throw new NotImplementedException();
-            /*GL.Enable(EnableCap.LineStipple);
-            GL.LineStipple(10, 0xAAAA);
-            GL.Begin(PrimitiveType.Lines);
-            GL.Color4(Color.FromArgb(64, BoxColour));
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            PrimitiveDrawing.SetColor(Color.FromArgb(64, BoxColour));
 
-            Coord(s.DX, s.DY, e.DZ);
-            Coord(e.DX, s.DY, e.DZ);
 
-            Coord(s.DX, e.DY, e.DZ);
-            Coord(e.DX, e.DY, e.DZ);
+            PrimitiveDrawing.DottedLine(new Vector3(s.X, s.Y, e.Z), new Vector3(e.X, s.Y, e.Z), 4m / viewport.Zoom);
+            PrimitiveDrawing.DottedLine(new Vector3(s.X, e.Y, e.Z), new Vector3(e.X, e.Y, e.Z), 4m / viewport.Zoom);
+            PrimitiveDrawing.DottedLine(new Vector3(s.X, s.Y, e.Z), new Vector3(s.X, e.Y, e.Z), 4m / viewport.Zoom);
+            PrimitiveDrawing.DottedLine(new Vector3(e.X, s.Y, e.Z), new Vector3(e.X, e.Y, e.Z), 4m / viewport.Zoom);
 
-            Coord(s.DX, s.DY, e.DZ);
-            Coord(s.DX, e.DY, e.DZ);
+            PrimitiveDrawing.End();
 
-            Coord(e.DX, s.DY, e.DZ);
-            Coord(e.DX, e.DY, e.DZ);
-
-            GL.End();
-            GL.Disable(EnableCap.LineStipple);
-
-            RenderBoxText(viewport, s, e);*/
+            RenderBoxText(viewport, s, e);
         }
 
         #endregion
