@@ -96,7 +96,7 @@ namespace CBRE.Editor {
                 if (Texture.ImGuiTexture != IntPtr.Zero) {
                     pressed = ImGui.ImageButton(Texture.ImGuiTexture, new Num.Vector2(16, 16));
                 } else {
-                    pressed = ImGui.Button("", new Num.Vector2(24, 22));
+                    pressed = ImGui.Button($"##{Texture.Name}", new Num.Vector2(24, 22));
                 }
                 ImGui.SameLine();
 

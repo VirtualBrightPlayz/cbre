@@ -15,6 +15,7 @@ namespace CBRE.Editor.Rendering {
     public class ObjectRenderer {
         public BasicEffect BasicEffect;
         public Effect TexturedShaded;
+        public Effect SolidShaded;
         public Document Document;
 
         public struct PointEntityVertex : IVertexType {
@@ -175,7 +176,7 @@ namespace CBRE.Editor.Rendering {
             public Microsoft.Xna.Framework.Vector2 DiffuseUV;
             public Microsoft.Xna.Framework.Vector2 LightmapUV;
             public Microsoft.Xna.Framework.Color Color;
-            public Microsoft.Xna.Framework.Color SelectColor;
+            public float Selected;
             public static readonly VertexDeclaration VertexDeclaration;
             public BrushVertex(
                     Microsoft.Xna.Framework.Vector3 position,
@@ -190,7 +191,7 @@ namespace CBRE.Editor.Rendering {
                 this.DiffuseUV = diffUv;
                 this.LightmapUV = lmUv;
                 this.Color = color;
-                this.SelectColor = selected ? Microsoft.Xna.Framework.Color.Red : Microsoft.Xna.Framework.Color.White;
+                this.Selected = selected ? 1.0f : 0.0f;
             }
 
             VertexDeclaration IVertexType.VertexDeclaration {
@@ -206,7 +207,7 @@ namespace CBRE.Editor.Rendering {
                     new VertexElement(24, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
                     new VertexElement(32, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 1),
                     new VertexElement(40, VertexElementFormat.Color, VertexElementUsage.Color, 0),
-                    new VertexElement(44, VertexElementFormat.Color, VertexElementUsage.Color, 1)
+                    new VertexElement(44, VertexElementFormat.Single, VertexElementUsage.Color, 1)
                 };
                 VertexDeclaration declaration = new VertexDeclaration(elements);
                 VertexDeclaration = declaration;
@@ -276,7 +277,7 @@ namespace CBRE.Editor.Rendering {
                         var lmUv = new Microsoft.Xna.Framework.Vector2((float)faces[i].Vertices[j].LMU, (float)faces[i].Vertices[j].LMV);
                         vertices[vertexIndex + j].LightmapUV = lmUv;
                         vertices[vertexIndex + j].Color = new Microsoft.Xna.Framework.Color(faces[i].Colour.R, faces[i].Colour.G, faces[i].Colour.B, faces[i].Colour.A);
-                        vertices[vertexIndex + j].SelectColor = document.Selection.IsFaceSelected(faces[i]) ? Microsoft.Xna.Framework.Color.Red : Microsoft.Xna.Framework.Color.White;
+                        vertices[vertexIndex + j].Selected = document.Selection.IsFaceSelected(faces[i]) ? 1.0f : 0.0f;
                         indicesWireframe[index2dIndex + (j * 2)] = (ushort)(vertexIndex + j);
                         indicesWireframe[index2dIndex + (j * 2) + 1] = (ushort)(vertexIndex + ((j + 1) % faces[i].Vertices.Count));
                     }
@@ -350,15 +351,20 @@ namespace CBRE.Editor.Rendering {
 
         private Dictionary<string, BrushGeometry> brushGeom = new Dictionary<string, BrushGeometry>();
 
+        private Effect LoadEffect(string filename) {
+            using (var fs = File.OpenRead(filename)) {
+                byte[] bytes = new byte[fs.Length];
+                fs.Read(bytes, 0, bytes.Length);
+                return new Effect(GlobalGraphics.GraphicsDevice, bytes);
+            }
+        }
+
         public ObjectRenderer(Document doc) {
             Document = doc;
 
             BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
-            using (var fs = File.OpenRead("Shaders/texturedShaded.mgfx")) {
-                byte[] bytes = new byte[fs.Length];
-                fs.Read(bytes, 0, bytes.Length);
-                TexturedShaded = new Effect(GlobalGraphics.GraphicsDevice, bytes);
-            }
+            TexturedShaded = LoadEffect("Shaders/texturedShaded.mgfx");
+            SolidShaded = LoadEffect("Shaders/solidShaded.mgfx");
 
             foreach (Solid solid in doc.Map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
                 solid.Faces.ForEach(f => AddFace(f));
@@ -391,6 +397,7 @@ namespace CBRE.Editor.Rendering {
             set {
                 BasicEffect.World = value;
                 TexturedShaded.Parameters["World"].SetValue(value);
+                SolidShaded.Parameters["World"].SetValue(value);
             }
         }
 
@@ -399,6 +406,7 @@ namespace CBRE.Editor.Rendering {
             set {
                 BasicEffect.View = value;
                 TexturedShaded.Parameters["View"].SetValue(value);
+                SolidShaded.Parameters["View"].SetValue(value);
             }
         }
 
@@ -407,16 +415,20 @@ namespace CBRE.Editor.Rendering {
             set {
                 BasicEffect.Projection = value;
                 TexturedShaded.Parameters["Projection"].SetValue(value);
+                SolidShaded.Parameters["Projection"].SetValue(value);
             }
         }
 
         public void RenderTextured() {
             foreach (var kvp in brushGeom) {
                 TextureItem item = TextureProvider.GetItem(kvp.Key);
-                if (item != null && item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
-                    BasicEffect.CurrentTechnique.Passes[0].Apply();
-                    TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
-                    TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                if (item != null) {
+                    if (item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
+                        TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
+                        TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                    } else {
+                        SolidShaded.CurrentTechnique.Passes[0].Apply();
+                    }
                     kvp.Value.RenderSolid();
                 }
             }
@@ -428,9 +440,7 @@ namespace CBRE.Editor.Rendering {
 
         public void RenderSolidUntextured() {
             foreach (var kvp in brushGeom) {
-                BasicEffect.VertexColorEnabled = true;
-                BasicEffect.TextureEnabled = false;
-                BasicEffect.CurrentTechnique.Passes[0].Apply();
+                SolidShaded.CurrentTechnique.Passes[0].Apply();
                 kvp.Value.RenderSolid();
             }
             BasicEffect.VertexColorEnabled = true;

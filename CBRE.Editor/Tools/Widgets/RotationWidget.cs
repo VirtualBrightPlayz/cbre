@@ -381,13 +381,12 @@ namespace CBRE.Editor.Tools.Widgets
         private void Render2D(Viewport2D viewport)
         {
             var pp = viewport.Flatten(_pivotPoint);
-            throw new NotImplementedException();
-            /*GL.Begin(PrimitiveType.Lines);
-            GL.Color3(Color.Cyan);
-            GLX.Circle(new Vector2d(pp.DX, pp.DY), 4, (double)viewport.Zoom);
-            GL.Color3(Color.White);
-            GLX.Circle(new Vector2d(pp.DX, pp.DY), 8, (double)viewport.Zoom);
-            GL.End();*/
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            PrimitiveDrawing.SetColor(Color.Cyan);
+            PrimitiveDrawing.Circle(new Vector3(pp.X, pp.Y, viewport.Zoom), 4);
+            PrimitiveDrawing.SetColor(Color.White);
+            PrimitiveDrawing.Circle(new Vector3(pp.X, pp.Y, viewport.Zoom), 8);
+            PrimitiveDrawing.End();
         }
 
         private void RenderAxisRotating(Viewport3D viewport, Document document)

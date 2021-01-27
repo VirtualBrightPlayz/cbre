@@ -11,8 +11,6 @@ struct VertexShaderInput
     float3 Normal : NORMAL0;
     float4 Color : COLOR0;
     float Selected : COLOR1;
-    float2 TexCoord : TEXCOORD0;
-    float2 LmCoord : TEXCOORD1;
 };
 
 
@@ -22,8 +20,6 @@ struct VertexShaderOutput
     float3 Normal : TEXCOORD2;
     float4 Color : COLOR0;
     float Selected : COLOR1;
-    float2 TexCoord : TEXCOORD0;
-    float2 LmCoord : TEXCOORD1;
 };
 
 VertexShaderOutput VertexShaderF(VertexShaderInput input)
@@ -39,9 +35,6 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
     output.Color = input.Color;
     output.Selected = input.Selected;
 
-    output.TexCoord = input.TexCoord;
-    output.LmCoord = input.LmCoord;
-
     return output;
 }
 
@@ -49,7 +42,7 @@ float4 PixelShaderF(VertexShaderOutput input) : COLOR0
 {
     float lighting = dot(input.Normal, float3(0.2672,0.8017,0.5345)) * 0.25 + 0.75;
 
-    float4 c = tex2D(TextureSampler, input.TexCoord) * float4(lighting, lighting, lighting, 1.0) * float4(1.0, 1.0 - input.Selected, 1.0 - input.Selected, 1.0);
+    float4 c = float4(lighting, lighting, lighting, 1.0) * (input.Selected * float4(1,0,0,1) + (1.0 - input.Selected) * input.Color);
 
     return c;
 }

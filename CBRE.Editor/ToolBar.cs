@@ -71,7 +71,7 @@ namespace CBRE.Editor {
                 if (Texture.ImGuiTexture != IntPtr.Zero) {
                     pressed = ImGui.ImageButton(Texture.ImGuiTexture, new Num.Vector2(32, 32));
                 } else {
-                    pressed = ImGui.Button("", new Num.Vector2(40, 38));
+                    pressed = ImGui.Button($"##{Tool}", new Num.Vector2(40, 38));
                 }
 
                 if (pressed && GameMain.Instance.SelectedTool != Tool) {

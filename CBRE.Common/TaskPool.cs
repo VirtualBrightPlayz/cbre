@@ -41,6 +41,7 @@ namespace CBRE.Common {
                 for (int i = 0; i < taskActions.Count; i++) {
                     if (taskActions[i].Task.IsCompleted) {
                         taskActions[i].OnCompletion?.Invoke(taskActions[i].Task, taskActions[i].UserData);
+                        taskActions[i].Task.Dispose();
                         taskActions.RemoveAt(i);
                         i--;
                     }

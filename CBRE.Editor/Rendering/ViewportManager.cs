@@ -207,12 +207,6 @@ namespace CBRE.Editor.Rendering {
             }
             if (shouldRerender) { Render(); }
             var mouseState = Mouse.GetState();
-            if (mouseState.X < vpStartPoint.X || mouseState.X > Right ||
-                mouseState.Y < vpStartPoint.Y || mouseState.Y > Bottom ||
-                TopMenuOpen) {
-                return;
-            }
-
             var keyboardState = Keyboard.GetState();
             var keysDown = keyboardState.GetPressedKeys();
             bool mouse1Down = mouseState.LeftButton == ButtonState.Pressed;
@@ -224,162 +218,166 @@ namespace CBRE.Editor.Rendering {
             Shift = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
             Alt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
 
-            int splitX = (int)((Right - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
-            int splitY = (int)((Bottom - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
+            if (mouseState.X >= vpStartPoint.X && mouseState.X <= Right &&
+                mouseState.Y >= vpStartPoint.Y && mouseState.Y <= Bottom &&
+                !TopMenuOpen) {
+                int splitX = (int)((Right - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
+                int splitY = (int)((Bottom - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
 
-            if (!mouse1Down && !mouse3Down) {
-                if (draggingViewport >= 0) {
-                    GameMain.Instance.SelectedTool?.MouseUp(Viewports[draggingViewport], new ViewportEvent() {
-                        Handled = false,
-                        Button = MouseButtons.Left,
-                        X = mouseState.X - Viewports[draggingViewport].X,
-                        Y = mouseState.Y - Viewports[draggingViewport].Y,
-                        LastX = Viewports[draggingViewport].PrevMouseX,
-                        LastY = Viewports[draggingViewport].PrevMouseY,
-                    });
-                    MarkForRerender();
-                }
-                draggingCenterX = false;
-                draggingCenterY = false;
-                draggingViewport = -1;
-            }
-            if (mouse1Hit) {
-                draggingCenterX = (mouseState.X >= (splitX - 3)) && (mouseState.X <= (splitX + 2));
-                draggingCenterY = (mouseState.Y >= (splitY - 3)) && (mouseState.Y <= (splitY + 2));
-            }
-
-            if (draggingCenterX) {
-                splitPoint.X = (float)(mouseState.X - vpStartPoint.X) / (Right - vpStartPoint.X);
-                splitPoint.X = Math.Clamp(splitPoint.X, 0.01f, 0.99f);
-                MarkForRerender();
-            }
-            if (draggingCenterY) {
-                splitPoint.Y = (float)(mouseState.Y - vpStartPoint.Y) / (Bottom - vpStartPoint.Y);
-                splitPoint.Y = Math.Clamp(splitPoint.Y, 0.01f, 0.99f);
-                MarkForRerender();
-            }
-
-            foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
-                GameMain.Instance.SelectedTool?.KeyDown(new ViewportEvent() {
-                    Handled = false,
-                    KeyCode = key
-                });
-            }
-
-            foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
-                GameMain.Instance.SelectedTool?.KeyUp(new ViewportEvent() {
-                    Handled = false,
-                    KeyCode = key
-                });
-            }
-
-            for (int i = 0; i < Viewports.Length; i++) {
-                if (Viewports[i] == null) { continue; }
-                bool left = i % 2 == 0;
-                bool top = i < 2;
-
-                Viewports[i].X = left ? vpStartPoint.X : splitX + 3;
-                Viewports[i].Y = top ? vpStartPoint.Y : splitY + 3;
-                Viewports[i].Width = left ? splitX - vpStartPoint.X - 4 : renderTarget.Width - (splitX - vpStartPoint.X + 3);
-                Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
-
-                GameMain.Instance.SelectedTool?.UpdateFrame(Viewports[i], new FrameInfo(0)); //TODO: fix FrameInfo
-
-                int currMouseX = mouseState.X - Viewports[i].X;
-                int currMouseY = mouseState.Y - Viewports[i].Y;
-
-                if (mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
-                    mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
-                    if (Viewports[i].PrevMouseX != currMouseX || Viewports[i].PrevMouseY != currMouseY) {
-                        GameMain.Instance.SelectedTool?.MouseMove(Viewports[i], new ViewportEvent() {
+                if (!mouse1Down && !mouse3Down) {
+                    if (draggingViewport >= 0) {
+                        GameMain.Instance.SelectedTool?.MouseUp(Viewports[draggingViewport], new ViewportEvent() {
                             Handled = false,
                             Button = MouseButtons.Left,
-                            X = currMouseX,
-                            Y = currMouseY,
-                            LastX = Viewports[i].PrevMouseX,
-                            LastY = Viewports[i].PrevMouseY,
+                            X = mouseState.X - Viewports[draggingViewport].X,
+                            Y = mouseState.Y - Viewports[draggingViewport].Y,
+                            LastX = Viewports[draggingViewport].PrevMouseX,
+                            LastY = Viewports[draggingViewport].PrevMouseY,
                         });
                         MarkForRerender();
                     }
-                    if (!draggingCenterX && !draggingCenterY && draggingViewport < 0) {
-                        if (mouse1Down || mouse3Down) {
-                            draggingViewport = i;
+                    draggingCenterX = false;
+                    draggingCenterY = false;
+                    draggingViewport = -1;
+                }
+                if (mouse1Hit) {
+                    draggingCenterX = (mouseState.X >= (splitX - 3)) && (mouseState.X <= (splitX + 2));
+                    draggingCenterY = (mouseState.Y >= (splitY - 3)) && (mouseState.Y <= (splitY + 2));
+                }
+
+                if (draggingCenterX) {
+                    splitPoint.X = (float)(mouseState.X - vpStartPoint.X) / (Right - vpStartPoint.X);
+                    splitPoint.X = Math.Clamp(splitPoint.X, 0.01f, 0.99f);
+                    MarkForRerender();
+                }
+                if (draggingCenterY) {
+                    splitPoint.Y = (float)(mouseState.Y - vpStartPoint.Y) / (Bottom - vpStartPoint.Y);
+                    splitPoint.Y = Math.Clamp(splitPoint.Y, 0.01f, 0.99f);
+                    MarkForRerender();
+                }
+
+                foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
+                    GameMain.Instance.SelectedTool?.KeyDown(new ViewportEvent() {
+                        Handled = false,
+                        KeyCode = key
+                    });
+                }
+
+                foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
+                    GameMain.Instance.SelectedTool?.KeyUp(new ViewportEvent() {
+                        Handled = false,
+                        KeyCode = key
+                    });
+                }
+
+                for (int i = 0; i < Viewports.Length; i++) {
+                    if (Viewports[i] == null) { continue; }
+                    bool left = i % 2 == 0;
+                    bool top = i < 2;
+
+                    Viewports[i].X = left ? vpStartPoint.X : splitX + 3;
+                    Viewports[i].Y = top ? vpStartPoint.Y : splitY + 3;
+                    Viewports[i].Width = left ? splitX - vpStartPoint.X - 4 : renderTarget.Width - (splitX - vpStartPoint.X + 3);
+                    Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
+
+                    GameMain.Instance.SelectedTool?.UpdateFrame(Viewports[i], new FrameInfo(0)); //TODO: fix FrameInfo
+
+                    int currMouseX = mouseState.X - Viewports[i].X;
+                    int currMouseY = mouseState.Y - Viewports[i].Y;
+
+                    if (mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
+                        mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
+                        if (Viewports[i].PrevMouseX != currMouseX || Viewports[i].PrevMouseY != currMouseY) {
+                            GameMain.Instance.SelectedTool?.MouseMove(Viewports[i], new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Left,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = Viewports[i].PrevMouseX,
+                                LastY = Viewports[i].PrevMouseY,
+                            });
+                            MarkForRerender();
+                        }
+                        if (!draggingCenterX && !draggingCenterY && draggingViewport < 0) {
+                            if (mouse1Down || mouse3Down) {
+                                draggingViewport = i;
+                            }
+                        }
+
+                        foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
+                            GameMain.Instance.SelectedTool?.KeyDown(Viewports[i], new ViewportEvent() {
+                                Handled = false,
+                                KeyCode = key
+                            });
+                        }
+
+                        foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
+                            GameMain.Instance.SelectedTool?.KeyUp(Viewports[i], new ViewportEvent() {
+                                Handled = false,
+                                KeyCode = key
+                            });
                         }
                     }
 
-                    foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
-                        GameMain.Instance.SelectedTool?.KeyDown(Viewports[i], new ViewportEvent() {
-                            Handled = false,
-                            KeyCode = key
-                        });
-                    }
+                    if (draggingViewport == i) {
+                        if (mouse1Hit) {
+                            GameMain.Instance.SelectedTool?.MouseClick(Viewports[i], new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Left,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = Viewports[i].PrevMouseX,
+                                LastY = Viewports[i].PrevMouseY,
+                                Clicks = 1
+                            });
 
-                    foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
-                        GameMain.Instance.SelectedTool?.KeyUp(Viewports[i], new ViewportEvent() {
-                            Handled = false,
-                            KeyCode = key
-                        });
-                    }
-                }
-
-                if (draggingViewport == i) {
-                    if (mouse1Hit) {
-                        GameMain.Instance.SelectedTool?.MouseClick(Viewports[i], new ViewportEvent() {
-                            Handled = false,
-                            Button = MouseButtons.Left,
-                            X = currMouseX,
-                            Y = currMouseY,
-                            LastX = Viewports[i].PrevMouseX,
-                            LastY = Viewports[i].PrevMouseY,
-                            Clicks = 1
-                        });
-
-                        GameMain.Instance.SelectedTool?.MouseDown(Viewports[i], new ViewportEvent() {
-                            Handled = false,
-                            Button = MouseButtons.Left,
-                            X = currMouseX,
-                            Y = currMouseY,
-                            LastX = Viewports[i].PrevMouseX,
-                            LastY = Viewports[i].PrevMouseY,
-                        });
-                    }
-                    if (mouse3Down) {
-                        if (currMouseX >= 0 && currMouseY >= 0 && currMouseX <= Viewports[i].Width && currMouseY <= Viewports[i].Height) {
-                            if (Viewports[i] is Viewport2D vp) {
-                                MarkForRerender();
-                                vp.Position -= new DataStructures.Geometric.Vector3((decimal)(currMouseX - vp.PrevMouseX) / vp.Zoom, -(decimal)(currMouseY - vp.PrevMouseY) / vp.Zoom, 0m);
+                            GameMain.Instance.SelectedTool?.MouseDown(Viewports[i], new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Left,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = Viewports[i].PrevMouseX,
+                                LastY = Viewports[i].PrevMouseY,
+                            });
+                        }
+                        if (mouse3Down) {
+                            if (currMouseX >= 0 && currMouseY >= 0 && currMouseX <= Viewports[i].Width && currMouseY <= Viewports[i].Height) {
+                                if (Viewports[i] is Viewport2D vp) {
+                                    MarkForRerender();
+                                    vp.Position -= new DataStructures.Geometric.Vector3((decimal)(currMouseX - vp.PrevMouseX) / vp.Zoom, -(decimal)(currMouseY - vp.PrevMouseY) / vp.Zoom, 0m);
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            mouseState = Mouse.GetState();
+                mouseState = Mouse.GetState();
 
-            for (int i = 0; i < Viewports.Length; i++) {
-                if (Viewports[i] == null) { continue; }
+                for (int i = 0; i < Viewports.Length; i++) {
+                    if (Viewports[i] == null) { continue; }
 
-                bool mouseOver = false;
-                if (mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
-                    mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
-                    mouseOver = true;
-                }
-                Viewports[i].PrevMouseOver = mouseOver;
-                Viewports[i].PrevMouseX = mouseState.X - Viewports[i].X;
-                Viewports[i].PrevMouseY = mouseState.Y - Viewports[i].Y;
+                    bool mouseOver = false;
+                    if (mouseState.X > Viewports[i].X && mouseState.Y > Viewports[i].Y &&
+                        mouseState.X < (Viewports[i].X + Viewports[i].Width) && mouseState.Y < (Viewports[i].Y + Viewports[i].Height)) {
+                        mouseOver = true;
+                    }
+                    Viewports[i].PrevMouseOver = mouseOver;
+                    Viewports[i].PrevMouseX = mouseState.X - Viewports[i].X;
+                    Viewports[i].PrevMouseY = mouseState.Y - Viewports[i].Y;
 
-                if (mouseOver && scrollWheelValue != prevScrollWheelValue) {
-                    if (Viewports[i] is Viewport2D vp) {
-                        var pos0 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - Viewports[i].X, mouseState.Y - Viewports[i].Y));
-                        decimal scrollWheelDiff = (scrollWheelValue - prevScrollWheelValue) * 0.001m;
-                        if (scrollWheelDiff > 0m) {
-                            vp.Zoom *= 1.0m + scrollWheelDiff;
-                        } else {
-                            vp.Zoom /= 1.0m - scrollWheelDiff;
+                    if (mouseOver && scrollWheelValue != prevScrollWheelValue) {
+                        if (Viewports[i] is Viewport2D vp) {
+                            var pos0 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - Viewports[i].X, mouseState.Y - Viewports[i].Y));
+                            decimal scrollWheelDiff = (scrollWheelValue - prevScrollWheelValue) * 0.001m;
+                            if (scrollWheelDiff > 0m) {
+                                vp.Zoom *= 1.0m + scrollWheelDiff;
+                            } else {
+                                vp.Zoom /= 1.0m - scrollWheelDiff;
+                            }
+                            var pos1 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - Viewports[i].X, mouseState.Y - Viewports[i].Y));
+                            vp.Position -= new DataStructures.Geometric.Vector3(pos1.X - pos0.X, pos0.Y - pos1.Y, 0m);
+                            MarkForRerender();
                         }
-                        var pos1 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - Viewports[i].X, mouseState.Y - Viewports[i].Y));
-                        vp.Position -= new DataStructures.Geometric.Vector3(pos1.X - pos0.X, pos0.Y - pos1.Y, 0m);
-                        MarkForRerender();
                     }
                 }
             }

@@ -13,6 +13,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Num = System.Numerics;
@@ -213,11 +214,31 @@ namespace CBRE.Editor {
                                                ImGuiWindowFlags.NoScrollbar |
                                                ImGuiWindowFlags.NoScrollWithMouse)) {
                 ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, 47));
-                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47));
-                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47))) {
+                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60));
+                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60))) {
                     SelectedTool?.UpdateGui();
 
                     ImGui.EndChildFrame();
+                }
+                ImGui.End();
+            }
+
+            if (ImGui.Begin("stats", ImGuiWindowFlags.NoBackground |
+                                     ImGuiWindowFlags.NoBringToFrontOnFocus |
+                                     ImGuiWindowFlags.NoMove |
+                                     ImGuiWindowFlags.NoDecoration |
+                                     ImGuiWindowFlags.NoScrollbar |
+                                     ImGuiWindowFlags.NoScrollWithMouse)) {
+                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, Window.ClientBounds.Height - 60));
+                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, 60));
+                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, 60))) {
+                    Process proc = Process.GetCurrentProcess();
+
+                    proc.Refresh();
+                    ImGui.Text($"Working set: {proc.WorkingSet64 / 1024 / 1024} MB");
+                    ImGui.Text($"Private mem: {proc.PrivateMemorySize64 / 1024 / 1024} MB");
+                    ImGui.Text($"Nonpaged mem: {proc.NonpagedSystemMemorySize64 / 1024 / 1024} MB");
+                    ImGui.Text($"Paged mem: {proc.PagedMemorySize64 / 1024 / 1024} MB");
                 }
                 ImGui.End();
             }
