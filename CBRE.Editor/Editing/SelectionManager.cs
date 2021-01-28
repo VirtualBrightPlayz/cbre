@@ -34,7 +34,7 @@ namespace CBRE.Editor.Editing {
         }
 
         public bool IsFaceSelected(Face face) {
-            return SelectedFaces.Contains(face);
+            return SelectedFaces.Contains(face) || SelectedObjects.Any(o => o is Solid s && s.Faces.Contains(face));
         }
 
         public void SwitchToFaceSelection() {
