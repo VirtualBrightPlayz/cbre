@@ -65,11 +65,11 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             }
 
             Matrix rotm;
-            if (viewport.Direction == Viewport2D.ViewDirection.Top) rotm = Matrix.RotationZ(angle);
-            else if (viewport.Direction == Viewport2D.ViewDirection.Front) rotm = Matrix.RotationX(angle);
-            else rotm = Matrix.RotationY(-angle); // The Y axis rotation goes in the reverse direction for whatever reason
+            if (viewport.Direction == Viewport2D.ViewDirection.Top) rotm = Matrix.RotationZ(-angle);
+            else if (viewport.Direction == Viewport2D.ViewDirection.Front) rotm = Matrix.RotationX(-angle);
+            else rotm = Matrix.RotationY(angle); // The Y axis rotation goes in the reverse direction for whatever reason
 
-            var mov = Matrix.Translation(-origin);
+            var mov = Matrix.Translation(origin);
             var rot = mov * rotm;
             return rot * mov.Inverse();
         }

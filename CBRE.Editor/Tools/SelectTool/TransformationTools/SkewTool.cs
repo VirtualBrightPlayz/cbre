@@ -63,21 +63,21 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             switch (viewport.Direction)
             {
                 case Viewport2D.ViewDirection.Top:
-                    if (shearUpDown) shearMatrix[(1 * 4) + 2] = say;
-                    else shearMatrix[(2 * 4) + 1] = sax;
+                    if (shearUpDown) shearMatrix[(1 * 4) + 0] = say;
+                    else shearMatrix[(0 * 4) + 1] = sax;
                     break;
                 case Viewport2D.ViewDirection.Front:
-                    if (shearUpDown) shearMatrix[(2 * 4) + 3] = say;
-                    else shearMatrix[(3 * 4) + 2] = sax;
+                    if (shearUpDown) shearMatrix[(2 * 4) + 1] = say;
+                    else shearMatrix[(1 * 4) + 2] = sax;
                     break;
                 case Viewport2D.ViewDirection.Side:
-                    if (shearUpDown) shearMatrix[(1 * 4) + 3] = say;
-                    else shearMatrix[(3 * 4) + 1] = sax;
+                    if (shearUpDown) shearMatrix[(2 * 4) + 0] = say;
+                    else shearMatrix[(0 * 4) + 2] = sax;
                     break;
             }
 
 
-            var stran = Matrix.Translation(-shearOrigin);
+            var stran = Matrix.Translation(shearOrigin);
             var shear = stran * shearMatrix;
             return shear * stran.Inverse();
         }

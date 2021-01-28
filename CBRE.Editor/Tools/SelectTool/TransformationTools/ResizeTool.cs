@@ -54,7 +54,7 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
                              (state.BoxEnd - state.PreTransformBoxEnd);
                 resize = resize.ComponentDivide(state.PreTransformBoxEnd - state.PreTransformBoxStart);
                 resize += new Vector3(1, 1, 1);
-                var offset = -GetOriginForTransform(viewport, state);
+                var offset = GetOriginForTransform(viewport, state);
                 var trans = Matrix.Translation(offset);
                 var scale = trans * Matrix.Scale(resize);
                 resizeMatrix = scale * trans.Inverse();
