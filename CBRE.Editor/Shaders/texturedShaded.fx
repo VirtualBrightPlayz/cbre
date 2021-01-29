@@ -1,6 +1,7 @@
 float4x4 World;
 float4x4 View;
 float4x4 Projection;
+float4x4 Selection;
 
 Texture2D xTexture;
 sampler TextureSampler : register (s0) = sampler_state { Texture = <xTexture>; };
@@ -31,6 +32,8 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
     VertexShaderOutput output;
     
     float4 worldPosition = mul(input.Position, World);
+    worldPosition = (1.0 - input.Selected) * worldPosition + input.Selected * mul(worldPosition, Selection);
+
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
 

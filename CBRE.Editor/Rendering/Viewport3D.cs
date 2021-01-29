@@ -133,19 +133,11 @@ namespace CBRE.Editor.Rendering {
             var near = new Vector3(x, Height - y, 0);
             var far = new Vector3(x, Height - y, 1);
             
-            var pmXna = Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), Width / (float)Height, 0.1f, 50000);
-            var vmXna = Microsoft.Xna.Framework.Matrix.CreateLookAt(
+            var pm = Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), Width / (float)Height, 0.1f, 50000).ToCbre();
+            var vm = Microsoft.Xna.Framework.Matrix.CreateLookAt(
                 new Microsoft.Xna.Framework.Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z),
                 new Microsoft.Xna.Framework.Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z),
-                Microsoft.Xna.Framework.Vector3.UnitZ);
-            decimal[] pmDec = new decimal[16];
-            decimal[] vmDec = new decimal[16];
-            for (int i = 0; i < 16; i++) {
-                pmDec[i] = (decimal)pmXna[i];
-                vmDec[i] = (decimal)vmXna[i];
-            }
-            var pm = new Matrix(pmDec);
-            var vm = new Matrix(vmDec);
+                Microsoft.Xna.Framework.Vector3.UnitZ).ToCbre();
             var viewport = new[] { 0, 0, Width, Height };
             var un = MathFunctions.Unproject(near, viewport, pm, vm);
             var uf = MathFunctions.Unproject(far, viewport, pm, vm);

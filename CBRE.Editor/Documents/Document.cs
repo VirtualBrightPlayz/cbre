@@ -9,6 +9,7 @@ using CBRE.Editor.History;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.Settings;
 using CBRE.Editor.Tools;
+using CBRE.Graphics;
 using CBRE.Providers.Map;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
@@ -50,6 +51,9 @@ namespace CBRE.Editor.Documents {
             MapFileName = mapFile == null
                               ? DocumentManager.GetUntitledDocumentName()
                               : Path.GetFileName(mapFile);
+
+            ObjectRenderer = new ObjectRenderer(this);
+
             SelectListTransform = Matrix.Identity;
 
             _subscriptions = new DocumentSubscriptions(this);
@@ -72,8 +76,6 @@ namespace CBRE.Editor.Documents {
             Map.PostLoadProcess(GameData, GetTexture, SettingsManager.GetSpecialTextureOpacity);
 
             if (MapFile != null) Mediator.Publish(EditorMediator.FileOpened, MapFile);
-
-            ObjectRenderer = new ObjectRenderer(this);
 
             //TODO: reimplement autosaving
         }
@@ -279,7 +281,13 @@ namespace CBRE.Editor.Documents {
             History.AddHistoryItem(history);
         }
 
-        public Matrix SelectListTransform { get; private set; }
+        public Matrix SelectListTransform {
+            get { return ObjectRenderer.TexturedShaded.Parameters["Selection"].GetValueMatrix().ToCbre(); }
+            set {
+                ObjectRenderer.TexturedShaded.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.SolidShaded.Parameters["Selection"].SetValue(value.ToXna());
+            }
+        }
 
         public void SetSelectListTransform(Matrix matrix) {
             SelectListTransform = matrix;
