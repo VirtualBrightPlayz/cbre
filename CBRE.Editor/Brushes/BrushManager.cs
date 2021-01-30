@@ -4,32 +4,34 @@ using System.Linq;
 
 namespace CBRE.Editor.Brushes {
     public static class BrushManager {
-        public static IBrush CurrentBrush { get; private set; }
+        public static IBrush CurrentBrush { get; set; }
 
-        private static readonly List<IBrush> Brushes;
+        private static readonly List<IBrush> brushes;
+        public static IEnumerable<IBrush> Brushes => brushes;
+
         //private static ComboBox _comboBox;
         public static bool RoundCreatedVertices;
 
         static BrushManager() {
-            Brushes = new List<IBrush>();
+            brushes = new List<IBrush>();
             RoundCreatedVertices = true;
         }
 
         public static void Init() {
-            Brushes.Add(new BlockBrush());
-            Brushes.Add(new TetrahedronBrush());
-            Brushes.Add(new PyramidBrush());
-            Brushes.Add(new WedgeBrush());
-            Brushes.Add(new CylinderBrush());
-            Brushes.Add(new ConeBrush());
-            Brushes.Add(new PipeBrush());
-            Brushes.Add(new ArchBrush());
-            Brushes.Add(new SphereBrush());
-            Brushes.Add(new TorusBrush());
+            brushes.Add(new BlockBrush());
+            brushes.Add(new TetrahedronBrush());
+            brushes.Add(new PyramidBrush());
+            brushes.Add(new WedgeBrush());
+            brushes.Add(new CylinderBrush());
+            brushes.Add(new ConeBrush());
+            brushes.Add(new PipeBrush());
+            brushes.Add(new ArchBrush());
+            brushes.Add(new SphereBrush());
+            brushes.Add(new TorusBrush());
         }
 
         public static void Register(IBrush brush) {
-            Brushes.Add(brush);
+            brushes.Add(brush);
         }
     }
 }

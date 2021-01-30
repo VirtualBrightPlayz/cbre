@@ -16,6 +16,7 @@ namespace CBRE.Editor.Rendering {
         public BasicEffect BasicEffect;
         public Effect TexturedShaded;
         public Effect SolidShaded;
+        public Effect Solid;
         public Document Document;
 
         public struct PointEntityVertex : IVertexType {
@@ -365,6 +366,7 @@ namespace CBRE.Editor.Rendering {
             BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
             TexturedShaded = LoadEffect("Shaders/texturedShaded.mgfx");
             SolidShaded = LoadEffect("Shaders/solidShaded.mgfx");
+            Solid = LoadEffect("Shaders/solid.mgfx");
 
             foreach (Solid solid in doc.Map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
                 solid.Faces.ForEach(f => AddFace(f));
@@ -398,6 +400,7 @@ namespace CBRE.Editor.Rendering {
                 BasicEffect.World = value;
                 TexturedShaded.Parameters["World"].SetValue(value);
                 SolidShaded.Parameters["World"].SetValue(value);
+                Solid.Parameters["World"].SetValue(value);
             }
         }
 
@@ -407,6 +410,7 @@ namespace CBRE.Editor.Rendering {
                 BasicEffect.View = value;
                 TexturedShaded.Parameters["View"].SetValue(value);
                 SolidShaded.Parameters["View"].SetValue(value);
+                Solid.Parameters["View"].SetValue(value);
             }
         }
 
@@ -416,6 +420,7 @@ namespace CBRE.Editor.Rendering {
                 BasicEffect.Projection = value;
                 TexturedShaded.Parameters["Projection"].SetValue(value);
                 SolidShaded.Parameters["Projection"].SetValue(value);
+                Solid.Parameters["Projection"].SetValue(value);
             }
         }
 
@@ -432,10 +437,8 @@ namespace CBRE.Editor.Rendering {
                     kvp.Value.RenderSolid();
                 }
             }
-            BasicEffect.VertexColorEnabled = true;
-            BasicEffect.TextureEnabled = false;
-            BasicEffect.CurrentTechnique.Passes[0].Apply();
-            pointEntityGeometry.RenderWireframe();
+            SolidShaded.CurrentTechnique.Passes[0].Apply();
+            pointEntityGeometry.RenderSolid();
         }
 
         public void RenderSolidUntextured() {
@@ -443,22 +446,15 @@ namespace CBRE.Editor.Rendering {
                 SolidShaded.CurrentTechnique.Passes[0].Apply();
                 kvp.Value.RenderSolid();
             }
-            BasicEffect.VertexColorEnabled = true;
-            BasicEffect.TextureEnabled = false;
-            BasicEffect.CurrentTechnique.Passes[0].Apply();
+            SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
         }
 
         public void RenderWireframe() {
+            Solid.CurrentTechnique.Passes[0].Apply();
             foreach (var kvp in brushGeom) {
-                BasicEffect.VertexColorEnabled = true;
-                BasicEffect.TextureEnabled = false;
-                BasicEffect.CurrentTechnique.Passes[0].Apply();
                 kvp.Value.RenderWireframe();
             }
-            BasicEffect.VertexColorEnabled = true;
-            BasicEffect.TextureEnabled = false;
-            BasicEffect.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderWireframe();
         }
     }

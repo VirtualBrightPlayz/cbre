@@ -287,6 +287,9 @@
     <None Update="Resources\Tool_Zoom.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Shaders\solid.mgfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Shaders\solidShaded.mgfx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

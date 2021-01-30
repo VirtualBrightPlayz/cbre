@@ -286,6 +286,7 @@ namespace CBRE.Editor.Documents {
             set {
                 ObjectRenderer.TexturedShaded.Parameters["Selection"].SetValue(value.ToXna());
                 ObjectRenderer.SolidShaded.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.Solid.Parameters["Selection"].SetValue(value.ToXna());
             }
         }
 

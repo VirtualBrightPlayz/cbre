@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Select = CBRE.Settings.Select;
+using ImGuiNET;
 
 namespace CBRE.Editor.Tools
 {
@@ -61,9 +62,6 @@ namespace CBRE.Editor.Tools
 
         public override void ToolSelected(bool preventHistory)
         {
-            throw new NotImplementedException();
-            /*
-            BrushManager.ValuesChanged += ValuesChanged;
             var sel = Document.Selection.GetSelectedObjects().OfType<Solid>().ToList();
             if (sel.Any())
             {
@@ -72,17 +70,25 @@ namespace CBRE.Editor.Tools
             else if (_lastBox == null)
             {
                 var gs = Document.Map.GridSpacing;
-                _lastBox = new Box(Coordinate.Zero, new Coordinate(gs, gs, gs));
+                _lastBox = new Box(Vector3.Zero, new Vector3(gs, gs, gs));
             }
-            _updatePreview = true;*/
+            _updatePreview = true;
         }
 
         public override void ToolDeselected(bool preventHistory)
         {
-            throw new NotImplementedException();
-            /*
-            BrushManager.ValuesChanged -= ValuesChanged;
-            _updatePreview = false;*/
+            _updatePreview = false;
+        }
+
+        public override void UpdateGui() {
+            if (ImGui.BeginCombo("Brush shape", BrushManager.CurrentBrush?.Name ?? "<none>")) {
+                foreach (var brush in BrushManager.Brushes) {
+                    if (ImGui.Selectable(brush.Name)) {
+                        BrushManager.CurrentBrush = brush;
+                        _updatePreview = true;
+                    }
+                }
+            }
         }
 
         private void ValuesChanged(IBrush brush)
@@ -96,14 +102,14 @@ namespace CBRE.Editor.Tools
             base.OnBoxChanged();
         }
 
-        /*protected override void LeftMouseDownToDraw(Viewport2D viewport, ViewportEvent e)
+        protected override void LeftMouseDownToDraw(Viewport2D viewport, ViewportEvent e)
         {
             base.LeftMouseDownToDraw(viewport, e);
             if (_lastBox == null) return;
             State.BoxStart += viewport.GetUnusedCoordinate(_lastBox.Start);
             State.BoxEnd += viewport.GetUnusedCoordinate(_lastBox.End);
             _updatePreview = true;
-        }*/
+        }
 
         private void CreateBrush(Box bounds)
         {
