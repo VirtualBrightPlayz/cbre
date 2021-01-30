@@ -14,6 +14,8 @@ using System.Drawing;
 using System.Linq;
 using Select = CBRE.Settings.Select;
 using ImGuiNET;
+using CBRE.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Tools
 {
@@ -91,15 +93,15 @@ namespace CBRE.Editor.Tools
             }
         }
 
-        private void ValuesChanged(IBrush brush)
-        {
-            if (BrushManager.CurrentBrush == brush) _updatePreview = true;
-        }
-
         protected override void OnBoxChanged()
         {
             _updatePreview = true;
             base.OnBoxChanged();
+        }
+
+        public override void MouseDown(ViewportBase viewport, ViewportEvent e) {
+            if (BrushManager.CurrentBrush == null) return;
+            base.MouseDown(viewport, e);
         }
 
         protected override void LeftMouseDownToDraw(Viewport2D viewport, ViewportEvent e)
@@ -218,32 +220,32 @@ namespace CBRE.Editor.Tools
         protected override void Render2D(Viewport2D viewport)
         {
             base.Render2D(viewport);
-            throw new NotImplementedException();
-            /*if (ShouldDrawBox(viewport) && _preview != null)
+            if (ShouldDrawBox(viewport) && _preview != null)
             {
-                GL.Color3(GetRenderColour());
-                Graphics.Helpers.Matrix.Push();
+                PrimitiveDrawing.Begin(PrimitiveType.LineList);
+                PrimitiveDrawing.SetColor(GetRenderColour());
                 var matrix = viewport.GetModelViewMatrix();
-                GL.MultMatrix(ref matrix);
-                MapObjectRenderer.DrawWireframe(_preview, true, false);
-                Graphics.Helpers.Matrix.Pop();
-            }*/
+                PrimitiveDrawing.FacesWireframe(_preview, matrix.ToCbre());
+                PrimitiveDrawing.End();
+            }
         }
 
         protected override void Render3D(Viewport3D viewport)
         {
             base.Render3D(viewport);
-            throw new NotImplementedException();
-            /*if (ShouldDraw3DBox() && _preview != null)
-            {
-                GL.Disable(EnableCap.CullFace);
-                TextureHelper.Unbind();
-                if (viewport.Type != Viewport3D.ViewType.Flat) MapObjectRenderer.EnableLighting();
-                MapObjectRenderer.DrawFilled(_preview, GetRenderColour(), false);
-                MapObjectRenderer.DisableLighting();
-                GL.Color4(Color.GreenYellow);
-                MapObjectRenderer.DrawWireframe(_preview, true, false);
-            }*/
+            if (ShouldDraw3DBox() && _preview != null) {
+                var matrix = viewport.GetModelViewMatrix();
+
+                PrimitiveDrawing.Begin(PrimitiveType.TriangleList);
+                PrimitiveDrawing.SetColor(GetRenderColour());
+                PrimitiveDrawing.FacesSolid(_preview, matrix.ToCbre());
+                PrimitiveDrawing.End();
+
+                PrimitiveDrawing.Begin(PrimitiveType.LineList);
+                PrimitiveDrawing.SetColor(GetRenderColour());
+                PrimitiveDrawing.FacesWireframe(_preview, matrix.ToCbre());
+                PrimitiveDrawing.End();
+            }
         }
 
         private static void CollectFaces(List<Face> faces, IEnumerable<MapObject> list)

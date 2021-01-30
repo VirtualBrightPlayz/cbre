@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using CBRE.DataStructures.MapObjects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -78,6 +79,27 @@ namespace CBRE.Graphics {
                 double cx = Math.Cos(((double)i + 0.5f) * Math.PI * 2.0 / 4.0) * radius;
                 double cy = Math.Sin(((double)i + 0.5f) * Math.PI * 2.0 / 4.0) * radius;
                 Vertex3(position.DX + cx, position.DY + cy, position.DZ);
+            }
+        }
+
+        public static void FacesWireframe(IEnumerable<Face> faces, CBRE.DataStructures.Geometric.Matrix m = null) {
+            var matrix = m ?? CBRE.DataStructures.Geometric.Matrix.Identity;
+            foreach (var face in faces) {
+                foreach (var edge in face.GetEdges()) {
+                    Vertex3(edge.Start * matrix);
+                    Vertex3(edge.End * matrix);
+                }
+            }
+        }
+
+        public static void FacesSolid(IEnumerable<Face> faces, CBRE.DataStructures.Geometric.Matrix m = null) {
+            var matrix = m ?? CBRE.DataStructures.Geometric.Matrix.Identity;
+            foreach (var face in faces) {
+                foreach (var tri in face.GetTriangles()) {
+                    Vertex3(tri[0].Location * matrix);
+                    Vertex3(tri[1].Location * matrix);
+                    Vertex3(tri[2].Location * matrix);
+                }
             }
         }
 

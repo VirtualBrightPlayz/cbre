@@ -1,4 +1,4 @@
-using CBRE.Common.Mediator;
+﻿using CBRE.Common.Mediator;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Actions.MapObjects.Operations.EditOperations;
 using CBRE.Editor.Documents;
@@ -176,6 +176,12 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             // Create
             _createdIds = _objectsToCreate.Select(x => x.MapObject.ID).ToList();
             _objectsToCreate.ForEach(x => x.MapObject.SetParent(document.Map.WorldSpawn.FindByID(x.ParentID)));
+
+            foreach (var solid in _objectsToCreate.Where(o => o.MapObject is Solid).Select(o => o.MapObject as Solid)) {
+                foreach (var face in solid.Faces) {
+                    document.ObjectRenderer.AddFace(face);
+                }
+            }
 
             // Select objects if IsSelected is true
             var sel = _objectsToCreate.Where(x => x.IsSelected).ToList();

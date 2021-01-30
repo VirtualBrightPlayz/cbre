@@ -427,15 +427,13 @@ namespace CBRE.Editor.Rendering {
         public void RenderTextured() {
             foreach (var kvp in brushGeom) {
                 TextureItem item = TextureProvider.GetItem(kvp.Key);
-                if (item != null) {
-                    if (item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
-                        TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
-                        TexturedShaded.CurrentTechnique.Passes[0].Apply();
-                    } else {
-                        SolidShaded.CurrentTechnique.Passes[0].Apply();
-                    }
-                    kvp.Value.RenderSolid();
+                if (item != null && item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
+                    TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
+                    TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                } else {
+                    SolidShaded.CurrentTechnique.Passes[0].Apply();
                 }
+                kvp.Value.RenderSolid();
             }
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();

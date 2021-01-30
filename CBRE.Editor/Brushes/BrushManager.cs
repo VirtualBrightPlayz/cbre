@@ -15,6 +15,7 @@ namespace CBRE.Editor.Brushes {
         static BrushManager() {
             brushes = new List<IBrush>();
             RoundCreatedVertices = true;
+            Init();
         }
 
         public static void Init() {
