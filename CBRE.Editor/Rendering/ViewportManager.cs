@@ -317,6 +317,36 @@ namespace CBRE.Editor.Rendering {
                                 KeyCode = key
                             });
                         }
+
+                        if (Viewports[i] is Viewport3D vp3d) {
+                            bool shiftDown = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
+                            bool mustRerender = false;
+                            if (keyboardState.IsKeyDown(Keys.A)) {
+                                vp3d.Camera.Strafe(-5m - (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+                            if (keyboardState.IsKeyDown(Keys.D)) {
+                                vp3d.Camera.Strafe(5m + (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+                            if (keyboardState.IsKeyDown(Keys.W)) {
+                                vp3d.Camera.Advance(5m + (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+                            if (keyboardState.IsKeyDown(Keys.S)) {
+                                vp3d.Camera.Advance(-5m - (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+                            if (mustRerender) {
+                                var map = Documents.DocumentManager.CurrentDocument.Map;
+                                if (map.ActiveCamera == null) { map.ActiveCamera = map.Cameras.FirstOrDefault(); }
+                                if (map.ActiveCamera != null) {
+                                    map.ActiveCamera.EyePosition = vp3d.Camera.EyePosition;
+                                    map.ActiveCamera.LookPosition = vp3d.Camera.LookPosition;
+                                }
+                                MarkForRerender();
+                            }
+                        }
                     }
 
                     if (draggingViewport == i) {
@@ -427,17 +457,25 @@ namespace CBRE.Editor.Rendering {
             basicEffect.CurrentTechnique.Passes[0].Apply();
             GlobalGraphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, backgroundVertices, 0, 12, backgroundIndices, 0, 6);
 
+            void resetBasicEffect(ViewportBase viewport) {
+                basicEffect.Projection = viewport.GetViewportMatrix();
+                basicEffect.View = viewport.GetCameraMatrix();
+                basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
+                basicEffect.CurrentTechnique.Passes[0].Apply();
+            };
+
             for (int i=0;i<Viewports.Length;i++) {
                 if (Viewports[i] == null) { continue; }
 
                 GlobalGraphics.GraphicsDevice.Viewport = new Viewport(Viewports[i].X - vpStartPoint.X, Viewports[i].Y - vpStartPoint.Y, Viewports[i].Width, Viewports[i].Height);
 
-                Viewports[i].Render();
-                basicEffect.Projection = Viewports[i].GetViewportMatrix();
-                basicEffect.View = Viewports[i].GetCameraMatrix();
-                basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
-                basicEffect.CurrentTechnique.Passes[0].Apply();
+                resetBasicEffect(Viewports[i]);
+
                 Viewports[i].DrawGrid();
+                Viewports[i].Render();
+
+                resetBasicEffect(Viewports[i]);
+
                 GlobalGraphics.GraphicsDevice.DepthStencilState = Viewports[i] is Viewport3D ? DepthStencilState.Default : DepthStencilState.None;
                 GameMain.Instance.SelectedTool?.Render(Viewports[i]);
             } 

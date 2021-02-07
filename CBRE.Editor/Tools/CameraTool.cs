@@ -33,13 +33,11 @@ namespace CBRE.Editor.Tools
         }
 
         private State _state;
-        private MoveFlags _moveFlags;
         private Camera _stateCamera;
 
         public override void ToolSelected(bool preventHistory)
         {
             _state = State.None;
-            _moveFlags = MoveFlags.None;
             Mediator.Subscribe(HotkeysMediator.CameraNext, this);
             Mediator.Subscribe(HotkeysMediator.CameraPrevious, this);
         }
@@ -104,9 +102,9 @@ namespace CBRE.Editor.Tools
             return Tuple.Create(pos, pos + dir);
         }
 
-        private void SetViewportCamera(Vector3 position, Vector3 look)
+        private void SetViewportCamera(Vector3 position, Vector3 look, Camera cam = null)
         {
-            var cam = ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();
+            cam ??= ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();
             if (cam == null) return;
 
             look = (look - position).Normalise() + position;
@@ -209,7 +207,6 @@ namespace CBRE.Editor.Tools
         public override void MouseMove(ViewportBase viewport, ViewportEvent e)
         {
             if (viewport is Viewport2D vp) {
-                _moveFlags = MoveFlags.None;
                 var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
                 var cursor = MouseCursor.Arrow;
 
@@ -223,14 +220,14 @@ namespace CBRE.Editor.Tools
                         var newEye = vp.GetUnusedCoordinate(_stateCamera.EyePosition) + p;
                         if (ViewportManager.Ctrl) _stateCamera.LookPosition += (newEye - _stateCamera.EyePosition);
                         _stateCamera.EyePosition = newEye;
-                        SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
+                        if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
                         break;
                     case State.MovingLook:
                         if (_stateCamera == null) break;
                         var newLook = vp.GetUnusedCoordinate(_stateCamera.LookPosition) + p;
                         if (ViewportManager.Ctrl) _stateCamera.EyePosition += (newLook - _stateCamera.LookPosition);
                         _stateCamera.LookPosition = newLook;
-                        SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition);
+                        if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
                         break;
                 }
                 vp.Cursor = cursor;
@@ -262,7 +259,7 @@ namespace CBRE.Editor.Tools
                 }
                 
                 ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
-                SetViewportCamera(camera.EyePosition, camera.LookPosition);
+                SetViewportCamera(camera.EyePosition, camera.LookPosition, vp3d.Camera);
             }
 
         }
@@ -280,42 +277,15 @@ namespace CBRE.Editor.Tools
         }
 
         public override void KeyDown(ViewportEvent e) {
-            var moveFlags = MoveFlags.None;
-            if (e.KeyCode == Keys.A) { moveFlags |= MoveFlags.Left; }
-            if (e.KeyCode == Keys.D) { moveFlags |= MoveFlags.Right; }
-            if (e.KeyCode == Keys.W) { moveFlags |= MoveFlags.Up; }
-            if (e.KeyCode == Keys.S) { moveFlags |= MoveFlags.Down; }
-            _moveFlags |= moveFlags;
+            //
         }
 
         public override void KeyUp(ViewportEvent e) {
-            var moveFlags = MoveFlags.None;
-            if (e.KeyCode == Keys.A) { moveFlags |= MoveFlags.Left; }
-            if (e.KeyCode == Keys.D) { moveFlags |= MoveFlags.Right; }
-            if (e.KeyCode == Keys.W) { moveFlags |= MoveFlags.Up; }
-            if (e.KeyCode == Keys.S) { moveFlags |= MoveFlags.Down; }
-            _moveFlags &= ~moveFlags;
+            //
         }
 
-        public override void Update()
-        {
-            var camera = GetCameras().FirstOrDefault();
-            if (_moveFlags.HasFlag(MoveFlags.Left)) {
-                camera.Strafe(-5m);
-            }
-            if (_moveFlags.HasFlag(MoveFlags.Right)) {
-                camera.Strafe(5m);
-            }
-            if (_moveFlags.HasFlag(MoveFlags.Up)) {
-                camera.Advance(5m);
-            }
-            if (_moveFlags.HasFlag(MoveFlags.Down)) {
-                camera.Advance(-5m);
-            }
-            if (_moveFlags != MoveFlags.None) {
-                SetViewportCamera(camera.EyePosition, camera.LookPosition);
-                ViewportManager.MarkForRerender();
-            }
+        public override void Update() {
+            //
         }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame) {
@@ -362,7 +332,7 @@ namespace CBRE.Editor.Tools
                 // Position circle
                 PrimitiveDrawing.Begin(PrimitiveType.TriangleFan);
                 PrimitiveDrawing.SetColor(camera == Document.Map.ActiveCamera ? Color.DarkOrange : Color.LawnGreen);
-                PrimitiveDrawing.Circle(new Vector3(p1.X, p1.Y, (decimal)z), 4);
+                PrimitiveDrawing.Circle(new Vector3(p1.X, p1.Y, (decimal)z), (double)(4m / vp.Zoom));
                 PrimitiveDrawing.End();
             }
             foreach (var camera in cams)
@@ -397,7 +367,7 @@ namespace CBRE.Editor.Tools
                 var cp = new Vector3(-dir.Y, dir.X, 0).Normalise();
 
                 PrimitiveDrawing.SetColor(Color.Black);
-                PrimitiveDrawing.Circle(new Vector3(p1.X, p1.Y, (decimal)z), 4);
+                PrimitiveDrawing.Circle(new Vector3(p1.X, p1.Y, (decimal)z), (double)(4m / vp.Zoom));
                 Coord(p2 + dir * 1.5m * multiplier);
                 Coord(p2 - (dir + cp) * multiplier);
                 Coord(p2 - (dir + cp) * multiplier);
