@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using CBRE.DataStructures.Models;
+using CBRE.Editor.Documents;
 using CBRE.Graphics;
 using ImGuiNET;
 using Num = System.Numerics;
@@ -15,7 +16,7 @@ namespace CBRE.Editor {
 
             TopBarItems.Add(new TopBarItem("New", MenuTextures["Menu_New"]));
             TopBarItems.Add(new TopBarItem("Open", MenuTextures["Menu_Open"]));
-            TopBarItems.Add(new TopBarItem("Close", MenuTextures["Menu_Close"]));
+            TopBarItems.Add(new TopBarItem("Close", MenuTextures["Menu_Close"], action: Top_Close));
             TopBarItems.Add(new TopBarItem("Save", MenuTextures["Menu_Save"]));
             TopBarItems.Add(new TopBarItem("Export / Lightmap", MenuTextures["Menu_ExportRmesh"]));
             TopBarItems.Add(new TopBarSeparator());
@@ -53,6 +54,22 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem("Options", MenuTextures["Menu_Options"]));
         }
+    
+        #region Actions
+
+        private void Top_Close() {
+            new PopupGame("Yes", "maybe");
+            return;
+            if (DocumentManager.CurrentDocument.SaveFile())
+            {
+                DocumentManager.CurrentDocument.Close();
+            }
+            else
+            {
+            }
+        }
+
+        #endregion
 
         private void UpdateTopBar() {
             ImGui.SetCursorPos(new Num.Vector2(0, 19));

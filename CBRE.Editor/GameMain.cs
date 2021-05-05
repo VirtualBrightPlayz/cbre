@@ -39,6 +39,8 @@ namespace CBRE.Editor {
             }
         }
 
+        public List<PopupGame> Popups { get; private set; } = new List<PopupGame>();
+
         public GameMain()
         {
             Instance = this;
@@ -240,6 +242,15 @@ namespace CBRE.Editor {
                     ImGui.Text($"Paged mem: {proc.PagedMemorySize64 / 1024 / 1024} MB");
                 }
                 ImGui.End();
+            }
+
+            for (int i = 0; i < Popups.Count; i++)
+            {
+                if (!Popups[i].Draw())
+                {
+                    Popups[i].Close();
+                    i--;
+                }
             }
         }
 	}
