@@ -1,3 +1,9 @@
+## This is a fork
+
+### Why fork?
+
+I wanted a room editor for a game I'm working on based off SCP - Containment Breach, and also to modernize cbre.
+
 Containment Breach Room Editor
 ======
 
