@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using CBRE.DataStructures.Models;
 using CBRE.Editor.Documents;
+using CBRE.Editor.Popup;
 using CBRE.Graphics;
 using ImGuiNET;
 using Num = System.Numerics;
@@ -58,15 +60,7 @@ namespace CBRE.Editor {
         #region Actions
 
         private void Top_Close() {
-            new PopupGame("Yes", "maybe");
-            return;
-            if (DocumentManager.CurrentDocument.SaveFile())
-            {
-                DocumentManager.CurrentDocument.Close();
-            }
-            else
-            {
-            }
+            new SavePopup("Warning", $"You have changes. Save {Path.GetFileName(DocumentManager.CurrentDocument.MapFile)}?", Directory.GetCurrentDirectory(), DocumentManager.CurrentDocument.Map);
         }
 
         #endregion

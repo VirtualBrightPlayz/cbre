@@ -18,30 +18,25 @@ using System.IO;
 using System.Linq;
 using Num = System.Numerics;
 
-namespace CBRE.Editor {
-    partial class PopupGame
+namespace CBRE.Editor.Popup {
+    public class PopupGame
     {
         private string _title;
-        private string _message;
-        private string _icon;
 
-        public enum PopupButtonType {
-            Ok,
-            YesNo,
-        }
-
-        public PopupGame(string title, string message, string icon = "")
+        public PopupGame(string title)
         {
             _title = title;
-            _message = message;
-            _icon = icon;
             GameMain.Instance.Popups.Add(this);
         }
 
         public bool Draw()
         {
-            // Draw our UI
-            return ImGuiLayout();
+            if (ImGui.Begin(_title, ImGuiWindowFlags.NoCollapse)) {
+                bool shouldBeOpen = ImGuiLayout();
+                ImGui.End();
+                return shouldBeOpen;
+            }
+            return false;
         }
 
         public virtual void Close() {
@@ -49,13 +44,8 @@ namespace CBRE.Editor {
         }
 
         protected virtual bool ImGuiLayout() {
-            if (ImGui.Begin(_title)) {
-                ImGui.Text(_message);
-                if (ImGui.Button("OK")) {
-                    return false;
-                    // Close();
-                }
-                ImGui.End();
+            if (ImGui.Button("OK")) {
+                return false;
             }
             return true;
         }

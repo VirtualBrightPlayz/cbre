@@ -1,6 +1,7 @@
 ﻿using CBRE.Common;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
+using CBRE.Editor.Popup;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.Tools;
 using CBRE.Graphics;

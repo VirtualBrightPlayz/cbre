@@ -10,6 +10,7 @@ using CBRE.Editor.Rendering;
 using CBRE.Editor.Settings;
 using CBRE.Editor.Tools;
 using CBRE.Graphics;
+using CBRE.Providers;
 using CBRE.Providers.Map;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
@@ -127,6 +128,9 @@ namespace CBRE.Editor.Documents {
                         break;
                     }
                 }
+            }
+
+            if (path == null) {
             }
 
             throw new NotImplementedException();
