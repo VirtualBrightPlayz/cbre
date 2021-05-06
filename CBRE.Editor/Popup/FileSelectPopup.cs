@@ -83,7 +83,12 @@ namespace CBRE.Editor.Popup {
             if (ImGui.InputText("File Name", ref tmp, 1024)) {
                 FileName = Path.Combine(_path, tmp);
             }
+            return ImGuiButtons();
+        }
+
+        protected virtual bool ImGuiButtons() {
             if (ImGui.Button("Cancel")) {
+                FileSelected(string.Empty);
                 return false;
             }
             ImGui.SameLine();
@@ -92,6 +97,7 @@ namespace CBRE.Editor.Popup {
                 return false;
             }
             return true;
+
         }
 
         protected virtual void FileSelected(string file)

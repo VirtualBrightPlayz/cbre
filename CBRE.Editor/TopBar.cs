@@ -73,19 +73,19 @@ namespace CBRE.Editor {
         public static void Top_Close() {
             Document _document = DocumentManager.CurrentDocument;
             if (_document.History.TotalActionsSinceLastSave > 0) {
-                new SaveMap("", _document.Map);
+                new SaveMap("", _document, true);
             }
             else {
                 DocumentManager.Remove(_document);
                 if (DocumentManager.Documents.Count == 0) {
-                    DocumentManager.AddAndSwitch(new Document("new", new DataStructures.MapObjects.Map()));
+                    DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
                 }
             }
         }
 
         public static void Top_Save() {
             if (DocumentManager.CurrentDocument != null)
-                new SaveMap("", DocumentManager.CurrentDocument.Map);
+                new SaveMap("", DocumentManager.CurrentDocument, false);
         }
 
         #endregion

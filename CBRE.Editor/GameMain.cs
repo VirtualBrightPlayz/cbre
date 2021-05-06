@@ -107,7 +107,7 @@ namespace CBRE.Editor {
             MapProvider.Register(new MapFormatProvider());
             MapProvider.Register(new L3DWProvider());
 
-            DocumentManager.AddAndSwitch(new Document("new", new DataStructures.MapObjects.Map()));
+            DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
             /*Map map = MapProvider.GetMapFromFile("gateA.3dw");
             Map map2 = MapProvider.GetMapFromFile("room2_2.3dw");
             DocumentManager.AddAndSwitch(new Document("gateA.3dw", map));
@@ -136,8 +136,11 @@ namespace CBRE.Editor {
             if (PopupSelected && Popups.Count == 0)
                 PopupSelected = false;
 
-            if (!PopupSelected)
+            if (!PopupSelected) {
+                for (int i = 0; i < Menus.Count; i++)
+                    Menus[i].Update();
                 timing.PerformTicks(ViewportManager.Update);
+            }
             timing.EndMeasurement();
         }
 

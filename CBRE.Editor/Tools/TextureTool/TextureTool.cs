@@ -18,6 +18,7 @@ using ImGuiNET;
 using CBRE.Graphics;
 using Num = System.Numerics;
 using Microsoft.Xna.Framework.Graphics;
+using CBRE.Editor.Popup;
 
 namespace CBRE.Editor.Tools.TextureTool {
     public class TextureTool : BaseTool {
@@ -54,8 +55,8 @@ namespace CBRE.Editor.Tools.TextureTool {
         // private TexturePopupUI texturePopup;
         private AsyncTexture _texture;
         private bool _showOffset = false;
-        private SelectBehaviour _leftCombo;
-        private SelectBehaviour _rightCombo;
+        private SelectBehaviour _leftCombo = SelectBehaviour.Select;
+        private SelectBehaviour _rightCombo = SelectBehaviour.ApplyWithValues;
 
         public TextureTool() {
             Usage = ToolUsage.View3D;
@@ -98,7 +99,9 @@ namespace CBRE.Editor.Tools.TextureTool {
             ImGui.Checkbox("Show 2D Offset", ref _showOffset);
             ImGui.NewLine();
             if (_texture.ImGuiTexture != IntPtr.Zero) {
-                ImGui.Image(_texture.ImGuiTexture, new Num.Vector2(100f, 100f));
+                if (ImGui.ImageButton(_texture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
+                    new TexturePopupUI(t => _texture = t);
+                }
             }
             ImGui.EndChild();
         }

@@ -27,6 +27,7 @@ using Path = System.IO.Path;
 
 namespace CBRE.Editor.Documents {
     public class Document {
+        public const string NewDocumentName = "new";
         public string MapFile { get; set; }
         public string MapFileName { get; set; }
         public Map Map { get; set; }
