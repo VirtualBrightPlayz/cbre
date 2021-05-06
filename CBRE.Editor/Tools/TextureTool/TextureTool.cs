@@ -50,10 +50,20 @@ namespace CBRE.Editor.Tools.TextureTool {
 
         #endregion
 
+        public struct TextureData {
+            public AsyncTexture AsyncTexture;
+            public TextureItem Texture;
+
+            public TextureData(AsyncTexture asyncTexture, TextureItem texture) {
+                AsyncTexture = asyncTexture;
+                Texture = texture;
+            }
+        }
+
         //private readonly TextureApplicationForm _form;
         //private readonly TextureToolSidebarPanel _sidebarPanel;
         // private TexturePopupUI texturePopup;
-        private AsyncTexture _texture;
+        private TextureData _texture;
         private bool _showOffset = false;
         private SelectBehaviour _leftCombo = SelectBehaviour.Select;
         private SelectBehaviour _rightCombo = SelectBehaviour.ApplyWithValues;
@@ -98,10 +108,16 @@ namespace CBRE.Editor.Tools.TextureTool {
             ImGui.NewLine();
             ImGui.Checkbox("Show 2D Offset", ref _showOffset);
             ImGui.NewLine();
-            if (_texture.ImGuiTexture != IntPtr.Zero) {
-                if (ImGui.ImageButton(_texture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
-                    new TexturePopupUI(t => _texture = t);
+            if (_texture.AsyncTexture.ImGuiTexture != IntPtr.Zero) {
+                if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
+                    new TexturePopupUI(t => {
+                        _texture = t;
+                        TextureChanged(this, t.Texture);
+                    });
                 }
+            }
+            if (ImGui.Button("Apply")) {
+                TextureApplied(this, _texture.Texture);
             }
             ImGui.EndChild();
         }
@@ -171,9 +187,11 @@ namespace CBRE.Editor.Tools.TextureTool {
         private void TextureApplied(object sender, TextureItem texture) {
             var ti = texture.Texture;
             Action<Document, Face> action = (document, face) => {
+                document.ObjectRenderer.RemoveFace(face);
                 face.Texture.Name = texture.Name;
                 face.Texture.Texture = ti;
                 face.CalculateTextureCoordinates(false);
+                document.ObjectRenderer.AddFace(face);
             };
             // When the texture changes, the entire list needs to be regenerated, can't do a partial update.
             Document.PerformAction("Apply texture", new EditFace(Document.Selection.GetSelectedFaces(), action, true));
@@ -233,8 +251,9 @@ namespace CBRE.Editor.Tools.TextureTool {
         }*/
 
         public override void ToolSelected(bool preventHistory) {
-            _texture = GameMain.MenuTextures["Menu_Close"];
-            _texture = new AsyncTexture(TextureProvider.Packages.First().Items.First().Value.Filename);
+            // _texture = GameMain.MenuTextures["Menu_Close"];
+            var tmptex = TextureProvider.GetItem("tooltextures/remove_face");
+            _texture = new TextureData(tmptex.Texture as AsyncTexture, tmptex);
 
             if (!preventHistory) {
                 Document.History.AddHistoryItem(new HistoryAction("Switch selection mode", new ChangeToFaceSelectionMode(GetType(), Document.Selection.GetSelectedObjects())));
@@ -300,9 +319,9 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         private void TextureSelected(TextureItem texture) {
-            if (texture == null)
-                return;
-            _texture = new AsyncTexture(texture.Filename);
+            // if (texture == null)
+                // return;
+            _texture = new TextureData(texture.Texture as AsyncTexture, texture);
             /*_form.SelectTexture(texture);*/
         }
 
@@ -351,7 +370,7 @@ namespace CBRE.Editor.Tools.TextureTool {
 
             Action lift = () => {
                 if (firstClicked == null) return;
-                var itemToSelect = Document.GetTexture(firstClicked.Texture.Name);
+                var itemToSelect = TextureProvider.GetItem(firstClicked.Texture.Name);
                                    //?? new TextureItem(null, firstClicked.Texture.Name, TextureFlags.Missing, 64, 64);
                 Mediator.Publish(EditorMediator.TextureSelected, itemToSelect);
             };

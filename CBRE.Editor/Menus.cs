@@ -25,8 +25,8 @@ namespace CBRE.Editor {
                 new MenuSeparator(),
                 new MenuItem("Exit", "", action: Exit)));
             Menus.Add(new Menu("Edit",
-                new MenuItem("Undo", "Ctrl+Z", MenuTextures["Menu_Undo"]),
-                new MenuItem("Redo", "Ctrl+Y", MenuTextures["Menu_Redo"]),
+                new MenuItem("Undo", "Ctrl+Z", MenuTextures["Menu_Undo"], action: Top_Undo),
+                new MenuItem("Redo", "Ctrl+Y", MenuTextures["Menu_Redo"], action: Top_Redo),
                 new MenuSeparator(),
                 new MenuItem("Cut", "Ctrl+X", MenuTextures["Menu_Cut"]),
                 new MenuItem("Copy", "Ctrl+C", MenuTextures["Menu_Copy"]),
@@ -99,7 +99,7 @@ namespace CBRE.Editor {
                     new MenuItem("Y Axis", ""),
                     new MenuItem("Z Axis", "")),
                 new MenuSeparator(),
-                new MenuItem("Options...", "", MenuTextures["Menu_Options"])));
+                new MenuItem("Options...", "", MenuTextures["Menu_Options"], action: Top_Options)));
             Menus.Add(new Menu("Layout",
                 new MenuItem("Create New Layout Window", "", MenuTextures["Menu_NewWindow"]),
                 new MenuItem("Layout Window Settings...", "", MenuTextures["Menu_WindowSettings"])));

@@ -23,8 +23,8 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem("Save", MenuTextures["Menu_Save"], action: Top_Save));
             TopBarItems.Add(new TopBarItem("Export / Lightmap", MenuTextures["Menu_ExportRmesh"]));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Undo", MenuTextures["Menu_Undo"]));
-            TopBarItems.Add(new TopBarItem("Redo", MenuTextures["Menu_Redo"]));
+            TopBarItems.Add(new TopBarItem("Undo", MenuTextures["Menu_Undo"], action: Top_Undo));
+            TopBarItems.Add(new TopBarItem("Redo", MenuTextures["Menu_Redo"], action: Top_Redo));
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem("Cut", MenuTextures["Menu_Cut"]));
             TopBarItems.Add(new TopBarItem("Copy", MenuTextures["Menu_Copy"]));
@@ -55,7 +55,7 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem("Group", MenuTextures["Menu_Group"]));
             TopBarItems.Add(new TopBarItem("Ungroup", MenuTextures["Menu_Ungroup"]));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Options", MenuTextures["Menu_Options"]));
+            TopBarItems.Add(new TopBarItem("Options", MenuTextures["Menu_Options"], action: Top_Options));
         }
     
         #region Actions
@@ -86,6 +86,24 @@ namespace CBRE.Editor {
         public static void Top_Save() {
             if (DocumentManager.CurrentDocument != null)
                 new SaveMap("", DocumentManager.CurrentDocument, false);
+        }
+
+        public static void Top_Undo() {
+            var doc = DocumentManager.CurrentDocument;
+            if (doc != null) {
+                doc.History.Undo();
+            }
+        }
+
+        public static void Top_Redo() {
+            var doc = DocumentManager.CurrentDocument;
+            if (doc != null) {
+                doc.History.Redo();
+            }
+        }
+
+        public static void Top_Options() {
+            new SettingsPopup("Options");
         }
 
         #endregion

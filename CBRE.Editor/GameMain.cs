@@ -118,6 +118,11 @@ namespace CBRE.Editor {
             base.Initialize();
         }
 
+        protected override void OnExiting(object sender, EventArgs args) {
+            SettingsManager.Write();
+            base.OnExiting(sender, args);
+        }
+
         private AsyncTexture LoadTexture(string filename) {
             return new AsyncTexture(filename);
         }
