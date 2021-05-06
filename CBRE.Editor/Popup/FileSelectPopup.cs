@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using ImGuiNET;
 using Num = System.Numerics;
 
@@ -59,7 +60,7 @@ namespace CBRE.Editor.Popup {
             string[] files = Directory.GetFiles(_path);
 
             for (int i = 0; i < files.Length; i++) {
-                if (ImGui.Selectable(Path.GetFileNameWithoutExtension(files[i]), false, ImGuiSelectableFlags.SpanAllColumns)) {
+                if (ImGui.Selectable(Path.GetFileNameWithoutExtension(files[i]), FileName == files[i], ImGuiSelectableFlags.SpanAllColumns)) {
                     FileName = files[i];
                 }
                 bool hovered = ImGui.IsItemHovered();
@@ -75,6 +76,10 @@ namespace CBRE.Editor.Popup {
             ImGui.NewLine();
             ImGui.Text(Filter);
             ImGui.Text(FileName);
+            string tmp = FileName;
+            if (ImGui.InputText("File Name", ref tmp, 1024)) {
+                FileName = Path.Combine(_path, tmp);
+            }
             if (ImGui.Button("Cancel")) {
                 return false;
             }

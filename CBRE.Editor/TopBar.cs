@@ -20,7 +20,7 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem("New", MenuTextures["Menu_New"], action: Top_New));
             TopBarItems.Add(new TopBarItem("Open", MenuTextures["Menu_Open"], action: Top_Open));
             TopBarItems.Add(new TopBarItem("Close", MenuTextures["Menu_Close"], action: Top_Close));
-            TopBarItems.Add(new TopBarItem("Save", MenuTextures["Menu_Save"]));
+            TopBarItems.Add(new TopBarItem("Save", MenuTextures["Menu_Save"], action: Top_Save));
             TopBarItems.Add(new TopBarItem("Export / Lightmap", MenuTextures["Menu_ExportRmesh"]));
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem("Undo", MenuTextures["Menu_Undo"]));
@@ -78,6 +78,11 @@ namespace CBRE.Editor {
             else {
                 DocumentManager.Remove(_document);
             }
+        }
+
+        public static void Top_Save() {
+            if (DocumentManager.CurrentDocument != null)
+                new SaveMap("", DocumentManager.CurrentDocument.Map);
         }
 
         #endregion
