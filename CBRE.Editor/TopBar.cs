@@ -17,8 +17,8 @@ namespace CBRE.Editor {
         private void InitTopBar() {
             TopBarItems = new List<TopBarItem>();
 
-            TopBarItems.Add(new TopBarItem("New", MenuTextures["Menu_New"]));
-            TopBarItems.Add(new TopBarItem("Open", MenuTextures["Menu_Open"]));
+            TopBarItems.Add(new TopBarItem("New", MenuTextures["Menu_New"], action: Top_New));
+            TopBarItems.Add(new TopBarItem("Open", MenuTextures["Menu_Open"], action: Top_Open));
             TopBarItems.Add(new TopBarItem("Close", MenuTextures["Menu_Close"], action: Top_Close));
             TopBarItems.Add(new TopBarItem("Save", MenuTextures["Menu_Save"]));
             TopBarItems.Add(new TopBarItem("Export / Lightmap", MenuTextures["Menu_ExportRmesh"]));
@@ -60,8 +60,24 @@ namespace CBRE.Editor {
     
         #region Actions
 
-        private void Top_Close() {
-            new SavePopup($"Save File", "", null, DocumentManager.CurrentDocument.Map);
+        public static void Top_New() {
+            string name = DocumentManager.GetUntitledDocumentName();
+            Document doc = new Document(name, new DataStructures.MapObjects.Map());
+            DocumentManager.AddAndSwitch(doc);
+        }
+
+        public static void Top_Open() {
+            new OpenMap("");
+        }
+
+        public static void Top_Close() {
+            Document _document = DocumentManager.CurrentDocument;
+            if (_document.History.TotalActionsSinceLastSave > 0) {
+                new SaveMap("", _document.Map);
+            }
+            else {
+                DocumentManager.Remove(_document);
+            }
         }
 
         #endregion

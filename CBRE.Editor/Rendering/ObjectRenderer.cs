@@ -71,6 +71,10 @@ namespace CBRE.Editor.Rendering {
                 indexSolidCount = entities.Count * 36;
                 indexWireframeCount = entities.Count * 24;
 
+                if (entities.Count == 0) {
+                    return;
+                }
+
                 if (vertexBuffer == null || vertices == null || vertices.Length < vertexCount) {
                     vertexBuffer = new VertexBuffer(GlobalGraphics.GraphicsDevice, PointEntityVertex.VertexDeclaration, vertexCount, BufferUsage.None);
                 }
@@ -157,6 +161,8 @@ namespace CBRE.Editor.Rendering {
 
             public void RenderWireframe() {
                 UpdateBuffers();
+                if (indexWireframeCount == 0)
+                    return;
                 GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
                 GlobalGraphics.GraphicsDevice.Indices = indexBufferWireframe;
                 GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, indexWireframeCount / 2);
@@ -164,6 +170,8 @@ namespace CBRE.Editor.Rendering {
 
             public void RenderSolid() {
                 UpdateBuffers();
+                if (indexSolidCount == 0)
+                    return;
                 GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
                 GlobalGraphics.GraphicsDevice.Indices = indexBufferSolid;
                 GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
