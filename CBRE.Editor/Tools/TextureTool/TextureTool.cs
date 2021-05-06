@@ -112,6 +112,12 @@ namespace CBRE.Editor.Tools.TextureTool {
             }
             ImGui.NewLine();
             ImGui.Checkbox("Show Offset Preview", ref _showOffset);
+            if (ImGui.Button("Align World")) {
+                TextureAligned(this, AlignMode.World);
+            }
+            if (ImGui.Button("Align Face")) {
+                TextureAligned(this, AlignMode.Face);
+            }
             ImGui.NewLine();
             ImGui.InputDouble("X Scale", ref xscl);
             ImGui.InputDouble("Y Scale", ref yscl);
@@ -124,8 +130,9 @@ namespace CBRE.Editor.Tools.TextureTool {
             if (_texture.AsyncTexture.ImGuiTexture != IntPtr.Zero) {
                 if (_showOffset) {
                     ImGui.Image(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f),
-                        new Num.Vector2(1f - (float)xscl + (float)xoff / _texture.AsyncTexture.Width, 1f - (float)yscl + (float)yoff / _texture.AsyncTexture.Height),
-                        new Num.Vector2((float)xscl + (float)xoff / _texture.AsyncTexture.Width, (float)yscl + (float)yoff / _texture.AsyncTexture.Height));
+                        // new Num.Vector2(0, 0), new Num.Vector2(1, 1));
+                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width - (float)xscl, (float)yscl * (float)yoff / _texture.AsyncTexture.Height - (float)yscl),
+                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width, (float)yscl * (float)yoff / _texture.AsyncTexture.Height));
                 }
                 if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
                     new TexturePopupUI(t => {
