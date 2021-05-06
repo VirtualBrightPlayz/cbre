@@ -142,7 +142,6 @@ namespace CBRE.Editor {
                     }
                     else {
                         ShortcutKey = Enum.TryParse<Keys>(keys[i], true, out Keys res) ? res : Keys.None;
-                        Console.WriteLine(ShortcutKey.ToString());
                     }
                 }
                 Shortcut = shortcut;
@@ -163,7 +162,6 @@ namespace CBRE.Editor {
                 List<Keys> pressed = new List<Keys>();
                 foreach (var key in keys) {
                     if (!previousKeys.Contains(key)) {
-                        Console.WriteLine(key.ToString());
                         pressed.Add(key);
                     }
                 }
