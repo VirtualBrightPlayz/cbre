@@ -107,6 +107,7 @@ namespace CBRE.Editor {
             MapProvider.Register(new MapFormatProvider());
             MapProvider.Register(new L3DWProvider());
 
+            DocumentManager.AddAndSwitch(new Document("new", new DataStructures.MapObjects.Map()));
             /*Map map = MapProvider.GetMapFromFile("gateA.3dw");
             Map map2 = MapProvider.GetMapFromFile("room2_2.3dw");
             DocumentManager.AddAndSwitch(new Document("gateA.3dw", map));

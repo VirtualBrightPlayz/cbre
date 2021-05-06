@@ -77,6 +77,9 @@ namespace CBRE.Editor {
             }
             else {
                 DocumentManager.Remove(_document);
+                if (DocumentManager.Documents.Count == 0) {
+                    DocumentManager.AddAndSwitch(new Document("new", new DataStructures.MapObjects.Map()));
+                }
             }
         }
 
