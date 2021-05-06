@@ -65,8 +65,13 @@ namespace CBRE.Editor.Tools.TextureTool {
         // private TexturePopupUI texturePopup;
         private TextureData _texture;
         private bool _showOffset = false;
-        private SelectBehaviour _leftCombo = SelectBehaviour.Select;
+        private SelectBehaviour _leftCombo = SelectBehaviour.LiftSelect;
         private SelectBehaviour _rightCombo = SelectBehaviour.ApplyWithValues;
+        private double xscl = 1;
+        private double yscl = 1;
+        private double xoff = 0;
+        private double yoff = 0;
+        private double trot = 0;
 
         public TextureTool() {
             Usage = ToolUsage.View3D;
@@ -106,9 +111,22 @@ namespace CBRE.Editor.Tools.TextureTool {
                 ImGui.EndCombo();
             }
             ImGui.NewLine();
-            ImGui.Checkbox("Show 2D Offset", ref _showOffset);
+            ImGui.Checkbox("Show Offset Preview", ref _showOffset);
+            ImGui.NewLine();
+            ImGui.InputDouble("X Scale", ref xscl);
+            ImGui.InputDouble("Y Scale", ref yscl);
+            ImGui.NewLine();
+            ImGui.InputDouble("X Offset", ref xoff);
+            ImGui.InputDouble("Y Offset", ref yoff);
+            ImGui.NewLine();
+            ImGui.InputDouble("Rotation", ref trot);
             ImGui.NewLine();
             if (_texture.AsyncTexture.ImGuiTexture != IntPtr.Zero) {
+                if (_showOffset) {
+                    ImGui.Image(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f),
+                        new Num.Vector2(1f - (float)xscl + (float)xoff / _texture.AsyncTexture.Width, 1f - (float)yscl + (float)yoff / _texture.AsyncTexture.Height),
+                        new Num.Vector2((float)xscl + (float)xoff / _texture.AsyncTexture.Width, (float)yscl + (float)yoff / _texture.AsyncTexture.Height));
+                }
                 if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
                     new TexturePopupUI(t => {
                         _texture = t;
@@ -117,7 +135,7 @@ namespace CBRE.Editor.Tools.TextureTool {
                 }
             }
             if (ImGui.Button("Apply")) {
-                TextureApplied(this, _texture.Texture);
+                TextureApplied(this, _texture.Texture, xscl, yscl, xoff, yoff, trot);
             }
             ImGui.EndChild();
         }
@@ -184,10 +202,15 @@ namespace CBRE.Editor.Tools.TextureTool {
             Document.PerformAction("Align texture", new EditFace(Document.Selection.GetSelectedFaces(), action, false));
         }
 
-        private void TextureApplied(object sender, TextureItem texture) {
+        private void TextureApplied(object sender, TextureItem texture, double xscl, double yscl, double xoff, double yoff, double trot) {
             var ti = texture.Texture;
             Action<Document, Face> action = (document, face) => {
                 document.ObjectRenderer.RemoveFace(face);
+                face.Texture.XScale = (decimal)xscl;
+                face.Texture.YScale = (decimal)yscl;
+                face.Texture.XShift = (decimal)xoff;
+                face.Texture.YShift = (decimal)yoff;
+                face.SetTextureRotation((decimal)trot);
                 face.Texture.Name = texture.Name;
                 face.Texture.Texture = ti;
                 face.CalculateTextureCoordinates(false);
@@ -331,7 +354,7 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         private void DocumentTreeFacesChanged() {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
             /*_form.SelectionChanged();*/
         }
 
@@ -372,6 +395,11 @@ namespace CBRE.Editor.Tools.TextureTool {
                 if (firstClicked == null) return;
                 var itemToSelect = TextureProvider.GetItem(firstClicked.Texture.Name);
                                    //?? new TextureItem(null, firstClicked.Texture.Name, TextureFlags.Missing, 64, 64);
+                xscl = (double)firstClicked.Texture.XScale;
+                yscl = (double)firstClicked.Texture.YScale;
+                xoff = (double)firstClicked.Texture.XShift;
+                yoff = (double)firstClicked.Texture.YShift;
+                trot = (double)firstClicked.Texture.Rotation;
                 Mediator.Publish(EditorMediator.TextureSelected, itemToSelect);
             };
 
@@ -388,10 +416,10 @@ namespace CBRE.Editor.Tools.TextureTool {
                     break;
                 case SelectBehaviour.Apply:
                 case SelectBehaviour.ApplyWithValues:
-                    throw new NotImplementedException();
-                    /*var item = _form.GetFirstSelectedTexture();
+                    // throw new NotImplementedException();
+                    var item = _texture.Texture;
                     if (item != null) {
-                        var texture = item.GetTexture();
+                        var texture = item.Texture;
                         ac.Add(new EditFace(faces, (document, face) => {
                             face.Texture.Name = item.Name;
                             face.Texture.Texture = texture;
@@ -399,16 +427,16 @@ namespace CBRE.Editor.Tools.TextureTool {
                                 // Calculates the texture coordinates
                                 face.AlignTextureWithFace(firstSelected);
                             } else if (behaviour == SelectBehaviour.ApplyWithValues) {
-                                face.Texture.XScale = _form.CurrentProperties.XScale;
-                                face.Texture.YScale = _form.CurrentProperties.YScale;
-                                face.Texture.XShift = _form.CurrentProperties.XShift;
-                                face.Texture.YShift = _form.CurrentProperties.YShift;
-                                face.SetTextureRotation(_form.CurrentProperties.Rotation);
+                                face.Texture.XScale = (decimal)xscl;
+                                face.Texture.YScale = (decimal)yscl;
+                                face.Texture.XShift = (decimal)xoff;
+                                face.Texture.YShift = (decimal)yoff;
+                                face.SetTextureRotation((decimal)trot);
                             } else {
                                 face.CalculateTextureCoordinates(true);
                             }
                         }, true));
-                    }*/
+                    }
                     break;
                 case SelectBehaviour.AlignToView:
                     var right = vp.Camera.GetRight();
