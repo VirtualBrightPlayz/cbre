@@ -40,7 +40,7 @@ namespace CBRE.Editor {
             }
         }
 
-        public List<PopupGame> Popups { get; private set; } = new List<PopupGame>();
+        public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
 
         public GameMain()
         {

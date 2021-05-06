@@ -1,7 +1,7 @@
 using ImGuiNET;
 
 namespace CBRE.Editor.Popup {
-    public class MessagePopup : PopupGame {
+    public class MessagePopup : PopupUI {
         private string _message;
 
         public MessagePopup(string title, string message) : base(title) {

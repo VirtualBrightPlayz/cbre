@@ -19,28 +19,41 @@ using System.Linq;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
-    public class PopupGame
+    public class PopupGame : Game
     {
+        private GraphicsDeviceManager _graphics;
+        private ImGuiRenderer _imGuiRenderer;
         private string _title;
 
         public PopupGame(string title)
         {
+            _graphics = new GraphicsDeviceManager(this);
+            _graphics.PreferredBackBufferWidth = 1600;
+            _graphics.PreferredBackBufferHeight = 900;
+            _graphics.PreferMultiSampling = false;
+            _graphics.SynchronizeWithVerticalRetrace = false;
+            _graphics.ApplyChanges();
+            Window.AllowUserResizing = true;
+            IsMouseVisible = true;
             _title = title;
-            GameMain.Instance.Popups.Add(this);
         }
 
-        public bool Draw()
-        {
+        protected override void Initialize() {
+            _imGuiRenderer = new ImGuiRenderer(this);
+            _imGuiRenderer.RebuildFontAtlas();
+            base.Initialize();
+        }
+
+        protected override void Draw(GameTime gameTime) {
+            _imGuiRenderer.BeforeLayout(gameTime);
             if (ImGui.Begin(_title, ImGuiWindowFlags.NoCollapse)) {
                 bool shouldBeOpen = ImGuiLayout();
-                ImGui.End();
-                return shouldBeOpen;
-            }
-            return false;
-        }
+                if (!shouldBeOpen) {
 
-        public virtual void Close() {
-            GameMain.Instance.Popups.Remove(this);
+                }
+            }
+            ImGui.End();
+            _imGuiRenderer.AfterLayout();
         }
 
         protected virtual bool ImGuiLayout() {

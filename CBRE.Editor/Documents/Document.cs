@@ -6,6 +6,7 @@ using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Actions;
 using CBRE.Editor.Editing;
 using CBRE.Editor.History;
+using CBRE.Editor.Popup;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.Settings;
 using CBRE.Editor.Tools;
@@ -130,17 +131,15 @@ namespace CBRE.Editor.Documents {
                 }
             }
 
-            if (path == null) {
-            }
-
             throw new NotImplementedException();
-            /*if (path == null) {
+
+            if (path == null) {
                 using (var sfd = new SaveFileDialog()) {
                     var filter = String.Join("|", FileTypeRegistration.GetSupportedExtensions()
                         .Where(x => x.CanSave).Select(x => x.Description + " (*" + x.Extension + ")|*" + x.Extension));
                     var all = FileTypeRegistration.GetSupportedExtensions().Where(x => x.CanSave).Select(x => "*" + x.Extension).ToArray();
                     sfd.Filter = "All supported formats (" + String.Join(", ", all) + ")|" + String.Join(";", all) + "|" + filter;
-                    if (sfd.ShowDialog() == DialogResult.OK) {
+                    if (sfd.ShowDialog().GetAwaiter().GetResult() == DialogResult.OK) {
                         path = sfd.FileName;
                     }
                 }
@@ -151,25 +150,25 @@ namespace CBRE.Editor.Documents {
             var cam = ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();
             if (cam != null) {
                 if (Map.ActiveCamera == null) {
-                    Map.ActiveCamera = !Map.Cameras.Any() ? new Camera { LookPosition = Coordinate.UnitX * Map.GridSpacing * 1.5m } : Map.Cameras.First();
+                    Map.ActiveCamera = !Map.Cameras.Any() ? new Camera { LookPosition = Vector3.UnitX * Map.GridSpacing * 1.5m } : Map.Cameras.First();
                     if (!Map.Cameras.Contains(Map.ActiveCamera)) Map.Cameras.Add(Map.ActiveCamera);
                 }
                 var dist = (Map.ActiveCamera.LookPosition - Map.ActiveCamera.EyePosition).VectorMagnitude();
-                var loc = cam.Location;
-                var look = cam.LookAt - cam.Location;
-                look.Normalize();
+                var loc = cam.EyePosition;
+                var look = cam.LookPosition - cam.EyePosition;
+                look = look.Normalise();
                 look = loc + look * (float)dist;
-                Map.ActiveCamera.EyePosition = new Coordinate((decimal)loc.X, (decimal)loc.Y, (decimal)loc.Z);
-                Map.ActiveCamera.LookPosition = new Coordinate((decimal)look.X, (decimal)look.Y, (decimal)look.Z);
+                Map.ActiveCamera.EyePosition = new Vector3((decimal)loc.X, (decimal)loc.Y, (decimal)loc.Z);
+                Map.ActiveCamera.LookPosition = new Vector3((decimal)look.X, (decimal)look.Y, (decimal)look.Z);
             }
-            Map.WorldSpawn.EntityData.SetPropertyValue("wad", string.Join(";", GetUsedTexturePackages().Select(x => x.PackageRoot).Where(x => x.EndsWith(".wad"))));
+            Map.WorldSpawn.EntityData.SetPropertyValue("wad", string.Join(";", GetUsedTextures().Select(x => x).Where(x => x.EndsWith(".wad"))));
             MapProvider.SaveMapToFile(path, Map);
             if (switchPath) {
                 MapFile = path;
                 MapFileName = Path.GetFileName(MapFile);
                 History.TotalActionsSinceLastSave = 0;
                 Mediator.Publish(EditorMediator.DocumentSaved, this);
-            }*/
+            }
             return true;
         }
 

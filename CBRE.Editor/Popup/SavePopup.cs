@@ -7,7 +7,7 @@ using ImGuiNET;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
-    public class SavePopup : PopupGame {
+    public class SavePopup : PopupUI {
         private string _message;
         private Map _map;
         private string _path;

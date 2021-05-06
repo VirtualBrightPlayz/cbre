@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using CBRE.DataStructures.Models;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Popup;
@@ -60,8 +61,8 @@ namespace CBRE.Editor {
         #region Actions
 
         private void Top_Close() {
-            // TODO: use DocumentManager.Remove()
-            new SavePopup("Warning", $"You have changes. Save {Path.GetFileName(DocumentManager.CurrentDocument.MapFile)}?", Directory.GetCurrentDirectory(), DocumentManager.CurrentDocument.Map);
+            DocumentManager.CurrentDocument.SaveFile();
+            DocumentManager.Remove(DocumentManager.CurrentDocument);
         }
 
         #endregion
