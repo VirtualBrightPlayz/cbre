@@ -48,9 +48,11 @@ namespace CBRE.Editor.Popup {
             try
             {
                 MapProvider.SaveMapToFile(file, _map.Map);
-                DocumentManager.Remove(_map);
-                if (DocumentManager.Documents.Count == 0) {
-                    DocumentManager.AddAndSwitch(new Document("new", new DataStructures.MapObjects.Map()));
+                if (_close) {
+                    DocumentManager.Remove(_map);
+                    if (DocumentManager.Documents.Count == 0) {
+                        DocumentManager.AddAndSwitch(new Document("new", new DataStructures.MapObjects.Map()));
+                    }
                 }
             }
             catch (ProviderNotFoundException e)
