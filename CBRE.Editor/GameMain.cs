@@ -40,6 +40,8 @@ namespace CBRE.Editor {
             }
         }
 
+        public bool PopupSelected { get; set; } = false;
+
         public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
 
         public GameMain()
@@ -130,7 +132,11 @@ namespace CBRE.Editor {
             timing.StartMeasurement();
             base.Update(gameTime);
 
-            timing.PerformTicks(ViewportManager.Update);
+            if (PopupSelected && Popups.Count == 0)
+                PopupSelected = false;
+
+            if (!PopupSelected)
+                timing.PerformTicks(ViewportManager.Update);
             timing.EndMeasurement();
         }
 

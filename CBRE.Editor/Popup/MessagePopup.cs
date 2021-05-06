@@ -8,6 +8,10 @@ namespace CBRE.Editor.Popup {
             _message = message;
         }
 
+        public MessagePopup(string title, string message, ImColor color) : base(title, color) {
+            _message = message;
+        }
+
         protected override bool ImGuiLayout() {
             ImGui.Text(_message);
             return base.ImGuiLayout();

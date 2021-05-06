@@ -61,8 +61,7 @@ namespace CBRE.Editor {
         #region Actions
 
         private void Top_Close() {
-            DocumentManager.CurrentDocument.SaveFile();
-            DocumentManager.Remove(DocumentManager.CurrentDocument);
+            new SavePopup($"Save File", "", null, DocumentManager.CurrentDocument.Map);
         }
 
         #endregion

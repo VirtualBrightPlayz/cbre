@@ -22,6 +22,8 @@ namespace CBRE.Editor.Popup {
     public class PopupUI : IDisposable
     {
         private string _title;
+        private bool _hasColor = false;
+        private ImColor _color;
 
         public PopupUI(string title)
         {
@@ -29,14 +31,24 @@ namespace CBRE.Editor.Popup {
             GameMain.Instance.Popups.Add(this);
         }
 
-        public bool Draw()
+        public PopupUI(string title, ImColor color) : this(title)
         {
+            _color = color;
+            _hasColor = true;
+        }
+
+        public virtual bool Draw()
+        {
+            bool shouldBeOpen = true;
+            if (_hasColor)
+                ImGui.PushStyleColor(ImGuiCol.WindowBg, _color.Value);
             if (ImGui.Begin(_title, ImGuiWindowFlags.NoCollapse)) {
-                bool shouldBeOpen = ImGuiLayout();
-                ImGui.End();
-                return shouldBeOpen;
+                shouldBeOpen = ImGuiLayout();
             }
-            return false;
+            ImGui.End();
+            if (_hasColor)
+                ImGui.PopStyleColor();
+            return shouldBeOpen;
         }
 
         public virtual void Close() {

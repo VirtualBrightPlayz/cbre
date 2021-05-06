@@ -131,20 +131,8 @@ namespace CBRE.Editor.Documents {
                 }
             }
 
-            throw new NotImplementedException();
-
-            if (path == null) {
-                using (var sfd = new SaveFileDialog()) {
-                    var filter = String.Join("|", FileTypeRegistration.GetSupportedExtensions()
-                        .Where(x => x.CanSave).Select(x => x.Description + " (*" + x.Extension + ")|*" + x.Extension));
-                    var all = FileTypeRegistration.GetSupportedExtensions().Where(x => x.CanSave).Select(x => "*" + x.Extension).ToArray();
-                    sfd.Filter = "All supported formats (" + String.Join(", ", all) + ")|" + String.Join(";", all) + "|" + filter;
-                    if (sfd.ShowDialog().GetAwaiter().GetResult() == DialogResult.OK) {
-                        path = sfd.FileName;
-                    }
-                }
-            }
-            if (path == null) return false;
+            if (path == null)
+                return false;
 
             // Save the 3D camera position
             var cam = ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();
