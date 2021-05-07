@@ -35,7 +35,7 @@ namespace CBRE.Editor.Popup {
             ImGui.Text($"Point Entities: {numPointEnts}");
             ImGui.Text($"Solid Entities: {numSolidEnts}");
             ImGui.Text($"Unique Textures: {numUniqueTextures}");
-            ImGui.Text(string.Format("Texture Memory: {#,##0} bytes", textureMemory));
+            ImGui.Text($"Texture Memory: {textureMemory.ToString("#,##0")} bytes");
 
             if (ImGui.Button("Close")) {
                 return false;
