@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CBRE.DataStructures.GameData;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Actions;
 using CBRE.Editor.Actions.MapObjects.Entities;
@@ -16,6 +18,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
         private MapObject _obj;
         private List<TableValue> _propVals;
         private string _className;
+        private GameDataObject selectedEntity = null;
 
         public ObjectPropertiesUI(Document document, MapObject mapobject) : base("Object Properties") {
             _document = document;
@@ -32,52 +35,132 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                 foreach (var prop in data.Properties) {
                     list.Add(new TableValue(prop));
                 }
+                var cls = _document.GameData.Classes.FirstOrDefault(p => p.Name == data.Name);
+                if (cls != null) {
+                    foreach (var gprop in cls.Properties) {
+                        var prop = list.FirstOrDefault(p => p.OriginalKey == gprop.Name);
+                        if (prop == null) {
+                            list.Add(new TableValue() {
+                                Class = gprop.VariableType,
+                                IsAdded = true,
+                                NewKey = gprop.Name,
+                                OriginalKey = gprop.Name,
+                                Value = gprop.DefaultValue
+                            });
+                        }
+                        else {
+                            prop.Class = gprop.VariableType;
+                        }
+                    }
+                    foreach (var prop in list) {
+                        if (!cls.Properties.Any(p => p.Name == prop.OriginalKey)) {
+                            prop.IsRemoved = true;
+                        }
+                    }
+                }
             }
             _propVals = list;
         }
 
         protected override bool ImGuiLayout() {
-            /*string tmpclass = _className;
-            if (ImGui.InputText("Class", ref tmpclass, 1024)) {
-                _className = tmpclass;
-            }*/
-            ImGui.Text($"Class {_obj.ClassName}");
             if (_obj is Entity || _obj is World)
                 EntityGui(_obj);
             return ImGuiButtons();
         }
 
         protected virtual void EntityGui(MapObject obj) {
+            if (ImGui.BeginCombo("Entity type", selectedEntity?.Name ?? "<No Change>")) {
+                var entityTypes = _document.GameData.Classes.Where(c => c.ClassType == ClassType.Point);
+                foreach (var entityType in entityTypes) {
+                    if (ImGui.Selectable(entityType.Name)) {
+                        selectedEntity = entityType;
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            
             var data = obj.GetEntityData();
             ImGui.Text($"{data.Name}");
 
             ImGui.BeginChild($"{data.Name}Properties", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 12));
-            ImGui.Columns(2, $"{data.Name}properties", true);
+            ImGui.Columns(3, $"{data.Name}properties", true);
             ImGui.Separator();
             ImGui.Text("Key");
             ImGui.NextColumn();
             ImGui.Text("Value");
             ImGui.NextColumn();
-            // ImGui.Text("Remove");
-            // ImGui.NextColumn();
+            ImGui.Text("State");
+            ImGui.NextColumn();
             ImGui.Separator();
 
             var props = _propVals;
 
             for (int i = 0; i < props.Count; i++) {
-                if (props[i].IsRemoved)
-                    continue;
-                /*string tmp = props[i].NewKey;
-                if (ImGui.InputText(props[i].OriginalKey, ref tmp, 1024)) {
-                    props[i].OriginalKey = tmp;
-                }*/
                 ImGui.Text(props[i].NewKey);
                 ImGui.NextColumn();
                 string tmp = props[i].Value;
-                if (ImGui.InputText(props[i].OriginalKey, ref tmp, 1024)) {
-                    props[i].Value = tmp;
-                    props[i].IsModified = true;
+                switch (props[i].Class) {
+                    case VariableType.Float:
+                        {
+                            float fl = 0f;
+                            float.TryParse(tmp, out fl);
+                            if (ImGui.InputFloat(props[i].OriginalKey, ref fl)) {
+                                props[i].Value = fl.ToString();
+                                props[i].IsModified = true;
+                            }
+                        }
+                        break;
+                    case VariableType.Integer:
+                        {
+                            int fl = 0;
+                            int.TryParse(tmp, out fl);
+                            if (ImGui.InputInt(props[i].OriginalKey, ref fl)) {
+                                props[i].Value = fl.ToString();
+                                props[i].IsModified = true;
+                            }
+                        }
+                        break;
+                    case VariableType.Color255:
+                        {
+                            Color color = props[i].GetColour255(Color.White);
+                            Num.Vector4 v4 = new Num.Vector4(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
+                            if (ImGui.ColorEdit4(props[i].OriginalKey, ref v4)) {
+                                props[i].Value = $"{(int)(v4.X * 255)} {(int)(v4.Y * 255)} {(int)(v4.Z * 255)} {(int)(v4.W * 255)}";
+                                props[i].IsModified = true;
+                            }
+                        }
+                        break;
+                    case VariableType.Vector:
+                        {
+                            Num.Vector3 v3 = props[i].GetVector3(Num.Vector3.Zero);
+                            if (ImGui.InputFloat3(props[i].OriginalKey, ref v3)) {
+                                props[i].Value = $"{v3.X} {v3.Y} {v3.Z}";
+                                props[i].IsModified = true;
+                            }
+                        }
+                        break;
+                    case VariableType.Bool:
+                        {
+                            bool b = default(bool);
+                            bool.TryParse(props[i].Value, out b);
+                            if (ImGui.Checkbox(props[i].OriginalKey, ref b)) {
+                                props[i].Value = b.ToString();
+                                props[i].IsModified = true;
+                            }
+                        }
+                        break;
+                    default:
+                        {
+                            if (ImGui.InputText(props[i].OriginalKey, ref tmp, 1024)) {
+                                props[i].Value = tmp;
+                                props[i].IsModified = true;
+                            }
+                        }
+                        break;
                 }
+                ImGui.NextColumn();
+                var col = props[i].GetStateColour();
+                ImGui.TextColored(new Num.Vector4(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f), props[i].GetState());
                 ImGui.NextColumn();
                 /*if (ImGui.Button("-")) {
                     props[i].IsRemoved = true;
@@ -106,13 +189,12 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             }
             ImGui.SameLine();
             if (ImGui.Button("Apply")) {
-                EntityApply();
-                return false;
+                return !EntityApply();
             }
             return true;
         }
 
-        protected virtual void EntityApply() {
+        protected virtual bool EntityApply() {
             string actionText = null;
             var ac = new ActionCollection();
             var editAction = GetEditEntityDataAction();
@@ -127,7 +209,9 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             {
                 // Run if either action shows changes
                 _document.PerformAction(actionText, ac);
+                return true;
             }
+            return false;
         }
 
         private EditEntityData GetEditEntityDataAction()
@@ -142,12 +226,6 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                 var entityData = entity.GetEntityData().Clone();
                 var changed = false;
                 var _values = _propVals;
-                // Updated class
-                /*if (_className != entity.ClassName)
-                {
-                    entity.ClassName = _className;
-                    changed = true;
-                }*/
 
                 // Remove nonexistant properties
                 var nonExistant = entityData.Properties.Where(x => _values.All(y => y.OriginalKey != x.Key));
@@ -197,6 +275,14 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                     }
                     if (entityData.Flags != beforeFlags) changed = true;
                 }*/
+
+                // Updated class
+                Console.WriteLine($"changed to {entityData.Name}");
+                if (selectedEntity != null) {
+                    entityData.Name = selectedEntity.Name;
+                    // entityData = new EntityData(selectedEntity);
+                    changed = true;
+                }
 
                 if (changed) action.AddEntity(entity, entityData);
             }
