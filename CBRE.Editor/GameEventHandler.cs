@@ -19,8 +19,7 @@ namespace CBRE.Editor {
         }
 
         public void MediatorError(object sender, MediatorExceptionEventArgs e) {
-            Console.WriteLine(e.Message);
-            new CopyMessagePopup($"Exception calling {e.Message}", e.Exception.ToString(), new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) });
+            Logging.Logger.ShowException(e.Exception, e.Message);
         }
 
         public void Subscribe() {
