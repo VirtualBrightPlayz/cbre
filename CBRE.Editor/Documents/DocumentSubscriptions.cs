@@ -26,6 +26,7 @@ using System.Globalization;
 using System.Linq;
 using Quaternion = CBRE.DataStructures.Geometric.Quaternion;
 using CBRE.Editor.Popup;
+using CBRE.Editor.Popup.ObjectProperties;
 
 namespace CBRE.Editor.Documents {
     /// <summary>
@@ -286,7 +287,8 @@ namespace CBRE.Editor.Documents {
         }
 
         public void ObjectProperties() {
-            throw new NotImplementedException();
+            new ObjectPropertiesUI(_document, _document.Selection.GetSelectedParents().FirstOrDefault());
+            // throw new NotImplementedException();
             /*var pd = new ObjectPropertiesDialog(_document);
             pd.Show(Editor.Instance);*/
         }
