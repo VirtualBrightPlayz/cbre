@@ -64,6 +64,7 @@ namespace CBRE.Editor.Rendering {
         static BasicEffect basicEffect = null;
 
         static bool prevMouse1Down;
+        static bool prevMouse2Down;
         static bool prevMouse3Down;
         static int prevScrollWheelValue;
         static Keys[] prevKeysDown;
@@ -211,6 +212,8 @@ namespace CBRE.Editor.Rendering {
             var keysDown = keyboardState.GetPressedKeys();
             bool mouse1Down = mouseState.LeftButton == ButtonState.Pressed;
             bool mouse1Hit = mouse1Down && !prevMouse1Down;
+            bool mouse2Down = mouseState.RightButton == ButtonState.Pressed;
+            bool mouse2Hit = mouse2Down && !prevMouse2Down;
             bool mouse3Down = mouseState.MiddleButton == ButtonState.Pressed;
             bool mouse3Hit = mouse3Down && !prevMouse3Down;
             int scrollWheelValue = mouseState.ScrollWheelValue;
@@ -370,6 +373,26 @@ namespace CBRE.Editor.Rendering {
                                 LastY = Viewports[i].PrevMouseY,
                             });
                         }
+                        if (mouse2Hit) {
+                            GameMain.Instance.SelectedTool?.MouseClick(Viewports[i], new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Right,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = Viewports[i].PrevMouseX,
+                                LastY = Viewports[i].PrevMouseY,
+                                Clicks = 1
+                            });
+
+                            GameMain.Instance.SelectedTool?.MouseDown(Viewports[i], new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Right,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = Viewports[i].PrevMouseX,
+                                LastY = Viewports[i].PrevMouseY,
+                            });
+                        }
                         if (mouse3Down) {
                             if (currMouseX >= 0 && currMouseY >= 0 && currMouseX <= Viewports[i].Width && currMouseY <= Viewports[i].Height) {
                                 if (Viewports[i] is Viewport2D vp) {
@@ -413,6 +436,7 @@ namespace CBRE.Editor.Rendering {
             }
 
             prevMouse1Down = mouse1Down;
+            prevMouse2Down = mouse2Down;
             prevMouse3Down = mouse3Down;
             prevKeysDown = keysDown;
             prevScrollWheelValue = scrollWheelValue;
