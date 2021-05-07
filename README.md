@@ -16,7 +16,7 @@ In the folder `AssimpNet/AssimpNet.Interop.Generator/` run the command `dotnet b
 
 ### CBRE.Editor
 
-In the folder `CBRE.Editor/` run the command `dotnet build
+In the folder `CBRE.Editor/` run the command `dotnet build`
 
 ### Windows 64-bit
 
