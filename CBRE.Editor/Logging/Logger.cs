@@ -14,7 +14,7 @@ namespace CBRE.Editor.Logging {
         static Logger()
         {
             LogFile = "cbre-log-" + DateTime.Now.ToString("yyyy_MM_dd_T_HH_mm_ss") + ".txt";
-            LogFile = Path.Combine(Directory.GetCurrentDirectory(), LogFile);
+            LogFile = Path.GetFullPath(Path.Combine(typeof(Logger).Assembly.Location, "..", LogFile));
         }
 
         public static void ShowException(Exception ex, string message = "") {
