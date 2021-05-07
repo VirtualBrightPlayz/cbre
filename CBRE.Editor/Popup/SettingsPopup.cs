@@ -13,13 +13,14 @@ namespace CBRE.Editor.Popup {
         }
 
         protected override bool ImGuiLayout() {
-            ImGui.Text("Click listing to remove it");
-            ImGui.SameLine();
-            if (ImGui.Button("+")) {
-                new CallbackFolderSelect("Select Texture Directory", "", Directories.TextureDirs.Add);
-                // Directories.TextureDirs.Add();
-            }
+            ImGui.Text("Texture Directories");
             if (ImGui.BeginChild("TextureDirs", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 5))) {
+                ImGui.Text("Click listing to remove it");
+                ImGui.SameLine();
+                if (ImGui.Button("+")) {
+                    new CallbackFolderSelect("Select Texture Directory", "", Directories.TextureDirs.Add);
+                    // Directories.TextureDirs.Add();
+                }
                 for (int i = 0; i < Directories.TextureDirs.Count; i++) {
                     var dir = Directories.TextureDirs[i];
                     if (ImGui.Selectable(dir, false)) {

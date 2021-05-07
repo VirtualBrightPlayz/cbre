@@ -158,9 +158,9 @@ namespace CBRE.Editor {
                     bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
                     bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
                     bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
-                    HotkeyDefinition def = Hotkeys.GetHotkeyDefinitions().FirstOrDefault(p => pressed.Contains(p.ShortcutKey) && ctrlpressed == p.Ctrl && shiftpressed == p.Shift && altpressed == p.Alt);
+                    HotkeyImplementation def = Hotkeys.GetHotkeyFor(pressed.ToArray(), ctrlpressed, shiftpressed, altpressed);
                     if (def != null) {
-                        Mediator.Publish(def.Action, def.Parameter);
+                        Mediator.Publish(def.Definition.Action, def.Definition.Parameter);
                     }
                     previousKeys = keys;
                 }
