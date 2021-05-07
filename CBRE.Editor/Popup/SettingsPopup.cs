@@ -21,8 +21,8 @@ namespace CBRE.Editor.Popup {
             TextureDirGui();
             HotkeysGui();
             if (ImGui.Button("Close")) {
-                SettingsManager.Write();
                 Hotkeys.SetupHotkeys(SettingsManager.Hotkeys);
+                SettingsManager.Write();
                 return false;
             }
             return true;
