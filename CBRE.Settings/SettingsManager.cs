@@ -162,7 +162,6 @@ namespace CBRE.Settings {
             root.Children.Add(recents);
 
             // Hotkeys
-            Hotkeys = CBRE.Settings.Hotkeys.GetHotkeys().ToList();
             var hotkeys = new GenericStructure("Hotkeys");
             foreach (var g in Hotkeys.GroupBy(x => x.ID)) {
                 var count = 0;
