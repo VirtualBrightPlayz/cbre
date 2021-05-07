@@ -41,5 +41,9 @@ namespace CBRE.Editor {
         public void Options() {
             new SettingsPopup("Options");
         }
+
+        public void MapInformation() {
+            new MapInformationPopup();
+        }
     }
 }

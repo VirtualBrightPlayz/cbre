@@ -61,7 +61,7 @@ namespace CBRE.Editor {
                 new MenuItem("Check for Problems", "", MenuTextures["Menu_CheckForProblems"]),
                 new MenuItem("Show Logical Tree", "", MenuTextures["Menu_ShowLogicalTree"]),
                 new MenuSeparator(),
-                new MenuItem("Map Properties...", "", MenuTextures["Menu_MapProperties"])));
+                new MenuItem("Map Properties...", "", MenuTextures["Menu_MapProperties"], action: MapInformation)));
             Menus.Add(new Menu("View",
                 new MenuItem("Autosize All Views", "", MenuTextures["Menu_AutosizeViews"]),
                 new MenuItem("Center All Views on Selection", "", MenuTextures["Menu_CenterSelectionAll"]),
