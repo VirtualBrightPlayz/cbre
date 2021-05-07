@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -27,7 +28,7 @@ using Path = System.IO.Path;
 
 namespace CBRE.Editor.Documents {
     public class Document {
-        public const string NewDocumentName = "new";
+        public const string NewDocumentName = null;
         public string MapFile { get; set; }
         public string MapFileName { get; set; }
         public Map Map { get; set; }
@@ -122,7 +123,7 @@ namespace CBRE.Editor.Documents {
         public bool SaveFile(string path = null, bool forceOverride = false, bool switchPath = true) {
             path = forceOverride ? path : path ?? MapFile;
 
-            if (path != null) {
+            if (!string.IsNullOrEmpty(path)) {
                 IEnumerable<string> noSaveExtensions = FileTypeRegistration.GetSupportedExtensions().Where(x => !x.CanSave).Select(x => x.Extension);
                 foreach (string ext in noSaveExtensions) {
                     if (path.EndsWith(ext, StringComparison.OrdinalIgnoreCase)) {
@@ -132,8 +133,14 @@ namespace CBRE.Editor.Documents {
                 }
             }
 
-            if (path == null)
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) {
+                Mediator.Publish(HotkeysMediator.FileSaveAs);
                 return false;
+            }
+
+            if (string.IsNullOrEmpty(path))
+                return false;
+                // throw new NotImplementedException();
 
             // Save the 3D camera position
             var cam = ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();

@@ -20,6 +20,7 @@ namespace CBRE.Settings {
 
                                     new HotkeyDefinition("New File", "Create a new map", HotkeysMediator.FileNew, "Ctrl+N"),
                                     new HotkeyDefinition("Open File", "Open an existing map", HotkeysMediator.FileOpen, "Ctrl+O"),
+                                    new HotkeyDefinition("Close File", "Closes the currently opened map", HotkeysMediator.FileClose, ""),
                                     new HotkeyDefinition("Save File", "Save the currently opened map", HotkeysMediator.FileSave, "Ctrl+S"),
                                     new HotkeyDefinition("Save File As...", "Save the currently opened map", HotkeysMediator.FileSaveAs, "Ctrl+Alt+S"),
                                     new HotkeyDefinition("Compile Map", "Compile the currently opened map", HotkeysMediator.FileCompile, "F9"),
@@ -38,10 +39,10 @@ namespace CBRE.Settings {
                                     new HotkeyDefinition("Show Object Properties", "Open the object properties dialog for the currently selected items", HotkeysMediator.ObjectProperties, "Alt+Enter"),
 
                                     new HotkeyDefinition("Copy", "Copy the current selection", HotkeysMediator.OperationsCopy, "Ctrl+C", "Ctrl+Ins"),
-                                    new HotkeyDefinition("Cut", "Cut the current selection", HotkeysMediator.OperationsCut, "Ctrl+X", "Shift+Del"),
+                                    new HotkeyDefinition("Cut", "Cut the current selection", HotkeysMediator.OperationsCut, "Ctrl+X", "Shift+Delete"),
                                     new HotkeyDefinition("Paste", "Paste the clipboard contents", HotkeysMediator.OperationsPaste, "Ctrl+V", "Shift+Ins"),
                                     new HotkeyDefinition("Paste Special", "Paste special the clipboard contents", HotkeysMediator.OperationsPasteSpecial, "Ctrl+Shift+V"),
-                                    new HotkeyDefinition("Delete", "Delete the current selection", HotkeysMediator.OperationsDelete, "Del"),
+                                    new HotkeyDefinition("Delete", "Delete the current selection", HotkeysMediator.OperationsDelete, "Delete"),
 
                                     new HotkeyDefinition("Group", "Group the selected objects", HotkeysMediator.GroupingGroup, "Ctrl+G"),
                                     new HotkeyDefinition("Ungroup", "Ungroup the selected objects", HotkeysMediator.GroupingUngroup, "Ctrl+U"),

@@ -35,7 +35,7 @@ namespace CBRE.Editor.Popup {
                 FileSelected(string.Empty);
                 DocumentManager.Remove(_map);
                 if (DocumentManager.Documents.Count == 0) {
-                    DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
+                    DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new Map()));
                 }
                 return false;
             }
@@ -47,13 +47,7 @@ namespace CBRE.Editor.Popup {
                 return;
             try
             {
-                MapProvider.SaveMapToFile(file, _map.Map);
-                if (_close) {
-                    DocumentManager.Remove(_map);
-                    if (DocumentManager.Documents.Count == 0) {
-                        DocumentManager.AddAndSwitch(new Document("new", new DataStructures.MapObjects.Map()));
-                    }
-                }
+                _map.SaveFile(file);
             }
             catch (ProviderNotFoundException e)
             {

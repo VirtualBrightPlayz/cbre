@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using CBRE.Common.Mediator;
 using CBRE.Editor.Rendering;
 using CBRE.Graphics;
+using CBRE.Settings;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
 using Num = System.Numerics;
@@ -15,24 +17,24 @@ namespace CBRE.Editor {
 
         private void InitMenus() {
             Menus.Add(new Menu("File",
-                new MenuItem("New", "Ctrl+N", MenuTextures["Menu_New"], action: Top_New),
-                new MenuItem("Open", "Ctrl+O", MenuTextures["Menu_Open"], action: Top_Open),
-                new MenuItem("Close", "", MenuTextures["Menu_Close"], action: Top_Close),
-                new MenuItem("Save", "Ctrl+S", MenuTextures["Menu_Save"], action: Top_Save),
-                new MenuItem("Save as", "Ctrl+Shift+S", MenuTextures["Menu_SaveAs"], action: Top_Save),
+                new MenuItem(HotkeysMediator.FileNew.ToString(), MenuTextures["Menu_New"]),
+                new MenuItem(HotkeysMediator.FileOpen.ToString(), MenuTextures["Menu_Open"]),
+                new MenuItem(HotkeysMediator.FileClose.ToString(), MenuTextures["Menu_Close"]),
+                new MenuItem(HotkeysMediator.FileSave.ToString(), MenuTextures["Menu_Save"]),
+                new MenuItem(HotkeysMediator.FileSaveAs.ToString(), MenuTextures["Menu_SaveAs"]),
                 new MenuSeparator(),
                 new MenuItem("Export / Lightmap", "F9", MenuTextures["Menu_ExportRmesh"]),
                 new MenuSeparator(),
                 new MenuItem("Exit", "", action: Exit)));
             Menus.Add(new Menu("Edit",
-                new MenuItem("Undo", "Ctrl+Z", MenuTextures["Menu_Undo"], action: Top_Undo),
-                new MenuItem("Redo", "Ctrl+Y", MenuTextures["Menu_Redo"], action: Top_Redo),
+                new MenuItem(HotkeysMediator.HistoryUndo.ToString(), MenuTextures["Menu_Undo"]),
+                new MenuItem(HotkeysMediator.HistoryRedo.ToString(), MenuTextures["Menu_Redo"]),
                 new MenuSeparator(),
                 new MenuItem("Cut", "Ctrl+X", MenuTextures["Menu_Cut"]),
                 new MenuItem("Copy", "Ctrl+C", MenuTextures["Menu_Copy"]),
                 new MenuItem("Paste", "Ctrl+V", MenuTextures["Menu_Paste"]),
                 new MenuItem("Paste Special...", "", MenuTextures["Menu_PasteSpecial"]),
-                new MenuItem("Delete", "Del", MenuTextures["Menu_Delete"]),
+                new MenuItem(HotkeysMediator.OperationsDelete.ToString(), MenuTextures["Menu_Delete"]),
                 new MenuSeparator(),
                 new MenuItem("Clear Selection", "", MenuTextures["Menu_ClearSelection"]),
                 new MenuItem("Select All", "Ctrl+A", MenuTextures["Menu_SelectAll"]),
@@ -99,7 +101,7 @@ namespace CBRE.Editor {
                     new MenuItem("Y Axis", ""),
                     new MenuItem("Z Axis", "")),
                 new MenuSeparator(),
-                new MenuItem("Options...", "", MenuTextures["Menu_Options"], action: Top_Options)));
+                new MenuItem("Options...", "", MenuTextures["Menu_Options"], action: Options)));
             Menus.Add(new Menu("Layout",
                 new MenuItem("Create New Layout Window", "", MenuTextures["Menu_NewWindow"]),
                 new MenuItem("Layout Window Settings...", "", MenuTextures["Menu_WindowSettings"])));
@@ -119,34 +121,26 @@ namespace CBRE.Editor {
         }
 
         public class MenuItem {
-            public MenuItem(string name, Keys shortcut, AsyncTexture texture = null, Action action = null) {
+            public MenuItem(string name, string shortcut, AsyncTexture texture = null, Action action = null) {
                 Name = name;
-                ShortcutKey = shortcut;
-                Shortcut = string.Join("+", Shortcut.Select(p => p.ToString()));
+                Shortcut = shortcut;
                 Texture = texture;
                 Action = action;
             }
 
-            public MenuItem(string name, string shortcut, AsyncTexture texture = null, Action action = null) {
-                Name = name;
-                string[] keys = shortcut.Split("+");
-                for (int i = 0; i < keys.Length; i++) {
-                    if (keys[i].ToLower() == "ctrl") {
-                        Ctrl = true;
-                    }
-                    else if (keys[i].ToLower() == "shift") {
-                        Shift = true;
-                    }
-                    else if (keys[i].ToLower() == "alt") {
-                        Alt = true;
-                    }
-                    else {
-                        ShortcutKey = Enum.TryParse<Keys>(keys[i], true, out Keys res) ? res : Keys.None;
-                    }
-                }
-                Shortcut = shortcut;
+            public MenuItem(string hotkey, AsyncTexture texture = null) {
+                var h = Hotkeys.GetHotkeyDefinitions().FirstOrDefault(p => p.ID == hotkey);
                 Texture = texture;
-                Action = action;
+                if (h == null) {
+                    Name = hotkey;
+                    Shortcut = "";
+                    return;
+                }
+                Name = h.Name;
+                Shortcut = string.Join("+", h.DefaultHotkeys);
+                Action = () => {
+                    Mediator.Publish(h.Action, h.Parameter);
+                };
             }
 
             public virtual void Draw(bool topLevel) {
@@ -155,23 +149,6 @@ namespace CBRE.Editor {
                     Action?.Invoke();
                 }
                 RenderIcon(pos);
-            }
-
-            public virtual void Update() {
-                Keys[] keys = Keyboard.GetState().GetPressedKeys();
-                List<Keys> pressed = new List<Keys>();
-                foreach (var key in keys) {
-                    if (!previousKeys.Contains(key)) {
-                        pressed.Add(key);
-                    }
-                }
-                bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
-                bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
-                bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
-                if (pressed.Contains(ShortcutKey) && ctrlpressed == Ctrl && shiftpressed == Shift && altpressed == Alt) {
-                    Action?.Invoke();
-                }
-                previousKeys = keys;
             }
 
             protected void RenderIcon(Num.Vector2 pos) {
@@ -186,14 +163,9 @@ namespace CBRE.Editor {
             }
 
             public Action Action;
-            public Keys[] previousKeys = new Keys[0];
 
             public string Name;
             public string Shortcut;
-            public Keys ShortcutKey;
-            public bool Ctrl = false;
-            public bool Shift = false;
-            public bool Alt = false;
             public AsyncTexture Texture;
         }
 
@@ -203,12 +175,6 @@ namespace CBRE.Editor {
             }
 
             public Menu(string name, params MenuItem[] items) : this(name, null, items) { }
-
-            public override void Update() {
-                for (int i = 0; i < Items.Count; i++) {
-                    Items[i].Update();
-                }
-            }
 
             public override void Draw(bool topLevel) {
                 Num.Vector2 pos = ImGui.GetCursorPos() + ImGui.GetWindowPos();

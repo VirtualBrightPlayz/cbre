@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CBRE.Common.Mediator;
 using CBRE.DataStructures.Models;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Popup;
+using CBRE.Editor.Tools;
+using CBRE.Editor.Tools.SelectTool;
 using CBRE.Graphics;
+using CBRE.Settings;
 using ImGuiNET;
 using Num = System.Numerics;
 
@@ -17,20 +22,20 @@ namespace CBRE.Editor {
         private void InitTopBar() {
             TopBarItems = new List<TopBarItem>();
 
-            TopBarItems.Add(new TopBarItem("New", MenuTextures["Menu_New"], action: Top_New));
-            TopBarItems.Add(new TopBarItem("Open", MenuTextures["Menu_Open"], action: Top_Open));
-            TopBarItems.Add(new TopBarItem("Close", MenuTextures["Menu_Close"], action: Top_Close));
-            TopBarItems.Add(new TopBarItem("Save", MenuTextures["Menu_Save"], action: Top_Save));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_New"], HotkeysMediator.FileNew.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Open"], HotkeysMediator.FileOpen.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Close"], HotkeysMediator.FileClose.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Save"], HotkeysMediator.FileSave.ToString()));
             TopBarItems.Add(new TopBarItem("Export / Lightmap", MenuTextures["Menu_ExportRmesh"]));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Undo", MenuTextures["Menu_Undo"], action: Top_Undo));
-            TopBarItems.Add(new TopBarItem("Redo", MenuTextures["Menu_Redo"], action: Top_Redo));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Undo"], HotkeysMediator.HistoryUndo.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Redo"], HotkeysMediator.HistoryRedo.ToString()));
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem("Cut", MenuTextures["Menu_Cut"]));
             TopBarItems.Add(new TopBarItem("Copy", MenuTextures["Menu_Copy"]));
             TopBarItems.Add(new TopBarItem("Paste", MenuTextures["Menu_Paste"]));
             TopBarItems.Add(new TopBarItem("Paste Special", MenuTextures["Menu_PasteSpecial"]));
-            TopBarItems.Add(new TopBarItem("Delete", MenuTextures["Menu_Delete"]));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Delete"], HotkeysMediator.OperationsDelete.ToString()));
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem("Object Properties", MenuTextures["Menu_ObjectProperties"]));
             TopBarItems.Add(new TopBarSeparator());
@@ -55,56 +60,10 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem("Group", MenuTextures["Menu_Group"]));
             TopBarItems.Add(new TopBarItem("Ungroup", MenuTextures["Menu_Ungroup"]));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Options", MenuTextures["Menu_Options"], action: Top_Options));
+            TopBarItems.Add(new TopBarItem("Options", MenuTextures["Menu_Options"], action: Options));
         }
     
         #region Actions
-
-        public static void Top_New() {
-            string name = DocumentManager.GetUntitledDocumentName();
-            Document doc = new Document(name, new DataStructures.MapObjects.Map());
-            DocumentManager.AddAndSwitch(doc);
-        }
-
-        public static void Top_Open() {
-            new OpenMap("");
-        }
-
-        public static void Top_Close() {
-            Document _document = DocumentManager.CurrentDocument;
-            if (_document.History.TotalActionsSinceLastSave > 0) {
-                new SaveMap("", _document, true);
-            }
-            else {
-                DocumentManager.Remove(_document);
-                if (DocumentManager.Documents.Count == 0) {
-                    DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
-                }
-            }
-        }
-
-        public static void Top_Save() {
-            if (DocumentManager.CurrentDocument != null)
-                new SaveMap("", DocumentManager.CurrentDocument, false);
-        }
-
-        public static void Top_Undo() {
-            var doc = DocumentManager.CurrentDocument;
-            if (doc != null) {
-                doc.History.Undo();
-            }
-        }
-
-        public static void Top_Redo() {
-            var doc = DocumentManager.CurrentDocument;
-            if (doc != null) {
-                doc.History.Redo();
-            }
-        }
-
-        public static void Top_Options() {
-            new SettingsPopup("Options");
-        }
 
         #endregion
 
@@ -137,6 +96,19 @@ namespace CBRE.Editor {
                 Texture = texture;
                 Action = action;
                 IsToggle = isToggle;
+            }
+
+            public TopBarItem(AsyncTexture texture, string hotkey, bool isToggle = false) {
+                var h = Hotkeys.GetHotkeyDefinitions().FirstOrDefault(p => p.ID == hotkey);
+                IsToggle = isToggle;
+                Texture = texture;
+                if (h == null) {
+                    ToolTip = hotkey;
+                    return;
+                }
+                Action = () => {
+                    Mediator.Publish(h.Action, h.Parameter);
+                };
             }
 
             public virtual void Draw() {

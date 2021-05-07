@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using Quaternion = CBRE.DataStructures.Geometric.Quaternion;
+using CBRE.Editor.Popup;
 
 namespace CBRE.Editor.Documents {
     /// <summary>
@@ -191,10 +192,8 @@ namespace CBRE.Editor.Documents {
 
         public void FileClose() {
             if (_document.History.TotalActionsSinceLastSave > 0) {
-                throw new NotImplementedException();
-                /*var result = MessageBox.Show("Would you like to save your changes to this map?", "Changes Detected", MessageBoxButtons.YesNoCancel);
-                if (result == DialogResult.Cancel) return;
-                if (result == DialogResult.Yes) FileSave();*/
+                new SaveMap("", _document, true);
+                return;
             }
             DocumentManager.Remove(_document);
         }
@@ -204,7 +203,7 @@ namespace CBRE.Editor.Documents {
         }
 
         public void FileSaveAs() {
-            _document.SaveFile(null, true);
+            new SaveMap("", _document, false);
         }
 
         public void FileCompile() {

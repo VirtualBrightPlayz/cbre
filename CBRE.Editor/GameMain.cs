@@ -1,4 +1,5 @@
 ﻿using CBRE.Common;
+using CBRE.Common.Mediator;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Popup;
@@ -96,9 +97,11 @@ namespace CBRE.Editor {
                     LoadTexture(file));
             }
 
+            Mediator.MediatorException += MediatorError;
             InitMenus();
             InitTopBar();
             InitToolBar();
+            Subscribe();
 
             TextureProvider.CreatePackages(Directories.GetTextureCategories());
 
@@ -133,6 +136,7 @@ namespace CBRE.Editor {
         }
 
         private Timing timing = new Timing();
+        private Keys[] previousKeys = new Keys[0];
 
         protected override void Update(GameTime gameTime) {
             timing.StartMeasurement();
@@ -142,8 +146,24 @@ namespace CBRE.Editor {
                 PopupSelected = false;
 
             if (!PopupSelected) {
-                for (int i = 0; i < Menus.Count; i++)
-                    Menus[i].Update();
+                // Hotkeys
+                {
+                    Keys[] keys = Keyboard.GetState().GetPressedKeys();
+                    List<Keys> pressed = new List<Keys>();
+                    foreach (var key in keys) {
+                        if (!previousKeys.Contains(key)) {
+                            pressed.Add(key);
+                        }
+                    }
+                    bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
+                    bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
+                    bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
+                    HotkeyDefinition def = Hotkeys.GetHotkeyDefinitions().FirstOrDefault(p => pressed.Contains(p.ShortcutKey) && ctrlpressed == p.Ctrl && shiftpressed == p.Shift && altpressed == p.Alt);
+                    if (def != null) {
+                        Mediator.Publish(def.Action, def.Parameter);
+                    }
+                    previousKeys = keys;
+                }
                 timing.PerformTicks(ViewportManager.Update);
             }
             timing.EndMeasurement();
