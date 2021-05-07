@@ -31,7 +31,7 @@ namespace CBRE.Editor.Popup {
         protected virtual void TextureDirGui() {
             ImGui.Text("Texture Directories");
             if (ImGui.BeginChild("TextureDirs", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 5))) {
-                ImGui.Text("Click listing to remove it");
+                ImGui.Text("Click a listing to remove it");
                 ImGui.SameLine();
                 if (ImGui.Button("+")) {
                     new CallbackFolderSelect("Select Texture Directory", "", Directories.TextureDirs.Add);
