@@ -6,6 +6,7 @@ using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ImGuiNET;
 
 namespace CBRE.Editor.Tools.VMTool
 {
@@ -19,6 +20,8 @@ namespace CBRE.Editor.Tools.VMTool
         }
 
         private VMState _state;
+        private bool merge;
+        private bool split;
 
         public StandardTool(VMTool mainTool) : base(mainTool)
         {
@@ -28,15 +31,20 @@ namespace CBRE.Editor.Tools.VMTool
             Control = sc;*/
         }
 
+        public override void UpdateGui() {
+            ImGui.Text($"Split Enabled {split.ToString()}");
+            ImGui.Checkbox("Automatically Merge", ref merge);
+        }
+
         private bool AutomaticallyMerge()
         {
-            throw new NotImplementedException();
+            return merge;
             /*return ((StandardControl)Control).AutomaticallyMerge;*/
         }
 
         private void UpdateSplitEnabled()
         {
-            throw new NotImplementedException();
+            split = CanSplit();
             /*((StandardControl)Control).SplitEnabled = CanSplit();*/
         }
 
@@ -197,7 +205,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
         public override void DragStart(List<VMPoint> clickedPoints)
         {
             _state = VMState.Down;
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
             /*Editor.Instance.CaptureAltPresses = true;*/
         }
 
@@ -222,7 +230,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
                 else MainTool.SetDirty(true, true);
             }
             _state = VMState.None;
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
             /*Editor.Instance.CaptureAltPresses = false;*/
         }
 
@@ -293,7 +301,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
                 removedFaces += solid.Faces.RemoveAll(x => x.Vertices.Count < 3);
             }
 
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
             /*((StandardControl)Control).ShowMergeResult(mergedVertices, removedFaces);*/
             MainTool.SetDirty(true, true);
         }

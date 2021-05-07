@@ -60,7 +60,13 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
                 var deselect = obj.FindAll().Where(x => x.IsSelected).ToList();
                 document.Selection.Deselect(deselect);
 
+                if (obj is Solid s) {
+                    s.Faces.ForEach(p => document.ObjectRenderer.RemoveFace(p));
+                }
                 obj.Unclone(kv.Value);
+                if (kv.Value is Solid v) {
+                    v.Faces.ForEach(p => document.ObjectRenderer.AddFace(p));
+                }
 
                 var select = obj.FindAll().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);

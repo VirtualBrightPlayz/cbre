@@ -147,6 +147,11 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
 
             // Create
             _objectsToCreate = document.Map.WorldSpawn.Find(x => _createdIds.Contains(x.ID)).Select(x => new CreateReference(x.Parent.ID, x)).ToList();
+            
+            _objectsToCreate.ForEach(p => {
+                if (p.MapObject is Solid s)
+                    s.Faces.ForEach(f => document.ObjectRenderer.RemoveFace(f));
+            });
             if (_objectsToCreate.Any(x => x.MapObject.IsSelected)) {
                 document.Selection.Deselect(_objectsToCreate.Where(x => x.MapObject.IsSelected).Select(x => x.MapObject));
             }
@@ -155,6 +160,10 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
 
             // Delete
             _idsToDelete = _deletedObjects.Select(x => x.Object.ID).ToList();
+            _deletedObjects.ForEach(p => {
+                if (p.Object is Solid s)
+                    s.Faces.ForEach(f => document.ObjectRenderer.AddFace(f));
+            });
             foreach (var dr in _deletedObjects.Where(x => x.TopMost)) {
                 dr.Object.SetParent(document.Map.WorldSpawn.FindByID(dr.ParentID));
                 document.Map.UpdateAutoVisgroups(dr.Object, true);
@@ -193,6 +202,11 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
 
             // Delete
             var objects = document.Map.WorldSpawn.Find(x => _idsToDelete.Contains(x.ID) && x.Parent != null).SelectMany(x => x.FindAll()).ToList();
+            
+            objects.ForEach(p => {
+                if (p is Solid s)
+                    s.Faces.ForEach(f => document.ObjectRenderer.RemoveFace(f));
+            });
 
             // Recursively check for parent groups that will be empty after these objects have been deleted
             IList<MapObject> emptyParents;

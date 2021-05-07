@@ -533,7 +533,7 @@ namespace CBRE.Editor.Tools
 
         public virtual void BoxDrawnCancel(ViewportBase viewport)
         {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
             if (State.ActiveViewport != null) State.ActiveViewport.Cursor = MouseCursor.Arrow;
             State.Action = BoxAction.ReadyToDraw;
             State.ActiveViewport = null;
