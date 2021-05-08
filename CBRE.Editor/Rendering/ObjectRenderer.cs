@@ -14,6 +14,7 @@ using Microsoft.Xna.Framework.Graphics;
 namespace CBRE.Editor.Rendering {
     public class ObjectRenderer {
         public BasicEffect BasicEffect;
+        public Effect TexturedLightmapped;
         public Effect TexturedShaded;
         public Effect SolidShaded;
         public Effect Solid;
@@ -372,6 +373,7 @@ namespace CBRE.Editor.Rendering {
             Document = doc;
 
             BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+            TexturedLightmapped = LoadEffect("Shaders/texturedLightmapped.mgfx");
             TexturedShaded = LoadEffect("Shaders/texturedShaded.mgfx");
             SolidShaded = LoadEffect("Shaders/solidShaded.mgfx");
             Solid = LoadEffect("Shaders/solid.mgfx");
@@ -442,6 +444,34 @@ namespace CBRE.Editor.Rendering {
                     SolidShaded.CurrentTechnique.Passes[0].Apply();
                 }
                 kvp.Value.RenderSolid();
+            }
+            SolidShaded.CurrentTechnique.Passes[0].Apply();
+            pointEntityGeometry.RenderSolid();
+        }
+
+        public void RenderLightmapped() {
+            throw new NotImplementedException();
+            TextureItem rem = TextureProvider.GetItem("tooltextures/remove_face");
+            foreach (var kvp in brushGeom) {
+                for (int i = 0; i < Document.Lightmaps.Length; i++) {
+                    TextureItem item = TextureProvider.GetItem(kvp.Key);
+                    if (item != null && item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
+                        TexturedLightmapped.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
+                        if (Document.Lightmaps[i] is AsyncTexture lmTexture0 && lmTexture0 != null) {
+                            TexturedLightmapped.Parameters["yTexture"].SetValue(lmTexture0.MonoGameTexture);
+                        }
+                        else if (rem.Texture is AsyncTexture aremTex && aremTex.MonoGameTexture != null) {
+                            TexturedLightmapped.Parameters["yTexture"].SetValue(aremTex.MonoGameTexture);
+                        }
+                        else {
+                            continue;
+                        }
+                        TexturedLightmapped.CurrentTechnique.Passes[0].Apply();
+                    } else {
+                        SolidShaded.CurrentTechnique.Passes[0].Apply();
+                    }
+                    // kvp.Value.RenderLightmapped(i);
+                }
             }
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();

@@ -39,6 +39,8 @@ namespace CBRE.Editor.Documents {
         public HistoryManager History { get; private set; }
 
         public ObjectRenderer ObjectRenderer { get; private set; }
+        public bool LightmapTextureOutdated { get; set; }
+        public ITexture[] Lightmaps { get; set; } = new ITexture[4];
 
         private readonly DocumentSubscriptions _subscriptions;
         private readonly DocumentMemory _memory;

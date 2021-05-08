@@ -123,9 +123,9 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                     case VariableType.Color255:
                         {
                             Color color = props[i].GetColour255(Color.White);
-                            Num.Vector4 v4 = new Num.Vector4(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
+                            Num.Vector4 v4 = new Num.Vector4(color.R / 255f, color.G / 255f, color.B / 255f, 1f);
                             if (ImGui.ColorEdit4(props[i].OriginalKey, ref v4)) {
-                                props[i].Value = $"{(int)(v4.X * 255)} {(int)(v4.Y * 255)} {(int)(v4.Z * 255)} {(int)(v4.W * 255)}";
+                                props[i].Value = $"{(int)(v4.X * 255)} {(int)(v4.Y * 255)} {(int)(v4.Z * 255)}";
                                 props[i].IsModified = true;
                             }
                         }

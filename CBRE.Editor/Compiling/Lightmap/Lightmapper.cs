@@ -1,7 +1,9 @@
 ﻿using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
+using CBRE.Editor.Rendering;
 using CBRE.Graphics;
+using CBRE.Providers.Texture;
 using CBRE.Settings;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -9,6 +11,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -119,6 +122,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
             LMFace.FindFacesAndGroups(map, out faces, out lmGroups);
 
             if (!lmGroups.Any()) { throw new Exception("No lightmap groups!"); }
+
+            foreach (LMFace lmface in faces) {
+                lmface.OriginalFace.LmIndex = lmface.LmIndex;
+            }
 
             foreach (Solid solid in map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
                 foreach (Face tface in solid.Faces) {
@@ -300,11 +307,23 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
             for (int k = 0; k < 4; k++) {
                 byte[] byteBuffer = new byte[buffers[k].Length];
+                Color[] pixels = new Color[buffers[k].Length / 4];
                 for (int i = 0; i < buffers[k].Length; i++) {
                     byteBuffer[i] = (byte)Math.Max(Math.Min(buffers[k][i] * 255.0f, 255.0f), 0.0f);
+                    if (i + 3 < buffers[k].Length) {
+                        pixels[i/4] = Color.FromArgb(byteBuffer[i+0], byteBuffer[i+1], byteBuffer[i+2], byteBuffer[i+3]);
+                    }
                 }
                 lock (Lightmaps) {
-                    throw new NotImplementedException();
+                    Texture2D tex = new Texture2D(GameMain.Instance.GraphicsDevice, totalTextureDims, totalTextureDims);
+                    tex.SetData(byteBuffer);
+                    string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"lm_{k}.png");
+                    FileStream fs = File.OpenWrite(fname);
+                    tex.SaveAsPng(fs, totalTextureDims, totalTextureDims);
+                    fs.Close();
+                    document.Lightmaps[k] = new AsyncTexture(fname);
+                    // document.Lightmaps[k] = SixLabors.ImageSharp.Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Argb32>(pixels, totalTextureDims, totalTextureDims);
+                    // throw new NotImplementedException();
                     /*BitmapData bitmapData2 = textureCollection.Lightmaps[k].LockBits(new Rectangle(0, 0, totalTextureDims, totalTextureDims), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                     Marshal.Copy(byteBuffer, 0, bitmapData2.Scan0, byteBuffer.Length);
                     textureCollection.Lightmaps[k].UnlockBits(bitmapData2);*/
@@ -315,31 +334,43 @@ namespace CBRE.Editor.Compiling.Lightmap {
             faces.AddRange(lmGroups.SelectMany(g => g.Faces));
 
             lock (Lightmaps) {
-                throw new NotImplementedException();
+                document.LightmapTextureOutdated = true;
+                ViewportManager.MarkForRerender();
+                // throw new NotImplementedException();
                 /*document.TextureCollection.LightmapTextureOutdated = true;*/
         }
     }
 
     public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
         lock (Lightmaps) {
-            throw new NotImplementedException();
-            /*for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
-                string iPath = path + (threeBasisModel ? i.ToString() : "");
-                if (lmCount == 1) {
-                    document.TextureCollection.Lightmaps[i].Save(iPath + ".png");
-                } else {
-                    for (int j = 0; j < lmCount; j++) {
-                        int x = ((j % 2) * LightmapConfig.TextureDims);
-                        int y = ((j / 2) * LightmapConfig.TextureDims);
+            // throw new NotImplementedException();
+            for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
+                while (document.Lightmaps[i] is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture == null) {
+                }
+                if (document.Lightmaps[i] is AsyncTexture texture) {
+                    string iPath = path + (threeBasisModel ? i.ToString() : "");
+                    if (lmCount == 1) {
+                        FileStream fs = File.OpenWrite(iPath + ".png");
+                        texture.MonoGameTexture.SaveAsPng(fs, texture.Width, texture.Height);
+                        fs.Close();
+                    } else {
+                        for (int j = 0; j < lmCount; j++) {
+                            int x = ((j % 2) * LightmapConfig.TextureDims);
+                            int y = ((j / 2) * LightmapConfig.TextureDims);
 
-                        Bitmap clone = document.TextureCollection.Lightmaps[i].Clone(
-                            new Rectangle(x, y, LightmapConfig.TextureDims, LightmapConfig.TextureDims),
-                            PixelFormat.Format32bppArgb);
-                        clone.Save(iPath + "_" + j.ToString() + ".png");
-                        clone.Dispose();
+                            byte[] clone = new byte[texture.Width * texture.Height];
+                            texture.MonoGameTexture.GetData(clone);
+                            Texture2D texture2 = new Texture2D(texture.MonoGameTexture.GraphicsDevice, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
+                            byte[] tmp = new byte[LightmapConfig.TextureDims * LightmapConfig.TextureDims];
+                            Array.Copy(clone, x + y * LightmapConfig.TextureDims, tmp, 0, tmp.Length);
+                            texture2.SetData(tmp);
+                            FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
+                            texture2.SaveAsPng(fs, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
+                            fs.Close();
+                        }
                     }
                 }
-            }*/
+            }
         }
     }
 

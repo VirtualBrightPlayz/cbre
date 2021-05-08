@@ -23,7 +23,7 @@ namespace CBRE.Editor {
                 new MenuItem(HotkeysMediator.FileSave.ToString(), MenuTextures["Menu_Save"]),
                 new MenuItem(HotkeysMediator.FileSaveAs.ToString(), MenuTextures["Menu_SaveAs"]),
                 new MenuSeparator(),
-                new MenuItem("Export / Lightmap", "F9", MenuTextures["Menu_ExportRmesh"]),
+                new MenuItem(HotkeysMediator.FileCompile.ToString(), MenuTextures["Menu_ExportRmesh"]),
                 new MenuSeparator(),
                 new MenuItem("Exit", "", action: Exit)));
             Menus.Add(new Menu("Edit",

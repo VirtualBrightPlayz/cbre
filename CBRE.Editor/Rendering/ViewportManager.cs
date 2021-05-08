@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CBRE.Editor.Documents;
 using CBRE.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -91,7 +92,7 @@ namespace CBRE.Editor.Rendering {
             draggingCenterY = false;
             draggingViewport = -1;
 
-            Viewports[0] = new Viewport3D(Viewport3D.ViewType.Shaded);
+            Viewports[0] = new Viewport3D(Viewport3D.ViewType.Textured);
             Viewports[1] = new Viewport2D(Viewport2D.ViewDirection.Top);
             Viewports[2] = new Viewport2D(Viewport2D.ViewDirection.Side);
             Viewports[3] = new Viewport2D(Viewport2D.ViewDirection.Front);
@@ -205,6 +206,11 @@ namespace CBRE.Editor.Rendering {
             GameMain.Instance.SelectedTool?.Update();
             if (knownWindowWidth != Right || knownWindowHeight != Bottom) {
                 RebuildRenderTarget();
+            }
+            var doc = DocumentManager.CurrentDocument;
+            if (doc != null && doc.LightmapTextureOutdated) {
+                doc.LightmapTextureOutdated = false;
+                shouldRerender = true;
             }
             if (shouldRerender) { Render(); }
             var mouseState = Mouse.GetState();

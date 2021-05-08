@@ -162,7 +162,22 @@ namespace CBRE.Editor.Rendering {
                 GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-                objectRenderer.RenderTextured();
+                switch (Type) {
+                    case ViewType.Lightmapped:
+                        objectRenderer.RenderLightmapped();
+                        break;
+                    case ViewType.Wireframe:
+                        objectRenderer.RenderWireframe();
+                        break;
+                    case ViewType.Flat:
+                        objectRenderer.RenderSolidUntextured();
+                        break;
+                    default:
+                        objectRenderer.RenderTextured();
+                        break;
+                }
+
+                // objectRenderer.RenderTextured();
 
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             }

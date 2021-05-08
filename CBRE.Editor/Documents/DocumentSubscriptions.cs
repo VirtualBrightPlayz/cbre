@@ -208,7 +208,8 @@ namespace CBRE.Editor.Documents {
         }
 
         public void FileCompile() {
-            throw new NotImplementedException();
+            ExportPopup form = new ExportPopup(_document);
+            // throw new NotImplementedException();
         }
 
         public void OperationsCopy() {

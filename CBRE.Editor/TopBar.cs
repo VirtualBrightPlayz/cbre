@@ -26,7 +26,7 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Open"], HotkeysMediator.FileOpen.ToString()));
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Close"], HotkeysMediator.FileClose.ToString()));
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Save"], HotkeysMediator.FileSave.ToString()));
-            TopBarItems.Add(new TopBarItem("Export / Lightmap", MenuTextures["Menu_ExportRmesh"]));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_ExportRmesh"], HotkeysMediator.FileCompile.ToString()));
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Undo"], HotkeysMediator.HistoryUndo.ToString()));
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Redo"], HotkeysMediator.HistoryRedo.ToString()));

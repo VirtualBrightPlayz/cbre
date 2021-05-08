@@ -21,6 +21,8 @@ namespace CBRE.DataStructures.MapObjects {
         public TextureReference Texture { get; set; }
         public List<Vertex> Vertices { get; set; }
 
+        public int LmIndex { get; set; }
+
         public Solid Parent { get; set; }
 
         public Box BoundingBox { get; set; }
