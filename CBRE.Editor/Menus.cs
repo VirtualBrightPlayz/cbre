@@ -106,7 +106,7 @@ namespace CBRE.Editor {
                 new MenuItem("Create New Layout Window", "", MenuTextures["Menu_NewWindow"]),
                 new MenuItem("Layout Window Settings...", "", MenuTextures["Menu_WindowSettings"])));
             Menus.Add(new Menu("Help",
-                new MenuItem("About...", "")));
+                new MenuItem("About...", "", action: About)));
         }
 
         private void UpdateMenus() {
