@@ -1,4 +1,5 @@
-﻿using CBRE.DataStructures.Geometric;
+﻿using CBRE.Common;
+using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
@@ -15,6 +16,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     static class Lightmapper {
@@ -307,11 +309,11 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
             for (int k = 0; k < 4; k++) {
                 byte[] byteBuffer = new byte[buffers[k].Length];
-                Color[] pixels = new Color[buffers[k].Length / 4];
+                // Color[] pixels = new Color[buffers[k].Length / 4];
                 for (int i = 0; i < buffers[k].Length; i++) {
                     byteBuffer[i] = (byte)Math.Max(Math.Min(buffers[k][i] * 255.0f, 255.0f), 0.0f);
                     if (i + 3 < buffers[k].Length) {
-                        pixels[i/4] = Color.FromArgb(byteBuffer[i+0], byteBuffer[i+1], byteBuffer[i+2], byteBuffer[i+3]);
+                        // pixels[i/4] = Color.FromArgb(byteBuffer[i+0], byteBuffer[i+1], byteBuffer[i+2], byteBuffer[i+3]);
                     }
                 }
                 lock (Lightmaps) {
@@ -335,35 +337,38 @@ namespace CBRE.Editor.Compiling.Lightmap {
     }
 
     public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
-        lock (Lightmaps) {
-            for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
-                while (document.Lightmaps[i] is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture == null) {
-                }
-                if (document.Lightmaps[i] is AsyncTexture texture) {
-                    string iPath = path + (threeBasisModel ? i.ToString() : "");
-                    if (lmCount == 1) {
-                        FileStream fs = File.OpenWrite(iPath + ".png");
-                        texture.MonoGameTexture.SaveAsPng(fs, texture.Width, texture.Height);
-                        fs.Close();
-                    } else {
-                        for (int j = 0; j < lmCount; j++) {
-                            int x = ((j % 2) * LightmapConfig.TextureDims);
-                            int y = ((j / 2) * LightmapConfig.TextureDims);
-
-                            byte[] clone = new byte[texture.Width * texture.Height];
-                            texture.MonoGameTexture.GetData(clone);
-                            Texture2D texture2 = new Texture2D(texture.MonoGameTexture.GraphicsDevice, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
-                            byte[] tmp = new byte[LightmapConfig.TextureDims * LightmapConfig.TextureDims];
-                            Array.Copy(clone, x + y * LightmapConfig.TextureDims, tmp, 0, tmp.Length);
-                            texture2.SetData(tmp);
-                            FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
-                            texture2.SaveAsPng(fs, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
+        Task.Run(() => {
+            lock (Lightmaps) {
+                for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
+                    while (document.Lightmaps[i] is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture == null) {
+                        Task.Delay(100);
+                    }
+                    if (document.Lightmaps[i] is AsyncTexture texture) {
+                        string iPath = path + (threeBasisModel ? i.ToString() : "");
+                        if (lmCount == 1) {
+                            FileStream fs = File.OpenWrite(iPath + ".png");
+                            texture.MonoGameTexture.SaveAsPng(fs, texture.MonoGameTexture.Width, texture.MonoGameTexture.Height);
                             fs.Close();
+                        } else {
+                            for (int j = 0; j < lmCount; j++) {
+                                int x = ((j % 2) * LightmapConfig.TextureDims);
+                                int y = ((j / 2) * LightmapConfig.TextureDims);
+
+                                byte[] clone = new byte[texture.Width * texture.Height];
+                                texture.MonoGameTexture.GetData(clone);
+                                Texture2D texture2 = new Texture2D(texture.MonoGameTexture.GraphicsDevice, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
+                                byte[] tmp = new byte[LightmapConfig.TextureDims * LightmapConfig.TextureDims];
+                                Array.Copy(clone, x + y * LightmapConfig.TextureDims, tmp, 0, tmp.Length);
+                                texture2.SetData(tmp);
+                                FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
+                                texture2.SaveAsPng(fs, texture2.Width, texture2.Height);
+                                fs.Close();
+                            }
                         }
                     }
                 }
             }
-        }
+        });
     }
 
     private static Thread CreateLightmapRenderThread(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces) {

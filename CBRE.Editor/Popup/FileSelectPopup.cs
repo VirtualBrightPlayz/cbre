@@ -62,7 +62,7 @@ namespace CBRE.Editor.Popup {
                 string[] files = Directory.GetFiles(_path);
 
                 for (int i = 0; i < files.Length; i++) {
-                    if (ImGui.Selectable(Path.GetFileNameWithoutExtension(files[i]), FileName == files[i], ImGuiSelectableFlags.SpanAllColumns)) {
+                    if (ImGui.Selectable(Path.GetFileName(files[i]), FileName == files[i], ImGuiSelectableFlags.SpanAllColumns)) {
                         FileName = files[i];
                     }
                     bool hovered = ImGui.IsItemHovered();
