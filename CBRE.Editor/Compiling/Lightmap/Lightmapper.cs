@@ -322,11 +322,6 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     tex.SaveAsPng(fs, totalTextureDims, totalTextureDims);
                     fs.Close();
                     document.Lightmaps[k] = new AsyncTexture(fname);
-                    // document.Lightmaps[k] = SixLabors.ImageSharp.Image.LoadPixelData<SixLabors.ImageSharp.PixelFormats.Argb32>(pixels, totalTextureDims, totalTextureDims);
-                    // throw new NotImplementedException();
-                    /*BitmapData bitmapData2 = textureCollection.Lightmaps[k].LockBits(new Rectangle(0, 0, totalTextureDims, totalTextureDims), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                    Marshal.Copy(byteBuffer, 0, bitmapData2.Scan0, byteBuffer.Length);
-                    textureCollection.Lightmaps[k].UnlockBits(bitmapData2);*/
                 }
             }
 
@@ -336,14 +331,11 @@ namespace CBRE.Editor.Compiling.Lightmap {
             lock (Lightmaps) {
                 document.LightmapTextureOutdated = true;
                 ViewportManager.MarkForRerender();
-                // throw new NotImplementedException();
-                /*document.TextureCollection.LightmapTextureOutdated = true;*/
         }
     }
 
     public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
         lock (Lightmaps) {
-            // throw new NotImplementedException();
             for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
                 while (document.Lightmaps[i] is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture == null) {
                 }
