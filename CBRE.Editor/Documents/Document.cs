@@ -16,6 +16,7 @@ using CBRE.Providers.Map;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
 using CBRE.Settings.Models;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -41,6 +42,7 @@ namespace CBRE.Editor.Documents {
         public ObjectRenderer ObjectRenderer { get; private set; }
         public bool LightmapTextureOutdated { get; set; }
         public ITexture[] Lightmaps { get; set; } = new ITexture[4];
+        public Texture2D[] MGLightmaps { get; set; } = new Texture2D[4];
 
         private readonly DocumentSubscriptions _subscriptions;
         private readonly DocumentMemory _memory;

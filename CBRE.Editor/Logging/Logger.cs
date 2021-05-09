@@ -17,9 +17,13 @@ namespace CBRE.Editor.Logging {
             LogFile = Path.GetFullPath(Path.Combine(typeof(Logger).Assembly.Location, "..", LogFile));
         }
 
+        public static void Log(ExceptionInfo info) {
+            File.AppendAllText(LogFile, $"===Date: {info.Date.ToString()}\n===Application Version: {info.ApplicationVersion}\n===Runtime Version: {info.RuntimeVersion}\n===Message: {info.Message}\n===Source: {info.Source}\n===OS: {info.FriendlyOSName()}\n===Stack Trace: {info.FullStackTrace}\n\n");
+        }
+
         public static void ShowException(Exception ex, string message = "") {
             var info = new ExceptionInfo(ex, message);
-            File.AppendAllText(LogFile, $"===Date: {info.Date.ToString()}\n===Application Version: {info.ApplicationVersion}\n===Runtime Version: {info.RuntimeVersion}\n===Message: {info.Message}\n===Source: {info.Source}\n===OS: {info.FriendlyOSName()}\n===Stack Trace: {info.FullStackTrace}\n\n");
+            Log(info);
             new CopyMessagePopup($"Exception", $"{info.Message}\nThis error has been logged to the file \"{LogFile}\"", new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) });
             /*var window = new ExceptionWindow(info);
             if (Editor.Instance == null || Editor.Instance.IsDisposed) window.Show();

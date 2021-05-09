@@ -254,7 +254,15 @@ namespace CBRE.Editor {
                 ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, 47));
                 ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60));
                 if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60))) {
-                    SelectedTool?.UpdateGui();
+                    if (ImGui.TreeNode("Tool")) {
+                        SelectedTool?.UpdateGui();
+                        ImGui.TreePop();
+                    }
+                    if (ImGui.TreeNode("Contextual Help")) {
+                        UpdateContextHelp();
+                        ImGui.TreePop();
+                    }
+                    
 
                     ImGui.EndChildFrame();
                 }
