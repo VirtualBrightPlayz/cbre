@@ -38,7 +38,7 @@ namespace CBRE.Graphics {
             }
         }
 
-        public TextureFlags Flags => TextureFlags.None;
+        public TextureFlags Flags => Name.ToLower().EndsWith("_clear") ? TextureFlags.Transparent : TextureFlags.None;
 
         public string Name => Path.GetFileNameWithoutExtension(Filename);
 

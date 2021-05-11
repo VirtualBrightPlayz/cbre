@@ -27,6 +27,8 @@ namespace CBRE.Editor.Popup {
         }
 
         protected override bool ImGuiLayout() {
+            if (Lightmapper.FaceRenderThreads != null && Lightmapper.FaceRenderThreads.Count > 0)
+                return base.ImGuiLayout();
             var eval = Enum.GetValues<LightmapSize>();
             if (ImGui.BeginCombo("Size", $"{_size.ToString()} ({(int)_size})")) {
                 for (int i = 0; i < eval.Length; i++) {
