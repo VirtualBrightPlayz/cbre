@@ -546,7 +546,7 @@ namespace CBRE.Editor.Rendering {
                         TexturedLightmapped.Parameters["yTexture"].SetValue(Document.MGLightmaps[i]);
                     }
                     else {
-                        Logging.Logger.Log(new Logging.ExceptionInfo(new Exception("No lightmap texture."), ""));
+                        // Logging.Logger.Log(new Logging.ExceptionInfo(new Exception("No lightmap texture."), ""));
                     }
 
                     if (item != null && item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
