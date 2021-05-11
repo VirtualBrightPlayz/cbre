@@ -344,17 +344,18 @@ namespace CBRE.Editor.Rendering {
                 GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
             }
 
-            public void RenderLightmapped(int id) {
+            public void RenderLightmapped(int id, bool last) {
+                if (!dirty) { return; }
                 UpdateLightmapBuffers(id);
                 if (indexSolidCount <= 0)
                     return;
                 GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
                 GlobalGraphics.GraphicsDevice.Indices = indexBufferSolid;
                 GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
+                dirty = last;
             }
 
             private void UpdateLightmapBuffers(int id) {
-                // if (!dirty) { return; }
 
                 var filteredFaces = faces.Where(p => p.LmIndex == id).ToList();
 
@@ -418,7 +419,6 @@ namespace CBRE.Editor.Rendering {
                 indexBufferSolid.SetData(indicesSolid);
                 indexBufferWireframe.SetData(indicesWireframe);
 
-                // dirty = false;
             }
 
             public void Dispose() {
@@ -551,7 +551,7 @@ namespace CBRE.Editor.Rendering {
                     }
                     TexturedLightmapped.CurrentTechnique.Passes[0].Apply();
                     // kvp.Value.RenderSolid();
-                    kvp.Value.RenderLightmapped(i);
+                    kvp.Value.RenderLightmapped(i, i + 1 >= Document.MGLightmaps.Length);
                 }
             }
             SolidShaded.CurrentTechnique.Passes[0].Apply();
