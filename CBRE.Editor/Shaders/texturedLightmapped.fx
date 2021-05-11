@@ -60,13 +60,13 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
 
 float4 PixelShaderF(VertexShaderOutput input) : COLOR0
 {
-    float lighting1 = dot(input.Normal, float3(0.2672,0.8017,0.5345)) * 0.25 + 0.75;
+    // float lighting1 = dot(input.Normal, float3(0.2672,0.8017,0.5345)) * 0.25 + 0.75;
     // float4 lighting = float4(lighting1, lighting1, lighting1, lighting1);
 
     float4 lighting = tex2D(TextureSampler0, input.LmCoord);
 
-    float4 c = tex2D(TextureSampler, input.TexCoord) + lighting;// * float4(1.0, 1.0 - input.Selected, 1.0 - input.Selected, 1.0);
-
+    float4 c = (tex2D(TextureSampler, input.TexCoord) * lighting) * float4(1.0, 1.0 - input.Selected, 1.0 - input.Selected, 1.0);
+    c.a = 1.0;
     return c;
 }
 

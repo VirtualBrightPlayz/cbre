@@ -262,7 +262,24 @@ namespace CBRE.Editor {
                         UpdateContextHelp();
                         ImGui.TreePop();
                     }
-                    
+                    if (ImGui.TreeNode("Viewport Options")) {
+                        for (int i = 0; i < ViewportManager.Viewports.Length; i++) {
+                            if (ViewportManager.Viewports[i] is Viewport3D viewport3D) {
+                                if (ImGui.BeginCombo("Viewport Render Type", viewport3D.Type.ToString())) {
+                                    var evals = Enum.GetValues<Viewport3D.ViewType>();
+                                    for (int j = 0; j < evals.Length; j++) {
+                                        if (ImGui.Selectable(evals[j].ToString(), viewport3D.Type == evals[j])) {
+                                            viewport3D.Type = evals[j];
+                                            ViewportManager.MarkForRerender();
+                                            DocumentManager.Documents.ForEach(p => p.ObjectRenderer.MarkDirty());
+                                        }
+                                    }
+                                    ImGui.EndCombo();
+                                }
+                            }
+                        }
+                        ImGui.TreePop();
+                    }
 
                     ImGui.EndChildFrame();
                 }
