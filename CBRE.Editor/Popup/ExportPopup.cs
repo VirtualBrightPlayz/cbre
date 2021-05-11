@@ -39,6 +39,7 @@ namespace CBRE.Editor.Popup {
             if (ImGui.Button("Render Lightmaps")) {
                 try {
                     LightmapConfig.TextureDims = (int)_size;
+                    LightmapConfig.DownscaleFactor = downscale;
                     Lightmapper.Render(_document, out var faces, out var lmgroups);
                 }
                 catch (System.Exception e) {
@@ -47,6 +48,8 @@ namespace CBRE.Editor.Popup {
             }
             if (ImGui.Button("Export as .rmesh")) {
                 try {
+                    LightmapConfig.TextureDims = (int)_size;
+                    LightmapConfig.DownscaleFactor = downscale;
                     new FileCallbackPopup("Save .rmesh", "", s => RMeshExport.SaveToFile(s, _document));
                 }
                 catch (System.Exception e) {
@@ -55,6 +58,8 @@ namespace CBRE.Editor.Popup {
             }
             if (ImGui.Button("Export as .rm2")) {
                 try {
+                    LightmapConfig.TextureDims = (int)_size;
+                    LightmapConfig.DownscaleFactor = downscale;
                     new FileCallbackPopup("Save .rm2", "", s => RM2Export.SaveToFile(s, _document));
                 }
                 catch (System.Exception e) {
