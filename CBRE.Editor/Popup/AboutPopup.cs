@@ -7,6 +7,8 @@ namespace CBRE.Editor.Popup {
     public class AboutPopup : PopupUI
     {
         private const string githubURL = "https://github.com/VirtualBrightPlayz/cbre";
+        private const string juanjp600URL = "https://juanjp600.github.io/cbre/";
+        private const string cbreURL = "https://github.com/juanjp600/cbre";
         private const string GPLv2URL = "https://www.gnu.org/licenses/gpl-2.0.html";
         private const string LogicAndTrick = "https://logic-and-trick.com/";
 
@@ -46,6 +48,24 @@ namespace CBRE.Editor.Popup {
                     Process.Start(githubURL);
                 } catch {
                     OpenUrl(githubURL);
+                }
+            }
+
+            ImGui.Text("juanjp600:");
+            ImGui.SameLine();
+            if (ImGui.Button("GitHub Pages CBRE")) {
+                try {
+                    Process.Start(juanjp600URL);
+                } catch {
+                    OpenUrl(juanjp600URL);
+                }
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("CBRE GitHub")) {
+                try {
+                    Process.Start(cbreURL);
+                } catch {
+                    OpenUrl(cbreURL);
                 }
             }
 
