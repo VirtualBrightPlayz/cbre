@@ -37,7 +37,7 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem("Paste Special", MenuTextures["Menu_PasteSpecial"]));
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Delete"], HotkeysMediator.OperationsDelete.ToString()));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Object Properties", MenuTextures["Menu_ObjectProperties"]));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_ObjectProperties"], HotkeysMediator.ObjectProperties.ToString()));
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem("Snap To Grid", MenuTextures["Menu_SnapToGrid"]));
             TopBarItems.Add(new TopBarItem("Show 2D Grid", MenuTextures["Menu_Show2DGrid"]));
@@ -62,10 +62,6 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem("Options", MenuTextures["Menu_Options"], action: Options));
         }
-    
-        #region Actions
-
-        #endregion
 
         private void UpdateTopBar() {
             ImGui.SetCursorPos(new Num.Vector2(0, 19));

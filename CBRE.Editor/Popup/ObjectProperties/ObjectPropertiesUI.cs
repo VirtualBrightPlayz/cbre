@@ -8,17 +8,27 @@ using CBRE.DataStructures.GameData;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Actions;
 using CBRE.Editor.Actions.MapObjects.Entities;
+using CBRE.Editor.Actions.MapObjects.Operations;
+using CBRE.Editor.Actions.Visgroups;
 using CBRE.Editor.Documents;
 using ImGuiNET;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup.ObjectProperties {
     public class ObjectPropertiesUI : PopupUI {
+        public enum VisgroupAction {
+            NoChange,
+            Add,
+            Remove
+        }
+
         private Document _document;
         private MapObject _obj;
         private List<TableValue> _propVals;
         private string _className;
         private GameDataObject selectedEntity = null;
+        private Dictionary<int, VisgroupAction> visgroupActions = new Dictionary<int, VisgroupAction>();
+        private Dictionary<int, Color> visgroupColors = new Dictionary<int, Color>();
 
         public ObjectPropertiesUI(Document document, MapObject mapobject) : base("Object Properties") {
             _document = document;
@@ -29,6 +39,11 @@ namespace CBRE.Editor.Popup.ObjectProperties {
 
         protected virtual void Setup() {
             _className = _obj.ClassName;
+            visgroupActions = new Dictionary<int, VisgroupAction>();
+            foreach (var group in _document.Map.Visgroups) {
+                visgroupActions.Add(group.ID, VisgroupAction.NoChange);
+            }
+
             var list = new List<TableValue>();
             if (_obj is Entity || _obj is World) {
                 var data = _obj.GetEntityData();
@@ -65,7 +80,65 @@ namespace CBRE.Editor.Popup.ObjectProperties {
         protected override bool ImGuiLayout() {
             if (_obj is Entity || _obj is World)
                 EntityGui(_obj);
+                VisgroupGui(_obj);
             return ImGuiButtons();
+        }
+
+        protected virtual void VisgroupGui(MapObject obj) {
+            if (ImGui.TreeNode("Visgroups")) {
+                for (int i = 0; i < _document.Map.Visgroups.Count; i++) {
+                    if (_document.Map.Visgroups[i] is DataStructures.MapObjects.AutoVisgroup) {
+                        continue;
+                    }
+                    var c = _document.Map.Visgroups[i].Colour;
+                    var col = new Num.Vector4(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
+                    ImGui.PushStyleColor(ImGuiCol.Text, col);
+                    int id = _document.Map.Visgroups[i].ID;
+                    bool isInVis = obj.IsInVisgroup(id, false);
+                    if (visgroupActions[id] != VisgroupAction.NoChange) {
+                        isInVis = visgroupActions[id] == VisgroupAction.Add ? true : false;
+                    }
+                    if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
+                        if (isInVis)
+                            visgroupActions[id] = VisgroupAction.Add;
+                        else
+                            visgroupActions[id] = VisgroupAction.Remove;
+                    }
+                    ImGui.PopStyleColor();
+                    /*ImGui.SameLine();
+                    if (ImGui.ColorEdit4($"{_document.Map.Visgroups[i].Name}", ref col)) {
+                        if (!visgroupColors.ContainsKey(id))
+                            visgroupColors.Add(id, c);
+                        visgroupColors[id] = Color.FromArgb((int)(col.W * 255), (int)(col.X * 255), (int)(col.Y * 255), (int)(col.Z * 255));
+                    }*/
+                }
+                ImGui.TreePop();
+            }
+            if (ImGui.TreeNode("Auto Visgroups")) {
+                for (int i = 0; i < _document.Map.Visgroups.Count; i++) {
+                    if (_document.Map.Visgroups[i] is DataStructures.MapObjects.AutoVisgroup) {
+                        var c = _document.Map.Visgroups[i].Colour;
+                        var col = new Num.Vector4(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
+                        ImGui.PushStyleColor(ImGuiCol.Text, col);
+                        int id = _document.Map.Visgroups[i].ID;
+                        bool isInVis = obj.IsInVisgroup(id, false);
+                        if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
+                            if (isInVis)
+                                visgroupActions[id] = VisgroupAction.Add;
+                            else
+                                visgroupActions[id] = VisgroupAction.Remove;
+                        }
+                        ImGui.PopStyleColor();
+                        /*ImGui.SameLine();
+                        if (ImGui.ColorEdit4($"{_document.Map.Visgroups[i].Name}", ref col)) {
+                            if (!visgroupColors.ContainsKey(id))
+                                visgroupColors.Add(id, c);
+                            visgroupColors[id] = Color.FromArgb((int)(col.W * 255), (int)(col.X * 255), (int)(col.Y * 255), (int)(col.Z * 255));
+                        }*/
+                    }
+                }
+                ImGui.TreePop();
+            }
         }
 
         protected virtual void EntityGui(MapObject obj) {
@@ -204,6 +277,14 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                 actionText = "Edit entity data";
                 ac.Add(editAction);
             }
+
+            var visgroupAction = GetUpdateVisgroupsAction();
+
+            if (visgroupAction != null)
+            {
+                actionText = "Update visgroups";
+                ac.Add(visgroupAction);
+            }
             
             if (!ac.IsEmpty())
             {
@@ -212,6 +293,13 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                 return true;
             }
             return false;
+        }
+
+        private IAction GetUpdateVisgroupsAction()
+        {
+            var add = visgroupActions.Where(p => p.Value == VisgroupAction.Add).Select(p => p.Key);
+            var rem = visgroupActions.Where(p => p.Value == VisgroupAction.Remove).Select(p => p.Key);
+            return new EditObjectVisgroups(new [] { _obj }, add, rem);
         }
 
         private EditEntityData GetEditEntityDataAction()

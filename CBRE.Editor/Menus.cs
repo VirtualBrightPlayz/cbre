@@ -39,7 +39,7 @@ namespace CBRE.Editor {
                 new MenuItem("Clear Selection", "", MenuTextures["Menu_ClearSelection"]),
                 new MenuItem("Select All", "Ctrl+A", MenuTextures["Menu_SelectAll"]),
                 new MenuSeparator(),
-                new MenuItem("Object Properties", "Alt+Enter", MenuTextures["Menu_ObjectProperties"])));
+                new MenuItem(HotkeysMediator.ObjectProperties.ToString(), MenuTextures["Menu_ObjectProperties"])));
             Menus.Add(new Menu("Map",
                 new MenuItem("Snap to Grid", "", MenuTextures["Menu_SnapToGrid"]),
                 new MenuItem("Show 2D Grid", "", MenuTextures["Menu_Show2DGrid"]),
