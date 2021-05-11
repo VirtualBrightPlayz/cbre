@@ -19,26 +19,34 @@
     <PackageReference Include="System.Buffers" Version="4.4.0" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="cimgui\win-x86\cimgui.dll">
+    <None Include="cimgui\win-x86\cimgui.dll">
       <PackagePath>runtimes/win-x86/native</PackagePath>
+      <!-- <Link>cimgui.dll</Link> -->
+      <!-- <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> -->
       <Pack>true</Pack>
-    </Content>
-    <Content Include="cimgui\win-x64\cimgui.dll">
+    </None>
+    <None Include="cimgui\win-x64\cimgui.dll">
       <PackagePath>runtimes/win-x64/native</PackagePath>
+      <Link>cimgui.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Pack>true</Pack>
-    </Content>
-    <Content Include="cimgui\linux-x64\cimgui.so">
+    </None>
+    <None Include="cimgui\linux-x64\cimgui.so">
       <PackagePath>runtimes/linux-x64/native/libcimgui.so</PackagePath>
+      <Link>cimgui.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Pack>true</Pack>
-    </Content>
-    <Content Include="cimgui\osx-x64\cimgui.dylib">
+    </None>
+    <None Include="cimgui\osx-x64\cimgui.dylib">
       <PackagePath>runtimes/osx-x64/native/libcimgui.dylib</PackagePath>
+      <Link>cimgui.dylib</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Pack>true</Pack>
-    </Content>
-    <Content Include="build\net40\ImGui.NET.targets">
+    </None>
+    <None Include="build\net40\ImGui.NET.targets">
       <PackagePath>build/net40/ImGui.NET.targets</PackagePath>
       <Pack>true</Pack>
-    </Content>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Generated\" />
