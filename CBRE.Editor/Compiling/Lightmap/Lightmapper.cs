@@ -2,12 +2,14 @@
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
+using CBRE.Editor.Popup;
 using CBRE.Editor.Rendering;
 using CBRE.Graphics;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -32,6 +34,27 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         public static List<Thread> FaceRenderThreads { get; private set; }
         private static List<LMThreadException> threadExceptions;
+        private static ProgressPopup progressPopup = null;
+
+        private static void UpdateProgress(string msg, float progress) {
+            if (progressPopup == null || !GameMain.Instance.Popups.Contains(progressPopup)) {
+                progressPopup = new ProgressPopup("Lightmap Progress");
+            }
+            progressPopup.message = msg;
+            progressPopup.progress = progress;
+            /*if (altGUIRenderer == null) {
+                altGUIRenderer = new ImGuiRenderer(GameMain.Instance);
+            }*/
+            // GameMain.Instance.GraphicsDevice.Clear(new Microsoft.Xna.Framework.Color(50, 50, 60));
+            // altGUIRenderer.BeforeLayout(new Microsoft.Xna.Framework.GameTime(default, TimeSpan.FromTicks(0)));
+            // progressPopup.Draw();
+            // altGUIRenderer.AfterLayout();
+            // GameMain.Instance.LimitedRedraw = progress < 1f;
+            // if (GameMain.Instance.LimitedRedraw)
+                // GameMain.Instance.Tick();
+            // if (GameMain.Instance.LimitedRedraw)
+                // GameMain.Instance.RunOneFrame();
+        }
 
         private static void CalculateUV(List<LightmapGroup> lmGroups, Rectangle area, out int usedWidth, out int usedHeight) {
             usedWidth = 0;
@@ -121,6 +144,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             List<LMFace> exclusiveBlockers = new List<LMFace>();
 
             //get faces
+            UpdateProgress("Determining UV coordinates...", 0);
             LMFace.FindFacesAndGroups(map, out faces, out lmGroups);
 
             if (!lmGroups.Any()) { throw new Exception("No lightmap groups!"); }
@@ -203,6 +227,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
 
             int faceNum = 0;
+            UpdateProgress("Started calculating brightness levels...", 0.05f);
             while (FaceRenderThreads.Count > 0) {
                 for (int i = 0; i < 8; i++) {
                     if (i >= FaceRenderThreads.Count) break;
@@ -212,6 +237,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                         FaceRenderThreads.RemoveAt(i);
                         i--;
                         faceNum++;
+                        UpdateProgress(faceNum.ToString() + "/" + faceCount.ToString() + " faces complete", 0.05f + ((float)faceNum / (float)faceCount) * 0.85f);
                     }
                 }
 
@@ -227,6 +253,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
 
             //blur the lightmap so it doesn't look too pixellated
+            UpdateProgress("Blurring lightmap...", 0.95f);
             float[] blurBuffer = new float[buffers[0].Length];
             for (int k = 0; k < 4; k++) {
                 foreach (LightmapGroup group in lmGroups) {
@@ -307,6 +334,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
             }
 
+            UpdateProgress("Copying bitmap data...", 0.99f);
             for (int k = 0; k < 4; k++) {
                 byte[] byteBuffer = new byte[buffers[k].Length];
                 // Color[] pixels = new Color[buffers[k].Length / 4];
@@ -334,8 +362,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
             lock (Lightmaps) {
                 document.LightmapTextureOutdated = true;
                 ViewportManager.MarkForRerender();
+            }
+
+            UpdateProgress("Lightmapping complete!", 1.0f);
         }
-    }
 
     public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
         lock (Lightmaps) {

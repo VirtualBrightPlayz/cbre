@@ -24,10 +24,12 @@ namespace CBRE.Editor.Popup {
         private string _title;
         private bool _hasColor = false;
         private ImColor _color;
+        public bool DrawAlways { get; protected set; }
 
         public PopupUI(string title)
         {
             _title = title;
+            DrawAlways = false;
             GameMain.Instance.Popups.Add(this);
         }
 
