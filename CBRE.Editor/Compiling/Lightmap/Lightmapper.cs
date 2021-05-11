@@ -38,7 +38,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         private static void UpdateProgress(string msg, float progress) {
             GameMain.Instance.PreDrawActions.Enqueue(() => {
-                if (progressPopup == null) {
+                if (progressPopup == null || !GameMain.Instance.Popups.Contains(progressPopup)) {
                     progressPopup = new ProgressPopup("Lightmap Progress");
                     // progressPopup.Run();
                     // Task.Run(progressPopup.Run);
