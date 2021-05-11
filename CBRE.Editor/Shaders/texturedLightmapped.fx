@@ -2,6 +2,7 @@ float4x4 World;
 float4x4 View;
 float4x4 Projection;
 float4x4 Selection;
+float Alpha;
 
 Texture2D xTexture;
 Texture2D yTexture;
@@ -66,7 +67,11 @@ float4 PixelShaderF(VertexShaderOutput input) : COLOR0
     float4 lighting = tex2D(TextureSampler0, input.LmCoord);
 
     float4 c = (tex2D(TextureSampler, input.TexCoord) * lighting) * float4(1.0, 1.0 - input.Selected, 1.0 - input.Selected, 1.0);
-    c.a = 1.0;
+    if ((input.TexCoord.x > 1f || input.TexCoord.x < 0f) && (input.TexCoord.y > 1f || input.TexCoord.y < 0f)) {
+        c.a = 0.0;
+    }
+
+    c.a = Alpha;
     return c;
 }
 

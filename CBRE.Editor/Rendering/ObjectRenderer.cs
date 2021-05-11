@@ -344,29 +344,15 @@ namespace CBRE.Editor.Rendering {
                 GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
             }
 
-            public void RenderLightmapped(int id, bool last) {
-                if (!dirty) { return; }
-                UpdateLightmapBuffers(id);
-                if (indexSolidCount <= 0)
-                    return;
-                GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
-                GlobalGraphics.GraphicsDevice.Indices = indexBufferSolid;
-                GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
-                dirty = last;
-            }
-
-            private void UpdateLightmapBuffers(int id) {
-
-                var filteredFaces = faces.Where(p => p.LmIndex == id).ToList();
-
+            public void ResetLightmapped() {
                 vertexCount = 0;
                 indexSolidCount = 0;
                 indexWireframeCount = 0;
-                for (int i=0;i<filteredFaces.Count;i++) {
-                    filteredFaces[i].CalculateTextureCoordinates(true);
-                    vertexCount += filteredFaces[i].Vertices.Count;
-                    indexSolidCount += (filteredFaces[i].Vertices.Count - 2) * 3;
-                    indexWireframeCount += filteredFaces[i].Vertices.Count * 2;
+                for (int i=0;i<faces.Count;i++) {
+                    faces[i].CalculateTextureCoordinates(true);
+                    vertexCount += faces[i].Vertices.Count;
+                    indexSolidCount += (faces[i].Vertices.Count - 2) * 3;
+                    indexWireframeCount += faces[i].Vertices.Count * 2;
                 }
 
                 if (vertices == null || vertices.Length < vertexCount) {
@@ -386,6 +372,22 @@ namespace CBRE.Editor.Rendering {
                     indexBufferWireframe?.Dispose();
                     indexBufferWireframe = new IndexBuffer(GlobalGraphics.GraphicsDevice, IndexElementSize.SixteenBits, indexWireframeCount * 2, BufferUsage.None);
                 }
+            }
+
+            public void RenderLightmapped(int id, bool last) {
+                // if (!dirty) { return; }
+                // UpdateLightmapBuffers(id);
+                if (indexSolidCount <= 0)
+                    return;
+                GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
+                GlobalGraphics.GraphicsDevice.Indices = indexBufferSolid;
+                GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
+                // dirty |= last;
+            }
+
+            public void UpdateLightmapBuffers(int id) {
+
+                var filteredFaces = faces.ToList();
 
                 int vertexIndex = 0;
                 int index3dIndex = 0;
@@ -418,7 +420,6 @@ namespace CBRE.Editor.Rendering {
                 vertexBuffer.SetData(vertices);
                 indexBufferSolid.SetData(indicesSolid);
                 indexBufferWireframe.SetData(indicesWireframe);
-
             }
 
             public void Dispose() {
@@ -535,7 +536,9 @@ namespace CBRE.Editor.Rendering {
 
         public void RenderLightmapped() {
             TextureItem rem = TextureProvider.GetItem("tooltextures/remove_face");
+            TexturedLightmapped.Parameters["Alpha"].SetValue(1f/*Document.MGLightmaps.Length*/);
             foreach (var kvp in brushGeom) {
+                kvp.Value.ResetLightmapped();
                 for (int i = 0; i < Document.MGLightmaps.Length; i++) {
                     TextureItem item = TextureProvider.GetItem(kvp.Key);
                     
@@ -550,7 +553,10 @@ namespace CBRE.Editor.Rendering {
                         TexturedLightmapped.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
                     }
                     TexturedLightmapped.CurrentTechnique.Passes[0].Apply();
-                    // kvp.Value.RenderSolid();
+                    kvp.Value.UpdateLightmapBuffers(i);
+                }
+                {
+                    int i = 0;
                     kvp.Value.RenderLightmapped(i, i + 1 >= Document.MGLightmaps.Length);
                 }
             }
