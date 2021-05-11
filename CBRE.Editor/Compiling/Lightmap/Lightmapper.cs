@@ -37,23 +37,29 @@ namespace CBRE.Editor.Compiling.Lightmap {
         private static ProgressPopup progressPopup = null;
 
         private static void UpdateProgress(string msg, float progress) {
-            if (progressPopup == null || !GameMain.Instance.Popups.Contains(progressPopup)) {
-                progressPopup = new ProgressPopup("Lightmap Progress");
-            }
-            progressPopup.message = msg;
-            progressPopup.progress = progress;
-            /*if (altGUIRenderer == null) {
-                altGUIRenderer = new ImGuiRenderer(GameMain.Instance);
-            }*/
-            // GameMain.Instance.GraphicsDevice.Clear(new Microsoft.Xna.Framework.Color(50, 50, 60));
-            // altGUIRenderer.BeforeLayout(new Microsoft.Xna.Framework.GameTime(default, TimeSpan.FromTicks(0)));
-            // progressPopup.Draw();
-            // altGUIRenderer.AfterLayout();
-            // GameMain.Instance.LimitedRedraw = progress < 1f;
-            // if (GameMain.Instance.LimitedRedraw)
-                // GameMain.Instance.Tick();
-            // if (GameMain.Instance.LimitedRedraw)
-                // GameMain.Instance.RunOneFrame();
+            GameMain.Instance.PreDrawActions.Enqueue(() => {
+                if (progressPopup == null) {
+                    progressPopup = new ProgressPopup("Lightmap Progress");
+                    // progressPopup.Run();
+                    // Task.Run(progressPopup.Run);
+                }
+                progressPopup.message = msg;
+                progressPopup.progress = progress;
+                // progressPopup.RunOneFrame();
+                // progressPopup.ResetElapsedTime();
+                /*if (altGUIRenderer == null) {
+                    altGUIRenderer = new ImGuiRenderer(GameMain.Instance);
+                }*/
+                // GameMain.Instance.GraphicsDevice.Clear(new Microsoft.Xna.Framework.Color(50, 50, 60));
+                // altGUIRenderer.BeforeLayout(new Microsoft.Xna.Framework.GameTime(default, TimeSpan.FromTicks(0)));
+                // progressPopup.Draw();
+                // altGUIRenderer.AfterLayout();
+                // GameMain.Instance.LimitedRedraw = progress < 1f;
+                // if (GameMain.Instance.LimitedRedraw)
+                    // GameMain.Instance.Tick();
+                // if (GameMain.Instance.LimitedRedraw)
+                    // GameMain.Instance.RunOneFrame();
+            });
         }
 
         private static void CalculateUV(List<LightmapGroup> lmGroups, Rectangle area, out int usedWidth, out int usedHeight) {
@@ -345,14 +351,17 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     }
                 }
                 lock (Lightmaps) {
-                    Texture2D tex = new Texture2D(GameMain.Instance.GraphicsDevice, totalTextureDims, totalTextureDims);
-                    tex.SetData(byteBuffer);
-                    string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"lm_{k}.png");
-                    FileStream fs = File.OpenWrite(fname);
-                    tex.SaveAsPng(fs, totalTextureDims, totalTextureDims);
-                    fs.Close();
-                    document.Lightmaps[k] = new AsyncTexture(fname);
-                    document.MGLightmaps[k] = tex;
+                    int j = k;
+                    GameMain.Instance.PreDrawActions.Enqueue(() => {
+                        Texture2D tex = new Texture2D(GameMain.Instance.GraphicsDevice, totalTextureDims, totalTextureDims);
+                        tex.SetData(byteBuffer);
+                        string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"lm_{j}.png");
+                        FileStream fs = File.OpenWrite(fname);
+                        tex.SaveAsPng(fs, totalTextureDims, totalTextureDims);
+                        fs.Close();
+                        document.Lightmaps[j] = new AsyncTexture(fname);
+                        document.MGLightmaps[j] = tex;
+                    });
                 }
             }
 
@@ -369,30 +378,32 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
     public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
         lock (Lightmaps) {
-            for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
-                string iPath = path + (threeBasisModel ? i.ToString() : "");
-                var texture = document.MGLightmaps[i];
-                if (lmCount == 1) {
-                    FileStream fs = File.OpenWrite(iPath + ".png");
-                    texture.SaveAsPng(fs, texture.Width, texture.Height);
-                    fs.Close();
-                } else {
-                    for (int j = 0; j < lmCount; j++) {
-                        int x = ((j % 2) * LightmapConfig.TextureDims);
-                        int y = ((j / 2) * LightmapConfig.TextureDims);
-
-                        byte[] clone = new byte[texture.Width * texture.Height];
-                        texture.GetData(clone);
-                        Texture2D texture2 = new Texture2D(texture.GraphicsDevice, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
-                        byte[] tmp = new byte[LightmapConfig.TextureDims * LightmapConfig.TextureDims];
-                        Array.Copy(clone, x + y * LightmapConfig.TextureDims, tmp, 0, tmp.Length);
-                        texture2.SetData(tmp);
-                        FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
-                        texture2.SaveAsPng(fs, texture2.Width, texture2.Height);
+            GameMain.Instance.PreDrawActions.Enqueue(() => {
+                for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
+                    string iPath = path + (threeBasisModel ? i.ToString() : "");
+                    var texture = document.MGLightmaps[i];
+                    if (lmCount == 1) {
+                        FileStream fs = File.OpenWrite(iPath + ".png");
+                        texture.SaveAsPng(fs, texture.Width, texture.Height);
                         fs.Close();
+                    } else {
+                        for (int j = 0; j < lmCount; j++) {
+                            int x = ((j % 2) * LightmapConfig.TextureDims);
+                            int y = ((j / 2) * LightmapConfig.TextureDims);
+
+                            byte[] clone = new byte[texture.Width * texture.Height];
+                            texture.GetData(clone);
+                            Texture2D texture2 = new Texture2D(texture.GraphicsDevice, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
+                            byte[] tmp = new byte[LightmapConfig.TextureDims * LightmapConfig.TextureDims];
+                            Array.Copy(clone, x + y * LightmapConfig.TextureDims, tmp, 0, tmp.Length);
+                            texture2.SetData(tmp);
+                            FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
+                            texture2.SaveAsPng(fs, texture2.Width, texture2.Height);
+                            fs.Close();
+                        }
                     }
                 }
-            }
+            });
         }
     }
 

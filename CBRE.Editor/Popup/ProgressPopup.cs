@@ -11,8 +11,6 @@ namespace CBRE.Editor.Popup {
         public string message;
 
         public ProgressPopup(string title) : base(title) {
-            DrawAlways = true;
-            GameMain.Instance.PopupSelected = true;
         }
 
         protected override bool ImGuiLayout() {

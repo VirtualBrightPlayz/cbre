@@ -14,7 +14,9 @@ namespace CBRE.Editor
             }
             catch (Exception e) {
                 File.AppendAllText(Logging.Logger.LogFile, $"!!!CRASH!!!\n===Stack Trace: {e.ToString()}\n\n");
+                Environment.Exit(1);
             }
+            Environment.Exit(0);
         }
     }
 }

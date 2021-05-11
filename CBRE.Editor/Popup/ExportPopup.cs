@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using CBRE.Editor.Compiling;
 using CBRE.Editor.Compiling.Lightmap;
 using CBRE.Editor.Documents;
@@ -40,7 +41,15 @@ namespace CBRE.Editor.Popup {
                 try {
                     LightmapConfig.TextureDims = (int)_size;
                     LightmapConfig.DownscaleFactor = downscale;
-                    Lightmapper.Render(_document, out var faces, out var lmgroups);
+                    Task.Run(() => {
+                        try {
+                        Lightmapper.Render(_document, out var faces, out var lmgroups);
+                        } catch (Exception e) {
+                            GameMain.Instance.PreDrawActions.Enqueue(() => {
+                                Logging.Logger.ShowException(e);
+                            });
+                        }
+                    });
                 }
                 catch (System.Exception e) {
                     Logging.Logger.ShowException(e);

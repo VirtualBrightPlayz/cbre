@@ -28,8 +28,8 @@ namespace CBRE.Editor.Popup {
         public PopupGame(string title)
         {
             _graphics = new GraphicsDeviceManager(this);
-            _graphics.PreferredBackBufferWidth = 1600;
-            _graphics.PreferredBackBufferHeight = 900;
+            _graphics.PreferredBackBufferWidth = 500;
+            _graphics.PreferredBackBufferHeight = 500;
             _graphics.PreferMultiSampling = false;
             _graphics.SynchronizeWithVerticalRetrace = false;
             _graphics.ApplyChanges();
@@ -49,7 +49,7 @@ namespace CBRE.Editor.Popup {
             if (ImGui.Begin(_title, ImGuiWindowFlags.NoCollapse)) {
                 bool shouldBeOpen = ImGuiLayout();
                 if (!shouldBeOpen) {
-
+                    Exit();
                 }
             }
             ImGui.End();

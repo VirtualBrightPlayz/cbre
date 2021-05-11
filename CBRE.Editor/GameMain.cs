@@ -44,6 +44,7 @@ namespace CBRE.Editor {
         public bool PopupSelected { get; set; } = false;
 
         public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
+        public Queue<Action> PreDrawActions { get; private set; } = new Queue<Action>();
 
         public GameMain()
         {
@@ -189,6 +190,14 @@ namespace CBRE.Editor {
             _imGuiRenderer.AfterLayout();
 
             base.Draw(gameTime);
+
+            while (PreDrawActions.Count > 0) {
+                try {
+                    PreDrawActions.Dequeue()?.Invoke();
+                } catch (Exception e) {
+                    Logging.Logger.ShowException(e);
+                }
+            }
         }
 
         protected virtual void ImGuiLayout() {
