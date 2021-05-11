@@ -567,6 +567,15 @@ namespace CBRE.Editor.Rendering {
             pointEntityGeometry.RenderSolid();
         }
 
+        public void RenderFlatUntextured() {
+            foreach (var kvp in brushGeom) {
+                Solid.CurrentTechnique.Passes[0].Apply();
+                kvp.Value.RenderSolid();
+            }
+            SolidShaded.CurrentTechnique.Passes[0].Apply();
+            pointEntityGeometry.RenderSolid();
+        }
+
         public void RenderWireframe() {
             Solid.CurrentTechnique.Passes[0].Apply();
             foreach (var kvp in brushGeom) {

@@ -169,8 +169,11 @@ namespace CBRE.Editor.Rendering {
                     case ViewType.Wireframe:
                         objectRenderer.RenderWireframe();
                         break;
-                    case ViewType.Flat:
+                    case ViewType.Shaded:
                         objectRenderer.RenderSolidUntextured();
+                        break;
+                    case ViewType.Flat:
+                        objectRenderer.RenderFlatUntextured();
                         break;
                     default:
                         objectRenderer.RenderTextured();
