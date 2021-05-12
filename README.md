@@ -18,14 +18,6 @@ In the folder `AssimpNet/AssimpNet.Interop.Generator/` run the command `dotnet b
 
 In the folder `CBRE.Editor/` run the command `dotnet build`
 
-### Windows 64-bit
-
-Copy `ImGui.NET/cimgui/win-x64/cimgui.dll` to `CBRE.Editor/bin/Debug/net5.0/cimgui.dll`
-
-### Linux 64-bit (Not tested yet)
-
-Copy `ImGui.NET/cimgui/linux-x64/cimgui.so` to `CBRE.Editor/bin/Debug/net5.0/cimgui.dll`
-
 ## Running
 
 ### Windows 64-bit
