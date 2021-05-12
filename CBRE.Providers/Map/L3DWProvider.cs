@@ -413,8 +413,71 @@ namespace CBRE.Providers.Map {
                 } else {
                     if (name == "terrain") {
                         MapProvider.warnings = "This map contains displacements, which are currently not supported. The map will appear incomplete.";
+                        br.ReadByte(); // flags
+                        float x = br.ReadSingle();
+                        float y = br.ReadSingle();
+                        float z = br.ReadSingle();
+                        float width = br.ReadSingle();
+                        float height = br.ReadSingle();
+                        int nameidx = br.ReadInt32();
+                        string terrainName = names[nameidx];
+                        Console.WriteLine(terrainName);
+                        int resolution = br.ReadInt32();
+                        int sectors = br.ReadInt32();
+                        int detailLevels = br.ReadInt32();
+                        float lightmapResolution = br.ReadSingle();
+                        int layerCount = br.ReadInt32();
+                        for (int j = 0; j < resolution; j++) {
+                            for (int k = 0; k < resolution; k++) {
+                                // luxel colors
+                                byte red = br.ReadByte();
+                                byte green = br.ReadByte();
+                                byte blue = br.ReadByte();
+                            }
+                        }
+                        float[] heights = new float[(int)Math.Pow(resolution + 0, 2)];
+
+                        
+                        for (int j = 0; j < resolution + 0; j++) {
+                            for (int k = 0; k < resolution + 0; k++) {
+                                heights[j + k * (resolution + 0)] = br.ReadSingle();
+                            }
+                        }
+                        for (int j = 0; j < layerCount; j++) {
+                            int layerNameIdx = br.ReadInt32();
+                            int materialIdx = br.ReadInt32();
+                            if (j > 0) {
+                                for (int k = 0; k < heights.Length; k++) {
+                                    byte alpha = br.ReadByte();
+                                }
+                            }
+                        }
+                        Solid newSolid = new Solid(map.IDGenerator.GetNextObjectID());
+                        Displacement d = new Displacement(map.IDGenerator.GetNextFaceID());
+                        d.SetPower((int)Math.Log2(resolution));
+                        d.StartPosition = new Vector3((decimal)x, (decimal)y, (decimal)z);
+                        d.Vertices.Clear();
+                        d.Vertices.Add(new Vertex(d.StartPosition + new Vector3(0, 0, 0), d));
+                        d.Vertices.Add(new Vertex(d.StartPosition + new Vector3(0, 0, (decimal)height), d));
+                        d.Vertices.Add(new Vertex(d.StartPosition + new Vector3((decimal)width, 0, (decimal)height), d));
+                        d.Vertices.Add(new Vertex(d.StartPosition + new Vector3((decimal)width, 0, 0), d));
+                        d.Plane = new Plane(d.Vertices[3].Location, d.Vertices[2].Location, d.Vertices[1].Location);
+                        d.CalculatePoints();
+                        for (int j = 0; j < resolution; j++) {
+                            for (int k = 0; k < resolution; k++) {
+                                DisplacementPoint p = d.GetPoint(j, k);
+                                p.CurrentPosition.Location.Y = (decimal)heights[j + k * resolution];
+                            }
+                        }
+                        newSolid.Faces.Add(d);
+                        d.Parent = newSolid;
+                        d.Colour = Colour.GetRandomBrushColour();
+                        d.UpdateBoundingBox();
+                        MapObject parent = map.WorldSpawn;
+                        newSolid.SetParent(parent);
                     }
-                    br.BaseStream.Seek(size, SeekOrigin.Current);
+                    else
+                        br.BaseStream.Seek(size, SeekOrigin.Current);
                 }
             }
 
