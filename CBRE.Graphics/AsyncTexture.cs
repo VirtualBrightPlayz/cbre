@@ -38,7 +38,7 @@ namespace CBRE.Graphics {
             }
         }
 
-        public TextureFlags Flags => Name.ToLower().EndsWith("_clear") ? TextureFlags.Transparent : TextureFlags.None;
+        public TextureFlags Flags { get; set; } = TextureFlags.None;
 
         public string Name => Path.GetFileNameWithoutExtension(Filename);
 
@@ -97,6 +97,22 @@ namespace CBRE.Graphics {
                 Array.Resize(ref data.Bytes, 0);
 
                 imGuiTexture = GlobalGraphics.ImGuiRenderer.BindTexture(monoGameTexture);
+
+                // try {
+                    
+                    var col = new Microsoft.Xna.Framework.Color[monoGameTexture.Width * monoGameTexture.Height / (data.Compressed ? 4 : 1)];
+
+                    monoGameTexture.GetData<Microsoft.Xna.Framework.Color>(col);
+
+                    for (int i = 0; i < col.Length; i++) {
+                        if (col[i].A != 255) {
+                            Flags = TextureFlags.Transparent;
+                            break;
+                        }
+                    }
+                /*} catch (Exception e) {
+                    Console.WriteLine(Name);
+                }*/
 
                 task.Dispose();
                 task = null;
