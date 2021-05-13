@@ -413,10 +413,10 @@ namespace CBRE.Providers.Map {
                 } else {
                     if (name == "terrain") {
                         MapProvider.warnings = "This map contains displacements, which are currently not supported. The map will appear incomplete.";
-                        br.ReadByte(); // flags
+                        byte flags = br.ReadByte(); // flags
                         float x = br.ReadSingle();
-                        float y = br.ReadSingle();
                         float z = br.ReadSingle();
+                        float y = br.ReadSingle();
                         float width = br.ReadSingle();
                         float height = br.ReadSingle();
                         int nameidx = br.ReadInt32();
@@ -438,8 +438,8 @@ namespace CBRE.Providers.Map {
                         float[] heights = new float[(int)Math.Pow(resolution + 0, 2)];
 
                         
-                        for (int j = 0; j < resolution + 0; j++) {
-                            for (int k = 0; k < resolution + 0; k++) {
+                        for (int k = 0; k < resolution + 0; k++) {
+                            for (int j = 0; j < resolution + 0; j++) {
                                 heights[j + k * (resolution + 0)] = br.ReadSingle();
                             }
                         }
@@ -452,33 +452,35 @@ namespace CBRE.Providers.Map {
                                 }
                             }
                         }
-                        Solid newSolid = new Solid(map.IDGenerator.GetNextObjectID());
                         Displacement d = new Displacement(map.IDGenerator.GetNextFaceID());
                         d.SetPower((int)Math.Log2(resolution));
-                        d.StartPosition = new Vector3((decimal)x, (decimal)y, (decimal)z) + new Vector3((decimal)(width / 3), (decimal)(width / -3), (decimal)(height * 1.3));
+                        d.StartPosition = new Vector3((decimal)x, (decimal)y, (decimal)z) + new Vector3((decimal)(width / 2), (decimal)(width / 2), (decimal)(0));
                         d.Vertices.Clear();
-                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3(0, (decimal)width, 0), d));
-                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3((decimal)width, (decimal)width, 0), d));
-                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3((decimal)width, 0, 0), d));
+                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3(0, (decimal)width * 1, 0), d));
+                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3((decimal)width * 1, (decimal)width * 1, 0), d));
+                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3((decimal)width * 1, 0, 0), d));
                         d.Vertices.Add(new Vertex(d.StartPosition - new Vector3(0, 0, 0), d));
                         d.Plane = new Plane(d.Vertices[1].Location, d.Vertices[2].Location, d.Vertices[3].Location);
                         d.Elevation = (decimal)0;
                         for (int k = 0; k < resolution; k++) {
                             for (int j = 0; j < resolution; j++) {
-                                DisplacementPoint p = d.GetPoint(-j + resolution - 1, -k + resolution - 1);
-                                p.OffsetDisplacement = new Vector(Vector.UnitZ, (decimal)(heights[j + k * resolution] * height / 2));
+                                DisplacementPoint p = d.GetPoint(-j + resolution, -k + resolution);
+                                p.OffsetDisplacement = new Vector(Vector.UnitZ, (decimal)(heights[j + k * resolution] * height));
+                                // p.Displacement = new Vector(Vector.UnitZ, p.OffsetDisplacement.Z);
                                 // p.OffsetDisplacement = new Vector(Vector.UnitZ, (decimal)(heights[k + j * resolution] * height));
                             }
                         }
                         d.AlignTextureToWorld();
                         d.CalculatePoints();
                         d.CalculateNormals();
-                        newSolid.Faces.Add(d);
-                        d.Parent = newSolid;
-                        d.Colour = Colour.GetRandomBrushColour();
-                        d.UpdateBoundingBox();
+                        Solid newSolid = SolidifyFace(map, d, d.StartPosition);//new Solid(map.IDGenerator.GetNextObjectID());
+                        // newSolid.Faces.Add(d);
+                        // d.Parent = newSolid;
+                        // d.Colour = Colour.GetRandomBrushColour();
+                        // d.UpdateBoundingBox();
                         MapObject parent = map.WorldSpawn;
                         newSolid.SetParent(parent);
+                        newSolid.Transform(new UnitScale(Vector3.One, newSolid.BoundingBox.Center), TransformFlags.None);
                     }
                     else
                         br.BaseStream.Seek(size, SeekOrigin.Current);
