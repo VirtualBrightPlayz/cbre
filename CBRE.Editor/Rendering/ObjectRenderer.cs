@@ -250,9 +250,9 @@ namespace CBRE.Editor.Rendering {
                 indexWireframeCount = 0;
                 for (int i=0;i<faces.Count;i++) {
                     faces[i].CalculateTextureCoordinates(true);
-                    vertexCount += faces[i].Vertices.Count;
-                    indexSolidCount += (faces[i].Vertices.Count - 2) * 3;
-                    indexWireframeCount += faces[i].Vertices.Count * 2;
+                    vertexCount += faces[i].GetIndexedVertices().Count();
+                    indexSolidCount += (faces[i].GetTriangleIndices().Count() - 2) * 3;
+                    indexWireframeCount += faces[i].GetIndexedVertices().Count() * 2;
                 }
 
                 if (vertices == null || vertices.Length < vertexCount) {
@@ -277,28 +277,30 @@ namespace CBRE.Editor.Rendering {
                 int index3dIndex = 0;
                 int index2dIndex = 0;
                 for (int i = 0; i < faces.Count; i++) {
-                    for (int j=0;j<faces[i].Vertices.Count;j++) {
-                        var location = faces[i].Vertices[j].Location;
+                    for (int j=0;j<faces[i].GetIndexedVertices().Count();j++) {
+                        var location = faces[i].GetIndexedVertices().ElementAt(j).Location;
                         vertices[vertexIndex + j].Position = new Microsoft.Xna.Framework.Vector3((float)location.X, (float)location.Y, (float)location.Z);
                         var normal = faces[i].Plane.Normal;
                         vertices[vertexIndex + j].Normal = new Microsoft.Xna.Framework.Vector3((float)normal.X, (float)normal.Y, (float)normal.Z);
-                        var diffUv = new Microsoft.Xna.Framework.Vector2((float)faces[i].Vertices[j].DTextureU, (float)faces[i].Vertices[j].DTextureV);
+                        var diffUv = new Microsoft.Xna.Framework.Vector2((float)faces[i].GetIndexedVertices().ElementAt(j).DTextureU, (float)faces[i].GetIndexedVertices().ElementAt(j).DTextureV);
                         vertices[vertexIndex + j].DiffuseUV = diffUv;
-                        var lmUv = new Microsoft.Xna.Framework.Vector2((float)faces[i].Vertices[j].LMU, (float)faces[i].Vertices[j].LMV);
+                        var lmUv = new Microsoft.Xna.Framework.Vector2((float)faces[i].GetIndexedVertices().ElementAt(j).LMU, (float)faces[i].GetIndexedVertices().ElementAt(j).LMV);
                         vertices[vertexIndex + j].LightmapUV = lmUv;
                         vertices[vertexIndex + j].Color = new Microsoft.Xna.Framework.Color(faces[i].Colour.R, faces[i].Colour.G, faces[i].Colour.B, faces[i].Colour.A);
                         vertices[vertexIndex + j].Selected = document.Selection.IsFaceSelected(faces[i]) ? 1.0f : 0.0f;
                         indicesWireframe[index2dIndex + (j * 2)] = (ushort)(vertexIndex + j);
-                        indicesWireframe[index2dIndex + (j * 2) + 1] = (ushort)(vertexIndex + ((j + 1) % faces[i].Vertices.Count));
+                        indicesWireframe[index2dIndex + (j * 2) + 1] = (ushort)(vertexIndex + ((j + 1) % faces[i].GetIndexedVertices().Count()));
                     }
 
-                    index2dIndex += faces[i].Vertices.Count * 2;
+                    index2dIndex += faces[i].GetIndexedVertices().Count() * 2;
 
                     foreach (var triangleIndex in faces[i].GetTriangleIndices()) {
+                        // if (indicesSolid.Length <= index3dIndex)
+                            // continue;
                         indicesSolid[index3dIndex] = (ushort)(vertexIndex + triangleIndex);
                         index3dIndex++;
                     }
-                    vertexIndex += faces[i].Vertices.Count;
+                    vertexIndex += faces[i].GetIndexedVertices().Count();
                 }
 
                 vertexBuffer.SetData(vertices);

@@ -430,9 +430,9 @@ namespace CBRE.Providers.Map {
                         for (int j = 0; j < resolution; j++) {
                             for (int k = 0; k < resolution; k++) {
                                 // luxel colors
-                                byte red = br.ReadByte();
+                                /*byte red = br.ReadByte();
                                 byte green = br.ReadByte();
-                                byte blue = br.ReadByte();
+                                byte blue = br.ReadByte();*/
                             }
                         }
                         float[] heights = new float[(int)Math.Pow(resolution + 0, 2)];
@@ -455,20 +455,24 @@ namespace CBRE.Providers.Map {
                         Solid newSolid = new Solid(map.IDGenerator.GetNextObjectID());
                         Displacement d = new Displacement(map.IDGenerator.GetNextFaceID());
                         d.SetPower((int)Math.Log2(resolution));
-                        d.StartPosition = new Vector3((decimal)x, (decimal)y, (decimal)z);
+                        d.StartPosition = new Vector3((decimal)x, (decimal)y, (decimal)z) + new Vector3((decimal)(width / 3), (decimal)(width / -3), (decimal)(height * 1.3));
                         d.Vertices.Clear();
-                        d.Vertices.Add(new Vertex(d.StartPosition + new Vector3(0, 0, 0), d));
-                        d.Vertices.Add(new Vertex(d.StartPosition + new Vector3(0, 0, (decimal)height), d));
-                        d.Vertices.Add(new Vertex(d.StartPosition + new Vector3((decimal)width, 0, (decimal)height), d));
-                        d.Vertices.Add(new Vertex(d.StartPosition + new Vector3((decimal)width, 0, 0), d));
-                        d.Plane = new Plane(d.Vertices[3].Location, d.Vertices[2].Location, d.Vertices[1].Location);
-                        d.CalculatePoints();
-                        for (int j = 0; j < resolution; j++) {
-                            for (int k = 0; k < resolution; k++) {
-                                DisplacementPoint p = d.GetPoint(j, k);
-                                p.CurrentPosition.Location.Y = (decimal)heights[j + k * resolution];
+                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3(0, (decimal)width, 0), d));
+                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3((decimal)width, (decimal)width, 0), d));
+                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3((decimal)width, 0, 0), d));
+                        d.Vertices.Add(new Vertex(d.StartPosition - new Vector3(0, 0, 0), d));
+                        d.Plane = new Plane(d.Vertices[1].Location, d.Vertices[2].Location, d.Vertices[3].Location);
+                        d.Elevation = (decimal)0;
+                        for (int k = 0; k < resolution; k++) {
+                            for (int j = 0; j < resolution; j++) {
+                                DisplacementPoint p = d.GetPoint(-j + resolution - 1, -k + resolution - 1);
+                                p.OffsetDisplacement = new Vector(Vector.UnitZ, (decimal)(heights[j + k * resolution] * height / 2));
+                                // p.OffsetDisplacement = new Vector(Vector.UnitZ, (decimal)(heights[k + j * resolution] * height));
                             }
                         }
+                        d.AlignTextureToWorld();
+                        d.CalculatePoints();
+                        d.CalculateNormals();
                         newSolid.Faces.Add(d);
                         d.Parent = newSolid;
                         d.Colour = Colour.GetRandomBrushColour();
