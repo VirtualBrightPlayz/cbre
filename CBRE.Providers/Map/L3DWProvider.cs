@@ -435,12 +435,12 @@ namespace CBRE.Providers.Map {
                                 byte blue = br.ReadByte();*/
                             }
                         }
-                        float[] heights = new float[(int)Math.Pow(resolution + 0, 2)];
+                        float[] heights = new float[(int)Math.Pow(resolution + 1, 2)];
 
                         
-                        for (int k = 0; k < resolution + 0; k++) {
-                            for (int j = 0; j < resolution + 0; j++) {
-                                heights[j + k * (resolution + 0)] = br.ReadSingle();
+                        for (int k = 0; k < resolution + 1; k++) {
+                            for (int j = 0; j < resolution + 1; j++) {
+                                heights[j + k * (resolution + 1)] = br.ReadSingle();
                             }
                         }
                         for (int j = 0; j < layerCount; j++) {
@@ -462,22 +462,18 @@ namespace CBRE.Providers.Map {
                         d.Vertices.Add(new Vertex(d.StartPosition - new Vector3(0, 0, 0), d));
                         d.Plane = new Plane(d.Vertices[1].Location, d.Vertices[2].Location, d.Vertices[3].Location);
                         d.Elevation = (decimal)0;
-                        for (int k = 0; k < resolution; k++) {
-                            for (int j = 0; j < resolution; j++) {
+                        for (int k = 0; k < resolution + 1; k++) {
+                            for (int j = 0; j < resolution + 1; j++) {
                                 DisplacementPoint p = d.GetPoint(-j + resolution, -k + resolution);
-                                p.OffsetDisplacement = new Vector(Vector.UnitZ, (decimal)(heights[j + k * resolution] * height));
-                                // p.Displacement = new Vector(Vector.UnitZ, p.OffsetDisplacement.Z);
-                                // p.OffsetDisplacement = new Vector(Vector.UnitZ, (decimal)(heights[k + j * resolution] * height));
+                                float h = heights[j + k * (resolution + 1)];
+                                h *= height;
+                                p.OffsetDisplacement = new Vector(Vector.UnitZ, Convert.ToDecimal(h));
                             }
                         }
                         d.AlignTextureToWorld();
                         d.CalculatePoints();
                         d.CalculateNormals();
-                        Solid newSolid = SolidifyFace(map, d, d.StartPosition);//new Solid(map.IDGenerator.GetNextObjectID());
-                        // newSolid.Faces.Add(d);
-                        // d.Parent = newSolid;
-                        // d.Colour = Colour.GetRandomBrushColour();
-                        // d.UpdateBoundingBox();
+                        Solid newSolid = SolidifyFace(map, d, d.StartPosition);
                         MapObject parent = map.WorldSpawn;
                         newSolid.SetParent(parent);
                         newSolid.Transform(new UnitScale(Vector3.One, newSolid.BoundingBox.Center), TransformFlags.None);
