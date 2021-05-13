@@ -443,9 +443,11 @@ namespace CBRE.Providers.Map {
                                 heights[j + k * (resolution + 1)] = br.ReadSingle();
                             }
                         }
+                        string mat = "tooltextures/invisible_collision";
                         for (int j = 0; j < layerCount; j++) {
                             int layerNameIdx = br.ReadInt32();
                             int materialIdx = br.ReadInt32();
+                            mat = materials[materialIdx];
                             if (j > 0) {
                                 for (int k = 0; k < heights.Length; k++) {
                                     byte alpha = br.ReadByte();
@@ -470,6 +472,7 @@ namespace CBRE.Providers.Map {
                                 p.OffsetDisplacement = new Vector(Vector.UnitZ, Convert.ToDecimal(h));
                             }
                         }
+                        d.Texture.Name = mat;
                         d.AlignTextureToWorld();
                         d.CalculatePoints();
                         d.CalculateNormals();
