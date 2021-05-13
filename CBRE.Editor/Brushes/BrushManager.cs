@@ -29,6 +29,7 @@ namespace CBRE.Editor.Brushes {
             brushes.Add(new ArchBrush());
             brushes.Add(new SphereBrush());
             brushes.Add(new TorusBrush());
+            brushes.Add(new TerrainBrush());
         }
 
         public static void Register(IBrush brush) {

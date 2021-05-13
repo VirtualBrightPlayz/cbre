@@ -90,6 +90,14 @@ namespace CBRE.Editor.Tools
                         _updatePreview = true;
                     }
                 }
+                ImGui.EndCombo();
+            }
+            if (ImGui.TreeNode("Brush Settings")) {
+                if (BrushManager.CurrentBrush != null) {
+                    foreach (var ctrl in BrushManager.CurrentBrush.GetControls()) {
+                        ctrl.Draw();
+                    }
+                }
             }
         }
 

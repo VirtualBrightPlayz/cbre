@@ -15,6 +15,9 @@
         private BrushControl() {
         }
 
+        public virtual void Draw() {
+        }
+
         protected BrushControl(IBrush brush) {
             Brush = brush;
         }
