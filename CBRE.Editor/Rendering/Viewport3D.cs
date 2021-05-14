@@ -92,14 +92,14 @@ namespace CBRE.Editor.Rendering {
         public Vector3 ScreenToWorld(Vector3 screen) {
             screen = new Vector3(screen.X, screen.Y, 1);
             var viewport = new[] { 0, 0, Width, Height };
-            throw new NotImplementedException();
-            /*
-            var pm = Matrix4d.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(Camera.FOV), Width / (float)Height, 0.1f, 50000);
-            var vm = Matrix4d.LookAt(
-                new Vector3d(Camera.Location.X, Camera.Location.Y, Camera.Location.Z),
-                new Vector3d(Camera.LookAt.X, Camera.LookAt.Y, Camera.LookAt.Z),
-                Vector3d.UnitZ);
-            return MathFunctions.Unproject(screen, viewport, pm, vm);*/
+            // throw new NotImplementedException();
+            
+            var pm = Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), Width / (float)Height, 0.1f, 50000).ToCbre();
+            var vm = Microsoft.Xna.Framework.Matrix.CreateLookAt(
+                new Microsoft.Xna.Framework.Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z),
+                new Microsoft.Xna.Framework.Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z),
+                Microsoft.Xna.Framework.Vector3.UnitZ).ToCbre();
+            return MathFunctions.Unproject(screen, viewport, pm, vm);
         }
 
         /// <summary>

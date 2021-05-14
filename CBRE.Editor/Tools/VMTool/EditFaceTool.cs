@@ -9,7 +9,7 @@ namespace CBRE.Editor.Tools.VMTool
 {
     public class EditFaceTool : VMSubTool
     {
-        private List<Face> _selection;
+        private List<Face> _selection = new List<Face>();
 
         public EditFaceTool(VMTool mainTool) : base(mainTool)
         {

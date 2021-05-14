@@ -23,7 +23,7 @@ namespace CBRE.Editor.Tools
             Tools.Add(new EntityTool());
             Tools.Add(new BrushTool());
             Tools.Add(new TextureTool.TextureTool());
-            //Tools.Add(new DisplacementTool());
+            Tools.Add(new DisplacementTool.DisplacementTool());
             Tools.Add(new ClipTool());
             Tools.Add(new VMTool.VMTool());
             //Tools.Add(new SketchTool());

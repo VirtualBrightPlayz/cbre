@@ -34,6 +34,12 @@ namespace CBRE.Editor.Tools.VMTool
         public override void UpdateGui() {
             ImGui.Text($"Split Enabled {split.ToString()}");
             ImGui.Checkbox("Automatically Merge", ref merge);
+            if (ImGui.Button("Merge")) {
+                Merge(this);
+            }
+            if (ImGui.Button("Split")) {
+                Split(this);
+            }
         }
 
         private bool AutomaticallyMerge()

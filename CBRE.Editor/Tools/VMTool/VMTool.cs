@@ -70,20 +70,20 @@ namespace CBRE.Editor.Tools.VMTool
         }
 
         public override void UpdateGui() {
-            if (ImGui.BeginChild("ToolPanel")) {
-                if (ImGui.TreeNode("VM Tools")) {
+            if (ImGui.TreeNode("ToolPanel")) {
+                if (ImGui.BeginCombo("VM Tools", _currentTool.GetName() ?? string.Empty)) {
                     for (int i = 0; i < _tools.Count; i++) {
-                        if (ImGui.TreeNode(_tools[i].GetName())) {
-                            _tools[i].UpdateGui();
-                            ImGui.TreePop();
+                        if (ImGui.Selectable(_tools[i].GetName() ?? string.Empty, _tools[i] == _currentTool)) {
+                            _currentTool = _tools[i];
                         }
                     }
-                    ImGui.TreePop();
+                    ImGui.EndCombo();
                 }
-                ImGui.EndChild();
+                _currentTool.UpdateGui();
+                ImGui.TreePop();
             }
-            ImGui.NewLine();
-            if (ImGui.TreeNode("Errors")) {
+            // ImGui.NewLine();
+            if (ImGui.TreeNode("VM Tool Errors")) {
                 var errs = GetErrors().ToArray();
                 for (int i = 0; i < errs.Length; i++) {
                     ImGui.TextColored(new System.Numerics.Vector4(0.75f, 0f, 0f, 1f), errs[i].Message);
@@ -361,7 +361,7 @@ namespace CBRE.Editor.Tools.VMTool
                 // Set all the original solids to hidden
                 // (do this after we clone it so the clones aren't hidden too)
                 solid.IsCodeHidden = true;
-                solid.Faces.ForEach(p => Document.ObjectRenderer.RemoveFace(p));
+                copy.Faces.ForEach(p => Document.ObjectRenderer.RemoveFace(p));
             }
             RefreshPoints();
             RefreshMidpoints();
@@ -904,7 +904,16 @@ namespace CBRE.Editor.Tools.VMTool
                 // Get us into 2D rendering
                 const float near = -1000000;
                 const float far = 1000000;
-                var matrix = Microsoft.Xna.Framework.Matrix.CreateOrthographic(vp.Width, vp.Height, near, far).ToCbre();
+                var matrix = Microsoft.Xna.Framework.Matrix.CreateOrthographic(vp.Width, vp.Height, near, far);
+                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+
+                BasicEffect basicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+                basicEffect.LightingEnabled = false;
+                basicEffect.VertexColorEnabled = true;
+                basicEffect.Projection = matrix;
+                basicEffect.View = Microsoft.Xna.Framework.Matrix.Identity;
+                basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
+                basicEffect.CurrentTechnique.Passes[0].Apply();
 
                 var half = new Vector3(vp.Width, vp.Height, 0) / 2;
                 // Render out the point handles
@@ -915,34 +924,26 @@ namespace CBRE.Editor.Tools.VMTool
                     if (!point.IsMidPoint && _showPoints == ShowPoints.Midpoints) continue;
 
                     var c = vp.WorldToScreen(point.Vector3);
-                    if (c == null /*|| c.Z > 1*/) continue;
+                    if (c == null || c.Z > 1) continue;
                     c -= half;
 
                     PrimitiveDrawing.SetColor(Color.Black);
-                    PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 4);
-                    /*PrimitiveDrawing.Vertex2(c.DX - 4, c.DY - 4);
+                    PrimitiveDrawing.Vertex2(c.DX - 4, c.DY - 4);
                     PrimitiveDrawing.Vertex2(c.DX - 4, c.DY + 4);
                     PrimitiveDrawing.Vertex2(c.DX + 4, c.DY + 4);
-                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY - 4);*/
-                    /*PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 4, (decimal)c.DY - 4, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 4, (decimal)c.DY + 4, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 4, (decimal)c.DY + 4, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 4, (decimal)c.DY - 4, 0) * matrix));*/
+                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY - 4);
 
                     PrimitiveDrawing.SetColor(point.GetColour());
-                    PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 3);
-                    /*PrimitiveDrawing.Vertex2(c.DX - 3, c.DY - 3);
+                    PrimitiveDrawing.Vertex2(c.DX - 3, c.DY - 3);
                     PrimitiveDrawing.Vertex2(c.DX - 3, c.DY + 3);
                     PrimitiveDrawing.Vertex2(c.DX + 3, c.DY + 3);
-                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY - 3);*/
-                    /*PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 3, (decimal)c.DY - 3, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 3, (decimal)c.DY + 3, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 3, (decimal)c.DY + 3, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 3, (decimal)c.DY - 3, 0) * matrix));*/
+                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY - 3);
                 }
                 PrimitiveDrawing.End();
 
                 // Get back into 3D rendering
+                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                ViewportManager.basicEffect.CurrentTechnique.Passes[0].Apply();
             }
 
             var type = vp.Type;

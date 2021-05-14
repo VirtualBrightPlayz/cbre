@@ -62,7 +62,7 @@ namespace CBRE.Editor.Rendering {
         static Vector2 splitPoint = new Vector2(0.45f, 0.55f);
         static VertexPositionColor[] backgroundVertices = new VertexPositionColor[12];
         static short[] backgroundIndices = new short[18];
-        static BasicEffect basicEffect = null;
+        public static BasicEffect basicEffect { get; private set; } = null;
 
         static bool prevMouse1Down;
         static bool prevMouse2Down;
