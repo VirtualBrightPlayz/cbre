@@ -97,9 +97,11 @@ namespace CBRE.Editor.Tools.DisplacementTool {
                         continue;
                     avg += subpoint.Displacement.Distance;
                 }
-                avg /= point.GetAdjacentPoints().Count() + 1;
+                avg /= point.GetAdjacentPoints().Where(p => p != null).Count() + 1;
                 offset += avg;
             }
+            if (_current.Length == 0)
+                return;
             offset /= _current.Length;
         }
 
