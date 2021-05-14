@@ -15,6 +15,7 @@ namespace CBRE.Editor.Tools.DisplacementTool {
     public class DisplacementTool : BaseTool {
         public float Multiplier = 1f;
         private Dictionary<Solid, Solid> _copies;
+        private Displacement[] selected;
 
         public override string GetContextualHelp() {
             return "*Click* on a displacement to raise it\n" +
@@ -65,6 +66,14 @@ namespace CBRE.Editor.Tools.DisplacementTool {
         public override void ToolSelected(bool preventHistory)
         {
             _copies = new Dictionary<Solid, Solid>();
+            foreach (var obj in Document.Selection.GetSelectedObjects().Where(x => x is Solid)) {
+                var copy = (Solid)obj.Clone();
+                copy.IsSelected = false;
+                foreach (var f in copy.Faces) f.IsSelected = false;
+                _copies.Add(copy, (Solid)obj);
+                ((Solid)copy).Faces.ForEach(p => Document.ObjectRenderer.RemoveFace(p));
+            }
+            selected = Document.Selection.GetSelectedObjects().Where(x => x is Solid).SelectMany(x => ((Solid)x).Faces).Where(x => x is Displacement).Select(x => x as Displacement).ToArray();
             Mediator.Subscribe(EditorMediator.SelectionChanged, this);
         }
         
@@ -73,13 +82,14 @@ namespace CBRE.Editor.Tools.DisplacementTool {
             Mediator.UnsubscribeAll(this);
 
             // Commit the changes
-            Commit(_copies.Values.ToList());
+            Commit(_copies.Keys.ToList());
 
             _copies = null;
         }
 
         private void Commit(IList<Solid> solids)
         {
+            Document.ObjectRenderer.MarkDirty();
             if (!solids.Any()) return;
 
             // Unhide the solids
@@ -107,25 +117,13 @@ namespace CBRE.Editor.Tools.DisplacementTool {
                 var wpos = vp.ScreenToWorld(ToCbre(e.Location));
                 var ray = vp.CastRayFromScreen(e.X, e.Y);
 
-                // Grab all the elements that intersect with the ray
-                var hits = Document.Map.WorldSpawn.GetAllNodesIntersectingWith(ray);
-
-                // Sort the list of intersecting elements by distance from ray origin and grab the first hit
-                var hit = hits
-                    .Select(x => new { Item = x, Intersection = x.GetIntersectionPoint(ray) })
-                    .Where(x => x.Intersection != null)
-                    .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
-                    .FirstOrDefault();
-
-                if (hit == null) return; // Nothing was clicked
-
-                if (hit.Item is Solid solid) {
-                    var f = solid.Faces.FirstOrDefault();
+                foreach (var copy in _copies.Keys) {
+                    var f = copy.Faces.FirstOrDefault();
                     if (f is Displacement displacement) {
                         var point = displacement.GetClosestDisplacementPoint(ray);
                         point.OffsetDisplacement.DZ += Multiplier;
                         point.CurrentPosition.Location.DZ += Multiplier;
-                        Document.ObjectRenderer.MarkDirty();
+                        // Document.ObjectRenderer.MarkDirty();
                         // displacement.CalculatePoints();
                     }
                 }
@@ -148,6 +146,52 @@ namespace CBRE.Editor.Tools.DisplacementTool {
         }
 
         public override void Render(ViewportBase viewport) {
+            if (viewport is Viewport3D vp3d) Render3D(vp3d);
+        }
+
+        public void Render3D(Viewport3D vp) {
+            // Get us into 2D rendering
+            const float near = -1000000;
+            const float far = 1000000;
+            var matrix = Microsoft.Xna.Framework.Matrix.CreateOrthographic(vp.Width, vp.Height, near, far);
+            GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+
+            BasicEffect basicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+            basicEffect.LightingEnabled = false;
+            basicEffect.VertexColorEnabled = true;
+            basicEffect.Projection = matrix;
+            basicEffect.View = Microsoft.Xna.Framework.Matrix.Identity;
+            basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
+            basicEffect.CurrentTechnique.Passes[0].Apply();
+
+            var half = new Vector3(vp.Width, vp.Height, 0) / 2;
+            foreach (var disp in _copies.Keys.SelectMany(x => x.Faces).Where(x => x is Displacement).Select(x => x as Displacement)) {
+                // Render out the point handles
+                PrimitiveDrawing.Begin(PrimitiveType.QuadList);
+                foreach (var point in disp.GetPoints()) {
+
+                    var c = vp.WorldToScreen(point.CurrentPosition.Location);
+                    if (c == null || c.Z > 1) continue;
+                    c -= half;
+
+                    PrimitiveDrawing.SetColor(Color.Black);
+                    PrimitiveDrawing.Vertex2(c.DX - 4, c.DY - 4);
+                    PrimitiveDrawing.Vertex2(c.DX - 4, c.DY + 4);
+                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY + 4);
+                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY - 4);
+
+                    PrimitiveDrawing.SetColor(Color.White);
+                    PrimitiveDrawing.Vertex2(c.DX - 3, c.DY - 3);
+                    PrimitiveDrawing.Vertex2(c.DX - 3, c.DY + 3);
+                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY + 3);
+                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY - 3);
+                }
+                PrimitiveDrawing.End();
+            }
+
+            // Get back into 3D rendering
+            GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            ViewportManager.basicEffect.CurrentTechnique.Passes[0].Apply();
         }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame) {
