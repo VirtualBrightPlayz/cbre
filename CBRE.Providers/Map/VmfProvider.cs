@@ -133,7 +133,47 @@ namespace CBRE.Providers.Map {
         }
 
         private static GenericStructure WriteDisplacement(Displacement disp) {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
+            var dispinfo = new GenericStructure("dispinfo");
+            dispinfo["power"] = disp.Power.ToString();
+            dispinfo["startposition"] = "[" + FormatVector3(disp.StartPosition) + "]";
+            dispinfo["elevation"] = disp.Elevation.ToString();
+            dispinfo["subdiv"] = (disp.SubDiv ? 1 : 0).ToString();
+            var normals = new GenericStructure("normals");
+            var distances = new GenericStructure("distances");
+            var offsets = new GenericStructure("offsets");
+            var offset_normals = new GenericStructure("offset_normals");
+            var alphas = new GenericStructure("alphas");
+            int size = disp.Resolution + 1;
+            for (int i = 0; i < size; i++) {
+                string row = "row" + i;
+                normals[row] = "";
+                distances[row] = "";
+                offsets[row] = "";
+                offset_normals[row] = "";
+                alphas[row] = "";
+                for (int j = 0; j < size; j++) {
+                    var p = disp.Points[i, j];
+                    normals[row] += FormatVector3(p.Displacement.Normal) + " ";
+                    distances[row] += p.Displacement.Distance + " ";
+                    offsets[row] += FormatVector3(p.OffsetDisplacement.Normal) + " ";
+                    offset_normals[row] += p.OffsetDisplacement.Distance + " ";
+                    alphas[row] += p.Alpha + " ";
+                }
+                // Prevent trailing whitespace
+                normals[row] = normals[row].Trim();
+                distances[row] = distances[row].Trim();
+                offsets[row] = offsets[row].Trim();
+                offset_normals[row] = offset_normals[row].Trim();
+                alphas[row] = alphas[row].Trim();
+            }
+
+            dispinfo.Children.Add(normals);
+            dispinfo.Children.Add(distances);
+            dispinfo.Children.Add(offsets);
+            dispinfo.Children.Add(offset_normals);
+            dispinfo.Children.Add(alphas);
+            return dispinfo;
         }
 
         private static Face ReadFace(GenericStructure side, IDGenerator generator) {
@@ -162,6 +202,8 @@ namespace CBRE.Providers.Map {
                 }
             }
 
+            if (ret is Displacement disp)
+                disp.CalculatePoints();
             return ret;
         }
 

@@ -469,7 +469,7 @@ namespace CBRE.Providers.Map {
                                 DisplacementPoint p = d.GetPoint(-j + resolution, -k + resolution);
                                 float h = heights[j + k * (resolution + 1)];
                                 h *= height;
-                                p.OffsetDisplacement = new Vector(Vector.UnitZ, Convert.ToDecimal(h));
+                                p.Displacement = new Vector(Vector.UnitZ, Convert.ToDecimal(h));
                             }
                         }
                         d.Texture.Name = mat;

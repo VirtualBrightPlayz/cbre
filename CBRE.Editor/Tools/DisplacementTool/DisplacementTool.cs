@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -15,7 +16,8 @@ namespace CBRE.Editor.Tools.DisplacementTool {
     public class DisplacementTool : BaseTool {
         public float Multiplier = 1f;
         private Dictionary<Solid, Solid> _copies;
-        private Displacement[] selected;
+        private Displacement[] _selected;
+        public DisplacementSubTool current;
 
         public override string GetContextualHelp() {
             return "*Click* on a displacement to raise it\n" +
@@ -73,8 +75,10 @@ namespace CBRE.Editor.Tools.DisplacementTool {
                 _copies.Add(copy, (Solid)obj);
                 ((Solid)copy).Faces.ForEach(p => Document.ObjectRenderer.RemoveFace(p));
             }
-            selected = Document.Selection.GetSelectedObjects().Where(x => x is Solid).SelectMany(x => ((Solid)x).Faces).Where(x => x is Displacement).Select(x => x as Displacement).ToArray();
+            _selected = Document.Selection.GetSelectedObjects().Where(x => x is Solid).SelectMany(x => ((Solid)x).Faces).Where(x => x is Displacement).Select(x => x as Displacement).ToArray();
             Mediator.Subscribe(EditorMediator.SelectionChanged, this);
+
+            current = new DPDragTool(this);
         }
         
         public override void ToolDeselected(bool preventHistory)
@@ -85,6 +89,7 @@ namespace CBRE.Editor.Tools.DisplacementTool {
             Commit(_copies.Keys.ToList());
 
             _copies = null;
+            current = null;
         }
 
         private void Commit(IList<Solid> solids)
@@ -114,17 +119,32 @@ namespace CBRE.Editor.Tools.DisplacementTool {
 
         public override void MouseDown(ViewportBase viewport, ViewportEvent e) {
             if (viewport is Viewport3D vp) {
-                var wpos = vp.ScreenToWorld(ToCbre(e.Location));
                 var ray = vp.CastRayFromScreen(e.X, e.Y);
+                var half = new Vector3(vp.Width, vp.Height, 0) / 2;
 
                 foreach (var copy in _copies.Keys) {
                     var f = copy.Faces.FirstOrDefault();
                     if (f is Displacement displacement) {
+                        List<DisplacementPoint> points = new List<DisplacementPoint>();
+                        foreach (var dpoint in displacement.GetPoints()) {
+                            // var pos = vp.WorldToScreen(dpoint.CurrentPosition.Location);
+                            // if (pos == null || pos.Z > 1) continue;
+                            // pos -= half;
+                            // if (Math.Abs(pos.X - e.X) <= 20 && Math.Abs(pos.Y - e.Y) <= 20) {
+                            // if ((pos - ToCbre(e.Location)).VectorMagnitude() <= 20) {
+                            var mag = (ray.ClosestPoint(dpoint.CurrentPosition.Location) - dpoint.CurrentPosition.Location).VectorMagnitude();
+                            if (mag <= 10) {
+                                points.Add(dpoint);
+                            }
+                        }
+                        current?.DragStart(points);
+                        return;
                         var point = displacement.GetClosestDisplacementPoint(ray);
-                        point.OffsetDisplacement.DZ += Multiplier;
-                        point.CurrentPosition.Location.DZ += Multiplier;
-                        // Document.ObjectRenderer.MarkDirty();
-                        // displacement.CalculatePoints();
+                        float mul = Multiplier;
+                        if (e.Shift)
+                            mul *= -1f;
+                        point.Displacement.Distance += (decimal)mul;
+                        point.CurrentPosition.Location.DZ += mul;
                     }
                 }
             }
@@ -137,9 +157,17 @@ namespace CBRE.Editor.Tools.DisplacementTool {
         }
 
         public override void MouseMove(ViewportBase viewport, ViewportEvent e) {
+            if (viewport is Viewport3D vp) {
+                if (e.Button.HasFlag(MouseButtons.Left)) {
+                    current?.DragMove(new Vector3(e.DeltaX, e.DeltaY, 0));
+                }
+            }
         }
 
         public override void MouseUp(ViewportBase viewport, ViewportEvent e) {
+            if (viewport is Viewport3D vp) {
+                current?.DragEnd();
+            }
         }
 
         public override void MouseWheel(ViewportBase viewport, ViewportEvent e) {
@@ -192,6 +220,8 @@ namespace CBRE.Editor.Tools.DisplacementTool {
             // Get back into 3D rendering
             GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             ViewportManager.basicEffect.CurrentTechnique.Passes[0].Apply();
+
+            current?.Render3D(vp);
         }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame) {
