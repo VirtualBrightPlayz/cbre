@@ -16,13 +16,17 @@ namespace CBRE.Editor.Tools.DisplacementTool {
     public class DisplacementTool : BaseTool {
         public float Multiplier = 1f;
         private Dictionary<Solid, Solid> _copies;
-        private Displacement[] _selected;
+        public List<DisplacementPoint> selected;
         public DisplacementSubTool current;
+        private List<DisplacementSubTool> tools;
+
+        public Displacement[] GetActiveDisplacements()
+        {
+            return _copies.Keys.SelectMany(x => x.Faces).Where(x => x is Displacement).Select(x => x as Displacement).ToArray();
+        }
 
         public override string GetContextualHelp() {
-            return "*Click* on a displacement to raise it\n" +
-                //    "*Ctrl+Click* to select multiple\n" +
-                   "*Shift+Click* to lower";
+            return current?.GetContextualHelp() ?? "Please select a tool.";
         }
 
         public override HotkeyTool? GetHotkeyToolType() {
@@ -43,7 +47,15 @@ namespace CBRE.Editor.Tools.DisplacementTool {
 
         public override void UpdateGui()
         {
-            ImGui.InputFloat("Multiplier", ref Multiplier);
+            if (ImGui.BeginCombo("Sub Tool", current?.GetName() ?? string.Empty)) {
+                for (int i = 0; i < tools.Count; i++) {
+                    if (ImGui.Selectable(tools[i].GetName(), tools[i] == current)) {
+                        current = tools[i];
+                    }
+                }
+                ImGui.EndCombo();
+            }
+            current?.UpdateGui();
         }
 
         public override void KeyDown(ViewportBase viewport, ViewportEvent e) {
@@ -56,9 +68,11 @@ namespace CBRE.Editor.Tools.DisplacementTool {
         }
 
         public override void MouseClick(ViewportBase viewport, ViewportEvent e) {
+            current?.MouseClick(viewport, e);
         }
 
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e) {
+            current?.MouseDoubleClick(viewport, e);
         }
 
         public static DataStructures.Geometric.Vector3 ToCbre(Microsoft.Xna.Framework.Vector3 input) {
@@ -75,10 +89,19 @@ namespace CBRE.Editor.Tools.DisplacementTool {
                 _copies.Add(copy, (Solid)obj);
                 ((Solid)copy).Faces.ForEach(p => Document.ObjectRenderer.RemoveFace(p));
             }
-            _selected = Document.Selection.GetSelectedObjects().Where(x => x is Solid).SelectMany(x => ((Solid)x).Faces).Where(x => x is Displacement).Select(x => x as Displacement).ToArray();
+            selected = new List<DisplacementPoint>();
             Mediator.Subscribe(EditorMediator.SelectionChanged, this);
 
-            current = new DPDragTool(this);
+            if (tools == null) {
+                tools = new List<DisplacementSubTool>();
+                tools.Add(new DPSelectTool(this));
+                tools.Add(new DPDragTool(this));
+                tools.Add(new DPSmoothTool(this));
+            }
+
+
+            if (current == null)
+                current = tools.FirstOrDefault();
         }
         
         public override void ToolDeselected(bool preventHistory)
@@ -89,7 +112,9 @@ namespace CBRE.Editor.Tools.DisplacementTool {
             Commit(_copies.Keys.ToList());
 
             _copies = null;
-            current = null;
+            selected = null;
+            // current = null;
+            // tools = null;
         }
 
         private void Commit(IList<Solid> solids)
@@ -125,26 +150,14 @@ namespace CBRE.Editor.Tools.DisplacementTool {
                 foreach (var copy in _copies.Keys) {
                     var f = copy.Faces.FirstOrDefault();
                     if (f is Displacement displacement) {
-                        List<DisplacementPoint> points = new List<DisplacementPoint>();
+                        /*List<DisplacementPoint> points = new List<DisplacementPoint>();
                         foreach (var dpoint in displacement.GetPoints()) {
-                            // var pos = vp.WorldToScreen(dpoint.CurrentPosition.Location);
-                            // if (pos == null || pos.Z > 1) continue;
-                            // pos -= half;
-                            // if (Math.Abs(pos.X - e.X) <= 20 && Math.Abs(pos.Y - e.Y) <= 20) {
-                            // if ((pos - ToCbre(e.Location)).VectorMagnitude() <= 20) {
                             var mag = (ray.ClosestPoint(dpoint.CurrentPosition.Location) - dpoint.CurrentPosition.Location).VectorMagnitude();
                             if (mag <= 10) {
                                 points.Add(dpoint);
                             }
-                        }
-                        current?.DragStart(points);
-                        return;
-                        var point = displacement.GetClosestDisplacementPoint(ray);
-                        float mul = Multiplier;
-                        if (e.Shift)
-                            mul *= -1f;
-                        point.Displacement.Distance += (decimal)mul;
-                        point.CurrentPosition.Location.DZ += mul;
+                        }*/
+                        current?.DragStart(selected);
                     }
                 }
             }
@@ -208,7 +221,7 @@ namespace CBRE.Editor.Tools.DisplacementTool {
                     PrimitiveDrawing.Vertex2(c.DX + 4, c.DY + 4);
                     PrimitiveDrawing.Vertex2(c.DX + 4, c.DY - 4);
 
-                    PrimitiveDrawing.SetColor(Color.White);
+                    PrimitiveDrawing.SetColor(selected.Contains(point) ? Color.Orange : Color.White);
                     PrimitiveDrawing.Vertex2(c.DX - 3, c.DY - 3);
                     PrimitiveDrawing.Vertex2(c.DX - 3, c.DY + 3);
                     PrimitiveDrawing.Vertex2(c.DX + 3, c.DY + 3);

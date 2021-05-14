@@ -1,17 +1,25 @@
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Rendering;
 using CBRE.Graphics;
+using ImGuiNET;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Tools.DisplacementTool {
-    public class DPDragTool : DisplacementSubTool {
+    public class DPSmoothTool : DisplacementSubTool {
         private DisplacementPoint[] _current;
+        private decimal multiplier;
+        private float dragDelta = 0.005f;
         private decimal offset;
 
-        public DPDragTool(DisplacementTool tool) : base(tool) {
+        public DPSmoothTool(DisplacementTool tool) : base(tool) {
+        }
+
+        public override void UpdateGui() {
+            ImGui.InputFloat("Drag Delta", ref dragDelta);
         }
 
         public override void Render3D(Viewport3D viewport) {
@@ -36,7 +44,7 @@ namespace CBRE.Editor.Tools.DisplacementTool {
             PrimitiveDrawing.Begin(PrimitiveType.QuadList);
             foreach (var point in _current) {
 
-                var c = viewport.WorldToScreen(point.CurrentPosition.Location + new Vector3(0, 0, offset));
+                var c = viewport.WorldToScreen(new Vector3(point.CurrentPosition.Location.X, point.CurrentPosition.Location.Y, Lerp(point.CurrentPosition.Location.Z, offset, multiplier)));
                 if (c == null || c.Z > 1) continue;
                 c -= half;
 
@@ -59,23 +67,40 @@ namespace CBRE.Editor.Tools.DisplacementTool {
             ViewportManager.basicEffect.CurrentTechnique.Passes[0].Apply();
         }
 
+        public static decimal Lerp(decimal v0, decimal v1, decimal t) {
+            return v0 + t * (v1 - v0);
+        }
+
         public override void DragEnd() {
             if (_current == null)
                 return;
             foreach (var point in _current) {
-                point.CurrentPosition.Location.Z += offset;
-                point.Displacement.Distance += offset;
+                point.CurrentPosition.Location.Z = Lerp(point.CurrentPosition.Location.Z, offset, multiplier);
+                point.Displacement.Distance = Lerp(point.Displacement.Distance, offset, multiplier);
             }
             _current = null;
         }
 
         public override void DragMove(Vector3 distance) {
-            offset -= distance.Y;
+            multiplier -= distance.Y * (decimal)dragDelta;
         }
 
         public override void DragStart(List<DisplacementPoint> clickedPoints) {
             _current = clickedPoints.ToArray();
             offset = 0;
+            multiplier = 0;
+            foreach (var point in _current) {
+                decimal avg = 0;
+                avg += point.Displacement.Distance;
+                foreach (var subpoint in point.GetAdjacentPoints()) {
+                    if (subpoint == null)
+                        continue;
+                    avg += subpoint.Displacement.Distance;
+                }
+                avg /= point.GetAdjacentPoints().Count() + 1;
+                offset += avg;
+            }
+            offset /= _current.Length;
         }
 
         public override string GetContextualHelp() {
@@ -84,7 +109,7 @@ namespace CBRE.Editor.Tools.DisplacementTool {
         }
 
         public override string GetName() {
-            return "Displacement Drag Tool";
+            return "Displacement Smooth Tool";
         }
 
         public override void KeyDown(ViewportBase viewport, ViewportEvent e) {

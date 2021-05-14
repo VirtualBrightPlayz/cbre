@@ -1,22 +1,25 @@
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Rendering;
 using CBRE.Graphics;
+using ImGuiNET;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Tools.DisplacementTool {
-    public class DPDragTool : DisplacementSubTool {
-        private DisplacementPoint[] _current;
-        private decimal offset;
+    public class DPSelectTool : DisplacementSubTool {
+        private float selectDistance = 10f;
 
-        public DPDragTool(DisplacementTool tool) : base(tool) {
+        public DPSelectTool(DisplacementTool tool) : base(tool) {
+        }
+
+        public override void UpdateGui() {
+            ImGui.InputFloat("Selection Distance", ref selectDistance);
         }
 
         public override void Render3D(Viewport3D viewport) {
-            if (_current == null)
-                return;
             // Get us into 2D rendering
             const float near = -1000000;
             const float far = 1000000;
@@ -34,9 +37,9 @@ namespace CBRE.Editor.Tools.DisplacementTool {
             var half = new Vector3(viewport.Width, viewport.Height, 0) / 2;
             // Render out the point handles
             PrimitiveDrawing.Begin(PrimitiveType.QuadList);
-            foreach (var point in _current) {
+            foreach (var point in MainTool.selected) {
 
-                var c = viewport.WorldToScreen(point.CurrentPosition.Location + new Vector3(0, 0, offset));
+                var c = viewport.WorldToScreen(point.CurrentPosition.Location);
                 if (c == null || c.Z > 1) continue;
                 c -= half;
 
@@ -60,31 +63,22 @@ namespace CBRE.Editor.Tools.DisplacementTool {
         }
 
         public override void DragEnd() {
-            if (_current == null)
-                return;
-            foreach (var point in _current) {
-                point.CurrentPosition.Location.Z += offset;
-                point.Displacement.Distance += offset;
-            }
-            _current = null;
         }
 
         public override void DragMove(Vector3 distance) {
-            offset -= distance.Y;
         }
 
         public override void DragStart(List<DisplacementPoint> clickedPoints) {
-            _current = clickedPoints.ToArray();
-            offset = 0;
         }
 
         public override string GetContextualHelp() {
-            return "Click and drag a dot in the 3D Viewport to move it.\n" +
-            "You can only move the dots Up and Down.";
+            return "*Click* to clear and select.\n" +
+            "*Ctrl+Click* to select.\n" +
+            "*Shift+Click* to deselect.";
         }
 
         public override string GetName() {
-            return "Displacement Drag Tool";
+            return "Displacement Select Tool";
         }
 
         public override void KeyDown(ViewportBase viewport, ViewportEvent e) {
@@ -97,6 +91,22 @@ namespace CBRE.Editor.Tools.DisplacementTool {
         }
 
         public override void MouseClick(ViewportBase viewport, ViewportEvent e) {
+            if (viewport is Viewport3D vp) {
+                var ray = vp.CastRayFromScreen(e.X, e.Y);
+                if (!ViewportManager.Shift && !ViewportManager.Ctrl)
+                    MainTool.selected.Clear();
+                foreach (var displacement in MainTool.GetActiveDisplacements()) {
+                    var point = displacement.GetClosestDisplacementPoint(ray);
+                    if ((point.Location - ray.ClosestPoint(point.Location)).VectorMagnitude() <= (decimal)selectDistance) {
+                        /*if (ViewportManager.Ctrl)
+                            MainTool.selected.Add(point);
+                        else*/ if (ViewportManager.Shift && MainTool.selected.Contains(point))
+                            MainTool.selected.Remove(point);
+                        else if (!ViewportManager.Shift)
+                            MainTool.selected.Add(point);
+                    }
+                }
+            }
         }
 
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e) {
