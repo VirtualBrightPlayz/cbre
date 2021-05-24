@@ -1,3 +1,37 @@
+## This is a fork
+
+### Why fork?
+
+I wanted a room editor for a game I'm working on based off SCP - Containment Breach, and also to modernize cbre.
+
+# Building
+
+## Required SDKs
+
+.NET 5
+
+### Assimp
+
+In the folder `AssimpNet/AssimpNet.Interop.Generator/` run the command `dotnet build`
+
+### CBRE.Editor
+
+In the folder `CBRE.Editor/` run the command `dotnet build`
+
+## Running
+
+### Windows 64-bit
+
+Run the file `CBRE.Editor/bin/Debug/net5.0/CBRE.Editor.exe`
+
+### Linux 64-bit (Not tested yet)
+
+Run the file `CBRE.Editor/bin/Debug/net5.0/CBRE.Editor.dll` using the `dotnet` command
+
+## Contributing
+
+Just make a Pull Request. Try to keep the style consistant with existing code, but it's fine if it does break convention.
+
 Containment Breach Room Editor
 ======
 

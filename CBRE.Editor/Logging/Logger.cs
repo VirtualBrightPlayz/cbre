@@ -1,12 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using CBRE.Editor.Popup;
+using ImGuiNET;
+using Num = System.Numerics;
 
 namespace CBRE.Editor.Logging {
     public static class Logger {
+        public static string LogFile { get; private set; }
+
+        static Logger()
+        {
+            LogFile = "cbre-log-" + DateTime.Now.ToString("yyyy_MM_dd_T_HH_mm_ss") + ".txt";
+            LogFile = Path.GetFullPath(Path.Combine(typeof(Logger).Assembly.Location, "..", LogFile));
+        }
+
+        public static void Log(ExceptionInfo info) {
+            File.AppendAllText(LogFile, $"===Date: {info.Date.ToString()}\n===Application Version: {info.ApplicationVersion}\n===Runtime Version: {info.RuntimeVersion}\n===Message: {info.Message}\n===Source: {info.Source}\n===OS: {info.FriendlyOSName()}\n===Stack Trace: {info.FullStackTrace}\n\n");
+        }
+
         public static void ShowException(Exception ex, string message = "") {
             var info = new ExceptionInfo(ex, message);
+            Log(info);
+            new CopyMessagePopup($"Exception", $"{info.Message}\nThis error has been logged to the file \"{LogFile}\"", new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) });
             /*var window = new ExceptionWindow(info);
             if (Editor.Instance == null || Editor.Instance.IsDisposed) window.Show();
             else window.Show(Editor.Instance);*/

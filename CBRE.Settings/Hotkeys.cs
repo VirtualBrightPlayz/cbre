@@ -1,4 +1,5 @@
 ﻿using CBRE.Settings.Models;
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,7 @@ namespace CBRE.Settings {
 
                                     new HotkeyDefinition("New File", "Create a new map", HotkeysMediator.FileNew, "Ctrl+N"),
                                     new HotkeyDefinition("Open File", "Open an existing map", HotkeysMediator.FileOpen, "Ctrl+O"),
+                                    new HotkeyDefinition("Close File", "Closes the currently opened map", HotkeysMediator.FileClose, ""),
                                     new HotkeyDefinition("Save File", "Save the currently opened map", HotkeysMediator.FileSave, "Ctrl+S"),
                                     new HotkeyDefinition("Save File As...", "Save the currently opened map", HotkeysMediator.FileSaveAs, "Ctrl+Alt+S"),
                                     new HotkeyDefinition("Compile Map", "Compile the currently opened map", HotkeysMediator.FileCompile, "F9"),
@@ -38,10 +40,10 @@ namespace CBRE.Settings {
                                     new HotkeyDefinition("Show Object Properties", "Open the object properties dialog for the currently selected items", HotkeysMediator.ObjectProperties, "Alt+Enter"),
 
                                     new HotkeyDefinition("Copy", "Copy the current selection", HotkeysMediator.OperationsCopy, "Ctrl+C", "Ctrl+Ins"),
-                                    new HotkeyDefinition("Cut", "Cut the current selection", HotkeysMediator.OperationsCut, "Ctrl+X", "Shift+Del"),
+                                    new HotkeyDefinition("Cut", "Cut the current selection", HotkeysMediator.OperationsCut, "Ctrl+X", "Shift+Delete"),
                                     new HotkeyDefinition("Paste", "Paste the clipboard contents", HotkeysMediator.OperationsPaste, "Ctrl+V", "Shift+Ins"),
                                     new HotkeyDefinition("Paste Special", "Paste special the clipboard contents", HotkeysMediator.OperationsPasteSpecial, "Ctrl+Shift+V"),
-                                    new HotkeyDefinition("Delete", "Delete the current selection", HotkeysMediator.OperationsDelete, "Del"),
+                                    new HotkeyDefinition("Delete", "Delete the current selection", HotkeysMediator.OperationsDelete, "Delete"),
 
                                     new HotkeyDefinition("Group", "Group the selected objects", HotkeysMediator.GroupingGroup, "Ctrl+G"),
                                     new HotkeyDefinition("Ungroup", "Ungroup the selected objects", HotkeysMediator.GroupingUngroup, "Ctrl+U"),
@@ -143,6 +145,18 @@ namespace CBRE.Settings {
 
         public static HotkeyImplementation GetHotkeyFor(string keyCombination) {
             return Implementations.FirstOrDefault(x => x.Hotkey == keyCombination);
+        }
+
+        public static HotkeyImplementation GetHotkeyFor(Keys[] keys, bool ctrl, bool shift, bool alt) {
+            return Implementations.FirstOrDefault(p => ContainsAll(p.ShortcutKeys.ToArray(), keys) && ctrl == p.Ctrl && shift == p.Shift && alt == p.Alt);
+        }
+
+        private static bool ContainsAll<T>(T[] checkd, T[] arr) {
+            for (int i = 0; i < checkd.Length; i++) {
+                if (!arr.Contains(checkd[i]))
+                    return false;
+            }
+            return true;
         }
 
         public static HotkeyDefinition GetHotkeyDefinition(string id) {

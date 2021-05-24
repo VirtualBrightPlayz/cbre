@@ -6,18 +6,22 @@ using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Actions;
 using CBRE.Editor.Editing;
 using CBRE.Editor.History;
+using CBRE.Editor.Popup;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.Settings;
 using CBRE.Editor.Tools;
 using CBRE.Graphics;
+using CBRE.Providers;
 using CBRE.Providers.Map;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
 using CBRE.Settings.Models;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -25,6 +29,7 @@ using Path = System.IO.Path;
 
 namespace CBRE.Editor.Documents {
     public class Document {
+        public const string NewDocumentName = null;
         public string MapFile { get; set; }
         public string MapFileName { get; set; }
         public Map Map { get; set; }
@@ -35,6 +40,9 @@ namespace CBRE.Editor.Documents {
         public HistoryManager History { get; private set; }
 
         public ObjectRenderer ObjectRenderer { get; private set; }
+        public bool LightmapTextureOutdated { get; set; }
+        public ITexture[] Lightmaps { get; set; } = new ITexture[4];
+        public Texture2D[] MGLightmaps { get; set; } = new Texture2D[4];
 
         private readonly DocumentSubscriptions _subscriptions;
         private readonly DocumentMemory _memory;
@@ -119,7 +127,7 @@ namespace CBRE.Editor.Documents {
         public bool SaveFile(string path = null, bool forceOverride = false, bool switchPath = true) {
             path = forceOverride ? path : path ?? MapFile;
 
-            if (path != null) {
+            if (!string.IsNullOrEmpty(path)) {
                 IEnumerable<string> noSaveExtensions = FileTypeRegistration.GetSupportedExtensions().Where(x => !x.CanSave).Select(x => x.Extension);
                 foreach (string ext in noSaveExtensions) {
                     if (path.EndsWith(ext, StringComparison.OrdinalIgnoreCase)) {
@@ -129,43 +137,38 @@ namespace CBRE.Editor.Documents {
                 }
             }
 
-            throw new NotImplementedException();
-            /*if (path == null) {
-                using (var sfd = new SaveFileDialog()) {
-                    var filter = String.Join("|", FileTypeRegistration.GetSupportedExtensions()
-                        .Where(x => x.CanSave).Select(x => x.Description + " (*" + x.Extension + ")|*" + x.Extension));
-                    var all = FileTypeRegistration.GetSupportedExtensions().Where(x => x.CanSave).Select(x => "*" + x.Extension).ToArray();
-                    sfd.Filter = "All supported formats (" + String.Join(", ", all) + ")|" + String.Join(";", all) + "|" + filter;
-                    if (sfd.ShowDialog() == DialogResult.OK) {
-                        path = sfd.FileName;
-                    }
-                }
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) {
+                Mediator.Publish(HotkeysMediator.FileSaveAs);
+                return false;
             }
-            if (path == null) return false;
+
+            if (string.IsNullOrEmpty(path))
+                return false;
+                // throw new NotImplementedException();
 
             // Save the 3D camera position
             var cam = ViewportManager.Viewports.OfType<Viewport3D>().Select(x => x.Camera).FirstOrDefault();
             if (cam != null) {
                 if (Map.ActiveCamera == null) {
-                    Map.ActiveCamera = !Map.Cameras.Any() ? new Camera { LookPosition = Coordinate.UnitX * Map.GridSpacing * 1.5m } : Map.Cameras.First();
+                    Map.ActiveCamera = !Map.Cameras.Any() ? new Camera { LookPosition = Vector3.UnitX * Map.GridSpacing * 1.5m } : Map.Cameras.First();
                     if (!Map.Cameras.Contains(Map.ActiveCamera)) Map.Cameras.Add(Map.ActiveCamera);
                 }
                 var dist = (Map.ActiveCamera.LookPosition - Map.ActiveCamera.EyePosition).VectorMagnitude();
-                var loc = cam.Location;
-                var look = cam.LookAt - cam.Location;
-                look.Normalize();
+                var loc = cam.EyePosition;
+                var look = cam.LookPosition - cam.EyePosition;
+                look = look.Normalise();
                 look = loc + look * (float)dist;
-                Map.ActiveCamera.EyePosition = new Coordinate((decimal)loc.X, (decimal)loc.Y, (decimal)loc.Z);
-                Map.ActiveCamera.LookPosition = new Coordinate((decimal)look.X, (decimal)look.Y, (decimal)look.Z);
+                Map.ActiveCamera.EyePosition = new Vector3((decimal)loc.X, (decimal)loc.Y, (decimal)loc.Z);
+                Map.ActiveCamera.LookPosition = new Vector3((decimal)look.X, (decimal)look.Y, (decimal)look.Z);
             }
-            Map.WorldSpawn.EntityData.SetPropertyValue("wad", string.Join(";", GetUsedTexturePackages().Select(x => x.PackageRoot).Where(x => x.EndsWith(".wad"))));
+            Map.WorldSpawn.EntityData.SetPropertyValue("wad", string.Join(";", GetUsedTextures().Select(x => x).Where(x => x.EndsWith(".wad"))));
             MapProvider.SaveMapToFile(path, Map);
             if (switchPath) {
                 MapFile = path;
                 MapFileName = Path.GetFileName(MapFile);
                 History.TotalActionsSinceLastSave = 0;
                 Mediator.Publish(EditorMediator.DocumentSaved, this);
-            }*/
+            }
             return true;
         }
 
@@ -284,6 +287,7 @@ namespace CBRE.Editor.Documents {
         public Matrix SelectListTransform {
             get { return ObjectRenderer.TexturedShaded.Parameters["Selection"].GetValueMatrix().ToCbre(); }
             set {
+                ObjectRenderer.TexturedLightmapped.Parameters["Selection"].SetValue(value.ToXna());
                 ObjectRenderer.TexturedShaded.Parameters["Selection"].SetValue(value.ToXna());
                 ObjectRenderer.SolidShaded.Parameters["Selection"].SetValue(value.ToXna());
                 ObjectRenderer.Solid.Parameters["Selection"].SetValue(value.ToXna());

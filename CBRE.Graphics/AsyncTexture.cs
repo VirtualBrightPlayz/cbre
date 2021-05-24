@@ -16,6 +16,7 @@ namespace CBRE.Graphics {
             public byte[] Bytes;
             public int Width; public int Height;
             public bool Compressed;
+            public bool Transparent;
         }
 
         public static Action<string> LoadCallback = null;
@@ -38,7 +39,7 @@ namespace CBRE.Graphics {
             }
         }
 
-        public TextureFlags Flags => TextureFlags.None;
+        public TextureFlags Flags { get; set; } = TextureFlags.None;
 
         public string Name => Path.GetFileNameWithoutExtension(Filename);
 
@@ -71,6 +72,13 @@ namespace CBRE.Graphics {
                     var bytes = Texture2D.TextureDataFromStream(stream, out int width, out int height, out _);
 
                     bool compressed = false;
+                    bool transparent = false;
+                    for (int i = 0; i < bytes.Length; i+=4) {
+                        if (bytes[i+3] != 255) {
+                            transparent = true;
+                            break;
+                        }
+                    }
                     if ((width > 64 || height > 64) &&
                         (width & 0x03) == 0 && (height & 0x03) == 0) {
                         var prevBytes = bytes;
@@ -79,7 +87,7 @@ namespace CBRE.Graphics {
                         compressed = true;
                     }
 
-                    return new Data { Bytes = bytes, Width = width, Height = height, Compressed = compressed };
+                    return new Data { Bytes = bytes, Width = width, Height = height, Compressed = compressed, Transparent = transparent };
                 }
             } finally {
                 Interlocked.Decrement(ref activeTasks);
@@ -97,6 +105,8 @@ namespace CBRE.Graphics {
                 Array.Resize(ref data.Bytes, 0);
 
                 imGuiTexture = GlobalGraphics.ImGuiRenderer.BindTexture(monoGameTexture);
+
+                Flags = data.Transparent ? TextureFlags.Transparent : TextureFlags.None;
 
                 task.Dispose();
                 task = null;

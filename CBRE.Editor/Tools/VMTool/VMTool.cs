@@ -13,6 +13,8 @@ using System.Linq;
 using Select = CBRE.Settings.Select;
 using View = CBRE.Settings.View;
 using Microsoft.Xna.Framework.Input;
+using ImGuiNET;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Tools.VMTool
 {
@@ -55,7 +57,7 @@ namespace CBRE.Editor.Tools.VMTool
             _errorPanel = new VMErrorsSidebarPanel();
             _errorPanel.SelectError += SelectError;
             _errorPanel.FixError += FixError;
-            _errorPanel.FixAllErrors += FixAllErrors;
+            _errorPanel.FixAllErrors += FixAllErrors;*/
 
             _tools = new List<VMSubTool>();
 
@@ -64,7 +66,30 @@ namespace CBRE.Editor.Tools.VMTool
             AddTool(new EditFaceTool(this));
             _currentTool = _tools.FirstOrDefault();
 
-            _showPoints = ShowPoints.All;*/
+            _showPoints = ShowPoints.All;
+        }
+
+        public override void UpdateGui() {
+            if (ImGui.BeginChild("ToolPanel")) {
+                if (ImGui.TreeNode("VM Tools")) {
+                    for (int i = 0; i < _tools.Count; i++) {
+                        if (ImGui.TreeNode(_tools[i].GetName())) {
+                            _tools[i].UpdateGui();
+                            ImGui.TreePop();
+                        }
+                    }
+                    ImGui.TreePop();
+                }
+                ImGui.EndChild();
+            }
+            ImGui.NewLine();
+            if (ImGui.TreeNode("Errors")) {
+                var errs = GetErrors().ToArray();
+                for (int i = 0; i < errs.Length; i++) {
+                    ImGui.TextColored(new System.Numerics.Vector4(0.75f, 0f, 0f, 1f), errs[i].Message);
+                }
+                ImGui.TreePop();
+            }
         }
 
         private void SelectError(object sender, VMError error)
@@ -113,20 +138,19 @@ namespace CBRE.Editor.Tools.VMTool
 
         private void VMToolSelected(object sender, VMSubTool tool)
         {
-            throw new NotImplementedException();
-            /*if (_currentTool == tool) return;
-            _controlPanel.SetSelectedTool(tool);
+            if (_currentTool == tool) return;
+            // _controlPanel.SetSelectedTool(tool);
             if (_currentTool != null) _currentTool.ToolDeselected(false);
             _currentTool = tool;
             if (_currentTool != null) _currentTool.ToolSelected(false);
 
-            Mediator.Publish(EditorMediator.ContextualHelpChanged);*/
+            Mediator.Publish(EditorMediator.ContextualHelpChanged);
         }
 
         private void AddTool(VMSubTool tool)
         {
-            throw new NotImplementedException();
-            /*_controlPanel.AddTool(tool);
+            // throw new NotImplementedException();
+            // _controlPanel.AddTool(tool);
             _tools.Add(tool);
         }
 
@@ -147,9 +171,9 @@ namespace CBRE.Editor.Tools.VMTool
 
         public override void DocumentChanged()
         {
-            throw new NotImplementedException();
-            /*_controlPanel.Document = Document;
-            _tools.ForEach(x => x.SetDocument(Document));*/
+            // throw new NotImplementedException();
+            // _controlPanel.Document = Document;
+            _tools.ForEach(x => x.SetDocument(Document));
         }
 
         public override string GetIcon()
@@ -194,9 +218,9 @@ namespace CBRE.Editor.Tools.VMTool
             UpdateEditedFaces();
             if (points) RefreshPoints();
             if (midpoints) RefreshMidpoints();
-            throw new NotImplementedException();
-            /*_errorPanel.SetErrorList(GetErrors());
-            _dirty = true;*/
+            // throw new NotImplementedException();
+            // _errorPanel.SetErrorList(GetErrors());
+            _dirty = true;
         }
 
         public IEnumerable<VMError> GetErrors()
@@ -337,6 +361,7 @@ namespace CBRE.Editor.Tools.VMTool
                 // Set all the original solids to hidden
                 // (do this after we clone it so the clones aren't hidden too)
                 solid.IsCodeHidden = true;
+                solid.Faces.ForEach(p => Document.ObjectRenderer.RemoveFace(p));
             }
             RefreshPoints();
             RefreshMidpoints();
@@ -344,7 +369,7 @@ namespace CBRE.Editor.Tools.VMTool
 
         public override void ToolSelected(bool preventHistory)
         {
-            throw new NotImplementedException();
+            // throw new NotImplementedException();
             /*Editor.Instance.Focus();*/
 
             // Init the points and copy caches
@@ -830,14 +855,15 @@ namespace CBRE.Editor.Tools.VMTool
 
             if (_currentTool != null) _currentTool.Render2D(vp);
 
-            throw new NotImplementedException();
-            /*// Render out the solid previews
-            GL.Color3(Color.Pink);
-            Matrix.Push();
+            // Render out the solid previews
+            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            PrimitiveDrawing.SetColor(Color.Pink);
+            // Matrix.Push();
             var matrix = vp.GetModelViewMatrix();
-            GL.MultMatrix(ref matrix);
-            MapObjectRenderer.DrawWireframe(_copies.Keys.SelectMany(x => x.Faces), true, false);
-            Matrix.Pop();
+            // GL.MultMatrix(ref matrix);
+            PrimitiveDrawing.FacesWireframe(_copies.Keys.SelectMany(x => x.Faces), matrix.ToCbre());
+            // Matrix.Pop();
+            PrimitiveDrawing.End();
 
             // Draw in order by the unused coordinate (the up axis for this viewport)
             var ordered = (from point in Points
@@ -847,16 +873,21 @@ namespace CBRE.Editor.Tools.VMTool
                            select point).ToList();
             // Render out the point handles
             var z = (double)vp.Zoom;
-            GL.Begin(PrimitiveType.Quads);
+            PrimitiveDrawing.Begin(PrimitiveType.QuadList);
             foreach (var point in ordered)
             {
                 var c = vp.Flatten(point.Vector3);
-                GL.Color3(Color.Black);
-                GLX.Square(new Vector2d(c.DX, c.DY), 4, z, true);
-                GL.Color3(point.GetColour());
-                GLX.Square(new Vector2d(c.DX, c.DY), 3, z, true);
+                PrimitiveDrawing.SetColor(Color.Black);
+                PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 4);
+                PrimitiveDrawing.SetColor(point.GetColour());
+                PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 3);
+                // GLX.Square(new Vector2d(c.DX, c.DY), 3, z, true);
             }
-            GL.End();*/
+            PrimitiveDrawing.End();
+        }
+
+        public static Microsoft.Xna.Framework.Vector3 ToXna(Vector3 vector) {
+            return new Microsoft.Xna.Framework.Vector3((float)vector.X, (float)vector.Y, (float)vector.Z);
         }
 
         protected override void Render3D(Viewport3D vp)
@@ -865,51 +896,53 @@ namespace CBRE.Editor.Tools.VMTool
 
             if (_currentTool != null) _currentTool.Render3D(vp);
 
-            throw new NotImplementedException();
-            /*TextureHelper.Unbind();
+            // throw new NotImplementedException();
+            // TextureHelper.Unbind();
 
             if (_currentTool == null || _currentTool.DrawVertices())
             {
                 // Get us into 2D rendering
-                Matrix.Set(MatrixMode.Projection);
-                Matrix.Identity();
-                Graphics.Helpers.Viewport.Orthographic(0, 0, vp.Width, vp.Height);
-                Matrix.Set(MatrixMode.Modelview);
-                Matrix.Identity();
+                const float near = -1000000;
+                const float far = 1000000;
+                var matrix = Microsoft.Xna.Framework.Matrix.CreateOrthographic(vp.Width, vp.Height, near, far).ToCbre();
 
                 var half = new Vector3(vp.Width, vp.Height, 0) / 2;
                 // Render out the point handles
-                GL.Begin(PrimitiveType.Quads);
+                PrimitiveDrawing.Begin(PrimitiveType.QuadList);
                 foreach (var point in Points)
                 {
                     if (point.IsMidPoint && _showPoints == ShowPoints.Vertices) continue;
                     if (!point.IsMidPoint && _showPoints == ShowPoints.Midpoints) continue;
 
                     var c = vp.WorldToScreen(point.Vector3);
-                    if (c == null || c.Z > 1) continue;
+                    if (c == null /*|| c.Z > 1*/) continue;
                     c -= half;
 
-                    GL.Color3(Color.Black);
-                    GL.Vertex2(c.DX - 4, c.DY - 4);
-                    GL.Vertex2(c.DX - 4, c.DY + 4);
-                    GL.Vertex2(c.DX + 4, c.DY + 4);
-                    GL.Vertex2(c.DX + 4, c.DY - 4);
+                    PrimitiveDrawing.SetColor(Color.Black);
+                    PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 4);
+                    /*PrimitiveDrawing.Vertex2(c.DX - 4, c.DY - 4);
+                    PrimitiveDrawing.Vertex2(c.DX - 4, c.DY + 4);
+                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY + 4);
+                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY - 4);*/
+                    /*PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 4, (decimal)c.DY - 4, 0) * matrix));
+                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 4, (decimal)c.DY + 4, 0) * matrix));
+                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 4, (decimal)c.DY + 4, 0) * matrix));
+                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 4, (decimal)c.DY - 4, 0) * matrix));*/
 
-                    GL.Color3(point.GetColour());
-                    GL.Vertex2(c.DX - 3, c.DY - 3);
-                    GL.Vertex2(c.DX - 3, c.DY + 3);
-                    GL.Vertex2(c.DX + 3, c.DY + 3);
-                    GL.Vertex2(c.DX + 3, c.DY - 3);
+                    PrimitiveDrawing.SetColor(point.GetColour());
+                    PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 3);
+                    /*PrimitiveDrawing.Vertex2(c.DX - 3, c.DY - 3);
+                    PrimitiveDrawing.Vertex2(c.DX - 3, c.DY + 3);
+                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY + 3);
+                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY - 3);*/
+                    /*PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 3, (decimal)c.DY - 3, 0) * matrix));
+                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 3, (decimal)c.DY + 3, 0) * matrix));
+                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 3, (decimal)c.DY + 3, 0) * matrix));
+                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 3, (decimal)c.DY - 3, 0) * matrix));*/
                 }
-                GL.End();
+                PrimitiveDrawing.End();
 
                 // Get back into 3D rendering
-                Matrix.Set(MatrixMode.Projection);
-                Matrix.Identity();
-                Graphics.Helpers.Viewport.Perspective(0, 0, vp.Width, vp.Height, View.CameraFOV);
-                Matrix.Set(MatrixMode.Modelview);
-                Matrix.Identity();
-                vp.Camera.Position();
             }
 
             var type = vp.Type;
@@ -918,36 +951,44 @@ namespace CBRE.Editor.Tools.VMTool
                  wireframe = type == Viewport3D.ViewType.Wireframe;
 
             // Render out the solid previews
-            GL.Color3(Color.White);
+            // PrimitiveDrawing.SetColor(Color.White);
             var faces = _copies.Keys.SelectMany(x => x.Faces).ToList();
 
             if (!wireframe)
             {
-                if (shaded) MapObjectRenderer.EnableLighting();
-                GL.Enable(EnableCap.Texture2D);
-                MapObjectRenderer.DrawFilled(faces.Where(x => !x.IsSelected), Color.FromArgb(255, 64, 192, 64), textured);
-                MapObjectRenderer.DrawFilled(faces.Where(x => x.IsSelected), Color.FromArgb(255, 255, 128, 128), textured);
-                GL.Disable(EnableCap.Texture2D);
-                MapObjectRenderer.DisableLighting();
+                PrimitiveDrawing.Begin(PrimitiveType.TriangleList);
+                // if (shaded) PrimitiveDrawing.EnableLighting();
+                // GL.Enable(EnableCap.Texture2D);
+                PrimitiveDrawing.SetColor(Color.FromArgb(255, 64, 192, 64));
+                PrimitiveDrawing.FacesSolid(faces.Where(x => !x.IsSelected));
+                PrimitiveDrawing.SetColor(Color.FromArgb(255, 255, 128, 128));
+                PrimitiveDrawing.FacesSolid(faces.Where(x => x.IsSelected));
+                // GL.Disable(EnableCap.Texture2D);
+                // MapObjectRenderer.DisableLighting();
+                PrimitiveDrawing.End();
 
-                GL.Color3(Color.Pink);
-                MapObjectRenderer.DrawWireframe(faces, true, false);
+                PrimitiveDrawing.Begin(PrimitiveType.LineList);
+                PrimitiveDrawing.SetColor(Color.Pink);
+                PrimitiveDrawing.FacesWireframe(faces);
+                PrimitiveDrawing.End();
             }
             else
             {
-                GL.Color4(Color.FromArgb(255, 64, 192, 64));
-                MapObjectRenderer.DrawWireframe(faces.Where(x => !x.IsSelected), true, false);
-                GL.Color4(Color.FromArgb(255, 255, 128, 128));
-                MapObjectRenderer.DrawWireframe(faces.Where(x => x.IsSelected), true, false);
-            }*/
+                PrimitiveDrawing.Begin(PrimitiveType.LineList);
+                PrimitiveDrawing.SetColor(Color.FromArgb(255, 64, 192, 64));
+                PrimitiveDrawing.FacesWireframe(faces.Where(x => !x.IsSelected));
+                PrimitiveDrawing.SetColor(Color.FromArgb(255, 255, 128, 128));
+                PrimitiveDrawing.FacesWireframe(faces.Where(x => x.IsSelected));
+                PrimitiveDrawing.End();
+            }
         }
 
-        /*public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
         {
             if (_currentTool != null) _currentTool.KeyDown(viewport, e);
             if (e.Handled) return;
             base.KeyDown(viewport, e);
-        }*/
+        }
 
         public override void Render(ViewportBase viewport)
         {

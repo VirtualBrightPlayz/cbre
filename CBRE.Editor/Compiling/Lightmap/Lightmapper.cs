@@ -1,17 +1,24 @@
-﻿using CBRE.DataStructures.Geometric;
+﻿using CBRE.Common;
+using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
+using CBRE.Editor.Popup;
+using CBRE.Editor.Rendering;
 using CBRE.Graphics;
+using CBRE.Providers.Texture;
 using CBRE.Settings;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     static class Lightmapper {
@@ -27,6 +34,33 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         public static List<Thread> FaceRenderThreads { get; private set; }
         private static List<LMThreadException> threadExceptions;
+        private static ProgressPopup progressPopup = null;
+
+        private static void UpdateProgress(string msg, float progress) {
+            GameMain.Instance.PreDrawActions.Enqueue(() => {
+                if (progressPopup == null || !GameMain.Instance.Popups.Contains(progressPopup)) {
+                    progressPopup = new ProgressPopup("Lightmap Progress");
+                    // progressPopup.Run();
+                    // Task.Run(progressPopup.Run);
+                }
+                progressPopup.message = msg;
+                progressPopup.progress = progress;
+                // progressPopup.RunOneFrame();
+                // progressPopup.ResetElapsedTime();
+                /*if (altGUIRenderer == null) {
+                    altGUIRenderer = new ImGuiRenderer(GameMain.Instance);
+                }*/
+                // GameMain.Instance.GraphicsDevice.Clear(new Microsoft.Xna.Framework.Color(50, 50, 60));
+                // altGUIRenderer.BeforeLayout(new Microsoft.Xna.Framework.GameTime(default, TimeSpan.FromTicks(0)));
+                // progressPopup.Draw();
+                // altGUIRenderer.AfterLayout();
+                // GameMain.Instance.LimitedRedraw = progress < 1f;
+                // if (GameMain.Instance.LimitedRedraw)
+                    // GameMain.Instance.Tick();
+                // if (GameMain.Instance.LimitedRedraw)
+                    // GameMain.Instance.RunOneFrame();
+            });
+        }
 
         private static void CalculateUV(List<LightmapGroup> lmGroups, Rectangle area, out int usedWidth, out int usedHeight) {
             usedWidth = 0;
@@ -116,9 +150,14 @@ namespace CBRE.Editor.Compiling.Lightmap {
             List<LMFace> exclusiveBlockers = new List<LMFace>();
 
             //get faces
+            UpdateProgress("Determining UV coordinates...", 0);
             LMFace.FindFacesAndGroups(map, out faces, out lmGroups);
 
             if (!lmGroups.Any()) { throw new Exception("No lightmap groups!"); }
+
+            foreach (LMFace lmface in faces) {
+                lmface.OriginalFace.LmIndex = lmface.LmIndex;
+            }
 
             foreach (Solid solid in map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
                 foreach (Face tface in solid.Faces) {
@@ -194,6 +233,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
 
             int faceNum = 0;
+            UpdateProgress("Started calculating brightness levels...", 0.05f);
             while (FaceRenderThreads.Count > 0) {
                 for (int i = 0; i < 8; i++) {
                     if (i >= FaceRenderThreads.Count) break;
@@ -203,6 +243,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                         FaceRenderThreads.RemoveAt(i);
                         i--;
                         faceNum++;
+                        UpdateProgress(faceNum.ToString() + "/" + faceCount.ToString() + " faces complete", 0.05f + ((float)faceNum / (float)faceCount) * 0.85f);
                     }
                 }
 
@@ -218,6 +259,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
 
             //blur the lightmap so it doesn't look too pixellated
+            UpdateProgress("Blurring lightmap...", 0.95f);
             float[] blurBuffer = new float[buffers[0].Length];
             for (int k = 0; k < 4; k++) {
                 foreach (LightmapGroup group in lmGroups) {
@@ -298,16 +340,28 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
             }
 
+            UpdateProgress("Copying bitmap data...", 0.99f);
             for (int k = 0; k < 4; k++) {
                 byte[] byteBuffer = new byte[buffers[k].Length];
+                // Color[] pixels = new Color[buffers[k].Length / 4];
                 for (int i = 0; i < buffers[k].Length; i++) {
                     byteBuffer[i] = (byte)Math.Max(Math.Min(buffers[k][i] * 255.0f, 255.0f), 0.0f);
+                    if (i + 3 < buffers[k].Length) {
+                        // pixels[i/4] = Color.FromArgb(byteBuffer[i+0], byteBuffer[i+1], byteBuffer[i+2], byteBuffer[i+3]);
+                    }
                 }
                 lock (Lightmaps) {
-                    throw new NotImplementedException();
-                    /*BitmapData bitmapData2 = textureCollection.Lightmaps[k].LockBits(new Rectangle(0, 0, totalTextureDims, totalTextureDims), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                    Marshal.Copy(byteBuffer, 0, bitmapData2.Scan0, byteBuffer.Length);
-                    textureCollection.Lightmaps[k].UnlockBits(bitmapData2);*/
+                    int j = k;
+                    GameMain.Instance.PreDrawActions.Enqueue(() => {
+                        Texture2D tex = new Texture2D(GameMain.Instance.GraphicsDevice, totalTextureDims, totalTextureDims);
+                        tex.SetData(byteBuffer);
+                        string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"lm_{j}.png");
+                        FileStream fs = File.OpenWrite(fname);
+                        tex.SaveAsPng(fs, totalTextureDims, totalTextureDims);
+                        fs.Close();
+                        document.Lightmaps[j] = new AsyncTexture(fname);
+                        document.MGLightmaps[j] = tex;
+                    });
                 }
             }
 
@@ -315,31 +369,41 @@ namespace CBRE.Editor.Compiling.Lightmap {
             faces.AddRange(lmGroups.SelectMany(g => g.Faces));
 
             lock (Lightmaps) {
-                throw new NotImplementedException();
-                /*document.TextureCollection.LightmapTextureOutdated = true;*/
+                document.LightmapTextureOutdated = true;
+                ViewportManager.MarkForRerender();
+            }
+
+            UpdateProgress("Lightmapping complete!", 1.0f);
         }
-    }
 
     public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
         lock (Lightmaps) {
-            throw new NotImplementedException();
-            /*for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
-                string iPath = path + (threeBasisModel ? i.ToString() : "");
-                if (lmCount == 1) {
-                    document.TextureCollection.Lightmaps[i].Save(iPath + ".png");
-                } else {
-                    for (int j = 0; j < lmCount; j++) {
-                        int x = ((j % 2) * LightmapConfig.TextureDims);
-                        int y = ((j / 2) * LightmapConfig.TextureDims);
+            GameMain.Instance.PreDrawActions.Enqueue(() => {
+                for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
+                    string iPath = path + (threeBasisModel ? i.ToString() : "");
+                    var texture = document.MGLightmaps[i];
+                    if (lmCount == 1) {
+                        FileStream fs = File.OpenWrite(iPath + ".png");
+                        texture.SaveAsPng(fs, texture.Width, texture.Height);
+                        fs.Close();
+                    } else {
+                        for (int j = 0; j < lmCount; j++) {
+                            int x = ((j % 2) * LightmapConfig.TextureDims);
+                            int y = ((j / 2) * LightmapConfig.TextureDims);
 
-                        Bitmap clone = document.TextureCollection.Lightmaps[i].Clone(
-                            new Rectangle(x, y, LightmapConfig.TextureDims, LightmapConfig.TextureDims),
-                            PixelFormat.Format32bppArgb);
-                        clone.Save(iPath + "_" + j.ToString() + ".png");
-                        clone.Dispose();
+                            byte[] clone = new byte[texture.Width * texture.Height];
+                            texture.GetData(clone);
+                            Texture2D texture2 = new Texture2D(texture.GraphicsDevice, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
+                            byte[] tmp = new byte[LightmapConfig.TextureDims * LightmapConfig.TextureDims];
+                            Array.Copy(clone, x + y * LightmapConfig.TextureDims, tmp, 0, tmp.Length);
+                            texture2.SetData(tmp);
+                            FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
+                            texture2.SaveAsPng(fs, texture2.Width, texture2.Height);
+                            fs.Close();
+                        }
                     }
                 }
-            }*/
+            });
         }
     }
 
@@ -539,21 +603,21 @@ namespace CBRE.Editor.Compiling.Lightmap {
                             brightness2 += ((float)rand.NextDouble() - 0.5f) * 0.005f;
                             brightnessNorm += ((float)rand.NextDouble() - 0.5f) * 0.005f;
 
-                            r[0][x, y] += lightColor.Z * brightness0; if (r[0][x, y] > 1.0f) r[0][x, y] = 1.0f; if (r[0][x, y] < 0) r[0][x, y] = 0;
+                            r[0][x, y] += lightColor.X * brightness0; if (r[0][x, y] > 1.0f) r[0][x, y] = 1.0f; if (r[0][x, y] < 0) r[0][x, y] = 0;
                             g[0][x, y] += lightColor.Y * brightness0; if (g[0][x, y] > 1.0f) g[0][x, y] = 1.0f; if (g[0][x, y] < 0) g[0][x, y] = 0;
-                            b[0][x, y] += lightColor.X * brightness0; if (b[0][x, y] > 1.0f) b[0][x, y] = 1.0f; if (b[0][x, y] < 0) b[0][x, y] = 0;
+                            b[0][x, y] += lightColor.Z * brightness0; if (b[0][x, y] > 1.0f) b[0][x, y] = 1.0f; if (b[0][x, y] < 0) b[0][x, y] = 0;
 
-                            r[1][x, y] += lightColor.Z * brightness1; if (r[1][x, y] > 1.0f) r[1][x, y] = 1.0f; if (r[1][x, y] < 0) r[1][x, y] = 0;
+                            r[1][x, y] += lightColor.X * brightness1; if (r[1][x, y] > 1.0f) r[1][x, y] = 1.0f; if (r[1][x, y] < 0) r[1][x, y] = 0;
                             g[1][x, y] += lightColor.Y * brightness1; if (g[1][x, y] > 1.0f) g[1][x, y] = 1.0f; if (g[1][x, y] < 0) g[1][x, y] = 0;
-                            b[1][x, y] += lightColor.X * brightness1; if (b[1][x, y] > 1.0f) b[1][x, y] = 1.0f; if (b[1][x, y] < 0) b[1][x, y] = 0;
+                            b[1][x, y] += lightColor.Z * brightness1; if (b[1][x, y] > 1.0f) b[1][x, y] = 1.0f; if (b[1][x, y] < 0) b[1][x, y] = 0;
 
-                            r[2][x, y] += lightColor.Z * brightness2; if (r[2][x, y] > 1.0f) r[2][x, y] = 1.0f; if (r[2][x, y] < 0) r[2][x, y] = 0;
+                            r[2][x, y] += lightColor.X * brightness2; if (r[2][x, y] > 1.0f) r[2][x, y] = 1.0f; if (r[2][x, y] < 0) r[2][x, y] = 0;
                             g[2][x, y] += lightColor.Y * brightness2; if (g[2][x, y] > 1.0f) g[2][x, y] = 1.0f; if (g[2][x, y] < 0) g[2][x, y] = 0;
-                            b[2][x, y] += lightColor.X * brightness2; if (b[2][x, y] > 1.0f) b[2][x, y] = 1.0f; if (b[2][x, y] < 0) b[2][x, y] = 0;
+                            b[2][x, y] += lightColor.Z * brightness2; if (b[2][x, y] > 1.0f) b[2][x, y] = 1.0f; if (b[2][x, y] < 0) b[2][x, y] = 0;
 
-                            r[3][x, y] += lightColor.Z * brightnessNorm; if (r[3][x, y] > 1.0f) r[3][x, y] = 1.0f; if (r[3][x, y] < 0) r[3][x, y] = 0;
+                            r[3][x, y] += lightColor.X * brightnessNorm; if (r[3][x, y] > 1.0f) r[3][x, y] = 1.0f; if (r[3][x, y] < 0) r[3][x, y] = 0;
                             g[3][x, y] += lightColor.Y * brightnessNorm; if (g[3][x, y] > 1.0f) g[3][x, y] = 1.0f; if (g[3][x, y] < 0) g[3][x, y] = 0;
-                            b[3][x, y] += lightColor.X * brightnessNorm; if (b[3][x, y] > 1.0f) b[3][x, y] = 1.0f; if (b[3][x, y] < 0) b[3][x, y] = 0;
+                            b[3][x, y] += lightColor.Z * brightnessNorm; if (b[3][x, y] > 1.0f) b[3][x, y] = 1.0f; if (b[3][x, y] < 0) b[3][x, y] = 0;
 
                             luxelColor0 = new Vector3F(r[0][x, y], g[0][x, y], b[0][x, y]);
                             luxelColor1 = new Vector3F(r[1][x, y], g[1][x, y], b[1][x, y]);

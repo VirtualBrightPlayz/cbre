@@ -25,6 +25,8 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using Quaternion = CBRE.DataStructures.Geometric.Quaternion;
+using CBRE.Editor.Popup;
+using CBRE.Editor.Popup.ObjectProperties;
 
 namespace CBRE.Editor.Documents {
     /// <summary>
@@ -191,10 +193,8 @@ namespace CBRE.Editor.Documents {
 
         public void FileClose() {
             if (_document.History.TotalActionsSinceLastSave > 0) {
-                throw new NotImplementedException();
-                /*var result = MessageBox.Show("Would you like to save your changes to this map?", "Changes Detected", MessageBoxButtons.YesNoCancel);
-                if (result == DialogResult.Cancel) return;
-                if (result == DialogResult.Yes) FileSave();*/
+                new SaveMap("", _document, true);
+                return;
             }
             DocumentManager.Remove(_document);
         }
@@ -204,11 +204,12 @@ namespace CBRE.Editor.Documents {
         }
 
         public void FileSaveAs() {
-            _document.SaveFile(null, true);
+            new SaveMap("", _document, false);
         }
 
         public void FileCompile() {
-            throw new NotImplementedException();
+            ExportPopup form = new ExportPopup(_document);
+            // throw new NotImplementedException();
         }
 
         public void OperationsCopy() {
@@ -287,7 +288,8 @@ namespace CBRE.Editor.Documents {
         }
 
         public void ObjectProperties() {
-            throw new NotImplementedException();
+            new ObjectPropertiesUI(_document, _document.Selection.GetSelectedParents().FirstOrDefault());
+            // throw new NotImplementedException();
             /*var pd = new ObjectPropertiesDialog(_document);
             pd.Show(Editor.Instance);*/
         }
@@ -647,7 +649,8 @@ namespace CBRE.Editor.Documents {
         }
 
         public void RebuildGrid() {
-            throw new NotImplementedException();
+            ViewportManager.MarkForRerender();
+            // throw new NotImplementedException();
             /*_document.Renderer.UpdateGrid(_document.Map.GridSpacing, _document.Map.Show2DGrid, _document.Map.Show3DGrid, true);
             Mediator.Publish(EditorMediator.DocumentGridSpacingChanged, _document.Map.GridSpacing);*/
         }
@@ -655,28 +658,25 @@ namespace CBRE.Editor.Documents {
         public void CenterAllViewsOnSelection() {
             var box = _document.Selection.GetSelectionBoundingBox()
                       ?? new Box(Vector3.Zero, Vector3.Zero);
-            throw new NotImplementedException();
-            /*foreach (var vp in ViewportManager.Viewports) {
+            foreach (var vp in ViewportManager.Viewports) {
                 vp.FocusOn(box);
-            }*/
+            }
         }
 
         public void Center2DViewsOnSelection() {
             var box = _document.Selection.GetSelectionBoundingBox()
                       ?? new Box(Vector3.Zero, Vector3.Zero);
-            throw new NotImplementedException();
-            /*foreach (var vp in ViewportManager.Viewports.OfType<Viewport2D>()) {
+            foreach (var vp in ViewportManager.Viewports.OfType<Viewport2D>()) {
                 vp.FocusOn(box);
-            }*/
+            }
         }
 
         public void Center3DViewsOnSelection() {
             var box = _document.Selection.GetSelectionBoundingBox()
                       ?? new Box(Vector3.Zero, Vector3.Zero);
-            throw new NotImplementedException();
-            /*foreach (var vp in ViewportManager.Viewports.OfType<Viewport3D>()) {
+            foreach (var vp in ViewportManager.Viewports.OfType<Viewport3D>()) {
                 vp.FocusOn(box);
-            }*/
+            }
         }
 
         public void GoToCoordinates() {

@@ -1,4 +1,7 @@
-﻿namespace CBRE.Settings {
+﻿using System;
+using Microsoft.Xna.Framework.Input;
+
+namespace CBRE.Settings {
     public class HotkeyDefinition {
         public string ID { get; set; }
         public string Name { get; set; }

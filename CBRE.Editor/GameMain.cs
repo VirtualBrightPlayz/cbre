@@ -1,6 +1,8 @@
 ﻿using CBRE.Common;
+using CBRE.Common.Mediator;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
+using CBRE.Editor.Popup;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.Tools;
 using CBRE.Graphics;
@@ -38,6 +40,11 @@ namespace CBRE.Editor {
                 return MouseCursor.Arrow;
             }
         }
+
+        public bool PopupSelected { get; set; } = false;
+
+        public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
+        public Queue<Action> PreDrawActions { get; private set; } = new Queue<Action>();
 
         public GameMain()
         {
@@ -91,9 +98,11 @@ namespace CBRE.Editor {
                     LoadTexture(file));
             }
 
+            Mediator.MediatorException += MediatorError;
             InitMenus();
             InitTopBar();
             InitToolBar();
+            Subscribe();
 
             TextureProvider.CreatePackages(Directories.GetTextureCategories());
 
@@ -102,14 +111,20 @@ namespace CBRE.Editor {
             MapProvider.Register(new MapFormatProvider());
             MapProvider.Register(new L3DWProvider());
 
-            Map map = MapProvider.GetMapFromFile("gateA.3dw");
+            DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
+            /*Map map = MapProvider.GetMapFromFile("gateA.3dw");
             Map map2 = MapProvider.GetMapFromFile("room2_2.3dw");
             DocumentManager.AddAndSwitch(new Document("gateA.3dw", map));
-            DocumentManager.Add(new Document("room2_2.3dw", map2));
+            DocumentManager.Add(new Document("room2_2.3dw", map2));*/
 
             ViewportManager.Init();
 
             base.Initialize();
+        }
+
+        protected override void OnExiting(object sender, EventArgs args) {
+            SettingsManager.Write();
+            base.OnExiting(sender, args);
         }
 
         private AsyncTexture LoadTexture(string filename) {
@@ -122,12 +137,36 @@ namespace CBRE.Editor {
         }
 
         private Timing timing = new Timing();
+        private Keys[] previousKeys = new Keys[0];
 
         protected override void Update(GameTime gameTime) {
             timing.StartMeasurement();
             base.Update(gameTime);
 
-            timing.PerformTicks(ViewportManager.Update);
+            if (PopupSelected && Popups.Count == 0)
+                PopupSelected = false;
+
+            if (!PopupSelected) {
+                // Hotkeys
+                {
+                    Keys[] keys = Keyboard.GetState().GetPressedKeys();
+                    List<Keys> pressed = new List<Keys>();
+                    foreach (var key in keys) {
+                        if (!previousKeys.Contains(key)) {
+                            pressed.Add(key);
+                        }
+                    }
+                    bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
+                    bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
+                    bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
+                    HotkeyImplementation def = Hotkeys.GetHotkeyFor(pressed.ToArray(), ctrlpressed, shiftpressed, altpressed);
+                    if (def != null) {
+                        Mediator.Publish(def.Definition.Action, def.Definition.Parameter);
+                    }
+                    previousKeys = keys;
+                }
+                timing.PerformTicks(ViewportManager.Update);
+            }
             timing.EndMeasurement();
         }
 
@@ -151,6 +190,14 @@ namespace CBRE.Editor {
             _imGuiRenderer.AfterLayout();
 
             base.Draw(gameTime);
+
+            while (PreDrawActions.Count > 0) {
+                try {
+                    PreDrawActions.Dequeue()?.Invoke();
+                } catch (Exception e) {
+                    Logging.Logger.ShowException(e);
+                }
+            }
         }
 
         protected virtual void ImGuiLayout() {
@@ -216,7 +263,32 @@ namespace CBRE.Editor {
                 ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, 47));
                 ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60));
                 if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60))) {
-                    SelectedTool?.UpdateGui();
+                    if (ImGui.TreeNode("Tool")) {
+                        SelectedTool?.UpdateGui();
+                        ImGui.TreePop();
+                    }
+                    if (ImGui.TreeNode("Contextual Help")) {
+                        UpdateContextHelp();
+                        ImGui.TreePop();
+                    }
+                    if (ImGui.TreeNode("Viewport Options")) {
+                        for (int i = 0; i < ViewportManager.Viewports.Length; i++) {
+                            if (ViewportManager.Viewports[i] is Viewport3D viewport3D) {
+                                if (ImGui.BeginCombo("Viewport Render Type", viewport3D.Type.ToString())) {
+                                    var evals = Enum.GetValues<Viewport3D.ViewType>();
+                                    for (int j = 0; j < evals.Length; j++) {
+                                        if (ImGui.Selectable(evals[j].ToString(), viewport3D.Type == evals[j])) {
+                                            viewport3D.Type = evals[j];
+                                            ViewportManager.MarkForRerender();
+                                            DocumentManager.Documents.ForEach(p => p.ObjectRenderer.MarkDirty());
+                                        }
+                                    }
+                                    ImGui.EndCombo();
+                                }
+                            }
+                        }
+                        ImGui.TreePop();
+                    }
 
                     ImGui.EndChildFrame();
                 }
@@ -240,6 +312,15 @@ namespace CBRE.Editor {
                     ImGui.Text($"Paged mem: {proc.PagedMemorySize64 / 1024 / 1024} MB");
                 }
                 ImGui.End();
+            }
+
+            for (int i = 0; i < Popups.Count; i++)
+            {
+                if (!Popups[i].Draw())
+                {
+                    Popups[i].Close();
+                    i--;
+                }
             }
         }
 	}
