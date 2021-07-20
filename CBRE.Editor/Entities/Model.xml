@@ -1,0 +1,15 @@
+<entity name="model">
+    <rmesh>
+        <write property="position" as="Vector" />
+        <write property="file" as="B3DString" />
+        <write property="angles" as="Vector" />
+        <write property="scale" as="Vector" />
+    </rmesh>
+
+    <properties>
+        <property name="position" type="Position" />
+        <property name="file" type="String" />
+        <property name="angles" type="Vector" />
+        <property name="scale" type="Vector" />
+    </properties>
+</entity>
