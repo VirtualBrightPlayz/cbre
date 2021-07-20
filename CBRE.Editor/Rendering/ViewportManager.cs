@@ -330,6 +330,7 @@ namespace CBRE.Editor.Rendering {
                         if (Viewports[i] is Viewport3D vp3d) {
                             bool shiftDown = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
                             bool mustRerender = false;
+                            // WASD
                             if (keyboardState.IsKeyDown(Keys.A)) {
                                 vp3d.Camera.Strafe(-5m - (shiftDown ? 5m : 0m));
                                 mustRerender = true;
@@ -344,6 +345,28 @@ namespace CBRE.Editor.Rendering {
                             }
                             if (keyboardState.IsKeyDown(Keys.S)) {
                                 vp3d.Camera.Advance(-5m - (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+                            // look around
+                            var fovdiv = (vp3d.Width / 60m) / 2.5m;
+                            if (keyboardState.IsKeyDown(Keys.Left)) {
+                                vp3d.Camera.Pan(5m / fovdiv);
+                                // vp3d.Camera.Strafe(-5m - (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+                            if (keyboardState.IsKeyDown(Keys.Right)) {
+                                vp3d.Camera.Pan(-5m / fovdiv);
+                                // vp3d.Camera.Strafe(5m + (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+                            if (keyboardState.IsKeyDown(Keys.Up)) {
+                                vp3d.Camera.Tilt(-5m / fovdiv);
+                                // vp3d.Camera.Advance(5m + (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+                            if (keyboardState.IsKeyDown(Keys.Down)) {
+                                vp3d.Camera.Tilt(5m / fovdiv);
+                                // vp3d.Camera.Advance(-5m - (shiftDown ? 5m : 0m));
                                 mustRerender = true;
                             }
                             if (mustRerender) {
