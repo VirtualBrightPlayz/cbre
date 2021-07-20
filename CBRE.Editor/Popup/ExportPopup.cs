@@ -77,6 +77,17 @@ namespace CBRE.Editor.Popup {
                     Logging.Logger.ShowException(e);
                 }
             }
+            // This seems to always crash for me --Virtual
+            /*if (ImGui.Button("Export as .fbx")) {
+                try {
+                    LightmapConfig.TextureDims = (int)_size;
+                    LightmapConfig.DownscaleFactor = downscale;
+                    new FileCallbackPopup("Save .fbx", "", s => GenericExport.SaveToFile(s, _document, "fbx"));
+                }
+                catch (System.Exception e) {
+                    Logging.Logger.ShowException(e);
+                }
+            }*/
             return base.ImGuiLayout();
         }
     }

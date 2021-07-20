@@ -328,7 +328,7 @@ namespace CBRE.Editor.Rendering {
                         }
 
                         if (Viewports[i] is Viewport3D vp3d) {
-                            bool shiftDown = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
+                            bool shiftDown = mouse2Down;
                             bool mustRerender = false;
                             // WASD
                             if (keyboardState.IsKeyDown(Keys.A)) {

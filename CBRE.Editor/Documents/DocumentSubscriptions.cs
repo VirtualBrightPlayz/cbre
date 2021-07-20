@@ -297,6 +297,7 @@ namespace CBRE.Editor.Documents {
         public void SwitchTool(HotkeyTool tool) {
             if (ToolManager.ActiveTool != null && ToolManager.ActiveTool.GetHotkeyToolType() == tool) tool = HotkeyTool.Selection;
             ToolManager.Activate(tool);
+            GameMain.Instance.SelectedTool = ToolManager.Tools.FirstOrDefault(p => p.GetHotkeyToolType() == tool);
         }
 
         public void ApplyCurrentTextureToSelection() {

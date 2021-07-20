@@ -393,6 +393,7 @@ namespace CBRE.Editor.Rendering {
                 int index3dIndex = 0;
                 int index2dIndex = 0;
                 for (int i = 0; i < filteredFaces.Count; i++) {
+                    if (filteredFaces[i].LmIndex != id) continue;
                     for (int j=0;j<filteredFaces[i].Vertices.Count;j++) {
                         var location = faces[i].Vertices[j].Location;
                         vertices[vertexIndex + j].Position = new Microsoft.Xna.Framework.Vector3((float)location.X, (float)location.Y, (float)location.Z);
