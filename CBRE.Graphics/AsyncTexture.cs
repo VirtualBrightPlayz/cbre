@@ -253,11 +253,14 @@ namespace CBRE.Graphics {
         }
 
         public void Bind() {
-            throw new NotImplementedException();
+            // GlobalGraphics.GraphicsDevice.Textures[0] = this.monoGameTexture;
+            PrimitiveDrawing.texture = this.monoGameTexture;
         }
 
         public void Unbind() {
-            throw new NotImplementedException();
+            // GlobalGraphics.GraphicsDevice.Textures[0] = this.monoGameTexture;
+            if (PrimitiveDrawing.texture == this.monoGameTexture)
+                PrimitiveDrawing.texture = null;
         }
     }
 }

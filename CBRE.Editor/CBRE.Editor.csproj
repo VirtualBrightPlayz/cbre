@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AssimpNet\AssimpNet\AssimpNet.csproj" />
+    <!-- <ProjectReference Include="..\AssimpNet\AssimpNet\AssimpNet.csproj" /> -->
     <ProjectReference Include="..\CBRE.Common\CBRE.Common.csproj" />
     <ProjectReference Include="..\CBRE.DataStructures\CBRE.DataStructures.csproj" />
     <ProjectReference Include="..\CBRE.FileSystem\CBRE.FileSystem.csproj" />
@@ -311,6 +311,10 @@
     <None Update="ToolTextures\REMOVE_FACE.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AssimpNet" Version="4.1.0" />
   </ItemGroup>
 
 </Project>

@@ -7,8 +7,12 @@ using CBRE.Common;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
+using CBRE.Extensions;
+using CBRE.FileSystem;
 using CBRE.Graphics;
+using CBRE.Providers.Model;
 using CBRE.Providers.Texture;
+using CBRE.Settings;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Rendering {
@@ -520,6 +524,8 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
+        private Dictionary<string, ModelReference> models = new Dictionary<string, ModelReference>();
+
         public void RenderTextured() {
             foreach (var kvp in brushGeom) {
                 TextureItem item = TextureProvider.GetItem(kvp.Key);
@@ -533,6 +539,35 @@ namespace CBRE.Editor.Rendering {
             }
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
+
+            // Models
+            BasicEffect.CurrentTechnique.Passes[0].Apply();
+            var models = Document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData != null && e.GameData.Behaviours.Any(p => p.Name == "model")).OfType<Entity>().ToList();
+            foreach (var model in models)
+            {
+                string key = model.GameData.Behaviours.FirstOrDefault(p => p.Name == "model").Values.FirstOrDefault();
+                string path = Directories.GetModelPath(model.EntityData.GetPropertyValue(key));
+                if (string.IsNullOrWhiteSpace(path))
+                    continue;
+                NativeFile file = new NativeFile(path);
+                if (this.models.ContainsKey(path))
+                {
+                    Vector3 euler = model.EntityData.GetPropertyVector3("angles", Vector3.Zero);
+                    Vector3 scale = model.EntityData.GetPropertyVector3("scale", Vector3.One);
+                    Matrix modelMat = Matrix.Translation(model.Origin)
+                    * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
+                    * Matrix.RotationY(DMath.DegreesToRadians(euler.Y))
+                    * Matrix.RotationZ(DMath.DegreesToRadians(euler.Z))
+                    * Matrix.Scale(scale);
+                    ModelRenderer.Render(this.models[path].Model, modelMat, BasicEffect);
+                }
+                else if (ModelProvider.CanLoad(file))
+                {
+                    ModelReference mref = ModelProvider.CreateModelReference(file);
+                    this.models.Add(path, mref);
+                }
+            }
+            // BasicEffect.CurrentTechnique.Passes[0].Apply();
         }
 
         public void RenderLightmapped() {

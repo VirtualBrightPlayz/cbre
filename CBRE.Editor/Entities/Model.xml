@@ -12,4 +12,6 @@
         <property name="angles" type="Vector" />
         <property name="scale" type="Vector" />
     </properties>
+
+    <model name="file" />
 </entity>

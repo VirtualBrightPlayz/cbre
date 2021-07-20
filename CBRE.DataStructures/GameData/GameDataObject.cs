@@ -111,6 +111,10 @@ namespace CBRE.DataStructures.GameData {
                     case "light":
 
                         break;
+                    case "model":
+                        string name = subElement.GetAttributeString("name", null);
+                        Behaviours.Add(new Behaviour("model", name));
+                        break;
                 }
             }
         }

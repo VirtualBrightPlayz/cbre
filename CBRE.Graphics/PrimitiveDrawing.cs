@@ -8,14 +8,16 @@ using Microsoft.Xna.Framework.Graphics;
 namespace CBRE.Graphics {
     public static class PrimitiveDrawing {
         private static PrimitiveType? currentPrimitiveType = null;
-
         private static Color color = Color.White;
-        private static List<VertexPositionColor> vertices = new List<VertexPositionColor>();
+        private static List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
+        public static Vector2 texCoords;
+        public static Texture2D texture = null;
 
         public static void Begin(PrimitiveType primType) {
             if (currentPrimitiveType != null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Begin because a draw operation is already in progress"); }
             currentPrimitiveType = primType;
             vertices.Clear();
+            texCoords = Vector2.Zero;
         }
 
         public static void SetColor(System.Drawing.Color clr) {
@@ -26,28 +28,35 @@ namespace CBRE.Graphics {
             color.A = clr.A;
         }
 
-        public static void Vertex2(double x, double y) {
+        /*public static void TexCoord2(float u, float v)
+        {
+            texCoords = new Vector2(u, v);
+        }*/
+
+        public static void Vertex2(double x, double y, float u = 0f, float v = 0f) {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Vertex3 because a draw operation isn't in progress"); }
-            vertices.Add(new VertexPositionColor() {
+            vertices.Add(new VertexPositionColorTexture() {
                 Position = new Vector3((float)x, (float)y, 0.0f),
-                Color = color
+                Color = color,
+                TextureCoordinate = new Vector2(u, v)
             });
         }
 
-        public static void Vertex3(Vector3 position) {
+        public static void Vertex3(Vector3 position, float u = 0f, float v = 0f) {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Vertex3 because a draw operation isn't in progress"); }
-            vertices.Add(new VertexPositionColor() {
+            vertices.Add(new VertexPositionColorTexture() {
                 Position = position,
-                Color = color
+                Color = color,
+                TextureCoordinate = new Vector2(u, v)
             });
         }
 
-        public static void Vertex3(double x, double y, double z) {
-            Vertex3(new Vector3((float)x, (float)y, (float)z));
+        public static void Vertex3(double x, double y, double z, float u = 0f, float v = 0f) {
+            Vertex3(new Vector3((float)x, (float)y, (float)z), u, v);
         }
 
-        public static void Vertex3(CBRE.DataStructures.Geometric.Vector3 position) {
-            Vertex3(position.DX, position.DY, position.DZ);
+        public static void Vertex3(CBRE.DataStructures.Geometric.Vector3 position, float u = 0f, float v = 0f) {
+            Vertex3(position.DX, position.DY, position.DZ, u, v);
         }
 
         public static void DottedLine(CBRE.DataStructures.Geometric.Vector3 pos0, CBRE.DataStructures.Geometric.Vector3 pos1, decimal subLen) {
@@ -135,13 +144,24 @@ namespace CBRE.Graphics {
             }
 
             if (vertices.Count > 0) {
-                GlobalGraphics.GraphicsDevice.DrawUserPrimitives(
-                    currentPrimitiveType.Value,
-                    vertices.ToArray(),
-                    0,
-                    primCount);
+                BasicEffect effect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+                effect.World = Matrix.Identity;
+                effect.TextureEnabled = true;
+                effect.VertexColorEnabled = false;
+                effect.Texture = texture;
+                // foreach (var pass in effect.CurrentTechnique.Passes)
+                {
+                    // pass.Apply();
+                    GlobalGraphics.GraphicsDevice.DrawUserPrimitives(
+                        currentPrimitiveType.Value,
+                        vertices.ToArray(),
+                        0,
+                        primCount);
+                    // break;
+                }
             }
             currentPrimitiveType = null;
+            texture = null;
         }
     }
 }
