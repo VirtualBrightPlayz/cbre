@@ -223,12 +223,21 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     buffers[i] = new float[totalTextureDims * totalTextureDims * 4];
                 }
             }
-
             foreach (LightmapGroup group in lmGroups) {
+                List<LMFace> threadFaceList = new List<LMFace>();
                 foreach (LMFace face in group.Faces) {
                     faceCount++;
-                    Thread newThread = CreateLightmapRenderThread(document, buffers, lightEntities, group, face, allBlockers);
+                    threadFaceList.Add(face);
+                    if (threadFaceList.Count >= LightmapConfig.FacesPerThread) {
+                        Thread newThread = CreateLightmapRenderThread(document, buffers, lightEntities, group, threadFaceList.ToArray(), allBlockers);
+                        FaceRenderThreads.Add(newThread);
+                        threadFaceList.Clear();
+                    }
+                }
+                if (threadFaceList.Count > 0) {
+                    Thread newThread = CreateLightmapRenderThread(document, buffers, lightEntities, group, threadFaceList.ToArray(), allBlockers);
                     FaceRenderThreads.Add(newThread);
+                    threadFaceList.Clear();
                 }
             }
 
@@ -411,14 +420,16 @@ namespace CBRE.Editor.Compiling.Lightmap {
         }
     }
 
-    private static Thread CreateLightmapRenderThread(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces) {
+    private static Thread CreateLightmapRenderThread(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, IEnumerable<LMFace> targetFaces, IEnumerable<LMFace> blockerFaces) {
         return new Thread(() => {
-            try {
-                RenderLightOntoFace(doc, bitmaps, lights, group, targetFace, blockerFaces);
-            } catch (ThreadAbortException) {
-                //do nothing
-            } catch (Exception e) {
-                threadExceptions.Add(new LMThreadException(e));
+            foreach (LMFace targetFace in targetFaces) {
+                try {
+                    RenderLightOntoFace(doc, bitmaps, lights, group, targetFace, blockerFaces);
+                } catch (ThreadAbortException) {
+                    //do nothing
+                } catch (Exception e) {
+                    threadExceptions.Add(new LMThreadException(e));
+                }
             }
         }) { CurrentCulture = CultureInfo.InvariantCulture };
     }

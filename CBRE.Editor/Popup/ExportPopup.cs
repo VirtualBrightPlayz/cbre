@@ -44,6 +44,10 @@ namespace CBRE.Editor.Popup {
             if (ImGui.InputInt("Max. Threads", ref threads)) {
                 LightmapConfig.MaxThreads = threads;
             }
+            int faces = LightmapConfig.FacesPerThread;
+            if (ImGui.InputInt("Faces per thread", ref faces)) {
+                LightmapConfig.FacesPerThread = faces;
+            }
             if (ImGui.Button("Render Lightmaps")) {
                 try {
                     LightmapConfig.TextureDims = (int)_size;
