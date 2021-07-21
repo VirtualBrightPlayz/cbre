@@ -68,27 +68,31 @@ namespace CBRE.Graphics {
             }
             Interlocked.Increment(ref activeTasks);
             try {
-                using (var stream = new FileStream(Filename, FileMode.Open)) {
-                    var bytes = Texture2D.TextureDataFromStream(stream, out int width, out int height, out _);
-
-                    bool compressed = false;
-                    bool transparent = false;
-                    for (int i = 0; i < bytes.Length; i+=4) {
-                        if (bytes[i+3] != 255) {
-                            transparent = true;
-                            break;
-                        }
-                    }
-                    if ((width > 64 || height > 64) &&
-                        (width & 0x03) == 0 && (height & 0x03) == 0) {
-                        var prevBytes = bytes;
-                        bytes = CompressDxt5(bytes, width, height);
-                        Array.Resize(ref prevBytes, 0);
-                        compressed = true;
-                    }
-
-                    return new Data { Bytes = bytes, Width = width, Height = height, Compressed = compressed, Transparent = transparent };
+                byte[] bytes;
+                int width;
+                int height;
+                var fileData = await File.ReadAllBytesAsync(Filename);
+                using (var stream = new MemoryStream(fileData)) {
+                    bytes = Texture2D.TextureDataFromStream(stream, out width, out height, out _);
                 }
+
+                bool compressed = false;
+                bool transparent = false;
+                for (int i = 0; i < bytes.Length; i+=4) {
+                    if (bytes[i+3] != 255) {
+                        transparent = true;
+                        break;
+                    }
+                }
+                if ((width > 64 || height > 64) &&
+                    (width & 0x03) == 0 && (height & 0x03) == 0) {
+                    var prevBytes = bytes;
+                    bytes = CompressDxt5(bytes, width, height);
+                    Array.Resize(ref prevBytes, 0);
+                    compressed = true;
+                }
+
+                return new Data { Bytes = bytes, Width = width, Height = height, Compressed = compressed, Transparent = transparent };
             } finally {
                 Interlocked.Decrement(ref activeTasks);
             }

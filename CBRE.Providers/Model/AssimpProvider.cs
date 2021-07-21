@@ -4,6 +4,7 @@ using CBRE.DataStructures.MapObjects;
 using CBRE.DataStructures.Models;
 using CBRE.FileSystem;
 using CBRE.Graphics;
+using CBRE.Providers.Texture;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -94,7 +95,18 @@ namespace CBRE.Providers.Model {
                     string path = Path.Combine(Path.GetDirectoryName(file.FullPathName), scene.Materials[i].TextureDiffuse.FilePath);
                     if (!File.Exists(path)) { path = scene.Materials[i].TextureDiffuse.FilePath; }
                     if (File.Exists(path)) {
-                        AsyncTexture _tex = new AsyncTexture(path);
+                        var titem = TextureProvider.GetItem(path);
+                        AsyncTexture _tex = null;
+                        if (titem == null) {
+                            TexturePackage package = new TexturePackage(Path.GetDirectoryName(path), "");
+                            var t = new TextureItem(package, Path.GetFileNameWithoutExtension(path), path);
+                            package.AddTexture(t);
+                            TextureProvider.Packages.Add(package);
+                            _tex = t.Texture as AsyncTexture;
+                        } else {
+                            _tex = titem.Texture as AsyncTexture;
+                        }
+                        // AsyncTexture _tex = new AsyncTexture(path);
                         tex = new DataStructures.Models.Texture {
                             Name = path,
                             Index = 0,
