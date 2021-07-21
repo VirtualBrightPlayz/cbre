@@ -541,7 +541,6 @@ namespace CBRE.Editor.Rendering {
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
 
-            RenderModels();
         }
 
         public void RenderSprites(Viewport3D vp) {
@@ -639,7 +638,6 @@ namespace CBRE.Editor.Rendering {
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
 
-            RenderModels();
         }
 
         public void RenderSolidUntextured() {

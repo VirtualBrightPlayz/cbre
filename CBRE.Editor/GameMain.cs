@@ -288,6 +288,10 @@ namespace CBRE.Editor {
                                     }
                                     ImGui.EndCombo();
                                 }
+                                bool b = viewport3D.ShouldRenderModels;
+                                if (ImGui.Checkbox("Should Render 3D Models", ref b)) {
+                                    viewport3D.ShouldRenderModels = b;
+                                }
                             }
                         }
                         ImGui.TreePop();
