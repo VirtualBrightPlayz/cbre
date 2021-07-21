@@ -40,13 +40,17 @@ namespace CBRE.Editor.Popup {
                 ImGui.EndCombo();
             }
             ImGui.InputFloat("Downscale Factor", ref downscale);
+            int threads = LightmapConfig.MaxThreads;
+            if (ImGui.InputInt("Max. Threads", ref threads)) {
+                LightmapConfig.MaxThreads = threads;
+            }
             if (ImGui.Button("Render Lightmaps")) {
                 try {
                     LightmapConfig.TextureDims = (int)_size;
                     LightmapConfig.DownscaleFactor = downscale;
                     Task.Run(() => {
                         try {
-                        Lightmapper.Render(_document, out var faces, out var lmgroups);
+                            Lightmapper.Render(_document, out var faces, out var lmgroups);
                         } catch (Exception e) {
                             GameMain.Instance.PreDrawActions.Enqueue(() => {
                                 Logging.Logger.ShowException(e);

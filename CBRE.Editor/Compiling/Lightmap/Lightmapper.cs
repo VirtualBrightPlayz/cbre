@@ -235,7 +235,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             int faceNum = 0;
             UpdateProgress("Started calculating brightness levels...", 0.05f);
             while (FaceRenderThreads.Count > 0) {
-                for (int i = 0; i < 8; i++) {
+                for (int i = 0; i < LightmapConfig.MaxThreads; i++) {
                     if (i >= FaceRenderThreads.Count) break;
                     if (FaceRenderThreads[i].ThreadState == ThreadState.Unstarted) {
                         FaceRenderThreads[i].Start();

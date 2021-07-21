@@ -2,6 +2,7 @@
     public class LightmapConfig {
         public static float DownscaleFactor { get; set; }
         public static int PlaneMargin { get; set; }
+        public static int MaxThreads { get; set; }
         public static int TextureDims { get; set; }
         public static int BlurRadius { get; set; }
 
@@ -16,6 +17,7 @@
         static LightmapConfig() {
             DownscaleFactor = 15;
             PlaneMargin = 1;
+            MaxThreads = 8;
             TextureDims = 512;
             BlurRadius = 2;
 
