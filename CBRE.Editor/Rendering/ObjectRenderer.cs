@@ -71,7 +71,7 @@ namespace CBRE.Editor.Rendering {
             private int indexWireframeCount = 0;
 
             public void UpdateBuffers() {
-                var entities = document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData?.ClassType == DataStructures.GameData.ClassType.Point).OfType<Entity>().ToList();
+                var entities = document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData?.ClassType == DataStructures.GameData.ClassType.Point && !e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
                 vertexCount = entities.Count * 24;
                 indexSolidCount = entities.Count * 36;
                 indexWireframeCount = entities.Count * 24;
@@ -542,6 +542,42 @@ namespace CBRE.Editor.Rendering {
             pointEntityGeometry.RenderSolid();
 
             RenderModels();
+        }
+
+        public void RenderSprites(Viewport3D vp) {
+            BasicEffect.CurrentTechnique.Passes[0].Apply();
+            var sprites = Document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData != null && e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
+            foreach (var sprite in sprites) {
+                string key = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "sprite").Values.FirstOrDefault();
+                string color = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "spritecolor").Values.FirstOrDefault();
+                Property prop = sprite.EntityData.Properties.FirstOrDefault(p => p.Key == color);
+                if (string.IsNullOrWhiteSpace(key)) {
+                    continue;
+                }
+                TextureItem tex = TextureProvider.GetItem(key);
+                if (tex != null && tex.Texture is AsyncTexture t) {
+                    PrimitiveDrawing.Begin(PrimitiveType.QuadList);
+                    var c = sprite.Origin;
+                    var fcolor = prop == null ? Vector3.One * 255f : prop.GetVector3(Vector3.One * 255f);
+                    t.Bind();
+                    double amount = 25.0;
+                    var up = vp.Camera.GetUp().Normalise() * amount;
+                    var right = vp.Camera.GetRight().Normalise() * amount;
+                    PrimitiveDrawing.Vertex3(c + up - right, 0f, 0f);
+                    PrimitiveDrawing.Vertex3(c + up + right, 1f, 0f);
+                    PrimitiveDrawing.Vertex3(c - up + right, 1f, 1f);
+                    PrimitiveDrawing.Vertex3(c - up - right, 0f, 1f);
+                    BasicEffect.Texture = PrimitiveDrawing.texture;
+                    BasicEffect.DiffuseColor = fcolor.ToXna() / 255f;
+                    BasicEffect.TextureEnabled = true;
+                    BasicEffect.VertexColorEnabled = false;
+                    BasicEffect.CurrentTechnique.Passes[0].Apply();
+                    PrimitiveDrawing.End();
+                    t.Unbind();
+                }
+            }
+            BasicEffect.TextureEnabled = false;
+            BasicEffect.VertexColorEnabled = true;
         }
 
         public void RenderModels() {

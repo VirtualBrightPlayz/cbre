@@ -182,6 +182,8 @@ namespace CBRE.Editor.Rendering {
 
                 // objectRenderer.RenderTextured();
 
+                objectRenderer.RenderSprites(this);
+
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             }
         }

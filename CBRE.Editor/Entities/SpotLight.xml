@@ -1,0 +1,30 @@
+<entity name="spotlight">
+    <rmesh>
+        <condition property="hassprite" equals="True" />
+        <write property="position" as="Vector" />
+        <write property="range" as="Float" />
+        <write property="color" as="B3DString" />
+        <write property="intensity" as="Float" />
+        <write property="innerconeangle" as="Float" />
+        <write property="outerconeangle" as="Float" />
+    </rmesh>
+
+    <properties>
+        <property name="position" type="Position" />
+        <property name="color" type="Color255" default="255 255 255" />
+        <property name="range" type="Float" default="100.0" />
+        <property name="intensity" type="Float" default="1.0" />
+        <property name="hassprite" type="Boolean" default="true" />
+        <property name="innerconeangle" type="Float" default="0.5" />
+        <property name="outerconeangle" type="Float" default="0.75" />
+    </properties>
+
+    <sprite name="Sprites/lightbulb" color="color" />
+
+    <light type="point">
+        <position property="position" />
+        <color property="color" />
+        <range property="range" />
+        <intensity property="intensity" />
+    </light>
+</entity>
