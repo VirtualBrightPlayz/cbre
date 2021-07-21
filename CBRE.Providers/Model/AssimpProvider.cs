@@ -29,8 +29,9 @@ namespace CBRE.Providers.Model {
             foreach (var meshIndex in node.MeshIndices) {
                 DataStructures.Models.Mesh sledgeMesh = AddMesh(model, scene.Meshes[meshIndex], selfMatrix);
                 foreach (var v in sledgeMesh.Vertices) {
-                    v.TextureU *= tex.Width;
-                    v.TextureV *= tex.Height;
+                    // This breaks model UVs
+                    // v.TextureU *= tex.Width;
+                    // v.TextureV *= tex.Height;
                 }
                 model.AddMesh("mesh", 0, sledgeMesh);
             }
@@ -59,6 +60,10 @@ namespace CBRE.Providers.Model {
             foreach (var face in assimpMesh.Faces) {
                 var triInds = face.Indices;
                 for (var i = 1; i < triInds.Count - 1; i++) {
+                    sledgeMesh.Vertices.Add(vertices[triInds[0]]);
+                    sledgeMesh.Vertices.Add(vertices[triInds[i + 1]]);
+                    sledgeMesh.Vertices.Add(vertices[triInds[i]]);
+                    continue;
                     sledgeMesh.Vertices.Add(new MeshVertex(vertices[triInds[0]].Location, vertices[triInds[0]].Normal, vertices[triInds[0]].BoneWeightings, vertices[triInds[0]].TextureU, vertices[triInds[0]].TextureV));
                     sledgeMesh.Vertices.Add(new MeshVertex(vertices[triInds[i + 1]].Location, vertices[triInds[i + 1]].Normal, vertices[triInds[i + 1]].BoneWeightings, vertices[triInds[i + 1]].TextureU, vertices[triInds[i + 1]].TextureV));
                     sledgeMesh.Vertices.Add(new MeshVertex(vertices[triInds[i]].Location, vertices[triInds[i]].Normal, vertices[triInds[i]].BoneWeightings, vertices[triInds[i]].TextureU, vertices[triInds[i]].TextureV));
