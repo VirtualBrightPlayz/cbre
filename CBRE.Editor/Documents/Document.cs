@@ -137,7 +137,7 @@ namespace CBRE.Editor.Documents {
                 }
             }
 
-            if (string.IsNullOrEmpty(path) || !File.Exists(path)) {
+            if (string.IsNullOrEmpty(path) /*|| !File.Exists(path)*/) {
                 Mediator.Publish(HotkeysMediator.FileSaveAs);
                 return false;
             }

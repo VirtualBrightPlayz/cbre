@@ -7,6 +7,7 @@ using CBRE.Editor.Rendering;
 using CBRE.Editor.Tools;
 using CBRE.Graphics;
 using CBRE.Providers.Map;
+using CBRE.Providers.Model;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
 using ImGuiNET;
@@ -110,6 +111,8 @@ namespace CBRE.Editor {
             MapProvider.Register(new RmfProvider());
             MapProvider.Register(new MapFormatProvider());
             MapProvider.Register(new L3DWProvider());
+
+            ModelProvider.Register(new AssimpProvider());
 
             DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
             /*Map map = MapProvider.GetMapFromFile("gateA.3dw");
@@ -284,6 +287,10 @@ namespace CBRE.Editor {
                                         }
                                     }
                                     ImGui.EndCombo();
+                                }
+                                bool b = viewport3D.ShouldRenderModels;
+                                if (ImGui.Checkbox("Should Render 3D Models", ref b)) {
+                                    viewport3D.ShouldRenderModels = b;
                                 }
                             }
                         }

@@ -64,7 +64,7 @@ namespace CBRE.Editor.Compiling {
 
             IEnumerable<Entity> props = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "model").OfType<Entity>();
 
-            FileStream stream = new FileStream(filepath + "/" + filename, FileMode.Create);
+            FileStream stream = File.Create(filepath + "/" + filename);
             BinaryWriter br = new BinaryWriter(stream);
 
             //header
@@ -140,13 +140,33 @@ namespace CBRE.Editor.Compiling {
                                 float lmMul = (lmCount > 1) ? 2.0f : 1.0f;
                                 float uSub = ((lmInd % 2) > 0) ? 0.5f : 0.0f;
                                 float vSub = ((lmInd / 2) > 0) ? 0.5f : 0.0f;
+                                // lmMul seems to break lightmaps in SCP-CB --Virtual
+                                lmMul = 1f;
 
                                 br.Write((face.Vertices[j].LMU - uSub) * lmMul);
                                 br.Write((face.Vertices[j].LMV - vSub) * lmMul);
 
-                                br.Write((byte)255); //r
-                                br.Write((byte)255); //g
-                                br.Write((byte)255); //b
+                                Microsoft.Xna.Framework.Graphics.Texture2D currentLM = document.MGLightmaps[face.LmIndex];
+                                if (currentLM == null)
+                                    currentLM = document.MGLightmaps.FirstOrDefault(p => p != null);
+                                if (currentLM != null)
+                                {
+                                    byte[] vertColors = new byte[currentLM.Width * currentLM.Height * 4];
+                                    int texX = (int)(face.Vertices[j].LMU * currentLM.Width);
+                                    int texY = (int)(face.Vertices[j].LMV * currentLM.Height);
+                                    currentLM.GetData(vertColors);
+                                    int k = (texX + texY * currentLM.Width) * 4;
+                                    
+                                    br.Write((byte)vertColors[k+0]); //r
+                                    br.Write((byte)vertColors[k+1]); //g
+                                    br.Write((byte)vertColors[k+2]); //b
+                                }
+                                else
+                                {
+                                    br.Write((byte)255); //r
+                                    br.Write((byte)255); //g
+                                    br.Write((byte)255); //b
+                                }
                             }
                         }
                         br.Write((Int32)triCount);
@@ -182,9 +202,20 @@ namespace CBRE.Editor.Compiling {
                                 br.Write((float)face.Vertices[j].TextureU);
                                 br.Write((float)face.Vertices[j].TextureV);
 
-                                br.Write((byte)255); //r
-                                br.Write((byte)255); //g
-                                br.Write((byte)255); //b
+                                Microsoft.Xna.Framework.Graphics.Texture2D currentLM = document.MGLightmaps[face.LmIndex];
+                                byte[] vertColors = new byte[currentLM.Width * currentLM.Height * 4];
+                                int texX = (int)(face.Vertices[j].LMU * currentLM.Width);
+                                int texY = (int)(face.Vertices[j].LMV * currentLM.Height);
+                                currentLM.GetData(vertColors);
+                                int k = (texX + texY * currentLM.Width) * 4;
+
+                                br.Write((byte)vertColors[k+0]); //r
+                                br.Write((byte)vertColors[k+1]); //g
+                                br.Write((byte)vertColors[k+2]); //b
+
+                                // br.Write((byte)255); //r
+                                // br.Write((byte)255); //g
+                                // br.Write((byte)255); //b
                             }
                         }
                         br.Write((Int32)triCount);

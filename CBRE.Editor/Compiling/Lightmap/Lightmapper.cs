@@ -388,7 +388,11 @@ namespace CBRE.Editor.Compiling.Lightmap {
                         fs.Close();
                     } else {
                         for (int j = 0; j < lmCount; j++) {
-                            int x = ((j % 2) * LightmapConfig.TextureDims);
+                            
+                            FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
+                            texture.SaveAsPng(fs, texture.Width, texture.Height);
+                            fs.Close();
+                            /*int x = ((j % 2) * LightmapConfig.TextureDims);
                             int y = ((j / 2) * LightmapConfig.TextureDims);
 
                             byte[] clone = new byte[texture.Width * texture.Height];
@@ -399,7 +403,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                             texture2.SetData(tmp);
                             FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
                             texture2.SaveAsPng(fs, texture2.Width, texture2.Height);
-                            fs.Close();
+                            fs.Close();*/
                         }
                     }
                 }

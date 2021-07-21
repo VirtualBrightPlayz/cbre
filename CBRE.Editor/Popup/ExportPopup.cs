@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CBRE.Editor.Compiling;
 using CBRE.Editor.Compiling.Lightmap;
 using CBRE.Editor.Documents;
+using CBRE.Providers.Model;
 using CBRE.Settings;
 using ImGuiNET;
 
@@ -72,6 +73,17 @@ namespace CBRE.Editor.Popup {
                     LightmapConfig.TextureDims = (int)_size;
                     LightmapConfig.DownscaleFactor = downscale;
                     new FileCallbackPopup("Save .rm2", "", s => RM2Export.SaveToFile(s, _document));
+                }
+                catch (System.Exception e) {
+                    Logging.Logger.ShowException(e);
+                }
+            }
+            // Does not seem to work --Virtual
+            if (ImGui.Button("Export as .fbx")) {
+                try {
+                    LightmapConfig.TextureDims = (int)_size;
+                    LightmapConfig.DownscaleFactor = downscale;
+                    new FileCallbackPopup("Save .fbx", "", s => AssimpProvider.SaveToFile(s, _document.Map, "fbx"));
                 }
                 catch (System.Exception e) {
                     Logging.Logger.ShowException(e);
