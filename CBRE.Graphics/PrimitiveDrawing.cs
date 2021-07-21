@@ -8,16 +8,17 @@ using Microsoft.Xna.Framework.Graphics;
 namespace CBRE.Graphics {
     public static class PrimitiveDrawing {
         private static PrimitiveType? currentPrimitiveType = null;
+
         private static Color color = Color.White;
         private static List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
-        public static Vector2 texCoords;
         public static Texture2D texture = null;
+        private static BasicEffect effect = null;
 
         public static void Begin(PrimitiveType primType) {
             if (currentPrimitiveType != null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Begin because a draw operation is already in progress"); }
             currentPrimitiveType = primType;
             vertices.Clear();
-            texCoords = Vector2.Zero;
+            effect = new BasicEffect(GlobalGraphics.GraphicsDevice);
         }
 
         public static void SetColor(System.Drawing.Color clr) {
@@ -27,11 +28,6 @@ namespace CBRE.Graphics {
             color.B = clr.B;
             color.A = clr.A;
         }
-
-        /*public static void TexCoord2(float u, float v)
-        {
-            texCoords = new Vector2(u, v);
-        }*/
 
         public static void Vertex2(double x, double y, float u = 0f, float v = 0f) {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Vertex3 because a draw operation isn't in progress"); }
@@ -144,21 +140,16 @@ namespace CBRE.Graphics {
             }
 
             if (vertices.Count > 0) {
-                BasicEffect effect = new BasicEffect(GlobalGraphics.GraphicsDevice);
-                effect.World = Matrix.Identity;
-                effect.TextureEnabled = true;
-                effect.VertexColorEnabled = false;
-                effect.Texture = texture;
-                // foreach (var pass in effect.CurrentTechnique.Passes)
+                if (effect != null)
                 {
-                    // pass.Apply();
-                    GlobalGraphics.GraphicsDevice.DrawUserPrimitives(
-                        currentPrimitiveType.Value,
-                        vertices.ToArray(),
-                        0,
-                        primCount);
-                    // break;
+                    effect.Texture = texture;
+                    effect.CurrentTechnique.Passes[0].Apply();
                 }
+                GlobalGraphics.GraphicsDevice.DrawUserPrimitives(
+                    currentPrimitiveType.Value,
+                    vertices.ToArray(),
+                    0,
+                    primCount);
             }
             currentPrimitiveType = null;
             texture = null;

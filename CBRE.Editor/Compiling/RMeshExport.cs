@@ -64,7 +64,7 @@ namespace CBRE.Editor.Compiling {
 
             IEnumerable<Entity> props = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "model").OfType<Entity>();
 
-            FileStream stream = new FileStream(filepath + "/" + filename, FileMode.Create);
+            FileStream stream = File.Create(filepath + "/" + filename);
             BinaryWriter br = new BinaryWriter(stream);
 
             //header
@@ -147,6 +147,8 @@ namespace CBRE.Editor.Compiling {
                                 br.Write((face.Vertices[j].LMV - vSub) * lmMul);
 
                                 Microsoft.Xna.Framework.Graphics.Texture2D currentLM = document.MGLightmaps[face.LmIndex];
+                                if (currentLM == null)
+                                    currentLM = document.MGLightmaps.FirstOrDefault(p => p != null);
                                 if (currentLM != null)
                                 {
                                     byte[] vertColors = new byte[currentLM.Width * currentLM.Height * 4];

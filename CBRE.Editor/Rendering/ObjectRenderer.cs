@@ -390,14 +390,15 @@ namespace CBRE.Editor.Rendering {
             }
 
             public void UpdateLightmapBuffers(int id) {
-
+                if (!dirty) return;
+                dirty = false;
                 var filteredFaces = faces.ToList();
 
                 int vertexIndex = 0;
                 int index3dIndex = 0;
                 int index2dIndex = 0;
                 for (int i = 0; i < filteredFaces.Count; i++) {
-                    if (filteredFaces[i].LmIndex != id) continue;
+                    // if (filteredFaces[i].LmIndex != id) continue;
                     for (int j=0;j<filteredFaces[i].Vertices.Count;j++) {
                         var location = faces[i].Vertices[j].Location;
                         vertices[vertexIndex + j].Position = new Microsoft.Xna.Framework.Vector3((float)location.X, (float)location.Y, (float)location.Z);
@@ -540,6 +541,10 @@ namespace CBRE.Editor.Rendering {
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
 
+            RenderModels();
+        }
+
+        public void RenderModels() {
             // Models
             BasicEffect.CurrentTechnique.Passes[0].Apply();
             var models = Document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData != null && e.GameData.Behaviours.Any(p => p.Name == "model")).OfType<Entity>().ToList();
@@ -556,8 +561,8 @@ namespace CBRE.Editor.Rendering {
                     Vector3 scale = model.EntityData.GetPropertyVector3("scale", Vector3.One);
                     Matrix modelMat = Matrix.Translation(model.Origin)
                     * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
-                    * Matrix.RotationY(DMath.DegreesToRadians(euler.Y))
-                    * Matrix.RotationZ(DMath.DegreesToRadians(euler.Z))
+                    * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
+                    * Matrix.RotationZ(DMath.DegreesToRadians(euler.Y))
                     * Matrix.Scale(scale);
                     ModelRenderer.Render(this.models[path].Model, modelMat, BasicEffect);
                 }
@@ -567,7 +572,6 @@ namespace CBRE.Editor.Rendering {
                     this.models.Add(path, mref);
                 }
             }
-            // BasicEffect.CurrentTechnique.Passes[0].Apply();
         }
 
         public void RenderLightmapped() {
@@ -598,6 +602,8 @@ namespace CBRE.Editor.Rendering {
             }
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
+
+            RenderModels();
         }
 
         public void RenderSolidUntextured() {
