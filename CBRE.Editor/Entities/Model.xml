@@ -9,8 +9,8 @@
     <properties>
         <property name="position" type="Position" />
         <property name="file" type="String" />
-        <property name="angles" type="Vector" />
-        <property name="scale" type="Vector" />
+        <property name="angles" type="Vector" default="0.0 0.0 0.0" />
+        <property name="scale" type="Vector" default="1.0 1.0 1.0" />
     </properties>
 
     <model name="file" />
