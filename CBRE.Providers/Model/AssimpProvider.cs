@@ -159,8 +159,9 @@ namespace CBRE.Providers.Model {
 
                 Material material = new Material();
                 material.Name = texture;
-                TextureSlot textureSlot = new TextureSlot(texture +
-                    (File.Exists(texture + ".png") ? ".png" : (File.Exists(texture + ".jpeg") ? ".jpeg" : ".jpg")),
+                TextureItem tex = TextureProvider.GetItem(texture);
+                string texPath = Path.Combine(tex.Package.PackageRoot, Path.GetFileName(tex.Filename));
+                TextureSlot textureSlot = new TextureSlot(Path.GetFileName(tex.Filename),
                     TextureType.Diffuse,
                     0,
                     TextureMapping.Plane,
@@ -171,6 +172,9 @@ namespace CBRE.Providers.Model {
                     Assimp.TextureWrapMode.Wrap,
                     0);
                 material.AddMaterialTexture(ref textureSlot);
+                string path = Path.Combine(Path.GetDirectoryName(typeof(AssimpProvider).Assembly.Location), textureSlot.FilePath);
+                if (!File.Exists(path))
+                    File.Copy(texPath, path);
                 scene.Materials.Add(material);
 
                 mesh = new Mesh();
