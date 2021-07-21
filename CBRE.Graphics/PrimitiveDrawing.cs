@@ -12,13 +12,11 @@ namespace CBRE.Graphics {
         private static Color color = Color.White;
         private static List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
         public static Texture2D texture = null;
-        private static BasicEffect effect = null;
 
         public static void Begin(PrimitiveType primType) {
             if (currentPrimitiveType != null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Begin because a draw operation is already in progress"); }
             currentPrimitiveType = primType;
             vertices.Clear();
-            effect = new BasicEffect(GlobalGraphics.GraphicsDevice);
         }
 
         public static void SetColor(System.Drawing.Color clr) {
@@ -140,11 +138,6 @@ namespace CBRE.Graphics {
             }
 
             if (vertices.Count > 0) {
-                if (effect != null)
-                {
-                    effect.Texture = texture;
-                    effect.CurrentTechnique.Passes[0].Apply();
-                }
                 GlobalGraphics.GraphicsDevice.DrawUserPrimitives(
                     currentPrimitiveType.Value,
                     vertices.ToArray(),
