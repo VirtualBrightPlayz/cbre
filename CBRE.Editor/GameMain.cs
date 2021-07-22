@@ -4,6 +4,7 @@ using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Popup;
 using CBRE.Editor.Rendering;
+using CBRE.Editor.Scripting;
 using CBRE.Editor.Tools;
 using CBRE.Graphics;
 using CBRE.Providers.Map;
@@ -121,6 +122,8 @@ namespace CBRE.Editor {
             DocumentManager.Add(new Document("room2_2.3dw", map2));*/
 
             ViewportManager.Init();
+
+            ScriptLoader.Init();
 
             base.Initialize();
         }
