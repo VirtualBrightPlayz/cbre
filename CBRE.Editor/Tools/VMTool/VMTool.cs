@@ -886,10 +886,6 @@ namespace CBRE.Editor.Tools.VMTool
             PrimitiveDrawing.End();
         }
 
-        public static Microsoft.Xna.Framework.Vector3 ToXna(Vector3 vector) {
-            return new Microsoft.Xna.Framework.Vector3((float)vector.X, (float)vector.Y, (float)vector.Z);
-        }
-
         protected override void Render3D(Viewport3D vp)
         {
             base.Render3D(vp);

@@ -297,6 +297,7 @@ namespace CBRE.Editor.Documents {
         public void SwitchTool(HotkeyTool tool) {
             if (ToolManager.ActiveTool != null && ToolManager.ActiveTool.GetHotkeyToolType() == tool) tool = HotkeyTool.Selection;
             ToolManager.Activate(tool);
+            GameMain.Instance.SelectedTool = ToolManager.Tools.FirstOrDefault(p => p.GetHotkeyToolType() == tool);
         }
 
         public void ApplyCurrentTextureToSelection() {
@@ -649,7 +650,8 @@ namespace CBRE.Editor.Documents {
         }
 
         public void RebuildGrid() {
-            throw new NotImplementedException();
+            ViewportManager.MarkForRerender();
+            // throw new NotImplementedException();
             /*_document.Renderer.UpdateGrid(_document.Map.GridSpacing, _document.Map.Show2DGrid, _document.Map.Show3DGrid, true);
             Mediator.Publish(EditorMediator.DocumentGridSpacingChanged, _document.Map.GridSpacing);*/
         }
@@ -657,28 +659,25 @@ namespace CBRE.Editor.Documents {
         public void CenterAllViewsOnSelection() {
             var box = _document.Selection.GetSelectionBoundingBox()
                       ?? new Box(Vector3.Zero, Vector3.Zero);
-            throw new NotImplementedException();
-            /*foreach (var vp in ViewportManager.Viewports) {
+            foreach (var vp in ViewportManager.Viewports) {
                 vp.FocusOn(box);
-            }*/
+            }
         }
 
         public void Center2DViewsOnSelection() {
             var box = _document.Selection.GetSelectionBoundingBox()
                       ?? new Box(Vector3.Zero, Vector3.Zero);
-            throw new NotImplementedException();
-            /*foreach (var vp in ViewportManager.Viewports.OfType<Viewport2D>()) {
+            foreach (var vp in ViewportManager.Viewports.OfType<Viewport2D>()) {
                 vp.FocusOn(box);
-            }*/
+            }
         }
 
         public void Center3DViewsOnSelection() {
             var box = _document.Selection.GetSelectionBoundingBox()
                       ?? new Box(Vector3.Zero, Vector3.Zero);
-            throw new NotImplementedException();
-            /*foreach (var vp in ViewportManager.Viewports.OfType<Viewport3D>()) {
+            foreach (var vp in ViewportManager.Viewports.OfType<Viewport3D>()) {
                 vp.FocusOn(box);
-            }*/
+            }
         }
 
         public void GoToCoordinates() {

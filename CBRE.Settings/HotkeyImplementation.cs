@@ -30,6 +30,12 @@ namespace CBRE.Settings {
                 else if (keys[i].ToLower() == "alt") {
                     Alt = true;
                 }
+                else if (keys[i].ToLower() == "[") {
+                    ShortcutKeys.Add(Keys.OemOpenBrackets);
+                }
+                else if (keys[i].ToLower() == "]") {
+                    ShortcutKeys.Add(Keys.OemCloseBrackets);
+                }
                 else {
                     ShortcutKeys.Add(Enum.TryParse<Keys>(keys[i], true, out Keys res) ? res : Keys.None);
                 }

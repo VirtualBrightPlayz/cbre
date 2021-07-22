@@ -31,10 +31,10 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Undo"], HotkeysMediator.HistoryUndo.ToString()));
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Redo"], HotkeysMediator.HistoryRedo.ToString()));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Cut", MenuTextures["Menu_Cut"]));
-            TopBarItems.Add(new TopBarItem("Copy", MenuTextures["Menu_Copy"]));
-            TopBarItems.Add(new TopBarItem("Paste", MenuTextures["Menu_Paste"]));
-            TopBarItems.Add(new TopBarItem("Paste Special", MenuTextures["Menu_PasteSpecial"]));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Cut"], HotkeysMediator.OperationsCut.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Copy"], HotkeysMediator.OperationsCopy.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Paste"], HotkeysMediator.OperationsPaste.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_PasteSpecial"], HotkeysMediator.OperationsPasteSpecial.ToString()));
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Delete"], HotkeysMediator.OperationsDelete.ToString()));
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_ObjectProperties"], HotkeysMediator.ObjectProperties.ToString()));
@@ -42,23 +42,23 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem("Snap To Grid", MenuTextures["Menu_SnapToGrid"]));
             TopBarItems.Add(new TopBarItem("Show 2D Grid", MenuTextures["Menu_Show2DGrid"]));
             TopBarItems.Add(new TopBarItem("Show 3D Grid", MenuTextures["Menu_Show3DGrid"]));
-            TopBarItems.Add(new TopBarItem("Smaller Grid", MenuTextures["Menu_SmallerGrid"]));
-            TopBarItems.Add(new TopBarItem("Bigger Grid", MenuTextures["Menu_LargerGrid"]));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_SmallerGrid"], HotkeysMediator.GridDecrease.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_LargerGrid"], HotkeysMediator.GridIncrease.ToString()));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Ignore Grouping", MenuTextures["Menu_IgnoreGrouping"]));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_IgnoreGrouping"], HotkeysMediator.ToggleIgnoreGrouping.ToString(), isToggle: true));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Texture Lock", MenuTextures["Menu_TextureLock"], isToggle: true));
-            TopBarItems.Add(new TopBarItem("Texture Scaling Lock", MenuTextures["Menu_TextureScalingLock"], isToggle: true));
-            TopBarItems.Add(new TopBarItem("Hide Null Textures", MenuTextures["Menu_HideNullTextures"], isToggle: true));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_TextureLock"], HotkeysMediator.ToggleTextureLock.ToString(), isToggle: true));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_TextureScalingLock"], HotkeysMediator.ToggleTextureScalingLock.ToString(), isToggle: true));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_HideNullTextures"], HotkeysMediator.ToggleHideNullTextures.ToString(), isToggle: true));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Hide Selected Objects", MenuTextures["Menu_HideSelected"]));
-            TopBarItems.Add(new TopBarItem("Hide Unselected Objects", MenuTextures["Menu_HideUnselected"]));
-            TopBarItems.Add(new TopBarItem("Show Hidden Objects", MenuTextures["Menu_ShowHidden"]));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_HideSelected"], HotkeysMediator.QuickHideSelected.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_HideUnselected"], HotkeysMediator.QuickHideUnselected.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_ShowHidden"], HotkeysMediator.QuickHideShowAll.ToString()));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem("Carve", MenuTextures["Menu_Carve"]));
-            TopBarItems.Add(new TopBarItem("Make Hollow", MenuTextures["Menu_Hollow"]));
-            TopBarItems.Add(new TopBarItem("Group", MenuTextures["Menu_Group"]));
-            TopBarItems.Add(new TopBarItem("Ungroup", MenuTextures["Menu_Ungroup"]));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Carve"], HotkeysMediator.Carve.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Hollow"], HotkeysMediator.MakeHollow.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Group"], HotkeysMediator.GroupingGroup.ToString()));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_Ungroup"], HotkeysMediator.GroupingUngroup.ToString()));
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem("Options", MenuTextures["Menu_Options"], action: Options));
         }
@@ -96,7 +96,7 @@ namespace CBRE.Editor {
 
             public TopBarItem(AsyncTexture texture, string hotkey, bool isToggle = false) {
                 var h = Hotkeys.GetHotkeyDefinitions().FirstOrDefault(p => p.ID == hotkey);
-                IsToggle = isToggle;
+                // IsToggle = isToggle;
                 Texture = texture;
                 if (h == null) {
                     ToolTip = hotkey;

@@ -187,8 +187,9 @@ namespace CBRE.DataStructures.Models {
                 var skin = Textures.FirstOrDefault(x => x.Index == g.Key);
                 if (skin == null) continue;
                 foreach (var v in g.SelectMany(m => m.Vertices)) {
-                    v.TextureU /= skin.Width;
-                    v.TextureV /= skin.Height;
+                    // This breaks model UVs
+                    // v.TextureU /= skin.Width;
+                    // v.TextureV /= skin.Height;
                 }
             }
         }

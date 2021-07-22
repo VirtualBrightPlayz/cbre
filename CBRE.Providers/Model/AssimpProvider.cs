@@ -4,6 +4,7 @@ using CBRE.DataStructures.MapObjects;
 using CBRE.DataStructures.Models;
 using CBRE.FileSystem;
 using CBRE.Graphics;
+using CBRE.Providers.Texture;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -29,8 +30,9 @@ namespace CBRE.Providers.Model {
             foreach (var meshIndex in node.MeshIndices) {
                 DataStructures.Models.Mesh sledgeMesh = AddMesh(model, scene.Meshes[meshIndex], selfMatrix);
                 foreach (var v in sledgeMesh.Vertices) {
-                    v.TextureU *= tex.Width;
-                    v.TextureV *= tex.Height;
+                    // This breaks model UVs
+                    // v.TextureU *= tex.Width;
+                    // v.TextureV *= tex.Height;
                 }
                 model.AddMesh("mesh", 0, sledgeMesh);
             }
@@ -59,6 +61,10 @@ namespace CBRE.Providers.Model {
             foreach (var face in assimpMesh.Faces) {
                 var triInds = face.Indices;
                 for (var i = 1; i < triInds.Count - 1; i++) {
+                    sledgeMesh.Vertices.Add(vertices[triInds[0]]);
+                    sledgeMesh.Vertices.Add(vertices[triInds[i + 1]]);
+                    sledgeMesh.Vertices.Add(vertices[triInds[i]]);
+                    continue;
                     sledgeMesh.Vertices.Add(new MeshVertex(vertices[triInds[0]].Location, vertices[triInds[0]].Normal, vertices[triInds[0]].BoneWeightings, vertices[triInds[0]].TextureU, vertices[triInds[0]].TextureV));
                     sledgeMesh.Vertices.Add(new MeshVertex(vertices[triInds[i + 1]].Location, vertices[triInds[i + 1]].Normal, vertices[triInds[i + 1]].BoneWeightings, vertices[triInds[i + 1]].TextureU, vertices[triInds[i + 1]].TextureV));
                     sledgeMesh.Vertices.Add(new MeshVertex(vertices[triInds[i]].Location, vertices[triInds[i]].Normal, vertices[triInds[i]].BoneWeightings, vertices[triInds[i]].TextureU, vertices[triInds[i]].TextureV));
@@ -89,7 +95,18 @@ namespace CBRE.Providers.Model {
                     string path = Path.Combine(Path.GetDirectoryName(file.FullPathName), scene.Materials[i].TextureDiffuse.FilePath);
                     if (!File.Exists(path)) { path = scene.Materials[i].TextureDiffuse.FilePath; }
                     if (File.Exists(path)) {
-                        AsyncTexture _tex = new AsyncTexture(path);
+                        var titem = TextureProvider.GetItem(path);
+                        AsyncTexture _tex = null;
+                        if (titem == null) {
+                            TexturePackage package = new TexturePackage(Path.GetDirectoryName(path), "");
+                            var t = new TextureItem(package, Path.GetFileNameWithoutExtension(path), path);
+                            package.AddTexture(t);
+                            TextureProvider.Packages.Add(package);
+                            _tex = t.Texture as AsyncTexture;
+                        } else {
+                            _tex = titem.Texture as AsyncTexture;
+                        }
+                        // AsyncTexture _tex = new AsyncTexture(path);
                         tex = new DataStructures.Models.Texture {
                             Name = path,
                             Index = 0,
@@ -142,8 +159,9 @@ namespace CBRE.Providers.Model {
 
                 Material material = new Material();
                 material.Name = texture;
-                TextureSlot textureSlot = new TextureSlot(texture +
-                    (File.Exists(texture + ".png") ? ".png" : (File.Exists(texture + ".jpeg") ? ".jpeg" : ".jpg")),
+                TextureItem tex = TextureProvider.GetItem(texture);
+                string texPath = Path.Combine(tex.Package.PackageRoot, Path.GetFileName(tex.Filename));
+                TextureSlot textureSlot = new TextureSlot(Path.GetFileName(tex.Filename),
                     TextureType.Diffuse,
                     0,
                     TextureMapping.Plane,
@@ -154,6 +172,9 @@ namespace CBRE.Providers.Model {
                     Assimp.TextureWrapMode.Wrap,
                     0);
                 material.AddMaterialTexture(ref textureSlot);
+                string path = Path.Combine(Path.GetDirectoryName(typeof(AssimpProvider).Assembly.Location), textureSlot.FilePath);
+                if (!File.Exists(path))
+                    File.Copy(texPath, path);
                 scene.Materials.Add(material);
 
                 mesh = new Mesh();
