@@ -19,6 +19,7 @@ namespace CBRE.Editor.Popup {
 
         protected override bool ImGuiLayout() {
             TextureDirGui();
+            ModelDirGui();
             HotkeysGui();
             if (ImGui.Button("Close")) {
                 Hotkeys.SetupHotkeys(SettingsManager.Hotkeys);
@@ -40,6 +41,25 @@ namespace CBRE.Editor.Popup {
                     var dir = Directories.TextureDirs[i];
                     if (ImGui.Selectable(dir, false)) {
                         Directories.TextureDirs.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+            ImGui.EndChild();
+        }
+
+        protected virtual void ModelDirGui() {
+            ImGui.Text("Model Directories");
+            if (ImGui.BeginChild("ModelDirs", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 5))) {
+                ImGui.Text("Click a listing to remove it");
+                ImGui.SameLine();
+                if (ImGui.Button("+")) {
+                    new CallbackFolderSelect("Select Model Directory", "", Directories.ModelDirs.Add);
+                }
+                for (int i = 0; i < Directories.ModelDirs.Count; i++) {
+                    var dir = Directories.ModelDirs[i];
+                    if (ImGui.Selectable(dir, false)) {
+                        Directories.ModelDirs.RemoveAt(i);
                         break;
                     }
                 }

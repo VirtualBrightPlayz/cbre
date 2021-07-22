@@ -17,7 +17,12 @@ namespace CBRE.Editor.Scripting
 
         public static void Init()
         {
-            string[] paths = SettingsManager.GetAdditionalData<string[]>("Scripts");
+            List<string> paths = SettingsManager.GetAdditionalData<List<string>>("Scripts");
+            if (paths == null)
+            {
+                SettingsManager.SetAdditionalData("Scripts", new List<string>());
+                return;
+            }
             loadedScripts.Clear();
             foreach (var scrPath in paths)
             {
