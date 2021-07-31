@@ -17,7 +17,7 @@ namespace CBRE.Editor.Popup {
                 var Window = GameMain.Instance.Window;
                 ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, 47), ImGuiCond.FirstUseEver);
                 ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60), ImGuiCond.FirstUseEver);
-                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60))) {
+                // if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60))) {
                     if (ImGui.TreeNode("Tool")) {
                         GameMain.Instance.SelectedTool?.UpdateGui();
                         ImGui.TreePop();
@@ -49,8 +49,8 @@ namespace CBRE.Editor.Popup {
                         ImGui.TreePop();
                     }
 
-                    ImGui.EndChildFrame();
-                }
+                    // ImGui.EndChildFrame();
+                // }
                 ImGui.End();
             }
             return true;
