@@ -8,7 +8,7 @@ namespace CBRE.Editor.Popup {
         {
         }
 
-        protected override bool ImGuiLayout() {
+        public override bool Draw() {
             if (ImGui.Begin("tools")) {
                 ImGui.DockSpaceOverViewport();
                 ImGui.SetWindowPos(new Num.Vector2(-1, 27), ImGuiCond.FirstUseEver);
@@ -19,10 +19,8 @@ namespace CBRE.Editor.Popup {
                 GameMain.Instance.ToolBarItems.ForEach(it => it.Draw());
 
                 ImGui.PopStyleVar();
-
-
-                ImGui.End();
             }
+            ImGui.End();
             return true;
         }
     }

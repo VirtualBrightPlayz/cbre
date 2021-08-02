@@ -211,14 +211,15 @@ namespace CBRE.Editor {
         }
 
         protected virtual void ImGuiLayout() {
+
             if (ImGui.BeginMainMenuBar()) {
                 UpdateMenus();
                 // UpdateTopBar();
-
-                ImGui.EndMainMenuBar();
             }
+            ImGui.EndMainMenuBar();
 
             /*if (ImGui.Begin("stats")) {
+                ImGui.DockSpaceOverViewport();
                 ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, Window.ClientBounds.Height - 60), ImGuiCond.FirstUseEver);
                 ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, 60), ImGuiCond.FirstUseEver);
                 if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, 60))) {
@@ -228,10 +229,10 @@ namespace CBRE.Editor {
                     ImGui.Text($"Working set: {proc.WorkingSet64 / 1024 / 1024} MB");
                     ImGui.Text($"Private mem: {proc.PrivateMemorySize64 / 1024 / 1024} MB");
                     ImGui.Text($"Paged mem: {proc.PagedMemorySize64 / 1024 / 1024} MB");
-                    ImGui.EndChildFrame();
                 }
-                ImGui.End();
-            }*/
+                ImGui.EndChildFrame();
+            }
+            ImGui.End();*/
 
             for (int i = 0; i < Popups.Count; i++)
             {

@@ -22,14 +22,14 @@ namespace CBRE.Editor.Popup {
                         if (DocumentManager.CurrentDocument != doc) {
                             DocumentManager.SwitchTo(doc);
                         }
-                        ImGui.EndTabItem();
                     }
+                    ImGui.EndTabItem();
                 }
                 ImGui.EndTabBar();
                 // Num.Vector2 pos = ImGui.GetWindowPos();
                 // ViewportManager.vpStartPoint = new Point((int)pos.X, (int)pos.Y);
-                ImGui.End();
             }
+            ImGui.End();
             return true;
         }
     }
