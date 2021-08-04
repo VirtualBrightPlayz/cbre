@@ -78,9 +78,10 @@ namespace CBRE.Editor.Popup.ObjectProperties {
         }
 
         protected override bool ImGuiLayout() {
-            if (_obj is Entity || _obj is World)
+            if (_obj is Entity || _obj is World) {
                 EntityGui(_obj);
                 VisgroupGui(_obj);
+            }
             return ImGuiButtons();
         }
 
@@ -91,20 +92,16 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                         continue;
                     }
                     var c = _document.Map.Visgroups[i].Colour;
-                    var col = new Num.Vector4(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
-                    ImGui.PushStyleColor(ImGuiCol.Text, col);
-                    int id = _document.Map.Visgroups[i].ID;
-                    bool isInVis = obj.IsInVisgroup(id, false);
-                    if (visgroupActions[id] != VisgroupAction.NoChange) {
-                        isInVis = visgroupActions[id] == VisgroupAction.Add ? true : false;
+                    using (new ColorPush(ImGuiCol.Text, c)) {
+                        int id = _document.Map.Visgroups[i].ID;
+                        bool isInVis = obj.IsInVisgroup(id, false);
+                        if (visgroupActions[id] != VisgroupAction.NoChange) {
+                            isInVis = visgroupActions[id] == VisgroupAction.Add;
+                        }
+                        if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
+                            visgroupActions[id] = isInVis ? VisgroupAction.Add : VisgroupAction.Remove;
+                        }
                     }
-                    if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
-                        if (isInVis)
-                            visgroupActions[id] = VisgroupAction.Add;
-                        else
-                            visgroupActions[id] = VisgroupAction.Remove;
-                    }
-                    ImGui.PopStyleColor();
                     /*ImGui.SameLine();
                     if (ImGui.ColorEdit4($"{_document.Map.Visgroups[i].Name}", ref col)) {
                         if (!visgroupColors.ContainsKey(id))
@@ -118,17 +115,16 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                 for (int i = 0; i < _document.Map.Visgroups.Count; i++) {
                     if (_document.Map.Visgroups[i] is DataStructures.MapObjects.AutoVisgroup) {
                         var c = _document.Map.Visgroups[i].Colour;
-                        var col = new Num.Vector4(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
-                        ImGui.PushStyleColor(ImGuiCol.Text, col);
-                        int id = _document.Map.Visgroups[i].ID;
-                        bool isInVis = obj.IsInVisgroup(id, false);
-                        if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
-                            if (isInVis)
-                                visgroupActions[id] = VisgroupAction.Add;
-                            else
-                                visgroupActions[id] = VisgroupAction.Remove;
+                        using (new ColorPush(ImGuiCol.Text, c)) {
+                            int id = _document.Map.Visgroups[i].ID;
+                            bool isInVis = obj.IsInVisgroup(id, false);
+                            if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
+                                if (isInVis)
+                                    visgroupActions[id] = VisgroupAction.Add;
+                                else
+                                    visgroupActions[id] = VisgroupAction.Remove;
+                            }
                         }
-                        ImGui.PopStyleColor();
                         /*ImGui.SameLine();
                         if (ImGui.ColorEdit4($"{_document.Map.Visgroups[i].Name}", ref col)) {
                             if (!visgroupColors.ContainsKey(id))

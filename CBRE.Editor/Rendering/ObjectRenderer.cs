@@ -519,19 +519,36 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
+        private readonly List<(AsyncTexture Texture, BrushGeometry Geometry)> translucentGeom = new();
         public void RenderTextured() {
+            translucentGeom.Clear();
             foreach (var kvp in brushGeom) {
                 TextureItem item = TextureProvider.GetItem(kvp.Key);
-                if (item != null && item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
-                    TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
-                    TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                if (item is {Texture: AsyncTexture {MonoGameTexture: { }} asyncTexture}) {
+                    if (asyncTexture.HasTransparency()) {
+                        translucentGeom.Add((asyncTexture, kvp.Value));
+                        continue;
+                    } else {
+                        TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
+                        TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                    }
                 } else {
                     SolidShaded.CurrentTechnique.Passes[0].Apply();
                 }
                 kvp.Value.RenderSolid();
             }
+            
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
+            
+            var prevDepthStencilState = GlobalGraphics.GraphicsDevice.DepthStencilState;
+            GlobalGraphics.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true, DepthBufferWriteEnable = false };
+            foreach (var (texture, geometry) in translucentGeom) {
+                TexturedShaded.Parameters["xTexture"].SetValue(texture.MonoGameTexture);
+                TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                geometry.RenderSolid();
+            }
+            GlobalGraphics.GraphicsDevice.DepthStencilState = prevDepthStencilState;
         }
 
         public void RenderLightmapped() {
