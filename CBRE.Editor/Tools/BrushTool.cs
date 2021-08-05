@@ -90,6 +90,7 @@ namespace CBRE.Editor.Tools
                         _updatePreview = true;
                     }
                 }
+                ImGui.EndCombo();
             }
         }
 
