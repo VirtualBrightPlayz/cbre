@@ -11,7 +11,7 @@ namespace CBRE.Editor.Popup {
         }
 
         protected override bool ImGuiLayout() {
-            if (ImGui.Begin("tabber")) {
+            if (ImGui.Begin("tabber", ref open)) {
                 ImGui.SetWindowPos(new Num.Vector2(47, 47), ImGuiCond.FirstUseEver);
                 ImGui.SetWindowSize(new Num.Vector2(ViewportManager.vpRect.Right - 47, 30), ImGuiCond.FirstUseEver);
                 ImGui.BeginTabBar("doc_tabber");
@@ -31,7 +31,7 @@ namespace CBRE.Editor.Popup {
                 ViewportManager.DrawRenderTarget();
             }
             ImGui.End();
-            return true;
+            return open;
         }
     }
 }

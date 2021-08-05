@@ -4,6 +4,7 @@ namespace CBRE.Editor.Popup
 {
     public class WindowUI : PopupUI
     {
+        public bool open = true;
 
         public WindowUI(string title) : base(title)
         {

@@ -11,7 +11,7 @@ namespace CBRE.Editor.Popup {
         }
 
         public override bool Draw() {
-            if (ImGui.Begin("stats")) {
+            if (ImGui.Begin("stats", ref open)) {
                 var Window = GameMain.Instance.Window;
                 ImGui.SetWindowPos(new Num.Vector2(ViewportManager.vpRect.Right, Window.ClientBounds.Height - 60), ImGuiCond.FirstUseEver);
                 ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.vpRect.Right, 60), ImGuiCond.FirstUseEver);
@@ -23,7 +23,7 @@ namespace CBRE.Editor.Popup {
                 ImGui.Text($"Paged mem: {proc.PagedMemorySize64 / 1024 / 1024} MB");
             }
             ImGui.End();
-            return true;
+            return open;
         }
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CBRE.Common.Mediator;
+using CBRE.Editor.Popup;
 using CBRE.Editor.Rendering;
 using CBRE.Graphics;
 using CBRE.Settings;
@@ -105,6 +106,11 @@ namespace CBRE.Editor {
             Menus.Add(new Menu("Layout",
                 new MenuItem("Create New Layout Window", "", MenuTextures["Menu_NewWindow"]),
                 new MenuItem("Layout Window Settings...", "", MenuTextures["Menu_WindowSettings"])));
+            Menus.Add(new Menu("Window",
+                new MenuItem("Document View", "", MenuTextures["Menu_NewWindow"], action: () => new DocumentTabWindow()),
+                new MenuItem("Tool Properties", "", MenuTextures["Menu_NewWindow"], action: () => new ToolPropsWindow()),
+                new MenuItem("Stats View", "", MenuTextures["Menu_NewWindow"], action: () => new StatsWindow()),
+                new MenuItem("Tools", "", MenuTextures["Menu_NewWindow"], action: () => new ToolsWindow())));
             Menus.Add(new Menu("Help",
                 new MenuItem("About...", "", action: About)));
         }
