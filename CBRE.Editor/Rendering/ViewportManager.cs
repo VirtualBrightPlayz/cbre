@@ -541,7 +541,10 @@ namespace CBRE.Editor.Rendering {
         }
 
         public static void DrawRenderTarget() {
-            ImGuiNET.ImGui.Image(renderTargetPtr, new System.Numerics.Vector2(vpRect.Size.X, vpRect.Size.Y));
+            if (ImGuiNET.ImGui.BeginChildFrame(3, new System.Numerics.Vector2(vpRect.Size.X, vpRect.Size.Y))) {
+                ImGuiNET.ImGui.Image(renderTargetPtr, new System.Numerics.Vector2(vpRect.Size.X, vpRect.Size.Y));
+            }
+            ImGuiNET.ImGui.EndChildFrame();
         }
     }
 }
