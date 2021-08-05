@@ -14,6 +14,7 @@
     <ProjectReference Include="..\CBRE.Providers\CBRE.Providers.csproj" />
     <ProjectReference Include="..\CBRE.Settings\CBRE.Settings.csproj" />
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
+    <ProjectReference Include="..\NativeFileDialog\dotnet\NativeFileDialog\NativeFileDialog.csproj" />
   </ItemGroup>
 
   <ItemGroup>
