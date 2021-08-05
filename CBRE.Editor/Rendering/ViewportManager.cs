@@ -74,6 +74,7 @@ namespace CBRE.Editor.Rendering {
         static int draggingViewport;
 
         public static RenderTarget2D renderTarget { get; private set; }
+        public static IntPtr renderTargetPtr { get; private set; }
         private static VertexPositionTexture[] renderTargetGeom;
         static BasicEffect renderTargetEffect = null;
 
@@ -82,7 +83,9 @@ namespace CBRE.Editor.Rendering {
         public static bool Alt { get; private set; }
 
 
-        readonly static Point vpStartPoint = new Point(46, 66);
+        // readonly static Point vpRect.Location = new Point(46, 66);
+
+        public static Rectangle vpRect { get; set; } = new Rectangle(0, 0, 640, 480);
 
         public static void Init() {
             prevMouse1Down = false;
@@ -155,33 +158,37 @@ namespace CBRE.Editor.Rendering {
 
         public static bool TopMenuOpen = false;
 
-        public static int Right { get { return GlobalGraphics.Window.ClientBounds.Width - 260; } }
-        public static int Bottom { get { return GlobalGraphics.Window.ClientBounds.Height; } }
+        // public static int Right { get { return GlobalGraphics.Window.ClientBounds.Width - 260; } }
+        // public static int Bottom { get { return GlobalGraphics.Window.ClientBounds.Height; } }
 
         private static void RebuildRenderTarget() {
             renderTargetGeom = new VertexPositionTexture[] {
-                new VertexPositionTexture(new Vector3(vpStartPoint.X, vpStartPoint.Y, 0), new Vector2(0, 0)),
-                new VertexPositionTexture(new Vector3(Right, vpStartPoint.Y, 0), new Vector2(1, 0)),
-                new VertexPositionTexture(new Vector3(vpStartPoint.X, Bottom, 0), new Vector2(0, 1)),
-                new VertexPositionTexture(new Vector3(Right, Bottom, 0), new Vector2(1, 1)),
+                new VertexPositionTexture(new Vector3(vpRect.Location.X, vpRect.Location.Y, 0), new Vector2(0, 0)),
+                new VertexPositionTexture(new Vector3(vpRect.Right, vpRect.Location.Y, 0), new Vector2(1, 0)),
+                new VertexPositionTexture(new Vector3(vpRect.Location.X, vpRect.Bottom, 0), new Vector2(0, 1)),
+                new VertexPositionTexture(new Vector3(vpRect.Right, vpRect.Bottom, 0), new Vector2(1, 1)),
             };
-            knownWindowWidth = Right;
-            knownWindowHeight = Bottom;
+            knownWindowWidth = vpRect.Right;
+            knownWindowHeight = vpRect.Bottom;
             renderTargetEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, GlobalGraphics.Window.ClientBounds.Width + 0.5f, GlobalGraphics.Window.ClientBounds.Height + 0.5f, 0.5f, -1f, 1f);
+            if (renderTargetPtr != null) {
+                GlobalGraphics.ImGuiRenderer.UnbindTexture(renderTargetPtr);
+            }
             renderTarget?.Dispose();
-            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, Right - vpStartPoint.X, Bottom - vpStartPoint.Y, false, SurfaceFormat.Color, DepthFormat.Depth24);
+            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, vpRect.Right - vpRect.Location.X, vpRect.Bottom - vpRect.Location.Y, false, SurfaceFormat.Color, DepthFormat.Depth24);
+            renderTargetPtr = GlobalGraphics.ImGuiRenderer.BindTexture(renderTarget);
 
-            int splitX = (int)((Right - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
-            int splitY = (int)((Bottom - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
+            int splitX = (int)((vpRect.Right - vpRect.Location.X) * splitPoint.X) + vpRect.Location.X;
+            int splitY = (int)((vpRect.Bottom - vpRect.Location.Y) * splitPoint.Y) + vpRect.Location.Y;
             for (int i = 0; i < Viewports.Length; i++) {
                 if (Viewports[i] == null) { continue; }
                 bool left = i % 2 == 0;
                 bool top = i < 2;
 
-                Viewports[i].X = left ? vpStartPoint.X : splitX + 3;
-                Viewports[i].Y = top ? vpStartPoint.Y : splitY + 3;
-                Viewports[i].Width = left ? splitX - vpStartPoint.X - 4 : renderTarget.Width - (splitX - vpStartPoint.X + 3);
-                Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
+                Viewports[i].X = left ? vpRect.Location.X : splitX + 3;
+                Viewports[i].Y = top ? vpRect.Location.Y : splitY + 3;
+                Viewports[i].Width = left ? splitX - vpRect.Location.X - 4 : renderTarget.Width - (splitX - vpRect.Location.X + 3);
+                Viewports[i].Height = top ? splitY - vpRect.Location.Y - 4 : renderTarget.Height - (splitY - vpRect.Location.Y + 3);
             }
 
             Render();
@@ -204,7 +211,7 @@ namespace CBRE.Editor.Rendering {
 
         public static void Update() {
             GameMain.Instance.SelectedTool?.Update();
-            if (knownWindowWidth != Right || knownWindowHeight != Bottom) {
+            if (knownWindowWidth != vpRect.Right || knownWindowHeight != vpRect.Bottom) {
                 RebuildRenderTarget();
             }
             var doc = DocumentManager.CurrentDocument;
@@ -227,11 +234,11 @@ namespace CBRE.Editor.Rendering {
             Shift = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
             Alt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
 
-            if (mouseState.X >= vpStartPoint.X && mouseState.X <= Right &&
-                mouseState.Y >= vpStartPoint.Y && mouseState.Y <= Bottom &&
+            if (mouseState.X >= vpRect.Location.X && mouseState.X <= vpRect.Right &&
+                mouseState.Y >= vpRect.Location.Y && mouseState.Y <= vpRect.Bottom &&
                 !TopMenuOpen) {
-                int splitX = (int)((Right - vpStartPoint.X) * splitPoint.X) + vpStartPoint.X;
-                int splitY = (int)((Bottom - vpStartPoint.Y) * splitPoint.Y) + vpStartPoint.Y;
+                int splitX = (int)((vpRect.Right - vpRect.Location.X) * splitPoint.X) + vpRect.Location.X;
+                int splitY = (int)((vpRect.Bottom - vpRect.Location.Y) * splitPoint.Y) + vpRect.Location.Y;
 
                 if (!mouse1Down && !mouse3Down) {
                     if (draggingViewport >= 0) {
@@ -255,12 +262,12 @@ namespace CBRE.Editor.Rendering {
                 }
 
                 if (draggingCenterX) {
-                    splitPoint.X = (float)(mouseState.X - vpStartPoint.X) / (Right - vpStartPoint.X);
+                    splitPoint.X = (float)(mouseState.X - vpRect.Location.X) / (vpRect.Right - vpRect.Location.X);
                     splitPoint.X = Math.Clamp(splitPoint.X, 0.01f, 0.99f);
                     MarkForRerender();
                 }
                 if (draggingCenterY) {
-                    splitPoint.Y = (float)(mouseState.Y - vpStartPoint.Y) / (Bottom - vpStartPoint.Y);
+                    splitPoint.Y = (float)(mouseState.Y - vpRect.Location.Y) / (vpRect.Bottom - vpRect.Location.Y);
                     splitPoint.Y = Math.Clamp(splitPoint.Y, 0.01f, 0.99f);
                     MarkForRerender();
                 }
@@ -284,10 +291,10 @@ namespace CBRE.Editor.Rendering {
                     bool left = i % 2 == 0;
                     bool top = i < 2;
 
-                    Viewports[i].X = left ? vpStartPoint.X : splitX + 3;
-                    Viewports[i].Y = top ? vpStartPoint.Y : splitY + 3;
-                    Viewports[i].Width = left ? splitX - vpStartPoint.X - 4 : renderTarget.Width - (splitX - vpStartPoint.X + 3);
-                    Viewports[i].Height = top ? splitY - vpStartPoint.Y - 4 : renderTarget.Height - (splitY - vpStartPoint.Y + 3);
+                    Viewports[i].X = left ? vpRect.Location.X : splitX + 3;
+                    Viewports[i].Y = top ? vpRect.Location.Y : splitY + 3;
+                    Viewports[i].Width = left ? splitX - vpRect.Location.X - 4 : renderTarget.Width - (splitX - vpRect.Location.X + 3);
+                    Viewports[i].Height = top ? splitY - vpRect.Location.Y - 4 : renderTarget.Height - (splitY - vpRect.Location.Y + 3);
 
                     GameMain.Instance.SelectedTool?.UpdateFrame(Viewports[i], new FrameInfo(0)); //TODO: fix FrameInfo
 
@@ -470,8 +477,8 @@ namespace CBRE.Editor.Rendering {
         public static void Render() {
             shouldRerender = false;
 
-            int splitX = (int)((Right - vpStartPoint.X) * splitPoint.X);
-            int splitY = (int)((Bottom - vpStartPoint.Y) * splitPoint.Y);
+            int splitX = (int)((vpRect.Right - vpRect.Location.X) * splitPoint.X);
+            int splitY = (int)((vpRect.Bottom - vpRect.Location.Y) * splitPoint.Y);
 
             GlobalGraphics.GraphicsDevice.SetRenderTarget(renderTarget);
             GlobalGraphics.GraphicsDevice.Clear(Color.Black);
@@ -516,7 +523,7 @@ namespace CBRE.Editor.Rendering {
             for (int i=0;i<Viewports.Length;i++) {
                 if (Viewports[i] == null) { continue; }
 
-                GlobalGraphics.GraphicsDevice.Viewport = new Viewport(Viewports[i].X - vpStartPoint.X, Viewports[i].Y - vpStartPoint.Y, Viewports[i].Width, Viewports[i].Height);
+                GlobalGraphics.GraphicsDevice.Viewport = new Viewport(Viewports[i].X - vpRect.Location.X, Viewports[i].Y - vpRect.Location.Y, Viewports[i].Width, Viewports[i].Height);
 
                 resetBasicEffect(Viewports[i]);
 
@@ -534,11 +541,7 @@ namespace CBRE.Editor.Rendering {
         }
 
         public static void DrawRenderTarget() {
-            GlobalGraphics.GraphicsDevice.ScissorRectangle = new Rectangle(0, 0, Right, Bottom);
-            GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
-            renderTargetEffect.Texture = renderTarget;
-            renderTargetEffect.CurrentTechnique.Passes[0].Apply();
-            GlobalGraphics.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleStrip, renderTargetGeom, 0, 2, VertexPositionTexture.VertexDeclaration);
+            ImGuiNET.ImGui.Image(renderTargetPtr, new System.Numerics.Vector2(vpRect.Size.X, vpRect.Size.Y));
         }
     }
 }

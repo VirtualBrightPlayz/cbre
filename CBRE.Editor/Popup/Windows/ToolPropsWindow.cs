@@ -13,10 +13,9 @@ namespace CBRE.Editor.Popup {
 
         protected override bool ImGuiLayout() {
             if (ImGui.Begin("tool_properties")) {
-                ImGui.DockSpaceOverViewport();
                 var Window = GameMain.Instance.Window;
-                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, 47), ImGuiCond.FirstUseEver);
-                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60), ImGuiCond.FirstUseEver);
+                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.vpRect.Right, 47), ImGuiCond.FirstUseEver);
+                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.vpRect.Right, Window.ClientBounds.Height - 47 - 60), ImGuiCond.FirstUseEver);
                 // if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60))) {
                     if (ImGui.TreeNode("Tool")) {
                         GameMain.Instance.SelectedTool?.UpdateGui();

@@ -12,9 +12,8 @@ namespace CBRE.Editor.Popup {
 
         protected override bool ImGuiLayout() {
             if (ImGui.Begin("tabber")) {
-                ImGui.DockSpaceOverViewport();
                 ImGui.SetWindowPos(new Num.Vector2(47, 47), ImGuiCond.FirstUseEver);
-                ImGui.SetWindowSize(new Num.Vector2(ViewportManager.Right - 47, 30), ImGuiCond.FirstUseEver);
+                ImGui.SetWindowSize(new Num.Vector2(ViewportManager.vpRect.Right - 47, 30), ImGuiCond.FirstUseEver);
                 ImGui.BeginTabBar("doc_tabber");
                 for (int i = 0; i < DocumentManager.Documents.Count; i++) {
                     Document doc = DocumentManager.Documents[i];
@@ -26,8 +25,10 @@ namespace CBRE.Editor.Popup {
                     ImGui.EndTabItem();
                 }
                 ImGui.EndTabBar();
-                // Num.Vector2 pos = ImGui.GetWindowPos();
-                // ViewportManager.vpStartPoint = new Point((int)pos.X, (int)pos.Y);
+                Num.Vector2 pos = ImGui.GetWindowPos() + ImGui.GetCursorPos();
+                Num.Vector2 siz = ImGui.GetWindowSize() - ImGui.GetCursorPos() * 1.5f;
+                ViewportManager.vpRect = new Microsoft.Xna.Framework.Rectangle((int)pos.X, (int)pos.Y, (int)siz.X, (int)siz.Y);
+                ViewportManager.DrawRenderTarget();
             }
             ImGui.End();
             return true;

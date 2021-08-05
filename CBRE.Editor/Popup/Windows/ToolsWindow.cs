@@ -10,7 +10,6 @@ namespace CBRE.Editor.Popup {
 
         public override bool Draw() {
             if (ImGui.Begin("tools")) {
-                ImGui.DockSpaceOverViewport();
                 ImGui.SetWindowPos(new Num.Vector2(-1, 27), ImGuiCond.FirstUseEver);
                 ImGui.SetWindowSize(new Num.Vector2(47, GameMain.Instance.Window.ClientBounds.Height - 27), ImGuiCond.FirstUseEver);
 

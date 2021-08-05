@@ -128,6 +128,7 @@ namespace CBRE.Editor {
             new ToolsWindow();
             new DocumentTabWindow();
             new ToolPropsWindow();
+            new StatsWindow();
 
             base.Initialize();
         }
@@ -188,8 +189,6 @@ namespace CBRE.Editor {
 
             GraphicsDevice.Clear(new Color(50, 50, 60));
 
-            // ViewportManager.DrawRenderTarget();
-
             // Call BeforeLayout first to set things up
             _imGuiRenderer.BeforeLayout(gameTime);
 
@@ -198,6 +197,8 @@ namespace CBRE.Editor {
 
             // Call AfterLayout now to finish up and draw all the things
             _imGuiRenderer.AfterLayout();
+
+            // ViewportManager.DrawRenderTarget();
 
             base.Draw(gameTime);
 
@@ -211,31 +212,25 @@ namespace CBRE.Editor {
         }
 
         protected virtual void ImGuiLayout() {
-
+            uint dockId = ImGui.GetID("Dock");
+            ImGuiViewportPtr viewportPtr = ImGui.GetMainViewport();
+            ImGui.SetNextWindowPos(viewportPtr.Pos);
+            ImGui.SetNextWindowSize(viewportPtr.Size);
+            ImGui.Begin("Main Window", ImGuiWindowFlags.NoMove |
+                                        ImGuiWindowFlags.NoResize |
+                                        ImGuiWindowFlags.NoBringToFrontOnFocus |
+                                        ImGuiWindowFlags.NoCollapse);
+            ImGui.DockSpace(dockId);
+            ImGui.End();
             if (ImGui.BeginMainMenuBar()) {
                 UpdateMenus();
                 // UpdateTopBar();
             }
             ImGui.EndMainMenuBar();
 
-            /*if (ImGui.Begin("stats")) {
-                ImGui.DockSpaceOverViewport();
-                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, Window.ClientBounds.Height - 60), ImGuiCond.FirstUseEver);
-                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, 60), ImGuiCond.FirstUseEver);
-                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, 60))) {
-                    Process proc = Process.GetCurrentProcess();
-
-                    proc.Refresh();
-                    ImGui.Text($"Working set: {proc.WorkingSet64 / 1024 / 1024} MB");
-                    ImGui.Text($"Private mem: {proc.PrivateMemorySize64 / 1024 / 1024} MB");
-                    ImGui.Text($"Paged mem: {proc.PagedMemorySize64 / 1024 / 1024} MB");
-                }
-                ImGui.EndChildFrame();
-            }
-            ImGui.End();*/
-
             for (int i = 0; i < Popups.Count; i++)
             {
+                ImGui.SetNextWindowDockID(dockId, ImGuiCond.FirstUseEver);
                 if (!Popups[i].Draw())
                 {
                     Popups[i].Close();
