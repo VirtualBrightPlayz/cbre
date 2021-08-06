@@ -22,3 +22,4 @@ jobs:
       with:
         name: CBRE.Editor Build
         path: CBRE.Editor/bin/Debug/net5.0/
+        retention-days: 5
