@@ -77,7 +77,7 @@ namespace CBRE.Editor {
             GlobalGraphics.Set(GraphicsDevice, Window, _imGuiRenderer);
 
             ImGuiStyle = ImGui.GetStyle();
-            ImGuiStyle.TabMinWidthForCloseButton = 1f;
+            ImGuiStyle.TabMinWidthForCloseButton = 50f;
             ImGuiStyle.ChildRounding = 0;
             ImGuiStyle.FrameRounding = 0;
             ImGuiStyle.GrabRounding = 0;
