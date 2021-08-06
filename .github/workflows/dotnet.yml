@@ -15,6 +15,10 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: dotnet restore --project CBRE.Editor
+      run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore --project CBRE.Editor
+      run: dotnet build --no-restore CBRE.Editor
+    - uses: actions/upload-artifact@v2
+      with:
+        name: CBRE.Editor Build
+        path: CBRE.Editor/bin/Debug/net5.0/
