@@ -130,6 +130,8 @@ namespace CBRE.Editor {
             new DocumentTabWindow();
             new ToolPropsWindow();
             new StatsWindow();
+            new ViewportWindow(ViewportManager.Viewports.First(p => p is Viewport3D));
+            new ViewportWindow(ViewportManager.Viewports.First(p => p is Viewport2D));
 
             base.Initialize();
         }

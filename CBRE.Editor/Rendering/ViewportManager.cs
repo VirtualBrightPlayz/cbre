@@ -476,6 +476,7 @@ namespace CBRE.Editor.Rendering {
 
         public static void Render() {
             shouldRerender = false;
+            return;
 
             int splitX = (int)((vpRect.Right - vpRect.Location.X) * splitPoint.X);
             int splitY = (int)((vpRect.Bottom - vpRect.Location.Y) * splitPoint.Y);
@@ -513,6 +514,18 @@ namespace CBRE.Editor.Rendering {
             basicEffect.CurrentTechnique.Passes[0].Apply();
             GlobalGraphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, backgroundVertices, 0, 12, backgroundIndices, 0, 6);
 
+            for (int i=0;i<Viewports.Length;i++) {
+                if (Viewports[i] == null) { continue; }
+
+                Render(Viewports[i], new Viewport(Viewports[i].X - vpRect.Location.X, Viewports[i].Y - vpRect.Location.Y, Viewports[i].Width, Viewports[i].Height));
+            } 
+            GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
+
+            GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
+        }
+
+        public static void Render(ViewportBase viewport, Viewport view)
+        {
             void resetBasicEffect(ViewportBase viewport) {
                 basicEffect.Projection = viewport.GetViewportMatrix();
                 basicEffect.View = viewport.GetCameraMatrix();
@@ -520,24 +533,19 @@ namespace CBRE.Editor.Rendering {
                 basicEffect.CurrentTechnique.Passes[0].Apply();
             };
 
-            for (int i=0;i<Viewports.Length;i++) {
-                if (Viewports[i] == null) { continue; }
+            if (viewport == null) { return; }
+            
+            GlobalGraphics.GraphicsDevice.Viewport = view;
 
-                GlobalGraphics.GraphicsDevice.Viewport = new Viewport(Viewports[i].X - vpRect.Location.X, Viewports[i].Y - vpRect.Location.Y, Viewports[i].Width, Viewports[i].Height);
+            resetBasicEffect(viewport);
 
-                resetBasicEffect(Viewports[i]);
+            viewport.DrawGrid();
+            viewport.Render();
 
-                Viewports[i].DrawGrid();
-                Viewports[i].Render();
+            resetBasicEffect(viewport);
 
-                resetBasicEffect(Viewports[i]);
-
-                GlobalGraphics.GraphicsDevice.DepthStencilState = Viewports[i] is Viewport3D ? DepthStencilState.Default : DepthStencilState.None;
-                GameMain.Instance.SelectedTool?.Render(Viewports[i]);
-            } 
-            GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
-
-            GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
+            GlobalGraphics.GraphicsDevice.DepthStencilState = viewport is Viewport3D ? DepthStencilState.Default : DepthStencilState.None;
+            GameMain.Instance.SelectedTool?.Render(viewport);
         }
 
         public static void DrawRenderTarget() {

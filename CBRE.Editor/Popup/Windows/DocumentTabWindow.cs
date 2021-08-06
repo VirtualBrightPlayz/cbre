@@ -25,10 +25,10 @@ namespace CBRE.Editor.Popup {
                     ImGui.EndTabItem();
                 }
                 ImGui.EndTabBar();
-                Num.Vector2 pos = ImGui.GetWindowPos() + ImGui.GetCursorPos();
+                /*Num.Vector2 pos = ImGui.GetWindowPos() + ImGui.GetCursorPos();
                 Num.Vector2 siz = ImGui.GetWindowSize() - ImGui.GetCursorPos() * 1.5f;
                 ViewportManager.vpRect = new Microsoft.Xna.Framework.Rectangle((int)pos.X, (int)pos.Y, (int)siz.X, (int)siz.Y);
-                ViewportManager.DrawRenderTarget();
+                ViewportManager.DrawRenderTarget();*/
             }
             ImGui.End();
             return open;
