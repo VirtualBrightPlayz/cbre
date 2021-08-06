@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using CBRE.Graphics;
+using NativeFileDialog;
 
 namespace CBRE.Editor
 {
@@ -10,6 +9,7 @@ namespace CBRE.Editor
     {
         public static void Main() {
             try {
+                var result = OpenDialogMultiple.Open("png,jpg", Environment.CurrentDirectory + "\\sus.png", out IEnumerable<string> outPaths);
                 using (var game = new GameMain()) { game.Run(); }
             }
             catch (Exception e) {
