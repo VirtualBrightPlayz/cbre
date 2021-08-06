@@ -46,7 +46,7 @@ namespace NativeFileDialog {
                             nfdchar_t **outPath); */
         
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
-        internal static extern IntPtr NFD_GetError();
+        internal static extern unsafe byte* NFD_GetError();
         /* const char * NFD_GetError( void ); */
         
         [DllImport(DllName, CallingConvention = CallingConvention.Cdecl)]
@@ -70,6 +70,10 @@ namespace NativeFileDialog {
         /* void    NFDi_Free( void *ptr ); */
     }
 
+    public class NativeFileDialogException : Exception {
+        public NativeFileDialogException(string message) : base(message) { }
+    }
+    
     internal static class Helper {
         internal static IntPtr StrToHAlloc(string str) {
             byte[] bytes = Encoding.UTF8.GetBytes(str+"\0");
@@ -86,7 +90,6 @@ namespace NativeFileDialog {
 
         internal static Result Convert(this Dll.nfdresult_t internalResult)
             => internalResult switch {
-                Dll.nfdresult_t.NFD_ERROR => Result.Error,
                 Dll.nfdresult_t.NFD_OKAY => Result.Okay,
                 Dll.nfdresult_t.NFD_CANCEL => Result.Cancel,
                 _ => throw new ArgumentOutOfRangeException(nameof(internalResult), internalResult, null)
@@ -94,7 +97,6 @@ namespace NativeFileDialog {
     }
 
     public enum Result {
-        Error,
         Okay,
         Cancel
     }
@@ -112,13 +114,15 @@ namespace NativeFileDialog {
 
                 Dll.nfdresult_t result = dialogFunc(filterListPtr, defaultPathPtr, outPathPtrPtr);
 
+                Marshal.FreeHGlobal(filterListPtr);
+                Marshal.FreeHGlobal(defaultPathPtr);
+                
                 if (result == Dll.nfdresult_t.NFD_OKAY) {
                     outPath = Helper.PtrToStr(outPathPtr);
                     Dll.NFDi_Free((IntPtr)outPathPtr);
+                } else if (result == Dll.nfdresult_t.NFD_ERROR) {
+                    throw new NativeFileDialogException(Helper.PtrToStr(Dll.NFD_GetError()));
                 }
-                
-                Marshal.FreeHGlobal(filterListPtr);
-                Marshal.FreeHGlobal(defaultPathPtr);
 
                 return result.Convert();
             }
