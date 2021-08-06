@@ -48,7 +48,7 @@ namespace CBRE.Editor.Popup {
         }
 
         public virtual bool IsOverAndOpen(MouseState mouseState) {
-            return (mouseState.X >= view.Left && mouseState.X <= view.Right && mouseState.Y >= view.Top && mouseState.Y <= view.Bottom);
+            return (selected && mouseState.X >= view.Left && mouseState.X <= view.Right && mouseState.Y >= view.Top && mouseState.Y <= view.Bottom);
         }
 
         protected override bool ImGuiLayout() {
@@ -66,7 +66,7 @@ namespace CBRE.Editor.Popup {
                     ImGui.Image(renderTargetPtr, new Num.Vector2(view.Size.X, view.Size.Y));
                 }
                 ImGui.EndChildFrame();
-                selected = true;
+                selected = ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows);
             }
             ImGui.End();
             return open;
