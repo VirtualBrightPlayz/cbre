@@ -48,7 +48,7 @@ namespace CBRE.Editor.Popup {
         }
 
         public virtual bool IsOverAndOpen(MouseState mouseState) {
-            return (selected && mouseState.X >= view.Left && mouseState.X <= view.Right && mouseState.Y >= view.Top && mouseState.Y <= view.Bottom);
+            return (selected && mouseState.X >= -view.Left && mouseState.X <= view.Right && mouseState.Y >= -view.Top && mouseState.Y <= view.Bottom);
         }
 
         protected override bool ImGuiLayout() {
