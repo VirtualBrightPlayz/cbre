@@ -17,7 +17,7 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore --project CBRE.Editor
+      run: dotnet build --no-restore CBRE.Editor
     - uses: actions/upload-artifact@v2
       with:
         name: CBRE.Editor Build
