@@ -134,6 +134,7 @@ namespace CBRE.Editor {
             new ViewportWindow(1);
             new ViewportWindow(2);
             new ViewportWindow(3);
+            new VisgroupsWindow();
 
             base.Initialize();
         }
