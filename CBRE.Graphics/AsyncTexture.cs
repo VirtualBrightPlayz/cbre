@@ -8,12 +8,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using CBRE.Common;
 using ImGuiNET;
-using Microsoft.Xna.Framework.Graphics;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using Veldrid;
+using Veldrid.ImageSharp;
 
 namespace CBRE.Graphics {
     public class AsyncTexture : ITexture {
         public struct Data {
-            public byte[] Bytes;
+            public Image<Rgba32> Image;
             public int Width; public int Height;
             public bool Compressed;
             public bool Transparent;
@@ -22,14 +25,14 @@ namespace CBRE.Graphics {
         public static Action<string> LoadCallback = null;
 
         private Task<Data> task;
-        private Texture2D monoGameTexture;
+        private Texture veldridTexture;
         private IntPtr imGuiTexture;
 
         private static long activeTasks;
 
-        public Texture2D MonoGameTexture {
+        public Texture VeldridTexture {
             get {
-                return monoGameTexture;
+                return veldridTexture;
             }
         }
 
@@ -43,14 +46,18 @@ namespace CBRE.Graphics {
 
         public string Name => Path.GetFileNameWithoutExtension(Filename);
 
-        public int Width => MonoGameTexture?.Width ?? 0;
+        public uint UWidth => VeldridTexture?.Width ?? 0;
 
-        public int Height => MonoGameTexture?.Height ?? 0;
+        public uint UHeight => VeldridTexture?.Height ?? 0;
+
+        public int Width => (int)UWidth;
+
+        public int Height => (int)UHeight;
 
         public readonly string Filename;
 
         public AsyncTexture(string filename, Task<Data> tsk=null) {
-            monoGameTexture = null;
+            veldridTexture = null;
             imGuiTexture = IntPtr.Zero;
 
             Filename = filename;
@@ -68,31 +75,24 @@ namespace CBRE.Graphics {
             }
             Interlocked.Increment(ref activeTasks);
             try {
-                byte[] bytes;
-                int width;
-                int height;
+                Image<Rgba32> img;
                 var fileData = await File.ReadAllBytesAsync(Filename);
                 using (var stream = new MemoryStream(fileData)) {
-                    bytes = Texture2D.TextureDataFromStream(stream, out width, out height, out _);
+                    img = await Image.LoadAsync<Rgba32>(stream);
                 }
 
                 bool compressed = false;
                 bool transparent = false;
-                for (int i = 0; i < bytes.Length; i+=4) {
-                    if (bytes[i+3] != 255) {
-                        transparent = true;
-                        break;
+                for (int y = 0; y < img.Height; y++) {
+                    for (int x = 0; x < img.Width; x++) {
+                        if  (img[x, y].A != 255) {
+                            transparent = true;
+                            break;
+                        }
                     }
                 }
-                if ((width > 64 || height > 64) &&
-                    (width & 0x03) == 0 && (height & 0x03) == 0) {
-                    var prevBytes = bytes;
-                    bytes = CompressDxt5(bytes, width, height);
-                    Array.Resize(ref prevBytes, 0);
-                    compressed = true;
-                }
 
-                return new Data { Bytes = bytes, Width = width, Height = height, Compressed = compressed, Transparent = transparent };
+                return new Data { Image = img, Width = img.Width, Height = img.Height, Compressed = compressed, Transparent = transparent };
             } finally {
                 Interlocked.Decrement(ref activeTasks);
             }
@@ -103,12 +103,11 @@ namespace CBRE.Graphics {
                 if (!task.IsCompleted) { return; }
 
                 Data data = task.Result;
-                monoGameTexture = new Texture2D(GlobalGraphics.GraphicsDevice, data.Width, data.Height, false, data.Compressed ? SurfaceFormat.Dxt5 : SurfaceFormat.Color);
-                monoGameTexture.SetData(data.Bytes);
 
-                Array.Resize(ref data.Bytes, 0);
+                ImageSharpTexture tex = new ImageSharpTexture(data.Image);
+                veldridTexture = tex.CreateDeviceTexture(GlobalGraphics.GraphicsDevice, GlobalGraphics.GraphicsDevice.ResourceFactory);
 
-                imGuiTexture = GlobalGraphics.ImGuiRenderer.BindTexture(monoGameTexture);
+                imGuiTexture = GlobalGraphics.ImGuiRenderer.GetOrCreateImGuiBinding(GlobalGraphics.GraphicsDevice.ResourceFactory, veldridTexture);
 
                 Flags = data.Transparent ? TextureFlags.Transparent : TextureFlags.None;
 
@@ -125,10 +124,10 @@ namespace CBRE.Graphics {
             }
 
             if (imGuiTexture != IntPtr.Zero) {
-                GlobalGraphics.ImGuiRenderer.UnbindTexture(imGuiTexture);
+                GlobalGraphics.ImGuiRenderer.RemoveImGuiBinding(veldridTexture);
                 imGuiTexture = IntPtr.Zero;
             }
-            monoGameTexture?.Dispose(); monoGameTexture = null;
+            veldridTexture?.Dispose(); veldridTexture = null;
         }
 
         private static byte[] CompressDxt5(byte[] data, int width, int height) {
@@ -258,12 +257,12 @@ namespace CBRE.Graphics {
 
         public void Bind() {
             // GlobalGraphics.GraphicsDevice.Textures[0] = this.monoGameTexture;
-            PrimitiveDrawing.texture = this.monoGameTexture;
+            PrimitiveDrawing.texture = this.veldridTexture;
         }
 
         public void Unbind() {
             // GlobalGraphics.GraphicsDevice.Textures[0] = this.monoGameTexture;
-            if (PrimitiveDrawing.texture == this.monoGameTexture)
+            if (PrimitiveDrawing.texture == this.veldridTexture)
                 PrimitiveDrawing.texture = null;
         }
     }

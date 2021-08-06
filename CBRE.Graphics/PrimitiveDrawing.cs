@@ -1,37 +1,41 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 using CBRE.DataStructures.MapObjects;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using SixLabors.ImageSharp;
+using Veldrid;
 
 namespace CBRE.Graphics {
     public static class PrimitiveDrawing {
-        private static PrimitiveType? currentPrimitiveType = null;
+        private static PrimitiveTopology? currentPrimitiveType = null;
+        private static CommandList cmdList = null;
 
-        private static Color color = Color.White;
+        private static Vector4 color = new Vector4(1f, 1f, 1f, 1f);
         private static List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
-        public static Texture2D texture = null;
+        public static Texture texture = null;
 
-        public static void Begin(PrimitiveType primType) {
+        public static void Begin(PrimitiveTopology primType) {
             if (currentPrimitiveType != null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Begin because a draw operation is already in progress"); }
             currentPrimitiveType = primType;
+            cmdList = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateCommandList();
+            cmdList.SetFramebuffer(GlobalGraphics.GraphicsDevice.SwapchainFramebuffer);
             vertices.Clear();
         }
 
         public static void SetColor(System.Drawing.Color clr) {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Color4 because a draw operation isn't in progress"); }
-            color.R = clr.R;
-            color.G = clr.G;
-            color.B = clr.B;
-            color.A = clr.A;
+            color.X = clr.R;
+            color.Y = clr.G;
+            color.Z = clr.B;
+            color.W = clr.A;
         }
 
         public static void Vertex2(double x, double y, float u = 0f, float v = 0f) {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Vertex3 because a draw operation isn't in progress"); }
             vertices.Add(new VertexPositionColorTexture() {
                 Position = new Vector3((float)x, (float)y, 0.0f),
-                Color = color,
+                Color = new RgbaFloat(color),
                 TextureCoordinate = new Vector2(u, v)
             });
         }
@@ -40,7 +44,7 @@ namespace CBRE.Graphics {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Vertex3 because a draw operation isn't in progress"); }
             vertices.Add(new VertexPositionColorTexture() {
                 Position = position,
-                Color = color,
+                Color = new RgbaFloat(color),
                 TextureCoordinate = new Vector2(u, v)
             });
         }
@@ -111,34 +115,36 @@ namespace CBRE.Graphics {
 
             int primCount = 0;
             switch (currentPrimitiveType) {
-                case PrimitiveType.PointList:
+                case PrimitiveTopology.PointList:
                     primCount = vertices.Count;
                     break;
-                case PrimitiveType.LineList:
+                case PrimitiveTopology.LineList:
                     primCount = vertices.Count / 2;
                     break;
-                case PrimitiveType.LineLoop:
+                /*case PrimitiveTopology.LineLoop:
                     primCount = vertices.Count;
-                    break;
-                case PrimitiveType.LineStrip:
+                    break;*/
+                case PrimitiveTopology.LineStrip:
                     primCount = vertices.Count - 1;
                     break;
-                case PrimitiveType.TriangleList:
+                case PrimitiveTopology.TriangleList:
                     primCount = vertices.Count / 3;
                     break;
-                case PrimitiveType.TriangleStrip:
+                case PrimitiveTopology.TriangleStrip:
                     primCount = vertices.Count - 2;
                     break;
-                case PrimitiveType.TriangleFan:
+                /*case PrimitiveTopology.TriangleFan:
                     primCount = vertices.Count - 2;
                     break;
-                case PrimitiveType.QuadList:
+                case PrimitiveTopology.QuadList:
                     primCount = vertices.Count / 4;
-                    break;
+                    break;*/
             }
 
             if (vertices.Count > 0) {
-                GlobalGraphics.GraphicsDevice.DrawUserPrimitives(
+                // TODO
+                cmdList.End();
+                new CommandList(
                     currentPrimitiveType.Value,
                     vertices.ToArray(),
                     0,
