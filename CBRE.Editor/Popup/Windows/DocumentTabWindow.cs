@@ -8,10 +8,13 @@ namespace CBRE.Editor.Popup {
     {
         public DocumentTabWindow() : base("")
         {
+            if (GameMain.Instance.Popups.FindIndex(p => p is DocumentTabWindow && p != this) != -1) {
+                Dispose();
+            }
         }
 
         protected override bool ImGuiLayout() {
-            if (ImGui.Begin("tabber", ref open)) {
+            if (ImGui.Begin("tabber")) {
                 ImGui.SetWindowPos(new Num.Vector2(47, 47), ImGuiCond.FirstUseEver);
                 ImGui.SetWindowSize(new Num.Vector2(ViewportManager.vpRect.Right - 47, 30), ImGuiCond.FirstUseEver);
                 ImGui.BeginTabBar("doc_tabber");
@@ -31,7 +34,7 @@ namespace CBRE.Editor.Popup {
                 ViewportManager.DrawRenderTarget();
             }
             ImGui.End();
-            return open;
+            return true;
         }
     }
 }
