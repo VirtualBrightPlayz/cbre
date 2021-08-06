@@ -83,8 +83,6 @@ namespace CBRE.Editor.Rendering {
         public static bool Alt { get; private set; }
 
 
-        // readonly static Point vpRect.Location = new Point(46, 66);
-
         public static Rectangle vpRect { get; set; } = new Rectangle(0, 0, 640, 480);
 
         public static void Init() {
@@ -158,9 +156,6 @@ namespace CBRE.Editor.Rendering {
 
         public static bool TopMenuOpen = false;
 
-        // public static int Right { get { return GlobalGraphics.Window.ClientBounds.Width - 260; } }
-        // public static int Bottom { get { return GlobalGraphics.Window.ClientBounds.Height; } }
-
         private static void RebuildRenderTarget() {
             renderTargetGeom = new VertexPositionTexture[] {
                 new VertexPositionTexture(new Vector3(vpRect.Location.X, vpRect.Location.Y, 0), new Vector2(0, 0)),
@@ -171,7 +166,7 @@ namespace CBRE.Editor.Rendering {
             knownWindowWidth = vpRect.Right;
             knownWindowHeight = vpRect.Bottom;
             renderTargetEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, GlobalGraphics.Window.ClientBounds.Width + 0.5f, GlobalGraphics.Window.ClientBounds.Height + 0.5f, 0.5f, -1f, 1f);
-            if (renderTargetPtr != null) {
+            if (renderTargetPtr != IntPtr.Zero) {
                 GlobalGraphics.ImGuiRenderer.UnbindTexture(renderTargetPtr);
             }
             renderTarget?.Dispose();
