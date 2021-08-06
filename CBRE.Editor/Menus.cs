@@ -108,6 +108,10 @@ namespace CBRE.Editor {
                 new MenuItem("Layout Window Settings...", "", MenuTextures["Menu_WindowSettings"])));
             Menus.Add(new Menu("Window",
                 new MenuItem("Document View", "", MenuTextures["Menu_NewWindow"], action: () => new DocumentTabWindow()),
+                new MenuItem("Viewport 0 - 3d", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow(0)),
+                new MenuItem("Viewport 1 - Top", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow(1)),
+                new MenuItem("Viewport 2 - Side", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow(2)),
+                new MenuItem("Viewport 3 - Front", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow(3)),
                 new MenuItem("Tool Properties", "", MenuTextures["Menu_NewWindow"], action: () => new ToolPropsWindow()),
                 new MenuItem("Stats View", "", MenuTextures["Menu_NewWindow"], action: () => new StatsWindow()),
                 new MenuItem("Tools", "", MenuTextures["Menu_NewWindow"], action: () => new ToolsWindow())));

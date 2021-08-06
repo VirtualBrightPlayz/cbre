@@ -130,8 +130,10 @@ namespace CBRE.Editor {
             new DocumentTabWindow();
             new ToolPropsWindow();
             new StatsWindow();
-            new ViewportWindow(ViewportManager.Viewports.First(p => p is Viewport3D));
-            new ViewportWindow(ViewportManager.Viewports.First(p => p is Viewport2D));
+            new ViewportWindow(0);
+            new ViewportWindow(1);
+            new ViewportWindow(2);
+            new ViewportWindow(3);
 
             base.Initialize();
         }
@@ -179,8 +181,8 @@ namespace CBRE.Editor {
                     }
                     previousKeys = keys;
                 }
-                timing.PerformTicks(ViewportManager.Update);
             }
+            timing.PerformTicks(ViewportManager.Update);
             timing.EndMeasurement();
         }
 
@@ -224,6 +226,7 @@ namespace CBRE.Editor {
             ImGui.DockSpace(dockId);
             ImGui.End();
             if (ImGui.BeginMainMenuBar()) {
+                ViewportManager.TopMenuOpen = false;
                 UpdateMenus();
                 // UpdateTopBar();
             }
