@@ -17,9 +17,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build win-x64
-      run: dotnet build --no-restore -r win-x64 CBRE.Editor
+      run: dotnet build -r win-x64 CBRE.Editor
     - name: Build linux-x64
-      run: dotnet build --no-restore -r linux-x64 CBRE.Editor
+      run: dotnet build -r linux-x64 CBRE.Editor
     - uses: actions/upload-artifact@v2
       with:
         name: CBRE.Editor win-x64 Build
