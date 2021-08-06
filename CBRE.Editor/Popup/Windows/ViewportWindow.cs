@@ -57,10 +57,10 @@ namespace CBRE.Editor.Popup {
                 Num.Vector2 pos = ImGui.GetWindowPos() + ImGui.GetCursorPos();
                 Num.Vector2 siz = ImGui.GetWindowSize() - ImGui.GetCursorPos() * 1.5f;
                 Rectangle tmpview = new Rectangle((int)pos.X, (int)pos.Y, (int)siz.X, (int)siz.Y);
-                // if (!view.Equals(tmpview)) {
+                if (!view.Equals(tmpview)) {
                     view = tmpview;
                     ResetRenderTarget();
-                // }
+                }
                 view = tmpview;
                 if (ImGui.BeginChildFrame(3, new Num.Vector2(view.Size.X, view.Size.Y), flags) && renderTargetPtr != IntPtr.Zero && open) {
                     ImGui.Image(renderTargetPtr, new Num.Vector2(view.Size.X, view.Size.Y));

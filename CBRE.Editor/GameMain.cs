@@ -156,7 +156,6 @@ namespace CBRE.Editor {
         private Keys[] previousKeys = new Keys[0];
 
         protected override void Update(GameTime gameTime) {
-            timing.StartMeasurement();
             base.Update(gameTime);
 
             if (PopupSelected && !Popups.Any(p => !(p is WindowUI)))
@@ -182,6 +181,8 @@ namespace CBRE.Editor {
                     previousKeys = keys;
                 }
             }
+
+            timing.StartMeasurement();
             timing.PerformTicks(ViewportManager.Update);
             timing.EndMeasurement();
         }

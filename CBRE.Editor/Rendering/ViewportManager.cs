@@ -207,15 +207,12 @@ namespace CBRE.Editor.Rendering {
 
         public static void Update() {
             GameMain.Instance.SelectedTool?.Update();
-            /*if (knownWindowWidth != vpRect.Right || knownWindowHeight != vpRect.Bottom) {
-                RebuildRenderTarget();
-            }*/
             var doc = DocumentManager.CurrentDocument;
             if (doc != null && doc.LightmapTextureOutdated) {
                 doc.LightmapTextureOutdated = false;
                 shouldRerender = true;
             }
-            if (shouldRerender) { Render(); }
+            if (shouldRerender) { Render(); return; }
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
             var keysDown = keyboardState.GetPressedKeys();
@@ -263,7 +260,6 @@ namespace CBRE.Editor.Rendering {
                                 LastX = viewportWindow.viewport.PrevMouseX,
                                 LastY = viewportWindow.viewport.PrevMouseY,
                             });
-                            viewportWindow.ResetRenderTarget();
                             MarkForRerender();
                             draggingCenterX = false;
                             draggingCenterY = false;
@@ -331,7 +327,6 @@ namespace CBRE.Editor.Rendering {
                                     map.ActiveCamera.EyePosition = vp3d.Camera.EyePosition;
                                     map.ActiveCamera.LookPosition = vp3d.Camera.LookPosition;
                                 }
-                                viewportWindow.ResetRenderTarget();
                                 MarkForRerender();
                             }
                         }
@@ -347,8 +342,7 @@ namespace CBRE.Editor.Rendering {
                                 LastX = viewportWindow.viewport.PrevMouseX,
                                 LastY = viewportWindow.viewport.PrevMouseY,
                             });
-                            // viewportWindow.ResetRenderTarget();
-                            // MarkForRerender();
+                            MarkForRerender();
                         }
 
                         if (mouse1Hit) {
@@ -393,7 +387,6 @@ namespace CBRE.Editor.Rendering {
                         }
                         if (mouse3Down) {
                             if (viewportWindow.viewport is Viewport2D vp) {
-                                viewportWindow.ResetRenderTarget();
                                 MarkForRerender();
                                 vp.Position -= new DataStructures.Geometric.Vector3((decimal)(currMouseX - vp.PrevMouseX) / vp.Zoom, -(decimal)(currMouseY - vp.PrevMouseY) / vp.Zoom, 0m);
                             }
@@ -425,7 +418,6 @@ namespace CBRE.Editor.Rendering {
                             }
                             var pos1 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - viewportWindow.viewport.X, mouseState.Y - viewportWindow.viewport.Y));
                             vp.Position -= new DataStructures.Geometric.Vector3(pos1.X - pos0.X, pos0.Y - pos1.Y, 0m);
-                            viewportWindow.ResetRenderTarget();
                             MarkForRerender();
                         }
                     }
