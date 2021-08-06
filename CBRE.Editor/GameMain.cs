@@ -159,7 +159,7 @@ namespace CBRE.Editor {
             timing.StartMeasurement();
             base.Update(gameTime);
 
-            if (PopupSelected && Popups.Count == 0)
+            if (PopupSelected && !Popups.Any(p => !(p is WindowUI)))
                 PopupSelected = false;
 
             if (!PopupSelected) {
