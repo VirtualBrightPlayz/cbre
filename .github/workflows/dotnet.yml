@@ -16,10 +16,17 @@ jobs:
         dotnet-version: 5.0.x
     - name: Restore dependencies
       run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore CBRE.Editor
+    - name: Build win-x64
+      run: dotnet build --no-restore -r win-x64 CBRE.Editor
+    - name: Build linux-x64
+      run: dotnet build --no-restore -r linux-x64 CBRE.Editor
     - uses: actions/upload-artifact@v2
       with:
-        name: CBRE.Editor Build
-        path: CBRE.Editor/bin/Debug/net5.0/
+        name: CBRE.Editor win-x64 Build
+        path: CBRE.Editor/bin/Debug/net5.0/win-x64/
+        retention-days: 5
+    - uses: actions/upload-artifact@v2
+      with:
+        name: CBRE.Editor linux-x64 Build
+        path: CBRE.Editor/bin/Debug/net5.0/linux-x64/
         retention-days: 5
