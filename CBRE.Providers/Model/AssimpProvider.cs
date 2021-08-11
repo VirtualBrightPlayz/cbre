@@ -196,7 +196,7 @@ namespace CBRE.Providers.Model {
                     foreach (Vertex v in face.Vertices) {
                         mesh.Vertices.Add(new Vector3D((float)v.Location.X, (float)v.Location.Z, (float)v.Location.Y));
                         mesh.Normals.Add(new Vector3D((float)face.Plane.Normal.X, (float)face.Plane.Normal.Z, (float)face.Plane.Normal.Y));
-                        mesh.TextureCoordinateChannels[0].Add(new Vector3D((float)v.TextureU, (float)v.TextureV, 0));
+                        mesh.TextureCoordinateChannels[0].Add(new Vector3D((float)v.TextureU, -(float)v.TextureV, 0));
                     }
                     mesh.UVComponentCount[0] = 2;
                     foreach (uint ind in face.GetTriangleIndices()) {
