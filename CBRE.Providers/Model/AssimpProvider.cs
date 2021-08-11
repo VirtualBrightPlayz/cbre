@@ -193,8 +193,8 @@ namespace CBRE.Providers.Model {
                     Where(x => x.Texture.Name == texture);
 
                 foreach (Face face in faces) {
-                    foreach (Vertex v in face.Vertices) {
-                        mesh.Vertices.Add(new Vector3D((float)v.Location.X, (float)v.Location.Z, (float)v.Location.Y));
+                    foreach (Vertex v in face.Vertices.Reverse<Vertex>()) {
+                        mesh.Vertices.Add(new Vector3D(-(float)v.Location.X, (float)v.Location.Z, (float)v.Location.Y));
                         mesh.Normals.Add(new Vector3D((float)face.Plane.Normal.X, (float)face.Plane.Normal.Z, (float)face.Plane.Normal.Y));
                         mesh.TextureCoordinateChannels[0].Add(new Vector3D((float)v.TextureU, -(float)v.TextureV, 0));
                     }
