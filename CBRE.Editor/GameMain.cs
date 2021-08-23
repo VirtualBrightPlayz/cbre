@@ -77,6 +77,7 @@ namespace CBRE.Editor {
             GlobalGraphics.Set(GraphicsDevice, Window, _imGuiRenderer);
 
             ImGuiStyle = ImGui.GetStyle();
+            ImGuiStyle.TabMinWidthForCloseButton = 50f;
             ImGuiStyle.ChildRounding = 0;
             ImGuiStyle.FrameRounding = 0;
             ImGuiStyle.GrabRounding = 0;
@@ -90,6 +91,8 @@ namespace CBRE.Editor {
             ImGuiStyle.IndentSpacing = 0;
             var colors = ImGuiStyle.Colors;
             colors[(int)ImGuiCol.FrameBg] = new Num.Vector4(0.05f, 0.05f, 0.07f, 1.0f);
+
+            ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
             MenuTextures = new Dictionary<string, AsyncTexture>();
             string[] files = Directory.GetFiles("Resources");
@@ -122,6 +125,17 @@ namespace CBRE.Editor {
 
             ViewportManager.Init();
 
+            // Initial windows
+            new ToolsWindow();
+            new DocumentTabWindow();
+            new ToolPropsWindow();
+            new StatsWindow();
+            new ViewportWindow(0);
+            new ViewportWindow(1);
+            new ViewportWindow(2);
+            new ViewportWindow(3);
+            new VisgroupsWindow();
+
             base.Initialize();
         }
 
@@ -143,10 +157,9 @@ namespace CBRE.Editor {
         private Keys[] previousKeys = new Keys[0];
 
         protected override void Update(GameTime gameTime) {
-            timing.StartMeasurement();
             base.Update(gameTime);
 
-            if (PopupSelected && Popups.Count == 0)
+            if (PopupSelected && !Popups.Any(p => !(p is WindowUI)))
                 PopupSelected = false;
 
             if (!PopupSelected) {
@@ -168,8 +181,10 @@ namespace CBRE.Editor {
                     }
                     previousKeys = keys;
                 }
-                timing.PerformTicks(ViewportManager.Update);
             }
+
+            timing.StartMeasurement();
+            timing.PerformTicks(ViewportManager.Update);
             timing.EndMeasurement();
         }
 
@@ -180,8 +195,6 @@ namespace CBRE.Editor {
             TaskPool.Update();
 
             GraphicsDevice.Clear(new Color(50, 50, 60));
-
-            ViewportManager.DrawRenderTarget();
 
             // Call BeforeLayout first to set things up
             _imGuiRenderer.BeforeLayout(gameTime);
@@ -204,125 +217,26 @@ namespace CBRE.Editor {
         }
 
         protected virtual void ImGuiLayout() {
-            if (ImGui.Begin("top", ImGuiWindowFlags.NoBackground |
-                                    ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                    ImGuiWindowFlags.NoMove |
-                                    ImGuiWindowFlags.NoDecoration |
-                                    ImGuiWindowFlags.MenuBar |
-                                    ImGuiWindowFlags.NoScrollbar |
-                                    ImGuiWindowFlags.NoScrollWithMouse)) {
-                ImGui.SetWindowPos(new Num.Vector2(-1, 0));
-                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width + 2, 47));
-
+            uint dockId = ImGui.GetID("Dock");
+            ImGuiViewportPtr viewportPtr = ImGui.GetMainViewport();
+            ImGui.SetNextWindowPos(viewportPtr.Pos);
+            ImGui.SetNextWindowSize(viewportPtr.Size);
+            ImGui.Begin("Main Window", ImGuiWindowFlags.NoMove |
+                                        ImGuiWindowFlags.NoResize |
+                                        ImGuiWindowFlags.NoBringToFrontOnFocus |
+                                        ImGuiWindowFlags.NoCollapse);
+            ImGui.DockSpace(dockId);
+            ImGui.End();
+            if (ImGui.BeginMainMenuBar()) {
                 ViewportManager.TopMenuOpen = false;
                 UpdateMenus();
-                UpdateTopBar();
-
-                ImGui.End();
+                // UpdateTopBar();
             }
-
-            if (ImGui.Begin("tools", ImGuiWindowFlags.NoBackground |
-                                    ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                    ImGuiWindowFlags.NoMove |
-                                    ImGuiWindowFlags.NoDecoration |
-                                    ImGuiWindowFlags.MenuBar |
-                                    ImGuiWindowFlags.NoScrollbar |
-                                    ImGuiWindowFlags.NoScrollWithMouse)) {
-                ImGui.SetWindowPos(new Num.Vector2(-1, 27));
-                ImGui.SetWindowSize(new Num.Vector2(47, Window.ClientBounds.Height - 27));
-
-                UpdateToolBar();
-
-                ImGui.End();
-            }
-            
-            if (ImGui.Begin("tabber", ImGuiWindowFlags.NoBackground |
-                                      ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                      ImGuiWindowFlags.NoMove |
-                                      ImGuiWindowFlags.NoDecoration |
-                                      ImGuiWindowFlags.NoScrollbar |
-                                      ImGuiWindowFlags.NoScrollWithMouse)) {
-                ImGui.SetWindowPos(new Num.Vector2(47, 47));
-                ImGui.SetWindowSize(new Num.Vector2(ViewportManager.Right - 47, 30));
-                ImGui.BeginTabBar("doc_tabber");
-                for (int i = 0; i < DocumentManager.Documents.Count; i++) {
-                    Document doc = DocumentManager.Documents[i];
-                    if (ImGui.BeginTabItem(doc.MapFileName)) {
-                        if (DocumentManager.CurrentDocument != doc) {
-                            DocumentManager.SwitchTo(doc);
-                        }
-                        ImGui.EndTabItem();
-                    }
-                }
-                ImGui.EndTabBar();
-            }
-
-            if (ImGui.Begin("tool_properties", ImGuiWindowFlags.NoBackground |
-                                               ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                               ImGuiWindowFlags.NoMove |
-                                               ImGuiWindowFlags.NoDecoration |
-                                               ImGuiWindowFlags.NoScrollbar |
-                                               ImGuiWindowFlags.NoScrollWithMouse)) {
-                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, 47));
-                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60));
-                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, Window.ClientBounds.Height - 47 - 60))) {
-                    if (ImGui.TreeNode("Tool")) {
-                        SelectedTool?.UpdateGui();
-                        ImGui.TreePop();
-                    }
-                    if (ImGui.TreeNode("Contextual Help")) {
-                        UpdateContextHelp();
-                        ImGui.TreePop();
-                    }
-                    if (ImGui.TreeNode("Viewport Options")) {
-                        for (int i = 0; i < ViewportManager.Viewports.Length; i++) {
-                            if (ViewportManager.Viewports[i] is Viewport3D viewport3D) {
-                                if (ImGui.BeginCombo("Viewport Render Type", viewport3D.Type.ToString())) {
-                                    var evals = Enum.GetValues<Viewport3D.ViewType>();
-                                    for (int j = 0; j < evals.Length; j++) {
-                                        if (ImGui.Selectable(evals[j].ToString(), viewport3D.Type == evals[j])) {
-                                            viewport3D.Type = evals[j];
-                                            ViewportManager.MarkForRerender();
-                                            DocumentManager.Documents.ForEach(p => p.ObjectRenderer.MarkDirty());
-                                        }
-                                    }
-                                    ImGui.EndCombo();
-                                }
-                                bool b = viewport3D.ShouldRenderModels;
-                                if (ImGui.Checkbox("Should Render 3D Models", ref b)) {
-                                    viewport3D.ShouldRenderModels = b;
-                                }
-                            }
-                        }
-                        ImGui.TreePop();
-                    }
-
-                    ImGui.EndChildFrame();
-                }
-                ImGui.End();
-            }
-
-            if (ImGui.Begin("stats", ImGuiWindowFlags.NoBackground |
-                                     ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                     ImGuiWindowFlags.NoMove |
-                                     ImGuiWindowFlags.NoDecoration |
-                                     ImGuiWindowFlags.NoScrollbar |
-                                     ImGuiWindowFlags.NoScrollWithMouse)) {
-                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.Right, Window.ClientBounds.Height - 60));
-                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, 60));
-                if (ImGui.BeginChildFrame(3, new Num.Vector2(Window.ClientBounds.Width - ViewportManager.Right, 60))) {
-                    Process proc = Process.GetCurrentProcess();
-
-                    proc.Refresh();
-                    ImGui.Text($"Working set: {proc.WorkingSet64 / 1024 / 1024} MB");
-                    ImGui.Text($"Private mem: {proc.PrivateMemorySize64 / 1024 / 1024} MB");
-                    ImGui.Text($"Paged mem: {proc.PagedMemorySize64 / 1024 / 1024} MB");
-                }
-                ImGui.End();
-            }
+            ImGui.EndMainMenuBar();
 
             for (int i = 0; i < Popups.Count; i++)
             {
+                ImGui.SetNextWindowDockID(dockId, ImGuiCond.FirstUseEver);
                 if (!Popups[i].Draw())
                 {
                     Popups[i].Close();

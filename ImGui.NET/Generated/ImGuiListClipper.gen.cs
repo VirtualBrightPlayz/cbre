@@ -11,6 +11,7 @@ namespace ImGuiNET
         public int DisplayEnd;
         public int ItemsCount;
         public int StepNo;
+        public int ItemsFrozen;
         public float ItemsHeight;
         public float StartPosY;
     }
@@ -26,28 +27,29 @@ namespace ImGuiNET
         public ref int DisplayEnd => ref Unsafe.AsRef<int>(&NativePtr->DisplayEnd);
         public ref int ItemsCount => ref Unsafe.AsRef<int>(&NativePtr->ItemsCount);
         public ref int StepNo => ref Unsafe.AsRef<int>(&NativePtr->StepNo);
+        public ref int ItemsFrozen => ref Unsafe.AsRef<int>(&NativePtr->ItemsFrozen);
         public ref float ItemsHeight => ref Unsafe.AsRef<float>(&NativePtr->ItemsHeight);
         public ref float StartPosY => ref Unsafe.AsRef<float>(&NativePtr->StartPosY);
         public void Begin(int items_count)
         {
             float items_height = -1.0f;
-            ImGuiNative.ImGuiListClipper_Begin(NativePtr, items_count, items_height);
+            ImGuiNative.ImGuiListClipper_Begin((ImGuiListClipper*)(NativePtr), items_count, items_height);
         }
         public void Begin(int items_count, float items_height)
         {
-            ImGuiNative.ImGuiListClipper_Begin(NativePtr, items_count, items_height);
+            ImGuiNative.ImGuiListClipper_Begin((ImGuiListClipper*)(NativePtr), items_count, items_height);
         }
         public void Destroy()
         {
-            ImGuiNative.ImGuiListClipper_destroy(NativePtr);
+            ImGuiNative.ImGuiListClipper_destroy((ImGuiListClipper*)(NativePtr));
         }
         public void End()
         {
-            ImGuiNative.ImGuiListClipper_End(NativePtr);
+            ImGuiNative.ImGuiListClipper_End((ImGuiListClipper*)(NativePtr));
         }
         public bool Step()
         {
-            byte ret = ImGuiNative.ImGuiListClipper_Step(NativePtr);
+            byte ret = ImGuiNative.ImGuiListClipper_Step((ImGuiListClipper*)(NativePtr));
             return ret != 0;
         }
     }

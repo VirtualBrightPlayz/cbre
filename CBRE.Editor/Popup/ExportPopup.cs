@@ -86,12 +86,25 @@ namespace CBRE.Editor.Popup {
                     Logging.Logger.ShowException(e);
                 }
             }
-            // Does not seem to work --Virtual
             if (ImGui.Button("Export as .fbx")) {
                 try {
                     LightmapConfig.TextureDims = (int)_size;
                     LightmapConfig.DownscaleFactor = downscale;
-                    new FileCallbackPopup("Save .fbx", "", s => AssimpProvider.SaveToFile(s, _document.Map, "fbx"));
+                    new FileCallbackPopup("Save .fbx", "", s => {
+                        AssimpProvider.SaveToFile(s, _document.Map, _document.GameData, "fbx");
+                    });
+                }
+                catch (System.Exception e) {
+                    Logging.Logger.ShowException(e);
+                }
+            }
+            if (ImGui.Button("Export as .gltf 2.0")) {
+                try {
+                    LightmapConfig.TextureDims = (int)_size;
+                    LightmapConfig.DownscaleFactor = downscale;
+                    new FileCallbackPopup("Save .gltf", "", s => {
+                        AssimpProvider.SaveToFile(s, _document.Map, _document.GameData, "gltf2");
+                    });
                 }
                 catch (System.Exception e) {
                     Logging.Logger.ShowException(e);

@@ -13,7 +13,7 @@ using Num = System.Numerics;
 namespace CBRE.Editor {
     partial class GameMain {
         // This can be it's own file for now lol.
-        protected virtual void UpdateContextHelp() {
+        public virtual void UpdateContextHelp() {
             if (SelectedTool != null) {
                 string text = SelectedTool.GetContextualHelp();
                 if (!string.IsNullOrEmpty(text)) {
