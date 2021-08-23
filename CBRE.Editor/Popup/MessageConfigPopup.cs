@@ -1,21 +1,25 @@
+using System;
 using System.Reflection;
 using ImGuiNET;
 
 namespace CBRE.Editor.Popup {
-    public class MessageConfigPopup : PopupUI {
+    public class MessageConfigPopup<T> : PopupUI where T : class {
         private string _message;
-        private object _data;
+        private T _data;
+        private Action<MessageConfigPopup<T>, T> _callback;
         private FieldInfo[] infos;
 
-        public MessageConfigPopup(string title, string message, object data) : base(title) {
+        public MessageConfigPopup(string title, string message, T data, Action<MessageConfigPopup<T>, T> callback) : base(title) {
             _message = message;
             _data = data;
+            _callback = callback;
             GameMain.Instance.PopupSelected = true;
         }
 
-        public MessageConfigPopup(string title, string message, object data, ImColor color) : base(title, color) {
+        public MessageConfigPopup(string title, string message, T data, Action<MessageConfigPopup<T>, T> callback, ImColor color) : base(title, color) {
             _message = message;
             _data = data;
+            _callback = callback;
             GameMain.Instance.PopupSelected = true;
         }
 
@@ -67,6 +71,11 @@ namespace CBRE.Editor.Popup {
                 }
             }
             return base.ImGuiLayout();
+        }
+
+        public override void Close() {
+            _callback?.Invoke(this, _data);
+            base.Close();
         }
     }
 }
