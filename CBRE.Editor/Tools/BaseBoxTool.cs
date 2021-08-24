@@ -733,7 +733,7 @@ namespace CBRE.Editor.Tools
             boxStart = viewport.WorldToScreen(boxStart);
             boxEnd = viewport.WorldToScreen(boxEnd);
 
-            GlobalGraphics.ImGuiRenderer.BeforeLayout(new Microsoft.Xna.Framework.GameTime());
+            // GlobalGraphics.ImGuiRenderer.BeforeLayout(GameMain.Instance.LastTime);
             ImGui.Begin("", ImGuiWindowFlags.NoTitleBar |
             ImGuiWindowFlags.NoResize |
             ImGuiWindowFlags.NoMove |
@@ -741,7 +741,8 @@ namespace CBRE.Editor.Tools
             ImGuiWindowFlags.NoSavedSettings |
             ImGuiWindowFlags.NoInputs |
             ImGuiWindowFlags.NoBackground |
-            ImGuiWindowFlags.NoMouseInputs
+            ImGuiWindowFlags.NoMouseInputs |
+            ImGuiWindowFlags.NoNavFocus
             );
             ImGui.SetWindowPos(new Num.Vector2());
             ImGui.SetWindowSize(new Num.Vector2(viewport.Width, viewport.Height));
@@ -759,7 +760,7 @@ namespace CBRE.Editor.Tools
             ImGui.TextColored(col, heightText);
 
             ImGui.End();
-            GlobalGraphics.ImGuiRenderer.AfterLayout();
+            // GlobalGraphics.ImGuiRenderer.AfterLayout();
 
             //TODO: implement
             //throw new NotImplementedException();

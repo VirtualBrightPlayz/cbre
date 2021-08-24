@@ -43,6 +43,7 @@ namespace CBRE.Editor {
         }
 
         public bool PopupSelected { get; set; } = false;
+        public GameTime LastTime { get; set; }
 
         public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
         public Queue<Action> PreDrawActions { get; private set; } = new Queue<Action>();
@@ -186,6 +187,8 @@ namespace CBRE.Editor {
             timing.StartMeasurement();
             timing.PerformTicks(ViewportManager.Update);
             timing.EndMeasurement();
+
+            LastTime = gameTime;
         }
 
         protected override void Draw(GameTime gameTime)
