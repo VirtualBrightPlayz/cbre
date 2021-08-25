@@ -163,6 +163,7 @@ namespace CBRE.Editor.Tools
 
         // Class Variables
         protected const decimal HandleWidth = 12;
+        private ImGuiRenderer _imguiRenderer;
 
         protected abstract Color BoxColour { get; }
         protected abstract Color FillColour { get; }
@@ -733,7 +734,12 @@ namespace CBRE.Editor.Tools
             boxStart = viewport.WorldToScreen(boxStart);
             boxEnd = viewport.WorldToScreen(boxEnd);
 
-            // GlobalGraphics.ImGuiRenderer.BeforeLayout(GameMain.Instance.LastTime);
+            if (_imguiRenderer == null) {
+                _imguiRenderer = new ImGuiRenderer(GameMain.Instance);
+                _imguiRenderer.RebuildFontAtlas();
+            }
+
+            _imguiRenderer.BeforeLayout(GameMain.Instance.LastTime);
             ImGui.Begin("", ImGuiWindowFlags.NoTitleBar |
             ImGuiWindowFlags.NoResize |
             ImGuiWindowFlags.NoMove |
@@ -746,6 +752,8 @@ namespace CBRE.Editor.Tools
             );
             ImGui.SetWindowPos(new Num.Vector2());
             ImGui.SetWindowSize(new Num.Vector2(viewport.Width, viewport.Height));
+
+            // ImGui.BeginChildFrame(3, new Num.Vector2(viewport.Width, viewport.Height));
             Num.Vector2 wid = ImGui.CalcTextSize(widthText);
             Num.Vector2 hei = ImGui.CalcTextSize(heightText);
             Num.Vector4 col = new Num.Vector4(BoxColour.R, BoxColour.G, BoxColour.B, BoxColour.A);
@@ -759,8 +767,9 @@ namespace CBRE.Editor.Tools
             ImGui.SetCursorPos(new Num.Vector2((float)boxEnd.X + 18f, viewport.Height - cy - hei.Y * 0.75f));
             ImGui.TextColored(col, heightText);
 
+            // ImGui.EndChildFrame();
             ImGui.End();
-            // GlobalGraphics.ImGuiRenderer.AfterLayout();
+            _imguiRenderer.AfterLayout();
 
             //TODO: implement
             //throw new NotImplementedException();
