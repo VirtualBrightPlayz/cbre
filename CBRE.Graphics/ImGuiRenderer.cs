@@ -39,8 +39,10 @@ namespace CBRE.Graphics {
 
         private List<int> _keys = new List<int>();
 
+        public IntPtr context { get; private set; }
+
         public ImGuiRenderer(Game game) {
-            var context = ImGui.CreateContext();
+            context = ImGui.CreateContext();
             ImGui.SetCurrentContext(context);
 
             _game = game ?? throw new ArgumentNullException(nameof(game));
@@ -111,6 +113,7 @@ namespace CBRE.Graphics {
         /// Sets up ImGui for a new frame, should be called at frame start
         /// </summary>
         public virtual void BeforeLayout(GameTime gameTime) {
+            ImGui.SetCurrentContext(context);
             ImGui.GetIO().DeltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             UpdateInput();

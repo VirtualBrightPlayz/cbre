@@ -231,7 +231,6 @@ namespace CBRE.Editor.Tools
                         selectedEntity = entityType;
                     }
                 }
-
                 ImGui.EndCombo();
             }
         }
