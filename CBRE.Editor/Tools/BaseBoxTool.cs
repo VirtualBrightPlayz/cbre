@@ -753,7 +753,6 @@ namespace CBRE.Editor.Tools
             ImGui.SetWindowPos(new Num.Vector2());
             ImGui.SetWindowSize(new Num.Vector2(viewport.Width, viewport.Height));
 
-            // ImGui.BeginChildFrame(3, new Num.Vector2(viewport.Width, viewport.Height));
             Num.Vector2 wid = ImGui.CalcTextSize(widthText);
             Num.Vector2 hei = ImGui.CalcTextSize(heightText);
             Num.Vector4 col = new Num.Vector4(BoxColour.R, BoxColour.G, BoxColour.B, BoxColour.A);
@@ -767,42 +766,8 @@ namespace CBRE.Editor.Tools
             ImGui.SetCursorPos(new Num.Vector2((float)boxEnd.X + 18f, viewport.Height - cy - hei.Y * 0.75f));
             ImGui.TextColored(col, heightText);
 
-            // ImGui.EndChildFrame();
             ImGui.End();
             _imguiRenderer.AfterLayout();
-
-            //TODO: implement
-            //throw new NotImplementedException();
-            /*var wid = _printer.Measure(widthText, _printerFont, new RectangleF(0, 0, viewport.Width, viewport.Height));
-            var hei = _printer.Measure(heightText, _printerFont, new RectangleF(0, 0, viewport.Width, viewport.Height));
-
-            boxStart = viewport.WorldToScreen(boxStart);
-            boxEnd = viewport.WorldToScreen(boxEnd);
-
-            var cx = (float)(boxStart.X + (boxEnd.X - boxStart.X) / 2);
-            var cy = (float)(boxStart.Y + (boxEnd.Y - boxStart.Y) / 2);
-
-            var wrect = new RectangleF(cx - wid.BoundingBox.Width / 2, viewport.Height - (float)boxEnd.Y - _printerFont.Height - 18, wid.BoundingBox.Width * 1.2f, wid.BoundingBox.Height);
-            var hrect = new RectangleF((float)boxEnd.X + 18, viewport.Height - cy - hei.BoundingBox.Height * 0.75f, hei.BoundingBox.Width * 1.2f, hei.BoundingBox.Height);
-
-            if (wrect.X < 10) wrect.X = 10;
-            if (wrect.X + wrect.Width + 10 > viewport.Width) wrect.X = viewport.Width - 10 - wrect.Width;
-            if (wrect.Y < 10) wrect.Y = 10;
-            if (wrect.Y + wrect.Height + 10 > viewport.Height) wrect.Y = viewport.Height - 10 - wrect.Height;
-
-            if (hrect.X < 10) hrect.X = 10;
-            if (hrect.X + hrect.Width + 10 > viewport.Width) hrect.X = viewport.Width - 10 - hrect.Width;
-            if (hrect.Y < 10) hrect.Y = 10;
-            if (hrect.Y + hrect.Height + 10 > viewport.Height) hrect.Y = viewport.Height - 10 - hrect.Height;
-
-            GL.Disable(EnableCap.CullFace);
-
-            _printer.Begin();
-            _printer.Print(widthText, _printerFont, BoxColour, wrect);
-            _printer.Print(heightText, _printerFont, BoxColour, hrect);
-            _printer.End();
-
-            GL.Enable(EnableCap.CullFace);*/
         }
 
         protected virtual void Render2D(Viewport2D viewport)
