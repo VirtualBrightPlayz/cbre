@@ -40,9 +40,11 @@ namespace CBRE.Editor.Popup {
             if (ImGui.Begin("visgroups", ref open)) {
                 var Window = GameMain.Instance.Window;
                 var doc = DocumentManager.CurrentDocument;
-                var visgroups = doc.Map.Visgroups;
-                for (int i = 0; i < visgroups.Count; i++) {
-                    DrawVisgroupUI(visgroups[i]);
+                if (doc != null) {
+                    var visgroups = doc.Map?.Visgroups;
+                    for (int i = 0; i < visgroups.Count; i++) {
+                        DrawVisgroupUI(visgroups[i]);
+                    }
                 }
             }
             ImGui.End();

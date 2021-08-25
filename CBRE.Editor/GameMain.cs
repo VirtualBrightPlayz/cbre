@@ -118,13 +118,13 @@ namespace CBRE.Editor {
 
             ModelProvider.Register(new AssimpProvider());
 
-            DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
             /*Map map = MapProvider.GetMapFromFile("gateA.3dw");
             Map map2 = MapProvider.GetMapFromFile("room2_2.3dw");
             DocumentManager.AddAndSwitch(new Document("gateA.3dw", map));
             DocumentManager.Add(new Document("room2_2.3dw", map2));*/
 
             ViewportManager.Init();
+            DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
 
             // Initial windows
             new ToolsWindow();
