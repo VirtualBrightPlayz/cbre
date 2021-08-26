@@ -92,6 +92,11 @@ namespace CBRE.Editor.Tools
                 }
                 ImGui.EndCombo();
             }
+            if (BrushManager.CurrentBrush != null) {
+                foreach (var ctrl in BrushManager.CurrentBrush.GetControls()) {
+                    ctrl.Draw();
+                }
+            }
         }
 
         protected override void OnBoxChanged()
