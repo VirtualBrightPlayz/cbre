@@ -19,6 +19,7 @@ namespace CBRE.Editor.Brushes {
         }
 
         public static void Init() {
+            brushes.Clear();
             brushes.Add(new BlockBrush());
             brushes.Add(new TetrahedronBrush());
             brushes.Add(new PyramidBrush());

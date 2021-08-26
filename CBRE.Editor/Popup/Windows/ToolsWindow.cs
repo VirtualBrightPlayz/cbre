@@ -1,3 +1,4 @@
+using CBRE.Editor.Scripting;
 using ImGuiNET;
 using Num = System.Numerics;
 
@@ -18,6 +19,9 @@ namespace CBRE.Editor.Popup {
                 GameMain.Instance.ToolBarItems.ForEach(it => it.Draw());
 
                 ImGui.PopStyleVar();
+                if (ImGui.Button("TestLua")) {
+                    LuaLoader.Init();
+                }
             }
             ImGui.End();
             return open;
