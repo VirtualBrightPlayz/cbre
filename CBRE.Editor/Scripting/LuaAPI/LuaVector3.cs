@@ -51,6 +51,22 @@ namespace CBRE.Editor.Scripting.LuaAPI {
             return !(a == b);
         }
 
+        public static bool operator <(LuaVector3 a, LuaVector3 b) {
+            return a.X < b.X && a.Y < b.Y && a.Z < b.Z;
+        }
+
+        public static bool operator >(LuaVector3 a, LuaVector3 b) {
+            return a.X > b.X && a.Y > b.Y && a.Z > b.Z;
+        }
+
+        public static bool operator <=(LuaVector3 a, LuaVector3 b) {
+            return a < b || a == b;
+        }
+
+        public static bool operator >=(LuaVector3 a, LuaVector3 b) {
+            return a > b || a == b;
+        }
+
         public override bool Equals(object obj) {
             if (ReferenceEquals(this, obj)) {
                 return true;
