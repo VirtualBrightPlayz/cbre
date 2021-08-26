@@ -1,7 +1,7 @@
 Name = "LuaBox"
 
 function Create(box)
-    local b = newbox(box.Start - Vector3(), box.End)
+    local b = newbox(box.Start, box.End)
     return b
 end
 

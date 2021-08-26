@@ -26,7 +26,7 @@ namespace CBRE.Editor.Scripting {
                 Script scr = new Script(CoreModules.Preset_HardSandbox);
                 scr.Globals["json"] = typeof(JsonModule);
                 scr.Globals["table"] = typeof(TableModule);
-                // scr.Globals["Vector3"] = typeof(LuaVector3);
+                scr.Globals["Vector3"] = typeof(LuaVector3);
                 scr.DoFile(scrPath);
                 scripts.Add(scr);
                 LuaBrush b = new LuaBrush(scr);
