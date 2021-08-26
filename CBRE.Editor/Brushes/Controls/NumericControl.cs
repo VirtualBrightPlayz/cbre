@@ -32,14 +32,12 @@ namespace CBRE.Editor.Brushes.Controls {
             float val2 = (float)Value;
             if (ControlEnabled) {
                 ImGui.Text(LabelText);
-                if (Minimum == Maximum) {
-                    if (ImGui.InputDouble(LabelText, ref val)) {
-                        // val = Math.Clamp(val, (double)Minimum, (double)Maximum);
-                        Value = (decimal)val;
-                    }
+                if (ImGui.InputDouble(LabelText, ref val)) {
+                    // val = Math.Clamp(val, (double)Minimum, (double)Maximum);
+                    Value = (decimal)val;
                 }
-                else {
-                    if (ImGui.SliderFloat(LabelText, ref val2, (float)Minimum, (float)Maximum)) {
+                if (Minimum != Maximum) {
+                    if (ImGui.SliderFloat(LabelText + " Slider", ref val2, (float)Minimum, (float)Maximum)) {
                         Value = (decimal)val2;
                     }
                 }
