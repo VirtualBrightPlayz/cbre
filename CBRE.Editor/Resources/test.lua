@@ -1,7 +1,11 @@
 Name = "LuaBox"
 
 function Create(box)
-    local b = newbox(box.Start, box.End)
+    local b = newbox(box.Start - box.Center, box.End - box.Center)
+    local b2 = newbox(box.Start + box.Center, box.End + box.Center)
+    for _,v in ipairs(b2) do
+        table.insert(b, v)
+    end
     return b
 end
 
