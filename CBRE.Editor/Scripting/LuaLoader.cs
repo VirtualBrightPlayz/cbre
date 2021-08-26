@@ -18,11 +18,15 @@ namespace CBRE.Editor.Scripting {
                 return;
             }
             UserData.RegisterType<JsonModule>();
-            paths.Add(Path.Combine(typeof(Program).Assembly.Location, "..", "test.lua"));
+            UserData.RegisterType<TableModule>();
+            UserData.RegisterType<LuaVector3>();
+            paths.Add(Path.Combine(typeof(Program).Assembly.Location, "..", "Resources", "test.lua"));
             foreach (var scrPath in paths) {
                 if (!File.Exists(scrPath)) continue;
                 Script scr = new Script(CoreModules.Preset_HardSandbox);
                 scr.Globals["json"] = typeof(JsonModule);
+                scr.Globals["table"] = typeof(TableModule);
+                // scr.Globals["Vector3"] = typeof(LuaVector3);
                 scr.DoFile(scrPath);
                 scripts.Add(scr);
                 LuaBrush b = new LuaBrush(scr);
