@@ -20,9 +20,25 @@ namespace CBRE.Editor.Scripting.LuaAPI {
 
         private DynValue NewVector3(ScriptExecutionContext arg1, CallbackArguments arg2) {
             DynValue tbl = DynValue.NewTable(lua);
-            tbl.Table.Set(1, arg2[1]);
-            tbl.Table.Set(2, arg2[2]);
-            tbl.Table.Set(3, arg2[3]);
+            tbl.Table.Set(1, arg2[0]);
+            tbl.Table.Set(2, arg2[1]);
+            tbl.Table.Set(3, arg2[2]);
+            return tbl;
+        }
+
+        private DynValue NewVector3(Vector3 vector) {
+            DynValue tbl = DynValue.NewTable(lua);
+            tbl.Table.Set(1, DynValue.NewNumber((double)vector.X));
+            tbl.Table.Set(2, DynValue.NewNumber((double)vector.Y));
+            tbl.Table.Set(3, DynValue.NewNumber((double)vector.Z));
+            return tbl;
+        }
+
+        private DynValue NewBox(Box box) {
+            DynValue tbl = DynValue.NewTable(lua);
+            tbl.Table.Set("Start", NewVector3(box.Start));
+            tbl.Table.Set("End", NewVector3(box.End));
+            tbl.Table.Set("Center", NewVector3(box.Center));
             return tbl;
         }
 
@@ -32,7 +48,7 @@ namespace CBRE.Editor.Scripting.LuaAPI {
 
         public IEnumerable<MapObject> Create(IDGenerator generator, Box box, ITexture texture, int roundDecimals) {
             var solid = new Solid(generator.GetNextObjectID()) { Colour = Colour.GetRandomBrushColour() };
-            DynValue val = lua.Call(lua.Globals["Create"], box);
+            DynValue val = lua.Call(lua.Globals["Create"], NewBox(box));
             Table faces = val.Table;
             Vector3 toV3(Table x) {
                 return new Vector3((decimal)x.Get(1).Number, (decimal)x.Get(2).Number, (decimal)x.Get(3).Number);
@@ -55,7 +71,7 @@ namespace CBRE.Editor.Scripting.LuaAPI {
         }
 
         public IEnumerable<BrushControl> GetControls() {
-            throw new System.NotImplementedException();
+            yield break;
         }
     }
 }

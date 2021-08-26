@@ -5,6 +5,7 @@ using CBRE.Editor.Brushes;
 using CBRE.Editor.Scripting.LuaAPI;
 using CBRE.Settings;
 using MoonSharp.Interpreter;
+using MoonSharp.Interpreter.CoreLib;
 
 namespace CBRE.Editor.Scripting {
     public class LuaLoader {
@@ -16,16 +17,12 @@ namespace CBRE.Editor.Scripting {
                 SettingsManager.SetAdditionalData("LuaScripts", new List<string>());
                 return;
             }
-            UserData.RegisterType<Vector3>();
-            UserData.RegisterType<Plane>();
-            UserData.RegisterType<Box>();
+            UserData.RegisterType<JsonModule>();
             paths.Add(Path.Combine(typeof(Program).Assembly.Location, "..", "test.lua"));
             foreach (var scrPath in paths) {
                 if (!File.Exists(scrPath)) continue;
                 Script scr = new Script(CoreModules.Preset_HardSandbox);
-                scr.Globals["Vector3"] = typeof(Vector3);
-                scr.Globals["Plane"] = typeof(Plane);
-                scr.Globals["Box"] = typeof(Box);
+                scr.Globals["json"] = typeof(JsonModule);
                 scr.DoFile(scrPath);
                 scripts.Add(scr);
                 LuaBrush b = new LuaBrush(scr);
