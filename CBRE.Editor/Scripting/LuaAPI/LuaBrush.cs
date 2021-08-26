@@ -12,8 +12,7 @@ namespace CBRE.Editor.Scripting.LuaAPI {
     public class LuaBrush : IBrush {
         private Script lua;
 
-        public LuaBrush(Script lua)
-        {
+        public LuaBrush(Script lua) {
             this.lua = lua;
         }
 
