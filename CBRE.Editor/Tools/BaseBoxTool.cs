@@ -2,11 +2,14 @@
 using CBRE.DataStructures.Geometric;
 using CBRE.Editor.Rendering;
 using CBRE.Graphics;
+using ImGuiNET;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Drawing;
 using System.Linq;
+using Num = System.Numerics;
+
 #pragma warning disable 0612
 namespace CBRE.Editor.Tools
 {
@@ -160,6 +163,7 @@ namespace CBRE.Editor.Tools
 
         // Class Variables
         protected const decimal HandleWidth = 12;
+        private ImGuiRenderer _imguiRenderer;
 
         protected abstract Color BoxColour { get; }
         protected abstract Color FillColour { get; }
@@ -727,38 +731,43 @@ namespace CBRE.Editor.Tools
             var widthText = (Math.Round(boxEnd.X - boxStart.X, 1)).ToString("#.##");
             var heightText = (Math.Round(boxEnd.Y - boxStart.Y, 1)).ToString("#.##");
 
-            //TODO: implement
-            //throw new NotImplementedException();
-            /*var wid = _printer.Measure(widthText, _printerFont, new RectangleF(0, 0, viewport.Width, viewport.Height));
-            var hei = _printer.Measure(heightText, _printerFont, new RectangleF(0, 0, viewport.Width, viewport.Height));
-
             boxStart = viewport.WorldToScreen(boxStart);
             boxEnd = viewport.WorldToScreen(boxEnd);
+
+            if (_imguiRenderer == null) {
+                _imguiRenderer = new ImGuiRenderer(GameMain.Instance);
+                _imguiRenderer.RebuildFontAtlas();
+            }
+
+            _imguiRenderer.BeforeLayout(GameMain.Instance.LastTime);
+            ImGui.Begin("", ImGuiWindowFlags.NoTitleBar |
+            ImGuiWindowFlags.NoResize |
+            ImGuiWindowFlags.NoMove |
+            ImGuiWindowFlags.NoScrollbar |
+            ImGuiWindowFlags.NoSavedSettings |
+            ImGuiWindowFlags.NoInputs |
+            ImGuiWindowFlags.NoBackground |
+            ImGuiWindowFlags.NoMouseInputs |
+            ImGuiWindowFlags.NoNavFocus
+            );
+            ImGui.SetWindowPos(new Num.Vector2());
+            ImGui.SetWindowSize(new Num.Vector2(viewport.Width, viewport.Height));
+
+            Num.Vector2 wid = ImGui.CalcTextSize(widthText);
+            Num.Vector2 hei = ImGui.CalcTextSize(heightText);
+            Num.Vector4 col = new Num.Vector4(BoxColour.R, BoxColour.G, BoxColour.B, BoxColour.A);
 
             var cx = (float)(boxStart.X + (boxEnd.X - boxStart.X) / 2);
             var cy = (float)(boxStart.Y + (boxEnd.Y - boxStart.Y) / 2);
 
-            var wrect = new RectangleF(cx - wid.BoundingBox.Width / 2, viewport.Height - (float)boxEnd.Y - _printerFont.Height - 18, wid.BoundingBox.Width * 1.2f, wid.BoundingBox.Height);
-            var hrect = new RectangleF((float)boxEnd.X + 18, viewport.Height - cy - hei.BoundingBox.Height * 0.75f, hei.BoundingBox.Width * 1.2f, hei.BoundingBox.Height);
+            ImGui.SetCursorPos(new Num.Vector2(cx - wid.X / 2f, viewport.Height - (float)boxEnd.Y - wid.Y - 18f));
+            ImGui.TextColored(col, widthText);
 
-            if (wrect.X < 10) wrect.X = 10;
-            if (wrect.X + wrect.Width + 10 > viewport.Width) wrect.X = viewport.Width - 10 - wrect.Width;
-            if (wrect.Y < 10) wrect.Y = 10;
-            if (wrect.Y + wrect.Height + 10 > viewport.Height) wrect.Y = viewport.Height - 10 - wrect.Height;
+            ImGui.SetCursorPos(new Num.Vector2((float)boxEnd.X + 18f, viewport.Height - cy - hei.Y * 0.75f));
+            ImGui.TextColored(col, heightText);
 
-            if (hrect.X < 10) hrect.X = 10;
-            if (hrect.X + hrect.Width + 10 > viewport.Width) hrect.X = viewport.Width - 10 - hrect.Width;
-            if (hrect.Y < 10) hrect.Y = 10;
-            if (hrect.Y + hrect.Height + 10 > viewport.Height) hrect.Y = viewport.Height - 10 - hrect.Height;
-
-            GL.Disable(EnableCap.CullFace);
-
-            _printer.Begin();
-            _printer.Print(widthText, _printerFont, BoxColour, wrect);
-            _printer.Print(heightText, _printerFont, BoxColour, hrect);
-            _printer.End();
-
-            GL.Enable(EnableCap.CullFace);*/
+            ImGui.End();
+            _imguiRenderer.AfterLayout();
         }
 
         protected virtual void Render2D(Viewport2D viewport)

@@ -297,6 +297,7 @@ namespace CBRE.Editor.Documents {
         public void SwitchTool(HotkeyTool tool) {
             if (ToolManager.ActiveTool != null && ToolManager.ActiveTool.GetHotkeyToolType() == tool) tool = HotkeyTool.Selection;
             ToolManager.Activate(tool);
+            GameMain.Instance.SelectedTool = ToolManager.Tools.FirstOrDefault(p => p.GetHotkeyToolType() == tool);
         }
 
         public void ApplyCurrentTextureToSelection() {
@@ -360,29 +361,22 @@ namespace CBRE.Editor.Documents {
             _document.PerformAction("Carve objects", new Carve(carvees, carver));
         }
 
+        public class MakeHollowData
+        {
+            public int Width = 32;
+        }
+
         public void MakeHollow() {
             if (_document.Selection.IsEmpty() || _document.Selection.InFaceSelection) return;
 
             var solids = _document.Selection.GetSelectedObjects().OfType<Solid>().ToList();
             if (!solids.Any()) return;
+            
+            MakeHollowData data = new MakeHollowData();
 
-            throw new NotImplementedException();
-            /*if (solids.Count > 1) {
-                if (MessageBox.Show("This will hollow out every selected solid, are you sure?", "Multiple solids selected", MessageBoxButtons.YesNo) != DialogResult.Yes) {
-                    return;
-                }
-            }
-
-            var qf = new QuickForm("Select wall width") { UseShortcutKeys = true }.NumericUpDown("Wall width (negative to hollow outwards)", -1024, 1024, 0, 32).OkCancel();
-
-            decimal width;
-            do {
-                if (qf.ShowDialog() == DialogResult.Cancel) return;
-                width = qf.Decimal("Wall width (negative to hollow outwards)");
-                if (width == 0) MessageBox.Show("Please select a non-zero value.");
-            } while (width == 0);
-
-            _document.PerformAction("Make objects hollow", new MakeHollow(solids, width));*/
+            new MessageConfigPopup<MakeHollowData>("Make Hollow", "Select wall width", data, (p, d) => {
+                _document.PerformAction("Make objects hollow", new MakeHollow(solids, d.Width));
+            });
         }
 
         public void GroupingGroup() {
@@ -494,60 +488,67 @@ namespace CBRE.Editor.Documents {
             return new UnitTranslate(offset);
         }
 
+        public class TransformOptions {
+            public bool translate = true;
+            public bool rotate = false;
+            public bool scale = false;
+            public float X;
+            public float Y;
+            public float Z;
+        }
+
         public void Transform() {
             if (_document.Selection.IsEmpty() || _document.Selection.InFaceSelection) return;
             var box = _document.Selection.GetSelectionBoundingBox();
 
-            throw new NotImplementedException();
-            /*using (var td = new TransformDialog(box)) {
-                if (td.ShowDialog() != DialogResult.OK) return;
+            // throw new NotImplementedException();
 
-                var value = td.TransformValue;
+
+            // using (var td = new TransformDialog(box)) {
+                // if (td.ShowDialog() != DialogResult.OK) return;
+            new MessageConfigPopup<TransformOptions>("Transform", "Transform selection.", new TransformOptions(), (p, td) => {
+
+                var value = new Vector3((decimal)td.X, (decimal)td.Y, (decimal)td.Z);
                 IUnitTransformation transform = null;
-                switch (td.TransformType) {
-                    case TransformType.Rotate:
-                        var mov = Matrix.Translation(-box.Center); // Move to zero
-                        var rot = Matrix.Rotation(Quaternion.EulerAngles(value * DMath.PI / 180)); // Do rotation
-                        var fin = Matrix.Translation(box.Center); // Move to final origin
-                        transform = new UnitMatrixMult(fin * rot * mov);
-                        break;
-                    case TransformType.Translate:
-                        transform = new UnitTranslate(value);
-                        break;
-                    case TransformType.Scale:
-                        transform = new UnitScale(value, box.Center);
-                        break;
+                if (td.rotate)
+                {
+                    var mov = Matrix.Translation(-box.Center); // Move to zero
+                    var rot = Matrix.Rotation(Quaternion.EulerAngles(value * DMath.PI / 180)); // Do rotation
+                    var fin = Matrix.Translation(box.Center); // Move to final origin
+                    transform = new UnitMatrixMult(fin * rot * mov);
                 }
+                else if (td.translate)
+                    transform = new UnitTranslate(value);
+                else if (td.scale)
+                    transform = new UnitScale(value, box.Center);
 
                 if (transform == null) return;
 
                 var selected = _document.Selection.GetSelectedParents();
                 _document.PerformAction("Transform selection", new Edit(selected, new TransformEditOperation(transform, _document.Map.GetTransformFlags())));
-            }*/
+            });
         }
 
         public void RotateClockwise() {
-            throw new NotImplementedException();
-            /*if (_document.Selection.IsEmpty() || _document.Selection.InFaceSelection) return;
+            if (_document.Selection.IsEmpty() || _document.Selection.InFaceSelection) return;
             var focused = ViewportManager.Viewports.FirstOrDefault(x => x.IsFocused && x is Viewport2D) as Viewport2D;
             if (focused == null) return;
             var center = new Box(_document.Selection.GetSelectedObjects().Select(x => x.BoundingBox).Where(x => x != null)).Center;
-            var axis = focused.GetUnusedCoordinate(Coordinate.One);
+            var axis = focused.GetUnusedCoordinate(Vector3.One);
             var transform = new UnitRotate(DMath.DegreesToRadians(90), new Line(center, center + axis));
             var selected = _document.Selection.GetSelectedParents();
-            _document.PerformAction("Transform selection", new Edit(selected, new TransformEditOperation(transform, _document.Map.GetTransformFlags())));*/
+            _document.PerformAction("Transform selection", new Edit(selected, new TransformEditOperation(transform, _document.Map.GetTransformFlags())));
         }
 
         public void RotateCounterClockwise() {
-            throw new NotImplementedException();
-            /*if (_document.Selection.IsEmpty() || _document.Selection.InFaceSelection) return;
+            if (_document.Selection.IsEmpty() || _document.Selection.InFaceSelection) return;
             var focused = ViewportManager.Viewports.FirstOrDefault(x => x.IsFocused && x is Viewport2D) as Viewport2D;
             if (focused == null) return;
             var center = new Box(_document.Selection.GetSelectedObjects().Select(x => x.BoundingBox).Where(x => x != null)).Center;
-            var axis = focused.GetUnusedCoordinate(Coordinate.One);
+            var axis = focused.GetUnusedCoordinate(Vector3.One);
             var transform = new UnitRotate(DMath.DegreesToRadians(-90), new Line(center, center + axis));
             var selected = _document.Selection.GetSelectedParents();
-            _document.PerformAction("Transform selection", new Edit(selected, new TransformEditOperation(transform, _document.Map.GetTransformFlags())));*/
+            _document.PerformAction("Transform selection", new Edit(selected, new TransformEditOperation(transform, _document.Map.GetTransformFlags())));
         }
 
         public void ReplaceTextures() {

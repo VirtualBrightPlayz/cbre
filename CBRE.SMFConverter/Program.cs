@@ -8,6 +8,25 @@ using System.Text;
 using System.Threading;
 
 namespace CBRE.SMFConverter {
+    public static class BinaryExtensions {
+        public static Vector3D ReadVector3D(this BinaryReader reader)
+        {
+            Vector3D retVal;
+            retVal.X = reader.ReadSingle();
+            retVal.Y = reader.ReadSingle();
+            retVal.Z = reader.ReadSingle();
+            return retVal;
+        }
+        
+        public static Vector2D ReadVector2D(this BinaryReader reader)
+        {
+            Vector2D retVal;
+            retVal.X = reader.ReadSingle();
+            retVal.Y = reader.ReadSingle();
+            return retVal;
+        }
+    }
+    
     class Program {
         static void Main(string[] args) {
             if (!args.Any()) {
@@ -90,7 +109,7 @@ namespace CBRE.SMFConverter {
                     Assimp.TextureWrapMode.Wrap,
                     Assimp.TextureWrapMode.Wrap,
                     0);
-                material.AddMaterialTexture(ref textureSlot);
+                material.AddMaterialTexture(in textureSlot);
                 scene.Materials.Add(material);
 
                 mesh.MaterialIndex = scene.MaterialCount - 1;

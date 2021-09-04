@@ -7,8 +7,12 @@ using CBRE.Common;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
+using CBRE.Extensions;
+using CBRE.FileSystem;
 using CBRE.Graphics;
+using CBRE.Providers.Model;
 using CBRE.Providers.Texture;
+using CBRE.Settings;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Rendering {
@@ -67,7 +71,7 @@ namespace CBRE.Editor.Rendering {
             private int indexWireframeCount = 0;
 
             public void UpdateBuffers() {
-                var entities = document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData?.ClassType == DataStructures.GameData.ClassType.Point).OfType<Entity>().ToList();
+                var entities = document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData?.ClassType == DataStructures.GameData.ClassType.Point && !e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
                 vertexCount = entities.Count * 24;
                 indexSolidCount = entities.Count * 36;
                 indexWireframeCount = entities.Count * 24;
@@ -386,13 +390,15 @@ namespace CBRE.Editor.Rendering {
             }
 
             public void UpdateLightmapBuffers(int id) {
-
+                if (!dirty) return;
+                dirty = false;
                 var filteredFaces = faces.ToList();
 
                 int vertexIndex = 0;
                 int index3dIndex = 0;
                 int index2dIndex = 0;
                 for (int i = 0; i < filteredFaces.Count; i++) {
+                    // if (filteredFaces[i].LmIndex != id) continue;
                     for (int j=0;j<filteredFaces[i].Vertices.Count;j++) {
                         var location = faces[i].Vertices[j].Location;
                         vertices[vertexIndex + j].Position = new Microsoft.Xna.Framework.Vector3((float)location.X, (float)location.Y, (float)location.Z);
@@ -520,6 +526,9 @@ namespace CBRE.Editor.Rendering {
         }
 
         private readonly List<(AsyncTexture Texture, BrushGeometry Geometry)> translucentGeom = new();
+
+        private Dictionary<string, ModelReference> models = new Dictionary<string, ModelReference>();
+
         public void RenderTextured() {
             translucentGeom.Clear();
             foreach (var kvp in brushGeom) {
@@ -540,7 +549,7 @@ namespace CBRE.Editor.Rendering {
             
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
-            
+
             var prevDepthStencilState = GlobalGraphics.GraphicsDevice.DepthStencilState;
             GlobalGraphics.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true, DepthBufferWriteEnable = false };
             foreach (var (texture, geometry) in translucentGeom) {
@@ -549,6 +558,70 @@ namespace CBRE.Editor.Rendering {
                 geometry.RenderSolid();
             }
             GlobalGraphics.GraphicsDevice.DepthStencilState = prevDepthStencilState;
+        }
+
+        public void RenderSprites(Viewport3D vp) {
+            BasicEffect.CurrentTechnique.Passes[0].Apply();
+            var sprites = Document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData != null && e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
+            foreach (var sprite in sprites) {
+                string key = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "sprite").Values.FirstOrDefault();
+                string color = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "spritecolor").Values.FirstOrDefault();
+                Property prop = sprite.EntityData.Properties.FirstOrDefault(p => p.Key == color);
+                if (string.IsNullOrWhiteSpace(key)) {
+                    continue;
+                }
+                TextureItem tex = TextureProvider.GetItem(key);
+                if (tex != null && tex.Texture is AsyncTexture t) {
+                    PrimitiveDrawing.Begin(PrimitiveType.QuadList);
+                    var c = sprite.Origin;
+                    var fcolor = prop == null ? Vector3.One * 255f : prop.GetVector3(Vector3.One * 255f);
+                    t.Bind();
+                    double amount = 25.0;
+                    var up = vp.Camera.GetUp().Normalise() * amount;
+                    var right = vp.Camera.GetRight().Normalise() * amount;
+                    PrimitiveDrawing.Vertex3(c + up - right, 0f, 0f);
+                    PrimitiveDrawing.Vertex3(c + up + right, 1f, 0f);
+                    PrimitiveDrawing.Vertex3(c - up + right, 1f, 1f);
+                    PrimitiveDrawing.Vertex3(c - up - right, 0f, 1f);
+                    BasicEffect.Texture = PrimitiveDrawing.texture;
+                    BasicEffect.DiffuseColor = fcolor.ToXna() / 255f;
+                    BasicEffect.TextureEnabled = true;
+                    BasicEffect.VertexColorEnabled = false;
+                    BasicEffect.CurrentTechnique.Passes[0].Apply();
+                    PrimitiveDrawing.End();
+                    t.Unbind();
+                }
+            }
+            BasicEffect.TextureEnabled = false;
+            BasicEffect.VertexColorEnabled = true;
+        }
+
+        public void RenderModels() {
+            // Models
+            BasicEffect.CurrentTechnique.Passes[0].Apply();
+            var models = Document.Map.WorldSpawn
+                .Find(x => x is Entity e && e.GameData != null && e.GameData.Behaviours.Any(p => p.Name == "model"))
+                .OfType<Entity>().ToList();
+            foreach (var model in models) {
+                string key = model.GameData.Behaviours.FirstOrDefault(p => p.Name == "model").Values.FirstOrDefault();
+                string path = Directories.GetModelPath(model.EntityData.GetPropertyValue(key));
+                if (string.IsNullOrWhiteSpace(path))
+                    continue;
+                NativeFile file = new NativeFile(path);
+                if (this.models.ContainsKey(path)) {
+                    Vector3 euler = model.EntityData.GetPropertyVector3("angles", Vector3.Zero);
+                    Vector3 scale = model.EntityData.GetPropertyVector3("scale", Vector3.One);
+                    Matrix modelMat = Matrix.Translation(model.Origin)
+                                      * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
+                                      * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
+                                      * Matrix.RotationZ(DMath.DegreesToRadians(euler.Y))
+                                      * Matrix.Scale(scale);
+                    ModelRenderer.Render(this.models[path].Model, modelMat, BasicEffect);
+                } else if (ModelProvider.CanLoad(file)) {
+                    ModelReference mref = ModelProvider.CreateModelReference(file);
+                    this.models.Add(path, mref);
+                }
+            }
         }
 
         public void RenderLightmapped() {
@@ -579,6 +652,7 @@ namespace CBRE.Editor.Rendering {
             }
             SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
+
         }
 
         public void RenderSolidUntextured() {

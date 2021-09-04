@@ -162,7 +162,8 @@ namespace CBRE.Editor.Tools
 
             if (hit == null) return; // Nothing was clicked
 
-            CreateEntity(hit.Intersection);
+            _state = EntityState.Moving;
+            _location = hit.Intersection;
         }
 
         public override void MouseClick(ViewportBase viewport, ViewportEvent e)
@@ -177,8 +178,9 @@ namespace CBRE.Editor.Tools
 
         public override void MouseUp(ViewportBase viewport, ViewportEvent e)
         {
-            if (!(viewport is Viewport2D) || e.Button != MouseButtons.Left) return;
+            if (e.Button != MouseButtons.Left) return;
             _state = EntityState.Drawn;
+            if (!(viewport is Viewport2D)) return;
             var vp = viewport as Viewport2D;
             var loc = SnapIfNeeded(vp.ScreenToWorld(e.X, vp.Height - e.Y));
             _location = vp.GetUnusedCoordinate(_location) + vp.Expand(loc);
@@ -229,7 +231,6 @@ namespace CBRE.Editor.Tools
                         selectedEntity = entityType;
                     }
                 }
-
                 ImGui.EndCombo();
             }
         }

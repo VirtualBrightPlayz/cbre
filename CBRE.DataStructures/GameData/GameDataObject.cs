@@ -107,9 +107,14 @@ namespace CBRE.DataStructures.GameData {
                         break;
                     case "sprite":
                         Behaviours.Add(new Behaviour("sprite", subElement.GetAttributeString("name", null)));
+                        Behaviours.Add(new Behaviour("spritecolor", subElement.GetAttributeString("color", null)));
                         break;
                     case "light":
 
+                        break;
+                    case "model":
+                        string name = subElement.GetAttributeString("name", null);
+                        Behaviours.Add(new Behaviour("model", name));
                         break;
                 }
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using ImGuiNET;
 
 namespace CBRE.Editor.Brushes.Controls {
     public partial class BooleanControl : BrushControl {
@@ -16,6 +17,15 @@ namespace CBRE.Editor.Brushes.Controls {
 
         private void ValueChanged(object sender, EventArgs e) {
             OnValuesChanged(Brush);
+        }
+
+        public override void Draw() {
+            bool val = Checked;
+            if (ControlEnabled) {
+                ImGui.Text(LabelText);
+                if (ImGui.Checkbox(LabelText, ref val))
+                    Checked = val;
+            }
         }
     }
 }

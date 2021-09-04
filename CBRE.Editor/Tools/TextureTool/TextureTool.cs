@@ -349,8 +349,8 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         private void TextureSelected(TextureItem texture) {
-            // if (texture == null)
-                // return;
+            if (texture == null)
+                return;
             _texture = new TextureData(texture.Texture as AsyncTexture, texture);
             /*_form.SelectTexture(texture);*/
         }

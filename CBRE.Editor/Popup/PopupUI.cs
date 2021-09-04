@@ -27,7 +27,7 @@ namespace CBRE.Editor.Popup {
         {
             bool shouldBeOpen = true;
             if (_hasColor) { ImGui.PushStyleColor(ImGuiCol.WindowBg, _color.Value); }
-            if (ImGui.Begin(_title, ImGuiWindowFlags.NoCollapse)) {
+            if (ImGui.Begin(_title, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking)) {
                 shouldBeOpen = ImGuiLayout();
             }
             ImGui.End();
