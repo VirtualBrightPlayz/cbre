@@ -23,10 +23,16 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Quaternion = CBRE.DataStructures.Geometric.Quaternion;
 using CBRE.Editor.Popup;
 using CBRE.Editor.Popup.ObjectProperties;
+using CBRE.Providers;
+using CBRE.Providers.Map;
+using ImGuiNET;
+using NativeFileDialog;
+using Path = CBRE.DataStructures.MapObjects.Path;
 
 namespace CBRE.Editor.Documents {
     /// <summary>
@@ -204,7 +210,18 @@ namespace CBRE.Editor.Documents {
         }
 
         public void FileSaveAs() {
-            new SaveMap("", _document, false);
+            var currFilePath = System.IO.Path.GetDirectoryName(DocumentManager.CurrentDocument.MapFile);
+            if (string.IsNullOrEmpty(currFilePath)) { currFilePath = Directory.GetCurrentDirectory(); }
+
+            var result = NativeFileDialog.SaveDialog.Open("vmf", currFilePath, out string outPath);
+            if (result == Result.Okay) {
+                try {
+                    _document.SaveFile(outPath);
+                }
+                catch (ProviderNotFoundException e) {
+                    new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) });
+                }
+            }
         }
 
         public void FileCompile() {
