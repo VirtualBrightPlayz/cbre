@@ -138,6 +138,8 @@ namespace CBRE.Editor {
             new VisgroupsWindow();
 
             base.Initialize();
+
+            timing.StartMeasurement();
         }
 
         protected override void OnExiting(object sender, EventArgs args) {
@@ -158,6 +160,9 @@ namespace CBRE.Editor {
         private Keys[] previousKeys = new Keys[0];
 
         protected override void Update(GameTime gameTime) {
+            timing.EndMeasurement();
+            timing.StartMeasurement();
+
             base.Update(gameTime);
 
             if (PopupSelected && !Popups.Any(p => !(p is WindowUI)))
@@ -184,15 +189,15 @@ namespace CBRE.Editor {
                 }
             }
 
-            timing.StartMeasurement();
             timing.PerformTicks(ViewportManager.Update);
-            timing.EndMeasurement();
 
             LastTime = gameTime;
         }
 
         protected override void Draw(GameTime gameTime)
         {
+            ViewportManager.RenderIfNecessary();
+
             GlobalGraphics.GraphicsDevice.Viewport = new Viewport(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
 
             TaskPool.Update();

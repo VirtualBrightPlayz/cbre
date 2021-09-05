@@ -15,8 +15,9 @@ namespace CBRE.Editor {
             if (!stopwatch.IsRunning) { stopwatch.Start(); }
         }
         public void EndMeasurement() {
-            accumulator += (double)(stopwatch.ElapsedTicks - lastMeasurementStop) / (double)Stopwatch.Frequency;
-            lastMeasurementStop = stopwatch.ElapsedTicks;
+            long elapsedTicks = stopwatch.ElapsedTicks;
+            accumulator += (double)(elapsedTicks - lastMeasurementStop) / (double)Stopwatch.Frequency;
+            lastMeasurementStop = elapsedTicks;
         }
 
         public void PerformTicks(Action action) {

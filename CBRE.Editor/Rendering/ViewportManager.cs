@@ -212,7 +212,6 @@ namespace CBRE.Editor.Rendering {
                 doc.LightmapTextureOutdated = false;
                 shouldRerender = true;
             }
-            if (shouldRerender) { Render(); return; }
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
             var keysDown = keyboardState.GetPressedKeys();
@@ -429,6 +428,11 @@ namespace CBRE.Editor.Rendering {
             prevMouse3Down = mouse3Down;
             prevKeysDown = keysDown;
             prevScrollWheelValue = scrollWheelValue;
+        }
+
+        public static void RenderIfNecessary() {
+            if (!shouldRerender) { return; }
+            Render();
         }
 
         public static void Render() {
