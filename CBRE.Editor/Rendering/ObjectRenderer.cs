@@ -447,6 +447,42 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
+        public void AddFaces(MapObject mapObject) {
+            switch (mapObject)
+            {
+                case Solid s:
+                    foreach (var f in s.Faces) { AddFace(f); }
+                    break;
+                case Group g:
+                    foreach (var child in g.GetChildren()) { AddFaces(child); }
+                    break;
+            }
+        }
+        
+        public void RemoveFaces(MapObject mapObject) {
+            switch (mapObject)
+            {
+                case Solid s:
+                    foreach (var f in s.Faces) { RemoveFace(f); }
+                    break;
+                case Group g:
+                    foreach (var child in g.GetChildren()) { RemoveFaces(child); }
+                    break;
+            }
+        }
+        
+        public void MarkDirty(MapObject mapObject) {
+            switch (mapObject)
+            {
+                case Solid s:
+                    foreach (var t in s.Faces.Select(f => f.Texture.Name).Distinct()) { MarkDirty(t); }
+                    break;
+                case Group g:
+                    foreach (var child in g.GetChildren()) { MarkDirty(child); }
+                    break;
+            }
+        }
+
         private Dictionary<string, BrushGeometry> brushGeom = new Dictionary<string, BrushGeometry>();
 
         private Effect LoadEffect(string filename) {
