@@ -41,7 +41,7 @@ namespace CBRE.Editor.Popup {
                 renderTargetPtr = IntPtr.Zero;
             }
             renderTarget?.Dispose();
-            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, view.Width, view.Height, false, SurfaceFormat.Color, DepthFormat.Depth24);
+            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, Math.Max(view.Width, 4), Math.Max(view.Height, 4), false, SurfaceFormat.Color, DepthFormat.Depth24);
 
             ViewportManager.Render(viewport, new Viewport(0, 0, renderTarget.Width, renderTarget.Height), renderTarget);
             renderTargetPtr = GlobalGraphics.ImGuiRenderer.BindTexture(renderTarget);
@@ -62,7 +62,7 @@ namespace CBRE.Editor.Popup {
                     ResetRenderTarget();
                 }
                 view = tmpview;
-                if (ImGui.BeginChildFrame(3, new Num.Vector2(view.Size.X, view.Size.Y), flags) && renderTargetPtr != IntPtr.Zero && open) {
+                if (ImGui.BeginChildFrame(1, new Num.Vector2(view.Size.X, view.Size.Y), flags) && renderTargetPtr != IntPtr.Zero && open) {
                     ImGui.Image(renderTargetPtr, new Num.Vector2(view.Size.X, view.Size.Y));
                 }
                 ImGui.EndChildFrame();

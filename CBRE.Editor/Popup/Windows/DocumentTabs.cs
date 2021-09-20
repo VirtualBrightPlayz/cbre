@@ -4,19 +4,22 @@ using ImGuiNET;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
-    public class DocumentTabWindow : WindowUI
+    public class DocumentTabs
     {
-        public DocumentTabWindow() : base("")
+        public DocumentTabs()
         {
             /*if (GameMain.Instance.Popups.FindIndex(p => p is DocumentTabWindow && p != this) != -1) {
                 Dispose();
             }*/
         }
 
-        protected override bool ImGuiLayout() {
-            if (ImGui.Begin("tabber", ref open)) {
-                ImGui.SetWindowPos(new Num.Vector2(47, 47), ImGuiCond.FirstUseEver);
-                ImGui.SetWindowSize(new Num.Vector2(ViewportManager.vpRect.Right - 47, 30), ImGuiCond.FirstUseEver);
+        public void ImGuiLayout() {
+            ImGuiViewportPtr viewportPtr = ImGui.GetMainViewport();
+            if (ImGui.Begin("DocumentTabs", ImGuiWindowFlags.NoMove |
+                ImGuiWindowFlags.NoResize |
+                ImGuiWindowFlags.NoCollapse)) {
+                ImGui.SetWindowPos(new Num.Vector2(0, 20), ImGuiCond.Always);
+                ImGui.SetWindowSize(new Num.Vector2(viewportPtr.Size.X, 40), ImGuiCond.Always);
                 ImGui.BeginTabBar("doc_tabber");
                 for (int i = 0; i < DocumentManager.Documents.Count; i++) {
                     Document doc = DocumentManager.Documents[i];
@@ -30,7 +33,6 @@ namespace CBRE.Editor.Popup {
                 ImGui.EndTabBar();
             }
             ImGui.End();
-            return open;
         }
     }
 }

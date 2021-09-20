@@ -84,7 +84,7 @@ namespace CBRE.Editor.Rendering {
         public static bool Alt { get; private set; }
 
 
-        public static Rectangle vpRect { get; set; } = new Rectangle(0, 0, 640, 480);
+        public static Rectangle VPRect { get; set; } = new Rectangle(0, 0, 640, 480);
 
         public static void Init() {
             prevMouse1Down = false;
@@ -159,32 +159,32 @@ namespace CBRE.Editor.Rendering {
 
         private static void RebuildRenderTarget() {
             renderTargetGeom = new VertexPositionTexture[] {
-                new VertexPositionTexture(new Vector3(vpRect.Location.X, vpRect.Location.Y, 0), new Vector2(0, 0)),
-                new VertexPositionTexture(new Vector3(vpRect.Right, vpRect.Location.Y, 0), new Vector2(1, 0)),
-                new VertexPositionTexture(new Vector3(vpRect.Location.X, vpRect.Bottom, 0), new Vector2(0, 1)),
-                new VertexPositionTexture(new Vector3(vpRect.Right, vpRect.Bottom, 0), new Vector2(1, 1)),
+                new VertexPositionTexture(new Vector3(VPRect.Location.X, VPRect.Location.Y, 0), new Vector2(0, 0)),
+                new VertexPositionTexture(new Vector3(VPRect.Right, VPRect.Location.Y, 0), new Vector2(1, 0)),
+                new VertexPositionTexture(new Vector3(VPRect.Location.X, VPRect.Bottom, 0), new Vector2(0, 1)),
+                new VertexPositionTexture(new Vector3(VPRect.Right, VPRect.Bottom, 0), new Vector2(1, 1)),
             };
-            knownWindowWidth = vpRect.Right;
-            knownWindowHeight = vpRect.Bottom;
+            knownWindowWidth = VPRect.Right;
+            knownWindowHeight = VPRect.Bottom;
             renderTargetEffect.Projection = Matrix.CreateOrthographicOffCenter(0.5f, GlobalGraphics.Window.ClientBounds.Width + 0.5f, GlobalGraphics.Window.ClientBounds.Height + 0.5f, 0.5f, -1f, 1f);
             if (renderTargetPtr != IntPtr.Zero) {
                 GlobalGraphics.ImGuiRenderer.UnbindTexture(renderTargetPtr);
             }
             renderTarget?.Dispose();
-            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, vpRect.Right - vpRect.Location.X, vpRect.Bottom - vpRect.Location.Y, false, SurfaceFormat.Color, DepthFormat.Depth24);
+            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, VPRect.Right - VPRect.Location.X, VPRect.Bottom - VPRect.Location.Y, false, SurfaceFormat.Color, DepthFormat.Depth24);
             renderTargetPtr = GlobalGraphics.ImGuiRenderer.BindTexture(renderTarget);
 
-            int splitX = (int)((vpRect.Right - vpRect.Location.X) * splitPoint.X) + vpRect.Location.X;
-            int splitY = (int)((vpRect.Bottom - vpRect.Location.Y) * splitPoint.Y) + vpRect.Location.Y;
+            int splitX = (int)((VPRect.Right - VPRect.Location.X) * splitPoint.X) + VPRect.Location.X;
+            int splitY = (int)((VPRect.Bottom - VPRect.Location.Y) * splitPoint.Y) + VPRect.Location.Y;
             for (int i = 0; i < Viewports.Length; i++) {
                 if (Viewports[i] == null) { continue; }
                 bool left = i % 2 == 0;
                 bool top = i < 2;
 
-                Viewports[i].X = left ? vpRect.Location.X : splitX + 3;
-                Viewports[i].Y = top ? vpRect.Location.Y : splitY + 3;
-                Viewports[i].Width = left ? splitX - vpRect.Location.X - 4 : renderTarget.Width - (splitX - vpRect.Location.X + 3);
-                Viewports[i].Height = top ? splitY - vpRect.Location.Y - 4 : renderTarget.Height - (splitY - vpRect.Location.Y + 3);
+                Viewports[i].X = left ? VPRect.Location.X : splitX + 3;
+                Viewports[i].Y = top ? VPRect.Location.Y : splitY + 3;
+                Viewports[i].Width = left ? splitX - VPRect.Location.X - 4 : renderTarget.Width - (splitX - VPRect.Location.X + 3);
+                Viewports[i].Height = top ? splitY - VPRect.Location.Y - 4 : renderTarget.Height - (splitY - VPRect.Location.Y + 3);
             }
 
             Render();
@@ -479,8 +479,8 @@ namespace CBRE.Editor.Rendering {
         }
 
         public static void DrawRenderTarget() {
-            if (ImGuiNET.ImGui.BeginChildFrame(3, new System.Numerics.Vector2(vpRect.Size.X, vpRect.Size.Y))) {
-                ImGuiNET.ImGui.Image(renderTargetPtr, new System.Numerics.Vector2(vpRect.Size.X, vpRect.Size.Y));
+            if (ImGuiNET.ImGui.BeginChildFrame(3, new System.Numerics.Vector2(VPRect.Size.X, VPRect.Size.Y))) {
+                ImGuiNET.ImGui.Image(renderTargetPtr, new System.Numerics.Vector2(VPRect.Size.X, VPRect.Size.Y));
             }
             ImGuiNET.ImGui.EndChildFrame();
         }

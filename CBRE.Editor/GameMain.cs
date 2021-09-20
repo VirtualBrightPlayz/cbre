@@ -67,6 +67,8 @@ namespace CBRE.Editor {
 
         ImGuiStylePtr ImGuiStyle;
 
+        private DocumentTabs documentTabs;
+
         protected override void Initialize()
         {
             SettingsManager.Read();
@@ -126,9 +128,10 @@ namespace CBRE.Editor {
             ViewportManager.Init();
             DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
 
+            documentTabs = new DocumentTabs();
+            
             // Initial windows
             new ToolsWindow();
-            new DocumentTabWindow();
             new ToolPropsWindow();
             new StatsWindow();
             new ViewportWindow(0);
@@ -229,18 +232,31 @@ namespace CBRE.Editor {
             ImGuiViewportPtr viewportPtr = ImGui.GetMainViewport();
             ImGui.SetNextWindowPos(viewportPtr.Pos);
             ImGui.SetNextWindowSize(viewportPtr.Size);
-            ImGui.Begin("Main Window", ImGuiWindowFlags.NoMove |
-                                        ImGuiWindowFlags.NoResize |
-                                        ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                        ImGuiWindowFlags.NoCollapse);
-            ImGui.DockSpace(dockId);
-            ImGui.End();
-            if (ImGui.BeginMainMenuBar()) {
-                ViewportManager.TopMenuOpen = false;
-                UpdateMenus();
-                // UpdateTopBar();
+            if (ImGui.Begin("Main Window", ImGuiWindowFlags.NoMove |
+                                           ImGuiWindowFlags.NoResize |
+                                           ImGuiWindowFlags.NoBringToFrontOnFocus |
+                                           ImGuiWindowFlags.NoCollapse)) {
+                if (ImGui.BeginMainMenuBar()) {
+                    ViewportManager.TopMenuOpen = false;
+                    UpdateMenus();
+                    // UpdateTopBar();
+                }
+                documentTabs.ImGuiLayout();
+    
+                ImGui.SetNextWindowPos(viewportPtr.Pos + new Num.Vector2(0, 60));
+                ImGui.SetNextWindowSize(viewportPtr.Size - new Num.Vector2(0, 60));
+                if (ImGui.Begin("Dock Space", ImGuiWindowFlags.NoMove |
+                                              ImGuiWindowFlags.NoResize |
+                                              ImGuiWindowFlags.NoCollapse)) {
+                    ImGui.DockSpace(dockId);
+                }
+                ImGui.End();
             }
+            
+            ImGui.End();
+            ImGui.End();
             ImGui.EndMainMenuBar();
+            
 
             for (int i = 0; i < Popups.Count; i++)
             {
