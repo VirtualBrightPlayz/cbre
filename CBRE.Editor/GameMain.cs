@@ -168,28 +168,27 @@ namespace CBRE.Editor {
 
             base.Update(gameTime);
 
-            if (PopupSelected && !Popups.Any(p => !(p is WindowUI)))
+            if (PopupSelected && !Popups.Any(p => !(p is WindowUI))) {
                 PopupSelected = false;
+            }
 
             if (!PopupSelected) {
                 // Hotkeys
-                {
-                    Keys[] keys = Keyboard.GetState().GetPressedKeys();
-                    List<Keys> pressed = new List<Keys>();
-                    foreach (var key in keys) {
-                        if (!previousKeys.Contains(key)) {
-                            pressed.Add(key);
-                        }
+                Keys[] keys = Keyboard.GetState().GetPressedKeys();
+                List<Keys> pressed = new List<Keys>();
+                foreach (var key in keys) {
+                    if (!previousKeys.Contains(key)) {
+                        pressed.Add(key);
                     }
-                    bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
-                    bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
-                    bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
-                    HotkeyImplementation def = Hotkeys.GetHotkeyFor(pressed.ToArray(), ctrlpressed, shiftpressed, altpressed);
-                    if (def != null) {
-                        Mediator.Publish(def.Definition.Action, def.Definition.Parameter);
-                    }
-                    previousKeys = keys;
                 }
+                bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
+                bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
+                bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
+                HotkeyImplementation def = Hotkeys.GetHotkeyFor(pressed.ToArray(), ctrlpressed, shiftpressed, altpressed);
+                if (def != null) {
+                    Mediator.Publish(def.Definition.Action, def.Definition.Parameter);
+                }
+                previousKeys = keys;
             }
 
             timing.PerformTicks(ViewportManager.Update);
@@ -231,32 +230,32 @@ namespace CBRE.Editor {
             uint dockId = ImGui.GetID("Dock");
             ImGuiViewportPtr viewportPtr = ImGui.GetMainViewport();
             ImGui.SetNextWindowPos(viewportPtr.Pos);
-            ImGui.SetNextWindowSize(viewportPtr.Size);
+            ImGui.SetNextWindowSize(new Num.Vector2(viewportPtr.Size.X,40));
             if (ImGui.Begin("Main Window", ImGuiWindowFlags.NoMove |
                                            ImGuiWindowFlags.NoResize |
                                            ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                           ImGuiWindowFlags.NoCollapse)) {
+                                           ImGuiWindowFlags.NoCollapse |
+                                           ImGuiWindowFlags.NoScrollbar)) {
                 if (ImGui.BeginMainMenuBar()) {
                     ViewportManager.TopMenuOpen = false;
                     UpdateMenus();
                     // UpdateTopBar();
+                    ImGui.EndMainMenuBar();
                 }
                 documentTabs.ImGuiLayout();
-    
-                ImGui.SetNextWindowPos(viewportPtr.Pos + new Num.Vector2(0, 60));
-                ImGui.SetNextWindowSize(viewportPtr.Size - new Num.Vector2(0, 60));
-                if (ImGui.Begin("Dock Space", ImGuiWindowFlags.NoMove |
-                                              ImGuiWindowFlags.NoResize |
-                                              ImGuiWindowFlags.NoCollapse)) {
-                    ImGui.DockSpace(dockId);
-                }
+            }
+            ImGui.End();
+            
+            ImGui.SetNextWindowPos(viewportPtr.Pos + new Num.Vector2(0, 40));
+            ImGui.SetNextWindowSize(viewportPtr.Size - new Num.Vector2(0, 40));
+            if (ImGui.Begin("Dock Space", ImGuiWindowFlags.NoMove |
+                                          ImGuiWindowFlags.NoResize |
+                                          ImGuiWindowFlags.NoCollapse |
+                                          ImGuiWindowFlags.NoTitleBar |
+                                          ImGuiWindowFlags.NoBringToFrontOnFocus)) {
+                ImGui.DockSpace(dockId);
                 ImGui.End();
             }
-            
-            ImGui.End();
-            ImGui.End();
-            ImGui.EndMainMenuBar();
-            
 
             for (int i = 0; i < Popups.Count; i++)
             {

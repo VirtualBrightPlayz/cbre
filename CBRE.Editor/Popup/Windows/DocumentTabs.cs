@@ -1,6 +1,7 @@
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
 using ImGuiNET;
+using Microsoft.Xna.Framework;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
@@ -15,24 +16,31 @@ namespace CBRE.Editor.Popup {
 
         public void ImGuiLayout() {
             ImGuiViewportPtr viewportPtr = ImGui.GetMainViewport();
-            if (ImGui.Begin("DocumentTabs", ImGuiWindowFlags.NoMove |
-                ImGuiWindowFlags.NoResize |
-                ImGuiWindowFlags.NoCollapse)) {
-                ImGui.SetWindowPos(new Num.Vector2(0, 20), ImGuiCond.Always);
-                ImGui.SetWindowSize(new Num.Vector2(viewportPtr.Size.X, 40), ImGuiCond.Always);
-                ImGui.BeginTabBar("doc_tabber");
+            ImGui.SetCursorPos(new Num.Vector2(0, 20));
+            if (ImGui.BeginChild("DocumentTabs", new Num.Vector2(viewportPtr.Size.X, 20))) {
                 for (int i = 0; i < DocumentManager.Documents.Count; i++) {
                     Document doc = DocumentManager.Documents[i];
-                    if (ImGui.BeginTabItem(doc.MapFileName)) {
+                    if (ImGui.Button(doc.MapFileName)) {
                         if (DocumentManager.CurrentDocument != doc) {
                             DocumentManager.SwitchTo(doc);
                         }
-                        ImGui.EndTabItem();
                     }
+                    ImGui.SameLine();
+                    var cursorPos = ImGui.GetCursorPos();
+                    ImGui.SetCursorPos(cursorPos - new Num.Vector2(8, 0));
+                    using (new ColorPush(ImGuiCol.Button, Color.DarkRed)) {
+                        using (new ColorPush(ImGuiCol.ButtonActive, Color.DarkRed)) {
+                            using (new ColorPush(ImGuiCol.ButtonHovered, Color.Red)) {
+                                if (ImGui.Button("X")) {
+                                    DocumentManager.Remove(doc);
+                                }
+                            }
+                        }
+                    }
+                    ImGui.SameLine();
                 }
-                ImGui.EndTabBar();
+                ImGui.EndChild();
             }
-            ImGui.End();
         }
     }
 }
