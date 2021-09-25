@@ -31,7 +31,7 @@ namespace CBRE.Editor.Popup {
                     using (new ColorPush(ImGuiCol.Button, Color.DarkRed)) {
                         using (new ColorPush(ImGuiCol.ButtonActive, Color.DarkRed)) {
                             using (new ColorPush(ImGuiCol.ButtonHovered, Color.Red)) {
-                                if (ImGui.Button("X")) {
+                                if (ImGui.Button($"X##doc{DocumentManager.Documents.IndexOf(doc)}")) {
                                     DocumentManager.Remove(doc);
                                 }
                             }
