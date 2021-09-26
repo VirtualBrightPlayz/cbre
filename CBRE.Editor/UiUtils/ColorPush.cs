@@ -19,9 +19,9 @@ namespace CBRE.Editor {
         
         public ColorPush(ImGuiCol element, System.Drawing.Color color) : this(element, new Num.Vector4(
             (float)color.R / 255f,
-            (float)color.R / 255f,
-            (float)color.R / 255f,
-            (float)color.R / 255f)) { }
+            (float)color.G / 255f,
+            (float)color.B / 255f,
+            (float)color.A / 255f)) { }
         
         public void Dispose() {
             ImGui.PopStyleColor();

@@ -30,12 +30,31 @@ namespace CBRE.Editor.Popup {
 
         public virtual bool Draw()
         {
+            if (!canBeDefocused) {
+                ImGui.SetNextWindowPos(new Num.Vector2(0,0));
+                ImGui.SetNextWindowSize(ImGui.GetWindowViewport().Size);
+                using (new ColorPush(ImGuiCol.WindowBg, Color.Transparent)) {
+                    if (ImGui.Begin($"##blocker{popupIndex}",
+                        ImGuiWindowFlags.NoCollapse
+                        | ImGuiWindowFlags.NoDecoration
+                        | ImGuiWindowFlags.NoMove
+                        | ImGuiWindowFlags.NoResize
+                        | ImGuiWindowFlags.NoTitleBar
+                        | ImGuiWindowFlags.NoDocking)) {
+                        ImGui.End();
+                    }
+                }
+            }
+            
             bool shouldBeOpen = true;
             bool closeButtonWasntHit = true;
             if (_hasColor) { ImGui.PushStyleColor(ImGuiCol.WindowBg, _color.Value); }
 
             string titleAndIndex = $"{_title}##popup{popupIndex}";
             bool windowWasInitialized = false;
+            if (!canBeDefocused) {
+                ImGui.SetWindowFocus(titleAndIndex);
+            }
             if (canBeClosed) {
                 windowWasInitialized = ImGui.Begin(titleAndIndex, ref closeButtonWasntHit,
                     ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking);

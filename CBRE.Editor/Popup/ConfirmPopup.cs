@@ -35,6 +35,7 @@ namespace CBRE.Editor.Popup {
 
             for (int i=0; i<Buttons.Length; i++) {
                 var btn = Buttons[i];
+                if (i > 0) { ImGui.SameLine(); }
                 if (ImGui.Button($"{btn.Label}##popup{popupIndex}btn{i}")) {
                     btn.Action();
                     return false;
