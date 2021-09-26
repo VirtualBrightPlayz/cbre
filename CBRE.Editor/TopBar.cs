@@ -63,10 +63,11 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem("Options", MenuTextures["Menu_Options"], action: Options));
         }
 
+        public const int TopBarHeight = 28;
         private void UpdateTopBar() {
             ImGui.SetCursorPos(new Num.Vector2(0, 19));
 
-            if (ImGui.BeginChildFrame(1, new Num.Vector2(Window.ClientBounds.Width + 1, 28))) {
+            if (ImGui.BeginChildFrame(1, new Num.Vector2(Window.ClientBounds.Width + 1, TopBarHeight))) {
                 ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(1, 0));
 
                 ImGui.Dummy(new Num.Vector2(2, 0));

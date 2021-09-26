@@ -37,7 +37,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
         private static ProgressPopup progressPopup = null;
 
         private static void UpdateProgress(string msg, float progress) {
-            GameMain.Instance.PreDrawActions.Enqueue(() => {
+            GameMain.Instance.PostDrawActions.Enqueue(() => {
                 if (progressPopup == null || !GameMain.Instance.Popups.Contains(progressPopup)) {
                     progressPopup = new ProgressPopup("Lightmap Progress");
                     // progressPopup.Run();
@@ -352,7 +352,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
                 lock (Lightmaps) {
                     int j = k;
-                    GameMain.Instance.PreDrawActions.Enqueue(() => {
+                    GameMain.Instance.PostDrawActions.Enqueue(() => {
                         Texture2D tex = new Texture2D(GameMain.Instance.GraphicsDevice, totalTextureDims, totalTextureDims);
                         tex.SetData(byteBuffer);
                         string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"lm_{j}.png");
@@ -378,7 +378,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
     public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
         lock (Lightmaps) {
-            GameMain.Instance.PreDrawActions.Enqueue(() => {
+            GameMain.Instance.PostDrawActions.Enqueue(() => {
                 for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
                     string iPath = path + (threeBasisModel ? i.ToString() : "");
                     var texture = document.MGLightmaps[i];

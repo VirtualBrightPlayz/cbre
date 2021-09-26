@@ -46,7 +46,7 @@ namespace CBRE.Editor {
         public GameTime LastTime { get; set; }
 
         public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
-        public Queue<Action> PreDrawActions { get; private set; } = new Queue<Action>();
+        public Queue<Action> PostDrawActions { get; private set; } = new Queue<Action>();
 
         public GameMain()
         {
@@ -175,16 +175,12 @@ namespace CBRE.Editor {
             if (!PopupSelected) {
                 // Hotkeys
                 Keys[] keys = Keyboard.GetState().GetPressedKeys();
-                List<Keys> pressed = new List<Keys>();
-                foreach (var key in keys) {
-                    if (!previousKeys.Contains(key)) {
-                        pressed.Add(key);
-                    }
-                }
+                Keys[] hitKeys = keys.Where(k => !previousKeys.Contains(k)).ToArray();
+                
                 bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
                 bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
                 bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
-                HotkeyImplementation def = Hotkeys.GetHotkeyFor(pressed.ToArray(), ctrlpressed, shiftpressed, altpressed);
+                HotkeyImplementation def = Hotkeys.GetHotkeyFor(hitKeys, ctrlpressed, shiftpressed, altpressed);
                 if (def != null) {
                     Mediator.Publish(def.Definition.Action, def.Definition.Parameter);
                 }
@@ -217,20 +213,21 @@ namespace CBRE.Editor {
 
             base.Draw(gameTime);
 
-            while (PreDrawActions.Count > 0) {
+            while (PostDrawActions.Count > 0) {
                 try {
-                    PreDrawActions.Dequeue()?.Invoke();
+                    PostDrawActions.Dequeue()?.Invoke();
                 } catch (Exception e) {
                     Logging.Logger.ShowException(e);
                 }
             }
         }
 
+        public const int MenuBarHeight = 20;
         protected virtual void ImGuiLayout() {
             uint dockId = ImGui.GetID("Dock");
             ImGuiViewportPtr viewportPtr = ImGui.GetMainViewport();
             ImGui.SetNextWindowPos(viewportPtr.Pos);
-            ImGui.SetNextWindowSize(new Num.Vector2(viewportPtr.Size.X,40));
+            ImGui.SetNextWindowSize(new Num.Vector2(viewportPtr.Size.X,MenuBarHeight + TopBarHeight + DocumentTabs.Height));
             if (ImGui.Begin("Main Window", ImGuiWindowFlags.NoMove |
                                            ImGuiWindowFlags.NoResize |
                                            ImGuiWindowFlags.NoBringToFrontOnFocus |
@@ -239,16 +236,16 @@ namespace CBRE.Editor {
                 if (ImGui.BeginMainMenuBar()) {
                     ViewportManager.TopMenuOpen = false;
                     UpdateMenus();
-                    // UpdateTopBar();
                     ImGui.EndMainMenuBar();
                 }
+                UpdateTopBar();
                 documentTabs.ImGuiLayout();
                 
                 ImGui.End();
             }
             
-            ImGui.SetNextWindowPos(viewportPtr.Pos + new Num.Vector2(0, 40));
-            ImGui.SetNextWindowSize(viewportPtr.Size - new Num.Vector2(0, 40));
+            ImGui.SetNextWindowPos(viewportPtr.Pos + new Num.Vector2(0, MenuBarHeight + TopBarHeight + DocumentTabs.Height));
+            ImGui.SetNextWindowSize(viewportPtr.Size - new Num.Vector2(0, MenuBarHeight + TopBarHeight + DocumentTabs.Height));
             if (ImGui.Begin("Dock Space", ImGuiWindowFlags.NoMove |
                                           ImGuiWindowFlags.NoResize |
                                           ImGuiWindowFlags.NoCollapse |

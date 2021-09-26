@@ -48,7 +48,7 @@ namespace CBRE.Editor.Popup {
                         try {
                         Lightmapper.Render(_document, out var faces, out var lmgroups);
                         } catch (Exception e) {
-                            GameMain.Instance.PreDrawActions.Enqueue(() => {
+                            GameMain.Instance.PostDrawActions.Enqueue(() => {
                                 Logging.Logger.ShowException(e);
                             });
                         }

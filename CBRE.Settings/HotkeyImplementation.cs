@@ -21,22 +21,20 @@ namespace CBRE.Settings {
             ShortcutKeys = new List<Keys>();
             string[] keys = Hotkey.Split("+");
             for (int i = 0; i < keys.Length; i++) {
-                if (keys[i].ToLower() == "ctrl") {
+                string keyLower = keys[i].ToLowerInvariant();
+                if (keyLower == "ctrl") {
                     Ctrl = true;
-                }
-                else if (keys[i].ToLower() == "shift") {
+                } else if (keyLower == "shift") {
                     Shift = true;
-                }
-                else if (keys[i].ToLower() == "alt") {
+                } else if (keyLower == "alt") {
                     Alt = true;
-                }
-                else if (keys[i].ToLower() == "[") {
+                } else if (keyLower == "[") {
                     ShortcutKeys.Add(Keys.OemOpenBrackets);
-                }
-                else if (keys[i].ToLower() == "]") {
+                } else if (keyLower == "]") {
                     ShortcutKeys.Add(Keys.OemCloseBrackets);
-                }
-                else {
+                } else if (keyLower == "del") {
+                    ShortcutKeys.Add(Keys.Delete);
+                } else {
                     ShortcutKeys.Add(Enum.TryParse<Keys>(keys[i], true, out Keys res) ? res : Keys.None);
                 }
             }

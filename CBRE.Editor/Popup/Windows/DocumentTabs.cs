@@ -14,10 +14,11 @@ namespace CBRE.Editor.Popup {
             }*/
         }
 
+        public const int Height = 20;
         public void ImGuiLayout() {
             ImGuiViewportPtr viewportPtr = ImGui.GetMainViewport();
-            ImGui.SetCursorPos(new Num.Vector2(0, 20));
-            if (ImGui.BeginChild("DocumentTabs", new Num.Vector2(viewportPtr.Size.X, 20))) {
+            ImGui.SetCursorPos(new Num.Vector2(0, GameMain.MenuBarHeight + GameMain.TopBarHeight));
+            if (ImGui.BeginChild("DocumentTabs", new Num.Vector2(viewportPtr.Size.X, Height))) {
                 for (int i = 0; i < DocumentManager.Documents.Count; i++) {
                     Document doc = DocumentManager.Documents[i];
                     if (ImGui.Button(doc.MapFileName)) {
