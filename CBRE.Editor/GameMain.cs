@@ -243,8 +243,9 @@ namespace CBRE.Editor {
                     ImGui.EndMainMenuBar();
                 }
                 documentTabs.ImGuiLayout();
+                
+                ImGui.End();
             }
-            ImGui.End();
             
             ImGui.SetNextWindowPos(viewportPtr.Pos + new Num.Vector2(0, 40));
             ImGui.SetNextWindowSize(viewportPtr.Size - new Num.Vector2(0, 40));

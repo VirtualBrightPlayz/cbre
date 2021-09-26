@@ -21,8 +21,9 @@ namespace CBRE.Editor.Popup {
                 ImGui.Text($"Working set: {proc.WorkingSet64 / 1024 / 1024} MB");
                 ImGui.Text($"Private mem: {proc.PrivateMemorySize64 / 1024 / 1024} MB");
                 ImGui.Text($"Paged mem: {proc.PagedMemorySize64 / 1024 / 1024} MB");
+                
+                ImGui.End();
             }
-            ImGui.End();
             return open;
         }
     }

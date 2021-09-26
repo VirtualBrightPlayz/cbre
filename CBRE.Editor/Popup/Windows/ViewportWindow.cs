@@ -64,11 +64,11 @@ namespace CBRE.Editor.Popup {
                 view = tmpview;
                 if (ImGui.BeginChildFrame(1, new Num.Vector2(view.Size.X, view.Size.Y), flags) && renderTargetPtr != IntPtr.Zero && open) {
                     ImGui.Image(renderTargetPtr, new Num.Vector2(view.Size.X, view.Size.Y));
+                    ImGui.EndChildFrame();
                 }
-                ImGui.EndChildFrame();
                 selected = ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows);
+                ImGui.End();
             }
-            ImGui.End();
             return open;
         }
 

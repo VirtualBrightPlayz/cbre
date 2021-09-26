@@ -43,8 +43,8 @@ namespace CBRE.Editor.Popup {
                         break;
                     }
                 }
+                ImGui.EndChild();
             }
-            ImGui.EndChild();
         }
 
         private HotkeyDefinition definition;

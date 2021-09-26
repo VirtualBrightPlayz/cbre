@@ -740,34 +740,33 @@ namespace CBRE.Editor.Tools
             }
 
             _imguiRenderer.BeforeLayout(GameMain.Instance.LastTime);
-            ImGui.Begin("", ImGuiWindowFlags.NoTitleBar |
-            ImGuiWindowFlags.NoResize |
-            ImGuiWindowFlags.NoMove |
-            ImGuiWindowFlags.NoScrollbar |
-            ImGuiWindowFlags.NoSavedSettings |
-            ImGuiWindowFlags.NoInputs |
-            ImGuiWindowFlags.NoBackground |
-            ImGuiWindowFlags.NoMouseInputs |
-            ImGuiWindowFlags.NoNavFocus
-            );
-            ImGui.SetWindowPos(new Num.Vector2());
-            ImGui.SetWindowSize(new Num.Vector2(viewport.Width, viewport.Height));
+            if (ImGui.Begin("", ImGuiWindowFlags.NoTitleBar |
+                                ImGuiWindowFlags.NoResize |
+                                ImGuiWindowFlags.NoMove |
+                                ImGuiWindowFlags.NoScrollbar |
+                                ImGuiWindowFlags.NoSavedSettings |
+                                ImGuiWindowFlags.NoInputs |
+                                ImGuiWindowFlags.NoBackground |
+                                ImGuiWindowFlags.NoMouseInputs |
+                                ImGuiWindowFlags.NoNavFocus)) {
+                ImGui.SetWindowPos(new Num.Vector2());
+                ImGui.SetWindowSize(new Num.Vector2(viewport.Width, viewport.Height));
 
-            Num.Vector2 wid = ImGui.CalcTextSize(widthText);
-            Num.Vector2 hei = ImGui.CalcTextSize(heightText);
-            Num.Vector4 col = new Num.Vector4(BoxColour.R, BoxColour.G, BoxColour.B, BoxColour.A);
+                Num.Vector2 wid = ImGui.CalcTextSize(widthText);
+                Num.Vector2 hei = ImGui.CalcTextSize(heightText);
+                Num.Vector4 col = new Num.Vector4(BoxColour.R, BoxColour.G, BoxColour.B, BoxColour.A);
 
-            var cx = (float)(boxStart.X + (boxEnd.X - boxStart.X) / 2);
-            var cy = (float)(boxStart.Y + (boxEnd.Y - boxStart.Y) / 2);
+                var cx = (float)(boxStart.X + (boxEnd.X - boxStart.X) / 2);
+                var cy = (float)(boxStart.Y + (boxEnd.Y - boxStart.Y) / 2);
 
-            ImGui.SetCursorPos(new Num.Vector2(cx - wid.X / 2f, viewport.Height - (float)boxEnd.Y - wid.Y - 18f));
-            ImGui.TextColored(col, widthText);
+                ImGui.SetCursorPos(new Num.Vector2(cx - wid.X / 2f, viewport.Height - (float)boxEnd.Y - wid.Y - 18f));
+                ImGui.TextColored(col, widthText);
 
-            ImGui.SetCursorPos(new Num.Vector2((float)boxEnd.X + 18f, viewport.Height - cy - hei.Y * 0.75f));
-            ImGui.TextColored(col, heightText);
+                ImGui.SetCursorPos(new Num.Vector2((float)boxEnd.X + 18f, viewport.Height - cy - hei.Y * 0.75f));
+                ImGui.TextColored(col, heightText);
 
-            ImGui.End();
-            _imguiRenderer.AfterLayout();
+                ImGui.End();
+            }
         }
 
         protected virtual void Render2D(Viewport2D viewport)
