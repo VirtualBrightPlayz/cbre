@@ -199,8 +199,17 @@ namespace CBRE.Editor.Documents {
 
         public void FileClose() {
             if (_document.History.TotalActionsSinceLastSave > 0) {
-                new SaveMap("", _document, true);
-                return;
+                var result = NativeFileDialog.SaveDialog.Open("vmf", _document.MapFileName, out string outPath);
+                if (result == Result.Okay) {
+                    try {
+                        _document.SaveFile(outPath);
+                    }
+                    catch (ProviderNotFoundException e) {
+                        new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) });
+                    }
+                } else {
+                    return;
+                }
             }
             DocumentManager.Remove(_document);
         }

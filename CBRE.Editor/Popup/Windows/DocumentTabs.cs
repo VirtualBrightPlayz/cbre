@@ -1,3 +1,4 @@
+using CBRE.Common.Mediator;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
 using ImGuiNET;
@@ -33,7 +34,10 @@ namespace CBRE.Editor.Popup {
                         using (new ColorPush(ImGuiCol.ButtonActive, Color.DarkRed)) {
                             using (new ColorPush(ImGuiCol.ButtonHovered, Color.Red)) {
                                 if (ImGui.Button($"X##doc{DocumentManager.Documents.IndexOf(doc)}")) {
-                                    DocumentManager.Remove(doc);
+                                    var currDoc = DocumentManager.CurrentDocument;
+                                    DocumentManager.SwitchTo(doc);
+                                    Mediator.Publish(CBRE.Settings.HotkeysMediator.FileClose);
+                                    if (doc != currDoc) { DocumentManager.SwitchTo(currDoc); }
                                 }
                             }
                         }
