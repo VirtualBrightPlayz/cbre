@@ -21,6 +21,7 @@ using CBRE.Settings;
 using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -199,19 +200,29 @@ namespace CBRE.Editor.Documents {
 
         public void FileClose() {
             if (_document.History.TotalActionsSinceLastSave > 0) {
-                var result = NativeFileDialog.SaveDialog.Open("vmf", _document.MapFileName, out string outPath);
-                if (result == Result.Okay) {
-                    try {
-                        _document.SaveFile(outPath);
-                    }
-                    catch (ProviderNotFoundException e) {
-                        new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) });
-                    }
-                } else {
-                    return;
-                }
+                new ConfirmPopup($"Closing {_document.MapFileName}",
+                    $"{_document.MapFileName} has unsaved changes.\nWould you like to save before closing?") {
+                    Buttons = new [] {
+                        new ConfirmPopup.Button("Yes", () => {
+                            var result = NativeFileDialog.SaveDialog.Open("vmf", _document.MapFileName, out string outPath);
+                            if (result == Result.Okay) {
+                                try {
+                                    _document.SaveFile(outPath);
+                                    DocumentManager.Remove(_document);
+                                } catch (ProviderNotFoundException e) {
+                                    new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) });
+                                }
+                            }
+                        }),
+                        new ConfirmPopup.Button("No", () => {
+                            DocumentManager.Remove(_document);
+                        }),
+                        new ConfirmPopup.Button("Cancel", () => { }),
+                    }.ToImmutableArray()
+                };
+            } else {
+                DocumentManager.Remove(_document);
             }
-            DocumentManager.Remove(_document);
         }
 
         public void FileSave() {

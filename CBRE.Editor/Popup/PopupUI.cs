@@ -10,8 +10,10 @@ namespace CBRE.Editor.Popup {
         private ImColor _color;
         public bool DrawAlways { get; protected set; }
         
-        protected virtual bool CanBeClosed => true;
-        protected virtual bool CanBeDefocused => true; //TODO: implement
+        protected virtual bool canBeClosed => true;
+        protected virtual bool canBeDefocused => true; //TODO: implement
+
+        protected int popupIndex => GameMain.Instance.Popups.IndexOf(this);
 
         public PopupUI(string title)
         {
@@ -32,9 +34,9 @@ namespace CBRE.Editor.Popup {
             bool closeButtonWasntHit = true;
             if (_hasColor) { ImGui.PushStyleColor(ImGuiCol.WindowBg, _color.Value); }
 
-            string titleAndIndex = $"{_title}##popup{GameMain.Instance.Popups.IndexOf(this)}";
+            string titleAndIndex = $"{_title}##popup{popupIndex}";
             bool windowWasInitialized = false;
-            if (CanBeClosed) {
+            if (canBeClosed) {
                 windowWasInitialized = ImGui.Begin(titleAndIndex, ref closeButtonWasntHit,
                     ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking);
             } else {
