@@ -290,7 +290,7 @@ namespace CBRE.Editor.Tools.TextureTool {
                 var currentSelection = Document.Selection.GetSelectedObjects();
                 Document.Selection.SwitchToFaceSelection();
                 var newSelection = Document.Selection.GetSelectedFaces().Select(x => x.Parent);
-                Document.RenderSelection(currentSelection.Union(newSelection));
+                Document.RenderObjects(currentSelection.Union(newSelection));
             }
 
             var selection = Document.Selection.GetSelectedFaces().OrderBy(x => x.Texture.Texture == null ? 1 : 0).FirstOrDefault();
@@ -338,7 +338,7 @@ namespace CBRE.Editor.Tools.TextureTool {
                 var currentSelection = Document.Selection.GetSelectedFaces().Select(x => x.Parent);
                 Document.Selection.SwitchToObjectSelection();
                 var newSelection = Document.Selection.GetSelectedObjects();
-                Document.RenderSelection(currentSelection.Union(newSelection));
+                Document.RenderObjects(currentSelection.Union(newSelection));
             }
 
             Mediator.UnsubscribeAll(this);

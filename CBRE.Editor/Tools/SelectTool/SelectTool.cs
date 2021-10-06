@@ -336,8 +336,8 @@ namespace CBRE.Editor.Tools.SelectTool
             objectsToDeselect = NormaliseSelection(objectsToDeselect.Where(x => x != null), ignoreGrouping);
             objectsToSelect = NormaliseSelection(objectsToSelect.Where(x => x != null), ignoreGrouping);
 
-            // Don't bother deselecting the objects we're about to select
-            objectsToDeselect = objectsToDeselect.Where(x => !objectsToSelect.Contains(x));
+            // The following line breaks undo, don't uncomment unless you know what you're doing!
+            //objectsToDeselect = objectsToDeselect.Where(x => !objectsToSelect.Contains(x));
 
             // Perform selections
             var deselected = objectsToDeselect.ToList();

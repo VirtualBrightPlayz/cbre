@@ -312,10 +312,6 @@ namespace CBRE.Editor.Documents {
             ViewportManager.MarkForRerender();
         }
 
-        public void RenderSelection(IEnumerable<MapObject> objects) {
-            RenderObjects(objects);
-        }
-
         public void RenderObjects(IEnumerable<MapObject> objects) {
             var faces = objects.Where(obj => obj is Solid).SelectMany(obj => ((Solid)obj).Faces);
             RenderFaces(faces);

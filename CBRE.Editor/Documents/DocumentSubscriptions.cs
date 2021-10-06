@@ -174,7 +174,7 @@ namespace CBRE.Editor.Documents {
         }
 
         private void DocumentTreeSelectedObjectsChanged(IEnumerable<MapObject> objects) {
-            _document.RenderSelection(objects);
+            _document.RenderObjects(objects);
         }
 
         private void DocumentTreeFacesChanged(IEnumerable<Face> faces) {
@@ -182,7 +182,7 @@ namespace CBRE.Editor.Documents {
         }
 
         private void DocumentTreeSelectedFacesChanged(IEnumerable<Face> faces) {
-            _document.RenderSelection(faces.Select(x => x.Parent).Distinct());
+            _document.RenderObjects(faces.Select(x => x.Parent).Distinct());
         }
 
         public void SettingsChanged() {
@@ -261,13 +261,13 @@ namespace CBRE.Editor.Documents {
         }
 
         public void OperationsPaste() {
-            if (!ClipboardManager.CanPaste()) return;
+            if (!ClipboardManager.CanPaste()) { return; }
 
             var content = ClipboardManager.GetPastedContent(_document);
-            if (content == null) return;
+            if (content == null) { return; }
 
             var list = content.ToList();
-            if (!list.Any()) return;
+            if (!list.Any()) { return; }
 
             list.SelectMany(x => x.FindAll()).ToList().ForEach(x => x.IsSelected = true);
             _document.Selection.SwitchToObjectSelection();
@@ -320,7 +320,7 @@ namespace CBRE.Editor.Documents {
         }
 
         public void SelectAll() {
-            var all = _document.Map.WorldSpawn.Find(x => !(x is World));
+            var all = _document.Map.WorldSpawn.Find(x => x is not World && !x.IsSelected);
             _document.PerformAction("Select all", new Actions.MapObjects.Selection.Select(all));
         }
 

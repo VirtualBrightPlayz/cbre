@@ -318,7 +318,9 @@ namespace CBRE.Editor.Rendering {
             }
 
             public void RemoveFace(Face face) {
-                if (faces.Contains(face)) { faces.Remove(face); }
+                if (!faces.Contains(face)) { return; }
+
+                faces.Remove(face);
                 MarkDirty();
             }
 

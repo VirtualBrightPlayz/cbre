@@ -91,8 +91,16 @@ namespace CBRE.Common.Mediator {
             Publish(message.ToString(), parameter);
         }
 
+        private readonly static Stack<string> messageStack = new Stack<string>();
         public static void Publish(string message, object parameter = null) {
-            if (!Listeners.ContainsKey(message)) return;
+            if (!Listeners.ContainsKey(message)) { return; }
+            string debugLine = "";
+            foreach (string msg in messageStack) {
+                debugLine += $"{msg} > ";
+            }
+            debugLine += message;
+            Debug.WriteLine(debugLine);
+            messageStack.Push(message);
             var list = new List<WeakReference>(Listeners[message]);
             foreach (var reference in list) {
                 if (!reference.IsAlive) {
@@ -108,6 +116,7 @@ namespace CBRE.Common.Mediator {
                     }
                 }
             }
+            messageStack.Pop();
         }
     }
 }

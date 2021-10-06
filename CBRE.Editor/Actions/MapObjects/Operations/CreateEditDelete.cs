@@ -64,7 +64,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             public void Reverse(Document document) {
                 var root = document.Map.WorldSpawn;
                 var obj = root.FindByID(ID);
-                if (obj == null) return;
+                if (obj == null) { return; }
 
                 // Unclone will reset children, need to reselect them if needed
                 var deselect = obj.FindAll().Where(x => x.IsSelected).ToList();
@@ -182,11 +182,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             _createdIds = _objectsToCreate.Select(x => x.MapObject.ID).ToList();
             _objectsToCreate.ForEach(x => x.MapObject.SetParent(document.Map.WorldSpawn.FindByID(x.ParentID)));
 
-            foreach (var solid in _objectsToCreate.Where(o => o.MapObject is Solid).Select(o => o.MapObject as Solid)) {
-                foreach (var face in solid.Faces) {
-                    document.ObjectRenderer.AddFace(face);
-                }
-            }
+            _objectsToCreate.ForEach(x => document.ObjectRenderer.AddFaces(x.MapObject));
 
             // Select objects if IsSelected is true
             var sel = _objectsToCreate.Where(x => x.IsSelected).ToList();
@@ -199,11 +195,6 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             // Delete
             var objects = document.Map.WorldSpawn.Find(x => _idsToDelete.Contains(x.ID) && x.Parent != null).SelectMany(x => x.FindAll()).ToList();
             
-            objects.ForEach(p => {
-                if (p is Solid s)
-                    s.Faces.ForEach(f => document.ObjectRenderer.RemoveFace(f));
-            });
-
             // Recursively check for parent groups that will be empty after these objects have been deleted
             IList<MapObject> emptyParents;
             do {
@@ -220,6 +211,8 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             foreach (var dr in _deletedObjects.Where(x => x.TopMost)) {
                 dr.Object.SetParent(null);
             }
+            _deletedObjects.ForEach(x => document.ObjectRenderer.RemoveFaces(x.Object));
+
             _idsToDelete = null;
 
             // Edit

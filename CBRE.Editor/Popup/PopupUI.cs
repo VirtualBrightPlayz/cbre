@@ -47,7 +47,7 @@ namespace CBRE.Editor.Popup {
             }
             
             bool shouldBeOpen = true;
-            bool closeButtonWasntHit = true;
+            bool closeButtonWasntHit = true; //must default to true because ImGui.Begin only writes this when the X button is hit
             if (_hasColor) { ImGui.PushStyleColor(ImGuiCol.WindowBg, _color.Value); }
 
             string titleAndIndex = $"{_title}##popup{popupIndex}";
