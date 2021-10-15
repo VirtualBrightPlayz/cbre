@@ -12,7 +12,7 @@ namespace CBRE.Common.Mediator {
     public static class Mediator {
         public delegate void MediatorExceptionEventHandler(object sender, MediatorExceptionEventArgs e);
         public static event MediatorExceptionEventHandler MediatorException;
-        private static void OnMediatorException(object sender, string message, object parameter, Exception ex) {
+        private static void OnMediatorException(object sender, Enum message, object parameter, Exception ex) {
             if (MediatorException != null) {
                 var st = new StackTrace();
                 var frames = st.GetFrames() ?? new StackFrame[0];
@@ -31,22 +31,22 @@ namespace CBRE.Common.Mediator {
         /// <param name="obj">The object to call the method on</param>
         /// <param name="message">The name of the method</param>
         /// <param name="parameter">The parameter. If this is an array, the multi-parameter method will be given priority over the single- and zero-parameter methods</param>
-        public static bool ExecuteDefault(object obj, string message, object parameter) {
+        public static bool ExecuteDefault(object obj, Enum message, object parameter) {
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
             var t = obj.GetType();
             MethodInfo method = null;
             object[] parameters = null;
             if (parameter is object[]) {
                 var arr = (object[])parameter;
-                method = t.GetMethod(message, flags, null, arr.Select(x => x == null ? typeof(object) : x.GetType()).ToArray(), null);
+                method = t.GetMethod(message.ToString(), flags, null, arr.Select(x => x == null ? typeof(object) : x.GetType()).ToArray(), null);
                 parameters = arr;
             }
             if (method == null && parameter != null) {
-                method = t.GetMethod(message, flags, null, new[] { parameter.GetType() }, null);
+                method = t.GetMethod(message.ToString(), flags, null, new[] { parameter.GetType() }, null);
                 parameters = new[] { parameter };
             }
             if (method == null) {
-                method = t.GetMethod(message, flags);
+                method = t.GetMethod(message.ToString(), flags);
                 if (method != null) parameters = method.GetParameters().Select(x => (object)null).ToArray();
             }
             if (method != null) {
@@ -58,29 +58,27 @@ namespace CBRE.Common.Mediator {
             return false;
         }
 
-        private static readonly MultiDictionary<string, WeakReference> Listeners;
+        private struct Listener {
+            public WeakReference Ref { get; init; }
+            public readonly int Priority { get; init; }
+        }
+        
+        private static readonly MultiDictionary<Enum, Listener> Listeners;
 
         static Mediator() {
-            Listeners = new MultiDictionary<string, WeakReference>();
+            Listeners = new MultiDictionary<Enum, Listener>();
         }
 
-        public static void Subscribe(string message, IMediatorListener obj) {
-            Listeners.AddValue(message, new WeakReference(obj));
-        }
-
-        public static void Subscribe(Enum message, IMediatorListener obj) {
-            Listeners.AddValue(message.ToString(), new WeakReference(obj));
-        }
-
-        public static void Unsubscribe(string message, IMediatorListener obj) {
-            if (!Listeners.ContainsKey(message)) return;
-            var l = Listeners[message];
-            l.RemoveAll(x => !x.IsAlive || x.Target == null || x.Target == obj);
+        public static void Subscribe(Enum message, IMediatorListener obj, int priority = 0) {
+            Listeners.AddValue(message, new Listener { Ref = new WeakReference(obj), Priority = priority });
+            foreach (var list in Listeners.Values) {
+                list.Sort((l1, l2) => l1.Priority-l2.Priority);
+            }
         }
 
         public static void UnsubscribeAll(IMediatorListener obj) {
             foreach (var listener in Listeners.Values) {
-                listener.RemoveAll(x => !x.IsAlive || x.Target == null || x.Target == obj);
+                listener.RemoveAll(x => !x.Ref.IsAlive || x.Ref.Target == null || x.Ref.Target == obj);
             }
         }
 
@@ -88,31 +86,33 @@ namespace CBRE.Common.Mediator {
             object parameter = null;
             if (parameters.Length == 1) parameter = parameters[0];
             else if (parameters.Length > 1) parameter = parameters;
-            Publish(message.ToString(), parameter);
+            Publish(message, parameter);
         }
 
-        private readonly static Stack<string> messageStack = new Stack<string>();
-        public static void Publish(string message, object parameter = null) {
+        private readonly static Stack<Enum> messageStack = new Stack<Enum>();
+        public static void Publish(Enum message, object parameter = null) {
             if (!Listeners.ContainsKey(message)) { return; }
             string debugLine = "";
-            foreach (string msg in messageStack) {
+            foreach (Enum msg in messageStack) {
                 debugLine += $"{msg} > ";
             }
             debugLine += message;
             Debug.WriteLine(debugLine);
             messageStack.Push(message);
-            var list = new List<WeakReference>(Listeners[message]);
-            foreach (var reference in list) {
-                if (!reference.IsAlive) {
-                    Listeners.RemoveValue(message, reference);
-                } else if (reference.Target != null) {
-                    var method = reference.Target.GetType().GetMethod("Notify", new[] { typeof(string), typeof(object) });
-                    if (method != null) {
-                        try {
-                            method.Invoke(reference.Target, new[] { message, parameter });
-                        } catch (Exception ex) {
-                            OnMediatorException(method, message, parameter, ex);
-                        }
+            var list = Listeners[message].ToArray();
+            foreach (var listener in list) {
+                Debug.WriteLine($"{listener.Priority} {listener.Ref.Target?.GetType() ?? typeof(int)}");
+                var target = listener.Ref.Target;
+                if (target is null || !listener.Ref.IsAlive) {
+                    Listeners.RemoveValue(message, listener);
+                    continue;
+                }
+                var method = target.GetType().GetMethod("Notify", new[] { typeof(Enum), typeof(object) });
+                if (method != null) {
+                    try {
+                        method.Invoke(target, new[] { message, parameter });
+                    } catch (Exception ex) {
+                        OnMediatorException(method, message, parameter, ex);
                     }
                 }
             }

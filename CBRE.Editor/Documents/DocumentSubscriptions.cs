@@ -22,6 +22,7 @@ using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -47,110 +48,109 @@ namespace CBRE.Editor.Documents {
         }
 
         public void Subscribe() {
-            Mediator.Subscribe(EditorMediator.DocumentTreeStructureChanged, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeObjectsChanged, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeSelectedObjectsChanged, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeFacesChanged, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeSelectedFacesChanged, this);
+            Mediator.Subscribe(EditorMediator.DocumentTreeStructureChanged, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.DocumentTreeObjectsChanged, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.DocumentTreeSelectedObjectsChanged, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.DocumentTreeFacesChanged, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.DocumentTreeSelectedFacesChanged, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.SettingsChanged, this);
+            Mediator.Subscribe(EditorMediator.SettingsChanged, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.FileClose, this);
-            Mediator.Subscribe(HotkeysMediator.FileSave, this);
-            Mediator.Subscribe(HotkeysMediator.FileSaveAs, this);
-            //Mediator.Subscribe(HotkeysMediator.FileExport, this);
-            Mediator.Subscribe(HotkeysMediator.FileCompile, this);
+            Mediator.Subscribe(HotkeysMediator.FileClose, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FileSave, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FileSaveAs, this, priority: -1);
+            //Mediator.Subscribe(HotkeysMediator.FileExport, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FileCompile, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.HistoryUndo, this);
-            Mediator.Subscribe(HotkeysMediator.HistoryRedo, this);
+            Mediator.Subscribe(HotkeysMediator.HistoryUndo, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.HistoryRedo, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.OperationsCopy, this);
-            Mediator.Subscribe(HotkeysMediator.OperationsCut, this);
-            Mediator.Subscribe(HotkeysMediator.OperationsPaste, this);
-            Mediator.Subscribe(HotkeysMediator.OperationsPasteSpecial, this);
-            Mediator.Subscribe(HotkeysMediator.OperationsDelete, this);
-            Mediator.Subscribe(HotkeysMediator.SelectionClear, this);
-            Mediator.Subscribe(HotkeysMediator.SelectAll, this);
-            Mediator.Subscribe(HotkeysMediator.ObjectProperties, this);
+            Mediator.Subscribe(HotkeysMediator.OperationsCopy, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.OperationsCut, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.OperationsPaste, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.OperationsPasteSpecial, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.OperationsDelete, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.SelectionClear, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.SelectAll, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ObjectProperties, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.QuickHideSelected, this);
-            Mediator.Subscribe(HotkeysMediator.QuickHideUnselected, this);
-            Mediator.Subscribe(HotkeysMediator.QuickHideShowAll, this);
+            Mediator.Subscribe(HotkeysMediator.QuickHideSelected, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.QuickHideUnselected, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.QuickHideShowAll, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.SwitchTool, this);
-            Mediator.Subscribe(HotkeysMediator.ApplyCurrentTextureToSelection, this);
+            Mediator.Subscribe(HotkeysMediator.SwitchTool, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ApplyCurrentTextureToSelection, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.RotateClockwise, this);
-            Mediator.Subscribe(HotkeysMediator.RotateCounterClockwise, this);
+            Mediator.Subscribe(HotkeysMediator.RotateClockwise, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.RotateCounterClockwise, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.Carve, this);
-            Mediator.Subscribe(HotkeysMediator.MakeHollow, this);
-            Mediator.Subscribe(HotkeysMediator.GroupingGroup, this);
-            Mediator.Subscribe(HotkeysMediator.GroupingUngroup, this);
-            Mediator.Subscribe(HotkeysMediator.TieToEntity, this);
-            Mediator.Subscribe(HotkeysMediator.TieToWorld, this);
-            Mediator.Subscribe(HotkeysMediator.Transform, this);
-            Mediator.Subscribe(HotkeysMediator.ReplaceTextures, this);
-            Mediator.Subscribe(HotkeysMediator.SnapSelectionToGrid, this);
-            Mediator.Subscribe(HotkeysMediator.SnapSelectionToGridIndividually, this);
-            Mediator.Subscribe(HotkeysMediator.AlignXMax, this);
-            Mediator.Subscribe(HotkeysMediator.AlignXMin, this);
-            Mediator.Subscribe(HotkeysMediator.AlignYMax, this);
-            Mediator.Subscribe(HotkeysMediator.AlignYMin, this);
-            Mediator.Subscribe(HotkeysMediator.AlignZMax, this);
-            Mediator.Subscribe(HotkeysMediator.AlignZMin, this);
-            Mediator.Subscribe(HotkeysMediator.FlipX, this);
-            Mediator.Subscribe(HotkeysMediator.FlipY, this);
-            Mediator.Subscribe(HotkeysMediator.FlipZ, this);
+            Mediator.Subscribe(HotkeysMediator.Carve, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.MakeHollow, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GroupingGroup, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GroupingUngroup, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.TieToEntity, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.TieToWorld, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.Transform, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ReplaceTextures, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.SnapSelectionToGrid, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.SnapSelectionToGridIndividually, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignXMax, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignXMin, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignYMax, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignYMin, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignZMax, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignZMin, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FlipX, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FlipY, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FlipZ, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.GridIncrease, this);
-            Mediator.Subscribe(HotkeysMediator.GridDecrease, this);
-            Mediator.Subscribe(HotkeysMediator.CenterAllViewsOnSelection, this);
-            Mediator.Subscribe(HotkeysMediator.Center2DViewsOnSelection, this);
-            Mediator.Subscribe(HotkeysMediator.Center3DViewsOnSelection, this);
-            Mediator.Subscribe(HotkeysMediator.GoToBrushID, this);
-            Mediator.Subscribe(HotkeysMediator.GoToCoordinates, this);
+            Mediator.Subscribe(HotkeysMediator.GridIncrease, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GridDecrease, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.CenterAllViewsOnSelection, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.Center2DViewsOnSelection, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.Center3DViewsOnSelection, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GoToBrushID, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GoToCoordinates, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.ToggleSnapToGrid, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleShow2DGrid, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleShow3DGrid, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleIgnoreGrouping, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleTextureLock, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleTextureScalingLock, this);
-            //Mediator.Subscribe(HotkeysMediator.ToggleCordon, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleHideFaceMask, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleHideDisplacementSolids, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleHideNullTextures, this);
+            Mediator.Subscribe(HotkeysMediator.ToggleSnapToGrid, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleShow2DGrid, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleShow3DGrid, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleIgnoreGrouping, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleTextureLock, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleTextureScalingLock, this, priority: -1);
+            //Mediator.Subscribe(HotkeysMediator.ToggleCordon, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleHideFaceMask, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleHideDisplacementSolids, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleHideNullTextures, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.ShowSelectedBrushID, this);
-            Mediator.Subscribe(HotkeysMediator.ShowMapInformation, this);
-            Mediator.Subscribe(HotkeysMediator.ShowLogicalTree, this);
-            Mediator.Subscribe(HotkeysMediator.ShowEntityReport, this);
-            Mediator.Subscribe(HotkeysMediator.CheckForProblems, this);
+            Mediator.Subscribe(HotkeysMediator.ShowSelectedBrushID, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ShowMapInformation, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ShowLogicalTree, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ShowEntityReport, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.CheckForProblems, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.ViewportRightClick, this);
+            Mediator.Subscribe(EditorMediator.ViewportRightClick, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.WorldspawnProperties, this);
+            Mediator.Subscribe(EditorMediator.WorldspawnProperties, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.VisgroupSelect, this);
-            Mediator.Subscribe(EditorMediator.VisgroupShowAll, this);
-            Mediator.Subscribe(EditorMediator.VisgroupShowEditor, this);
-            Mediator.Subscribe(EditorMediator.VisgroupToggled, this);
-            Mediator.Subscribe(HotkeysMediator.VisgroupCreateNew, this);
-            Mediator.Subscribe(EditorMediator.SetZoomValue, this);
-            Mediator.Subscribe(EditorMediator.TextureSelected, this);
-            Mediator.Subscribe(EditorMediator.SelectMatchingTextures, this);
+            Mediator.Subscribe(EditorMediator.VisgroupSelect, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.VisgroupShowAll, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.VisgroupShowEditor, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.VisgroupToggled, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.VisgroupCreateNew, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.SetZoomValue, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.TextureSelected, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.SelectMatchingTextures, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.ViewportCreated, this);
+            Mediator.Subscribe(EditorMediator.ViewportCreated, this, priority: -1);
         }
 
         public void Unsubscribe() {
             Mediator.UnsubscribeAll(this);
         }
 
-        public void Notify(string message, object data) {
-            HotkeysMediator val;
-            if (ToolManager.ActiveTool != null && Enum.TryParse(message, true, out val)) {
+        public void Notify(Enum message, object data) {
+            if (ToolManager.ActiveTool != null && message is HotkeysMediator val) {
                 var result = ToolManager.ActiveTool.InterceptHotkey(val, data);
                 if (result == HotkeyInterceptResult.Abort) return;
                 if (result == HotkeyInterceptResult.SwitchToSelectTool) {
@@ -174,6 +174,11 @@ namespace CBRE.Editor.Documents {
         }
 
         private void DocumentTreeSelectedObjectsChanged(IEnumerable<MapObject> objects) {
+            var selectedObjects = _document.Selection.GetSelectedObjects().ToArray();
+            var types = selectedObjects.Select(o => o.GetType()).Distinct().ToArray();
+            foreach (var t in types) {
+                Debug.WriteLine($"{t}: {selectedObjects.Count(o => o.GetType() == t)}");
+            }
             _document.RenderObjects(objects);
         }
 
@@ -277,6 +282,12 @@ namespace CBRE.Editor.Documents {
             _document.PerformAction(name, new ActionCollection(
                                               new Deselect(selected), // Deselect the current objects
                                               new Create(_document.Map.WorldSpawn.ID, list))); // Add and select the new objects
+            
+            var selectedObjects = _document.Selection.GetSelectedObjects().ToArray();
+            var types = selectedObjects.Select(o => o.GetType()).Distinct().ToArray();
+            foreach (var t in types) {
+                Debug.WriteLine($"{t}: {selectedObjects.Count(o => o.GetType() == t)}");
+            }
         }
 
         public void OperationsPasteSpecial() {
@@ -308,9 +319,9 @@ namespace CBRE.Editor.Documents {
 
         public void OperationsDelete() {
             if (!_document.Selection.IsEmpty() && !_document.Selection.InFaceSelection) {
-                var sel = _document.Selection.GetSelectedParents().Select(x => x.ID).ToList();
-                var name = "Removed " + sel.Count + " item" + (sel.Count == 1 ? "" : "s");
-                _document.PerformAction(name, new Delete(sel));
+                var deleted = _document.Selection.GetSelectedObjects().Select(x => x.ID).ToList();
+                var name = "Removed " + deleted.Count + " item" + (deleted.Count == 1 ? "" : "s");
+                _document.PerformAction(name, new Delete(deleted));
             }
         }
 

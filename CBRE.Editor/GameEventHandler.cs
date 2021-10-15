@@ -14,7 +14,7 @@ using Path = System.IO.Path;
 
 namespace CBRE.Editor {
     partial class GameMain : IMediatorListener {
-        public void Notify(string message, object data) {
+        public void Notify(Enum message, object data) {
             /*if (Enum.TryParse(message, true, out HotkeysMediator hotkeys)) {
 
             }*/
@@ -24,7 +24,7 @@ namespace CBRE.Editor {
         }
 
         public void MediatorError(object sender, MediatorExceptionEventArgs e) {
-            Logging.Logger.ShowException(e.Exception, e.Message);
+            Logging.Logger.ShowException(e.Exception, e.Message.ToString());
         }
 
         public void Subscribe() {

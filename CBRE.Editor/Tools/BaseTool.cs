@@ -1,4 +1,5 @@
-﻿using CBRE.Common.Mediator;
+﻿using System;
+using CBRE.Common.Mediator;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Extensions;
@@ -150,7 +151,7 @@ namespace CBRE.Editor.Tools
             // Virtual
         }
 
-        public virtual void Notify(string message, object data)
+        public virtual void Notify(Enum message, object data)
         {
             Mediator.ExecuteDefault(this, message, data);
         }

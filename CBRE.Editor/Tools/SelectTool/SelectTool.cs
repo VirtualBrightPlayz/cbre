@@ -14,6 +14,7 @@ using CBRE.Settings;
 using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
@@ -201,6 +202,12 @@ namespace CBRE.Editor.Tools.SelectTool
         private void SelectionChanged()
         {
             if (Document == null) return;
+            var selectedObjects = Document.Selection.GetSelectedObjects().ToArray();
+            var types = selectedObjects.Select(o => o.GetType()).Distinct().ToArray();
+            foreach (var t in types) {
+                Debug.WriteLine($"{t}: {selectedObjects.Count(o => o.GetType() == t)}");
+            }
+            
             UpdateBoxBasedOnSelection();
             if (State.Action != BoxAction.ReadyToResize && _currentTool != null) SetCurrentTool(null);
             else if (State.Action == BoxAction.ReadyToResize && _currentTool == null) SetCurrentTool(_lastTool ?? _tools[0]);
@@ -867,7 +874,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         private void RenderTransformBox(Viewport2D viewport)
         {
-            if (CurrentTransform == null) return;
+            if (CurrentTransform == null) { return; }
 
             var box = new Box(State.PreTransformBoxStart, State.PreTransformBoxEnd);
             var trans = CreateMatrixMultTransformation(CurrentTransform);
@@ -877,7 +884,6 @@ namespace CBRE.Editor.Tools.SelectTool
 
             PrimitiveDrawing.Begin(PrimitiveType.LineList);
             PrimitiveDrawing.SetColor(Color.FromArgb(64, BoxColour));
-
 
             PrimitiveDrawing.DottedLine(new Vector3(s.X, s.Y, e.Z), new Vector3(e.X, s.Y, e.Z), 4m / viewport.Zoom);
             PrimitiveDrawing.DottedLine(new Vector3(s.X, e.Y, e.Z), new Vector3(e.X, e.Y, e.Z), 4m / viewport.Zoom);

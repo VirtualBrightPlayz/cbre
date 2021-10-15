@@ -156,7 +156,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             }
             _objectsToCreate.ForEach(x => x.MapObject.SetParent(null));
             _createdIds = null;
-
+            
             // Delete
             _idsToDelete = _deletedObjects.Select(x => x.Object.ID).ToList();
             _deletedObjects.ForEach(p => document.ObjectRenderer.AddFaces(p.Object));
