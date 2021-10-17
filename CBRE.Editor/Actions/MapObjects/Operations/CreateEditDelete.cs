@@ -203,8 +203,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             _objectsToCreate = null;
 
             // Delete
-            var objects = document.Map.WorldSpawn.Find(x => _idsToDelete.Contains(x.ID) && x.Parent != null).SelectMany(x => x.FindAll()).ToList();
-            objects = objects.SelectMany(SelectSelfAndChildren).ToList();
+            var objects = document.Map.WorldSpawn.Find(x => _idsToDelete.Contains(x.ID) && x.Parent != null).SelectMany(SelectSelfAndChildren).ToList();
 
             // Recursively check for parent groups that will be empty after these objects have been deleted
             IList<MapObject> emptyParents;
