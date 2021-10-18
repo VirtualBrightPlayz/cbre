@@ -274,7 +274,7 @@ namespace CBRE.Editor.Documents {
             var list = content.ToList();
             if (!list.Any()) { return; }
 
-            list.SelectMany(x => x.FindAll()).ToList().ForEach(x => x.IsSelected = true);
+            list.SelectMany(x => x.GetSelfAndChildren()).ToList().ForEach(x => x.IsSelected = true);
             _document.Selection.SwitchToObjectSelection();
 
             var name = "Pasted " + list.Count + " item" + (list.Count == 1 ? "" : "s");
@@ -299,7 +299,7 @@ namespace CBRE.Editor.Documents {
             var list = content.ToList();
             if (!list.Any()) return;
 
-            foreach (var face in list.SelectMany(x => x.FindAll().OfType<Solid>().SelectMany(y => y.Faces))) {
+            foreach (var face in list.SelectMany(x => x.GetSelfAndChildren().OfType<Solid>().SelectMany(y => y.Faces))) {
                 face.Texture.Texture = _document.GetTexture(face.Texture.Name);
             }
 
@@ -379,7 +379,7 @@ namespace CBRE.Editor.Documents {
             var autohide = _document.Map.GetAllVisgroups().FirstOrDefault(x => x.Name == "Autohide");
             if (autohide == null) return;
 
-            var objects = _document.Map.WorldSpawn.FindAll().Except(_document.Selection.GetSelectedObjects()).Where(x => !(x is World) && !(x is Group));
+            var objects = _document.Map.WorldSpawn.GetSelfAndChildren().Except(_document.Selection.GetSelectedObjects()).Where(x => !(x is World) && !(x is Group));
             _document.PerformAction("Hide objects", new QuickHideObjects(objects));
         }
 

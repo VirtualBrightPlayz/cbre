@@ -142,7 +142,7 @@ namespace CBRE.Editor.Tools.SelectTool
                 var parents = selected.Select(x => x.FindTopmostParent(y => y is Group || y is Entity) ?? x).Distinct();
                 foreach (var p in parents)
                 {
-                    var children = p.FindAll();
+                    var children = p.GetSelfAndChildren();
                     var leaves = children.Where(x => !x.HasChildren);
                     if (leaves.All(selected.Contains)) select.AddRange(children.Where(x => !selected.Contains(x)));
                     else deselect.AddRange(children.Where(selected.Contains));
@@ -318,7 +318,7 @@ namespace CBRE.Editor.Tools.SelectTool
         {
             return ignoreGrouping
                        ? objects.Where(x => !x.HasChildren)
-                       : objects.Select(x => x.FindTopmostParent(y => y is Group || y is Entity) ?? x).Distinct().SelectMany(x => x.FindAll());
+                       : objects.Select(x => x.FindTopmostParent(y => y is Group || y is Entity) ?? x).Distinct().SelectMany(x => x.GetSelfAndChildren());
         }
 
         /// <summary>
@@ -922,10 +922,10 @@ namespace CBRE.Editor.Tools.SelectTool
                 {
                     mo.Transform(transform, Document.Map.GetTransformFlags());
                     if (CBRE.Settings.Select.KeepVisgroupsWhenCloning) continue;
-                    foreach (var o in mo.FindAll()) o.Visgroups.Clear();
+                    foreach (var o in mo.GetSelfAndChildren()) o.Visgroups.Clear();
                 }
                 cad.Create(Document.Map.WorldSpawn.ID, copies);
-                var sel = new ChangeSelection(copies.SelectMany(x => x.FindAll()), Document.Selection.GetSelectedObjects());
+                var sel = new ChangeSelection(copies.SelectMany(x => x.GetSelfAndChildren()), Document.Selection.GetSelectedObjects());
                 action.Add(sel);
             }
             else

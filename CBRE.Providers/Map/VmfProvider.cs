@@ -301,7 +301,7 @@ namespace CBRE.Providers.Map {
             var editor = WriteEditor(ent);
             ret.Children.Add(editor);
 
-            foreach (var solid in ent.GetChildren().SelectMany(x => x.FindAll()).OfType<Solid>().OrderBy(x => x.ID)) {
+            foreach (var solid in ent.GetChildren().SelectMany(x => x.GetSelfAndChildren()).OfType<Solid>().OrderBy(x => x.ID)) {
                 ret.Children.Add(WriteSolid(solid));
             }
 

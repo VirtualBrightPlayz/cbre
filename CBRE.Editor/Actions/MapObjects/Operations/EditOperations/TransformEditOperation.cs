@@ -17,7 +17,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations.EditOperations {
             mo.Transform(_transformation, _transformFlags);
 
             if (ClearVisgroups) {
-                foreach (var o in mo.FindAll()) o.Visgroups.Clear();
+                foreach (var o in mo.GetSelfAndChildren()) o.Visgroups.Clear();
             }
         }
     }

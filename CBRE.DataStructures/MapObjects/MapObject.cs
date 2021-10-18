@@ -401,7 +401,7 @@ namespace CBRE.DataStructures.MapObjects {
         /// Flattens the tree underneath this node.
         /// </summary>
         /// <returns>A list containing all the descendants of this node (including this node)</returns>
-        public List<MapObject> FindAll() {
+        public List<MapObject> GetSelfAndChildren() {
             return Find(x => true);
         }
 

@@ -64,7 +64,7 @@ namespace CBRE.DataStructures.MapObjects {
         }
 
         public IEnumerable<MapFeature> GetUsedFeatures() {
-            var all = WorldSpawn.FindAll();
+            var all = WorldSpawn.GetSelfAndChildren();
 
             // Too generic: this should be assumed
             // yield return MapFeature.Worldspawn;
@@ -131,7 +131,7 @@ namespace CBRE.DataStructures.MapObjects {
         public void PostLoadProcess(GameData.GameData gameData, Func<string, ITexture> textureAccessor, Func<string, float> textureOpacity) {
             PartialPostLoadProcess(gameData, textureAccessor, textureOpacity);
 
-            var all = WorldSpawn.FindAll();
+            var all = WorldSpawn.GetSelfAndChildren();
 
             // Set maximum ids
             var maxObjectId = all.Max(x => x.ID);
@@ -156,13 +156,13 @@ namespace CBRE.DataStructures.MapObjects {
         }
 
         public void UpdateAutoVisgroups(MapObject node, bool recursive) {
-            var nodes = recursive ? node.FindAll() : new List<MapObject> { node };
+            var nodes = recursive ? node.GetSelfAndChildren() : new List<MapObject> { node };
             UpdateAutoVisgroups(nodes, false);
         }
 
         public void UpdateAutoVisgroups(IEnumerable<MapObject> nodes, bool recursive) {
             var autos = GetAllVisgroups().OfType<AutoVisgroup>().Where(x => x.Filter != null).ToList();
-            var list = recursive ? nodes.SelectMany(x => x.FindAll()) : nodes;
+            var list = recursive ? nodes.SelectMany(x => x.GetSelfAndChildren()) : nodes;
             foreach (var o in list) {
                 var obj = o;
                 obj.Visgroups.RemoveAll(x => o.AutoVisgroups.Contains(x));
@@ -190,7 +190,7 @@ namespace CBRE.DataStructures.MapObjects {
         }
 
         public void PartialPostLoadProcess(GameData.GameData gameData, Func<string, ITexture> textureAccessor, Func<string, float> textureOpacity) {
-            var objects = WorldSpawn.FindAll();
+            var objects = WorldSpawn.GetSelfAndChildren();
             Parallel.ForEach(objects, obj => {
                 if (obj is Entity) {
                     var ent = (Entity)obj;

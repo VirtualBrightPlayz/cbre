@@ -14,7 +14,7 @@ namespace CBRE.Editor.Popup {
 
         protected override bool ImGuiLayout() {
             var document = DocumentManager.CurrentDocument;
-            var all = document.Map.WorldSpawn.FindAll();
+            var all = document.Map.WorldSpawn.GetSelfAndChildren();
             var solids = all.OfType<Solid>().ToList();
             var faces = solids.SelectMany(x => x.Faces).ToList();
             var entities = all.OfType<Entity>().ToList();

@@ -31,7 +31,7 @@ namespace CBRE.Editor.Actions.Visgroups {
 
         public void Perform(Document document) {
             _hiddenGroups = document.Map.Visgroups.Where(x => !x.Visible).Select(x => x.ID).ToList();
-            _shown = document.Map.WorldSpawn.FindAll()
+            _shown = document.Map.WorldSpawn.GetSelfAndChildren()
                 .Where(x => x.IsVisgroupHidden).ToList();
             _shown.ForEach(x => x.IsVisgroupHidden = false);
             document.Map.Visgroups.ForEach(x => x.Visible = true);
