@@ -46,8 +46,8 @@ namespace CBRE.Editor.Popup {
                         DrawVisgroupUI(visgroups[i]);
                     }
                 }
+                ImGui.End();
             }
-            ImGui.End();
             return open;
         }
     }

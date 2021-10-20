@@ -27,27 +27,35 @@ namespace CBRE.Editor.Popup {
             ImGui.InputText("Search", ref _namefilter, 255);
             int y = 0;
             ImGui.NewLine();
-            ImGui.BeginChild("TextureSelect");
-            for (int i = 0; i < textureList.Count; i++) {
-                if (string.IsNullOrWhiteSpace(_namefilter) || textureList[i].Texture.Name.Contains(_namefilter) || _namefilter.Contains(textureList[i].Texture.Name)) {
-                    ImGui.BeginChild($"TextureBox_{i}", new Num.Vector2(200, 200));
-                    if (textureList[i].AsyncTexture.ImGuiTexture != IntPtr.Zero) {
-                        if (ImGui.ImageButton(textureList[i].AsyncTexture.ImGuiTexture, new Num.Vector2(50, 50))) {
-                            _callback?.Invoke(textureList[i]);
-                            return false;
+            if (ImGui.BeginChild("TextureSelect")) {
+                for (int i = 0; i < textureList.Count; i++) {
+                    if (string.IsNullOrWhiteSpace(_namefilter) || textureList[i].Texture.Name.Contains(_namefilter) ||
+                        _namefilter.Contains(textureList[i].Texture.Name)) {
+                        if (ImGui.BeginChild($"TextureBox_{i}", new Num.Vector2(200, 200))) {
+                            if (textureList[i].AsyncTexture.ImGuiTexture != IntPtr.Zero) {
+                                if (ImGui.ImageButton(textureList[i].AsyncTexture.ImGuiTexture,
+                                    new Num.Vector2(50, 50))) {
+                                    _callback?.Invoke(textureList[i]);
+                                    return false;
+                                }
+                            }
+
+                            ImGui.NewLine();
+                            ImGui.Text(textureList[i].Texture.Name);
+                            ImGui.NewLine();
+                            ImGui.EndChild();
                         }
+
+                        if (y++ < 3)
+                            ImGui.SameLine();
+                        else
+                            y = 0;
                     }
-                    ImGui.NewLine();
-                    ImGui.Text(textureList[i].Texture.Name);
-                    ImGui.NewLine();
-                    ImGui.EndChild();
-                    if (y++ < 3)
-                        ImGui.SameLine();
-                    else
-                        y = 0;
                 }
+
+                ImGui.EndChild();
             }
-            ImGui.EndChild();
+
             return true;
         }
     }

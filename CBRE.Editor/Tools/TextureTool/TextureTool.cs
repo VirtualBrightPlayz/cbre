@@ -90,61 +90,73 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         public override void UpdateGui() {
-            ImGui.BeginChild("Texture Tool");
-            if (ImGui.BeginCombo("Left Click", _leftCombo.ToString())) {
-                var e = Enum.GetValues<SelectBehaviour>();
-                for (int i = 0; i < e.Length; i++) {
-                    if (ImGui.Selectable(e[i].ToString())) {
-                        _leftCombo = e[i];
+            if (ImGui.BeginChild("Texture Tool")) {
+                if (ImGui.BeginCombo("Left Click", _leftCombo.ToString())) {
+                    var e = Enum.GetValues<SelectBehaviour>();
+                    for (int i = 0; i < e.Length; i++) {
+                        if (ImGui.Selectable(e[i].ToString())) {
+                            _leftCombo = e[i];
+                        }
+                    }
+
+                    ImGui.EndCombo();
+                }
+
+                ImGui.NewLine();
+                if (ImGui.BeginCombo("Right Click", _rightCombo.ToString())) {
+                    var e = Enum.GetValues<SelectBehaviour>();
+                    for (int i = 0; i < e.Length; i++) {
+                        if (ImGui.Selectable(e[i].ToString())) {
+                            _rightCombo = e[i];
+                        }
+                    }
+
+                    ImGui.EndCombo();
+                }
+
+                ImGui.NewLine();
+                ImGui.Checkbox("Show Offset Preview", ref _showOffset);
+                if (ImGui.Button("Align World")) {
+                    TextureAligned(this, AlignMode.World);
+                }
+
+                if (ImGui.Button("Align Face")) {
+                    TextureAligned(this, AlignMode.Face);
+                }
+
+                ImGui.NewLine();
+                ImGui.InputDouble("X Scale", ref xscl);
+                ImGui.InputDouble("Y Scale", ref yscl);
+                ImGui.NewLine();
+                ImGui.InputDouble("X Offset", ref xoff);
+                ImGui.InputDouble("Y Offset", ref yoff);
+                ImGui.NewLine();
+                ImGui.InputDouble("Rotation", ref trot);
+                ImGui.NewLine();
+                if (_texture.AsyncTexture.ImGuiTexture != IntPtr.Zero) {
+                    if (_showOffset) {
+                        ImGui.Image(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f),
+                            // new Num.Vector2(0, 0), new Num.Vector2(1, 1));
+                            new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width - (float)xscl,
+                                (float)yscl * (float)yoff / _texture.AsyncTexture.Height - (float)yscl),
+                            new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width,
+                                (float)yscl * (float)yoff / _texture.AsyncTexture.Height));
+                    }
+
+                    if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
+                        new TexturePopupUI(t => {
+                            _texture = t;
+                            TextureChanged(this, t.Texture);
+                        });
                     }
                 }
-                ImGui.EndCombo();
-            }
-            ImGui.NewLine();
-            if (ImGui.BeginCombo("Right Click", _rightCombo.ToString())) {
-                var e = Enum.GetValues<SelectBehaviour>();
-                for (int i = 0; i < e.Length; i++) {
-                    if (ImGui.Selectable(e[i].ToString())) {
-                        _rightCombo = e[i];
-                    }
+
+                if (ImGui.Button("Apply")) {
+                    TextureApplied(this, _texture.Texture, xscl, yscl, xoff, yoff, trot);
                 }
-                ImGui.EndCombo();
+
+                ImGui.EndChild();
             }
-            ImGui.NewLine();
-            ImGui.Checkbox("Show Offset Preview", ref _showOffset);
-            if (ImGui.Button("Align World")) {
-                TextureAligned(this, AlignMode.World);
-            }
-            if (ImGui.Button("Align Face")) {
-                TextureAligned(this, AlignMode.Face);
-            }
-            ImGui.NewLine();
-            ImGui.InputDouble("X Scale", ref xscl);
-            ImGui.InputDouble("Y Scale", ref yscl);
-            ImGui.NewLine();
-            ImGui.InputDouble("X Offset", ref xoff);
-            ImGui.InputDouble("Y Offset", ref yoff);
-            ImGui.NewLine();
-            ImGui.InputDouble("Rotation", ref trot);
-            ImGui.NewLine();
-            if (_texture.AsyncTexture.ImGuiTexture != IntPtr.Zero) {
-                if (_showOffset) {
-                    ImGui.Image(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f),
-                        // new Num.Vector2(0, 0), new Num.Vector2(1, 1));
-                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width - (float)xscl, (float)yscl * (float)yoff / _texture.AsyncTexture.Height - (float)yscl),
-                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width, (float)yscl * (float)yoff / _texture.AsyncTexture.Height));
-                }
-                if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
-                    new TexturePopupUI(t => {
-                        _texture = t;
-                        TextureChanged(this, t.Texture);
-                    });
-                }
-            }
-            if (ImGui.Button("Apply")) {
-                TextureApplied(this, _texture.Texture, xscl, yscl, xoff, yoff, trot);
-            }
-            ImGui.EndChild();
         }
 
         public override void DocumentChanged() {

@@ -24,57 +24,62 @@ namespace CBRE.Editor.Popup {
             ImGui.NewLine();
 
 
-            ImGui.BeginChild("Files", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 12));
-            ImGui.Columns(2, "files", true);
-            ImGui.Separator();
-            ImGui.Text("File Name");
-            ImGui.NextColumn();
-            ImGui.Text("File extension");
-            ImGui.NextColumn();
-            ImGui.Separator();
+            if (ImGui.BeginChild("Files", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 12))) {
+                ImGui.Columns(2, "files", true);
+                ImGui.Separator();
+                ImGui.Text("File Name");
+                ImGui.NextColumn();
+                ImGui.Text("File extension");
+                ImGui.NextColumn();
+                ImGui.Separator();
 
-            if (Directory.Exists(_path)) {
+                if (Directory.Exists(_path)) {
 
-                string[] special = new string[] { ".." };
-                
-                for (int i = 0; i < special.Length; i++) {
-                    if (ImGui.Selectable(special[i], false, ImGuiSelectableFlags.SpanAllColumns)) {
-                        _path = Path.GetFullPath(Path.Combine(_path, ".."));
+                    string[] special = new string[] { ".." };
+
+                    for (int i = 0; i < special.Length; i++) {
+                        if (ImGui.Selectable(special[i], false, ImGuiSelectableFlags.SpanAllColumns)) {
+                            _path = Path.GetFullPath(Path.Combine(_path, ".."));
+                        }
+
+                        bool hovered = ImGui.IsItemHovered();
+                        ImGui.NextColumn();
+                        ImGui.Text("/Special/");
+                        ImGui.NextColumn();
                     }
-                    bool hovered = ImGui.IsItemHovered();
-                    ImGui.NextColumn();
-                    ImGui.Text("/Special/");
-                    ImGui.NextColumn();
+
+                    string[] dirs = Directory.GetDirectories(_path);
+
+                    for (int i = 0; i < dirs.Length; i++) {
+                        if (ImGui.Selectable(dirs[i], false, ImGuiSelectableFlags.SpanAllColumns)) {
+                            _path = dirs[i];
+                        }
+
+                        bool hovered = ImGui.IsItemHovered();
+                        ImGui.NextColumn();
+                        ImGui.Text("/Dir/");
+                        ImGui.NextColumn();
+                    }
+
+                    string[] files = Directory.GetFiles(_path);
+
+                    for (int i = 0; i < files.Length; i++) {
+                        if (ImGui.Selectable(Path.GetFileNameWithoutExtension(files[i]), FileName == files[i],
+                            ImGuiSelectableFlags.SpanAllColumns)) {
+                            FileName = files[i];
+                        }
+
+                        bool hovered = ImGui.IsItemHovered();
+                        ImGui.NextColumn();
+                        ImGui.Text(Path.GetExtension(files[i]));
+                        ImGui.NextColumn();
+                    }
                 }
 
-                string[] dirs = Directory.GetDirectories(_path);
-
-                for (int i = 0; i < dirs.Length; i++) {
-                    if (ImGui.Selectable(dirs[i], false, ImGuiSelectableFlags.SpanAllColumns)) {
-                        _path = dirs[i];
-                    }
-                    bool hovered = ImGui.IsItemHovered();
-                    ImGui.NextColumn();
-                    ImGui.Text("/Dir/");
-                    ImGui.NextColumn();
-                }
-
-                string[] files = Directory.GetFiles(_path);
-
-                for (int i = 0; i < files.Length; i++) {
-                    if (ImGui.Selectable(Path.GetFileNameWithoutExtension(files[i]), FileName == files[i], ImGuiSelectableFlags.SpanAllColumns)) {
-                        FileName = files[i];
-                    }
-                    bool hovered = ImGui.IsItemHovered();
-                    ImGui.NextColumn();
-                    ImGui.Text(Path.GetExtension(files[i]));
-                    ImGui.NextColumn();
-                }
+                ImGui.Columns(1);
+                ImGui.Separator();
+                ImGui.EndChild();
             }
-
-            ImGui.Columns(1);
-            ImGui.Separator();
-            ImGui.EndChild();
 
             ImGui.NewLine();
             ImGui.Text(Filter);

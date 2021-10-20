@@ -6,6 +6,7 @@ using CBRE.Editor.Documents;
 using CBRE.Providers.Model;
 using CBRE.Settings;
 using ImGuiNET;
+using NativeFileDialog;
 
 namespace CBRE.Editor.Popup {
     public class ExportPopup : PopupUI {
@@ -62,7 +63,10 @@ namespace CBRE.Editor.Popup {
                 try {
                     LightmapConfig.TextureDims = (int)_size;
                     LightmapConfig.DownscaleFactor = downscale;
-                    new FileCallbackPopup("Save .rmesh", "", s => RMeshExport.SaveToFile(s, _document));
+                    var result = NativeFileDialog.SaveDialog.Open("rmesh", _document.MapFileName, out string outPath);
+                    if (result == Result.Okay) {
+                        RMeshExport.SaveToFile(outPath, _document);
+                    }
                 }
                 catch (System.Exception e) {
                     Logging.Logger.ShowException(e);
@@ -72,7 +76,10 @@ namespace CBRE.Editor.Popup {
                 try {
                     LightmapConfig.TextureDims = (int)_size;
                     LightmapConfig.DownscaleFactor = downscale;
-                    new FileCallbackPopup("Save .rm2", "", s => RM2Export.SaveToFile(s, _document));
+                    var result = NativeFileDialog.SaveDialog.Open("rm2", _document.MapFileName, out string outPath);
+                    if (result == Result.Okay) {
+                        RM2Export.SaveToFile(outPath, _document);
+                    }
                 }
                 catch (System.Exception e) {
                     Logging.Logger.ShowException(e);
@@ -82,9 +89,10 @@ namespace CBRE.Editor.Popup {
                 try {
                     LightmapConfig.TextureDims = (int)_size;
                     LightmapConfig.DownscaleFactor = downscale;
-                    new FileCallbackPopup("Save .fbx", "", s => {
-                        AssimpProvider.SaveToFile(s, _document.Map, _document.GameData, "fbx");
-                    });
+                    var result = NativeFileDialog.SaveDialog.Open("fbx", _document.MapFileName, out string outPath);
+                    if (result == Result.Okay) {
+                        AssimpProvider.SaveToFile(outPath, _document.Map, _document.GameData, "fbx");
+                    }
                 }
                 catch (System.Exception e) {
                     Logging.Logger.ShowException(e);
@@ -94,9 +102,10 @@ namespace CBRE.Editor.Popup {
                 try {
                     LightmapConfig.TextureDims = (int)_size;
                     LightmapConfig.DownscaleFactor = downscale;
-                    new FileCallbackPopup("Save .gltf", "", s => {
-                        AssimpProvider.SaveToFile(s, _document.Map, _document.GameData, "gltf2");
-                    });
+                    var result = NativeFileDialog.SaveDialog.Open("gltf2", _document.MapFileName, out string outPath);
+                    if (result == Result.Okay) {
+                        AssimpProvider.SaveToFile(outPath, _document.Map, _document.GameData, "gltf2");
+                    }
                 }
                 catch (System.Exception e) {
                     Logging.Logger.ShowException(e);

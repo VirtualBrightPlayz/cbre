@@ -264,6 +264,7 @@ namespace CBRE.Editor {
                     i--;
                 }
             }
+            ImGui.SetNextWindowDockID(0, ImGuiCond.Always);
         }
 	}
 }

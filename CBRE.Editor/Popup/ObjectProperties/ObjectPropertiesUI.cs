@@ -151,26 +151,26 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             var data = obj.GetEntityData();
             ImGui.Text($"{data.Name}");
 
-            ImGui.BeginChild($"{data.Name}Properties", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 12));
-            ImGui.Columns(3, $"{data.Name}properties", true);
-            ImGui.Separator();
-            ImGui.Text("Key");
-            ImGui.NextColumn();
-            ImGui.Text("Value");
-            ImGui.NextColumn();
-            ImGui.Text("State");
-            ImGui.NextColumn();
-            ImGui.Separator();
-
-            var props = _propVals;
-
-            for (int i = 0; i < props.Count; i++) {
-                ImGui.Text(props[i].NewKey);
+            if (ImGui.BeginChild($"{data.Name}Properties",
+                new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 12))) {
+                ImGui.Columns(3, $"{data.Name}properties", true);
+                ImGui.Separator();
+                ImGui.Text("Key");
                 ImGui.NextColumn();
-                string tmp = props[i].Value;
-                switch (props[i].Class) {
-                    case VariableType.Float:
-                        {
+                ImGui.Text("Value");
+                ImGui.NextColumn();
+                ImGui.Text("State");
+                ImGui.NextColumn();
+                ImGui.Separator();
+
+                var props = _propVals;
+
+                for (int i = 0; i < props.Count; i++) {
+                    ImGui.Text(props[i].NewKey);
+                    ImGui.NextColumn();
+                    string tmp = props[i].Value;
+                    switch (props[i].Class) {
+                        case VariableType.Float: {
                             float fl = 0f;
                             float.TryParse(tmp, out fl);
                             if (ImGui.InputFloat(props[i].OriginalKey, ref fl)) {
@@ -178,9 +178,8 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    case VariableType.Integer:
-                        {
+                            break;
+                        case VariableType.Integer: {
                             int fl = 0;
                             int.TryParse(tmp, out fl);
                             if (ImGui.InputInt(props[i].OriginalKey, ref fl)) {
@@ -188,9 +187,8 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    case VariableType.Color255:
-                        {
+                            break;
+                        case VariableType.Color255: {
                             Color color = props[i].GetColour255(Color.White);
                             Num.Vector4 v4 = new Num.Vector4(color.R / 255f, color.G / 255f, color.B / 255f, 1f);
                             if (ImGui.ColorEdit4(props[i].OriginalKey, ref v4)) {
@@ -198,18 +196,16 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    case VariableType.Vector:
-                        {
+                            break;
+                        case VariableType.Vector: {
                             Num.Vector3 v3 = props[i].GetVector3(Num.Vector3.Zero);
                             if (ImGui.InputFloat3(props[i].OriginalKey, ref v3)) {
                                 props[i].Value = $"{v3.X} {v3.Y} {v3.Z}";
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    case VariableType.Bool:
-                        {
+                            break;
+                        case VariableType.Bool: {
                             bool b = default(bool);
                             bool.TryParse(props[i].Value, out b);
                             if (ImGui.Checkbox(props[i].OriginalKey, ref b)) {
@@ -217,29 +213,31 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    default:
-                        {
+                            break;
+                        default: {
                             if (ImGui.InputText(props[i].OriginalKey, ref tmp, 1024)) {
                                 props[i].Value = tmp;
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                }
-                ImGui.NextColumn();
-                var col = props[i].GetStateColour();
-                ImGui.TextColored(new Num.Vector4(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f), props[i].GetState());
-                ImGui.NextColumn();
-                /*if (ImGui.Button("-")) {
-                    props[i].IsRemoved = true;
-                }
-                ImGui.NextColumn();*/
-            }
+                            break;
+                    }
 
-            ImGui.Columns(1);
-            ImGui.Separator();
-            ImGui.EndChild();
+                    ImGui.NextColumn();
+                    var col = props[i].GetStateColour();
+                    ImGui.TextColored(new Num.Vector4(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f),
+                        props[i].GetState());
+                    ImGui.NextColumn();
+                    /*if (ImGui.Button("-")) {
+                        props[i].IsRemoved = true;
+                    }
+                    ImGui.NextColumn();*/
+                }
+
+                ImGui.Columns(1);
+                ImGui.Separator();
+                ImGui.EndChild();
+            }
 
             ImGui.NewLine();
             /*if (ImGui.Button("+")) {

@@ -18,8 +18,8 @@ namespace CBRE.Editor.Popup {
                 GameMain.Instance.ToolBarItems.ForEach(it => it.Draw());
 
                 ImGui.PopStyleVar();
+                ImGui.End();
             }
-            ImGui.End();
             return open;
         }
     }
