@@ -168,6 +168,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             _deletedObjects.ForEach(p => document.ObjectRenderer.AddFaces(p.Object));
             foreach (var dr in _deletedObjects.Where(x => x.TopMost)) {
                 dr.Object.SetParent(document.Map.WorldSpawn.FindByID(dr.ParentID));
+                RecalculatePastedFaces(document, dr.Object);
                 document.Map.UpdateAutoVisgroups(dr.Object, true);
             }
             document.Selection.Select(_deletedObjects.Where(x => x.IsSelected).Select(x => x.Object));
@@ -183,12 +184,23 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             Mediator.Publish(EditorMediator.VisgroupsChanged);
         }
 
+        private static void RecalculatePastedFaces(Document doc, MapObject x) {
+            foreach (var o in x.GetSelfAndChildren().Where(s => s is Solid).Cast<Solid>()) {
+                o.Faces.ForEach(f => {
+                    f.Texture.Texture = doc.GetTexture(f.Texture.Name);
+                    f.CalculateTextureCoordinates(minimizeShiftValues: false);
+                });
+            }
+        }
+        
         public virtual void Perform(Document document) {
             // Create
             _createdIds = _objectsToCreate.Select(x => x.MapObject.ID).ToList();
-            _objectsToCreate.ForEach(x => x.MapObject.SetParent(document.Map.WorldSpawn.FindByID(x.ParentID)));
-
-            _objectsToCreate.ForEach(x => document.ObjectRenderer.AddFaces(x.MapObject));
+            _objectsToCreate.ForEach(x => {
+                x.MapObject.SetParent(document.Map.WorldSpawn.FindByID(x.ParentID));
+                RecalculatePastedFaces(document, x.MapObject);
+                document.ObjectRenderer.AddFaces(x.MapObject);
+            });
 
             // Select objects if IsSelected is true
             var sel = _objectsToCreate.Where(x => x.IsSelected).ToList();
