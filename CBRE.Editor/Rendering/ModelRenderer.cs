@@ -22,7 +22,7 @@ namespace CBRE.Editor.Rendering {
                         Vector3 c = new Vector3(v.Location * transform);
                         PrimitiveDrawing.Vertex3(c * mat, v.TextureU, v.TextureV);
                     }
-                    effect.Texture = PrimitiveDrawing.texture;
+                    effect.Texture = PrimitiveDrawing.Texture;
                     effect.TextureEnabled = true;
                     effect.VertexColorEnabled = false;
                     effect.CurrentTechnique.Passes[0].Apply();

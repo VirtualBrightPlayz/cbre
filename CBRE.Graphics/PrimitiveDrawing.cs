@@ -11,7 +11,7 @@ namespace CBRE.Graphics {
 
         private static Color color = Color.White;
         private static List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
-        public static Texture2D texture = null;
+        public static Texture2D Texture = null;
 
         public static void Begin(PrimitiveType primType) {
             if (currentPrimitiveType != null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Begin because a draw operation is already in progress"); }
@@ -145,7 +145,7 @@ namespace CBRE.Graphics {
                     primCount);
             }
             currentPrimitiveType = null;
-            texture = null;
+            Texture = null;
         }
     }
 }

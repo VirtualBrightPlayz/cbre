@@ -166,8 +166,9 @@ namespace CBRE.Editor.Rendering {
 
             public void RenderWireframe() {
                 UpdateBuffers();
-                if (indexWireframeCount == 0)
+                if (indexWireframeCount == 0) {
                     return;
+                }
                 GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
                 GlobalGraphics.GraphicsDevice.Indices = indexBufferWireframe;
                 GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, indexWireframeCount / 2);
@@ -175,8 +176,9 @@ namespace CBRE.Editor.Rendering {
 
             public void RenderSolid() {
                 UpdateBuffers();
-                if (indexSolidCount == 0)
+                if (indexSolidCount == 0) {
                     return;
+                }
                 GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
                 GlobalGraphics.GraphicsDevice.Indices = indexBufferSolid;
                 GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
@@ -621,7 +623,7 @@ namespace CBRE.Editor.Rendering {
                     PrimitiveDrawing.Vertex3(c + up + right, 1f, 0f);
                     PrimitiveDrawing.Vertex3(c - up + right, 1f, 1f);
                     PrimitiveDrawing.Vertex3(c - up - right, 0f, 1f);
-                    BasicEffect.Texture = PrimitiveDrawing.texture;
+                    BasicEffect.Texture = PrimitiveDrawing.Texture;
                     BasicEffect.DiffuseColor = fcolor.ToXna() / 255f;
                     BasicEffect.TextureEnabled = true;
                     BasicEffect.VertexColorEnabled = false;

@@ -22,36 +22,28 @@ namespace CBRE.Graphics {
         public static Action<string> LoadCallback = null;
 
         private Task<Data> task;
-        private Texture2D monoGameTexture;
-        private IntPtr imGuiTexture;
 
         private static long activeTasks;
 
-        public Texture2D MonoGameTexture {
-            get {
-                return monoGameTexture;
-            }
-        }
+        public Texture2D MonoGameTexture { get; private set; }
 
-        public IntPtr ImGuiTexture {
-            get {
-                return imGuiTexture;
-            }
-        }
+        public IntPtr ImGuiTexture { get; private set; }
+
+        public int DownscaleFactor { get; private set; } = 2;
 
         public TextureFlags Flags { get; set; } = TextureFlags.None;
 
         public string Name => Path.GetFileNameWithoutExtension(Filename);
 
-        public int Width => MonoGameTexture?.Width ?? 0;
+        public int Width => (MonoGameTexture?.Width ?? 0) * DownscaleFactor;
 
-        public int Height => MonoGameTexture?.Height ?? 0;
+        public int Height => (MonoGameTexture?.Height ?? 0) * DownscaleFactor;
 
         public readonly string Filename;
 
         public AsyncTexture(string filename, Task<Data> tsk=null) {
-            monoGameTexture = null;
-            imGuiTexture = IntPtr.Zero;
+            MonoGameTexture = null;
+            ImGuiTexture = IntPtr.Zero;
 
             Filename = filename;
             task = tsk ?? Load();
@@ -74,6 +66,28 @@ namespace CBRE.Graphics {
                 var fileData = await File.ReadAllBytesAsync(Filename);
                 using (var stream = new MemoryStream(fileData)) {
                     bytes = Texture2D.TextureDataFromStream(stream, out width, out height, out _);
+                }
+
+                if (DownscaleFactor > 1 && width > DownscaleFactor && height > DownscaleFactor) {
+                    int downscaleSqr = DownscaleFactor * DownscaleFactor;
+                    byte[] oldBytes = bytes;
+
+                    width /= DownscaleFactor;
+                    height /= DownscaleFactor;
+                    bytes = new byte[width * height * 4];
+                    for (int y = 0; y < height; y++) {
+                        for (int x = 0; x < width; x++) {
+                            void copyByte(int chn) {
+                                bytes[(x * 4) + (y * 4 * width) + chn] = oldBytes[(x * 4 * DownscaleFactor) + (y * 4 * width * downscaleSqr) + chn];
+                            }
+                            copyByte(0);
+                            copyByte(1);
+                            copyByte(2);
+                            copyByte(3);
+                        }
+                    }
+                } else {
+                    DownscaleFactor = 1;
                 }
 
                 bool compressed = false;
@@ -103,12 +117,12 @@ namespace CBRE.Graphics {
                 if (!task.IsCompleted) { return; }
 
                 Data data = task.Result;
-                monoGameTexture = new Texture2D(GlobalGraphics.GraphicsDevice, data.Width, data.Height, false, data.Compressed ? SurfaceFormat.Dxt5 : SurfaceFormat.Color);
-                monoGameTexture.SetData(data.Bytes);
+                MonoGameTexture = new Texture2D(GlobalGraphics.GraphicsDevice, data.Width, data.Height, false, data.Compressed ? SurfaceFormat.Dxt5 : SurfaceFormat.Color);
+                MonoGameTexture.SetData(data.Bytes);
 
                 Array.Resize(ref data.Bytes, 0);
 
-                imGuiTexture = GlobalGraphics.ImGuiRenderer.BindTexture(monoGameTexture);
+                ImGuiTexture = GlobalGraphics.ImGuiRenderer.BindTexture(MonoGameTexture);
 
                 Flags = data.Transparent ? TextureFlags.Transparent : TextureFlags.None;
 
@@ -124,11 +138,11 @@ namespace CBRE.Graphics {
                 task = null;
             }
 
-            if (imGuiTexture != IntPtr.Zero) {
-                GlobalGraphics.ImGuiRenderer.UnbindTexture(imGuiTexture);
-                imGuiTexture = IntPtr.Zero;
+            if (ImGuiTexture != IntPtr.Zero) {
+                GlobalGraphics.ImGuiRenderer.UnbindTexture(ImGuiTexture);
+                ImGuiTexture = IntPtr.Zero;
             }
-            monoGameTexture?.Dispose(); monoGameTexture = null;
+            MonoGameTexture?.Dispose(); MonoGameTexture = null;
         }
 
         private static byte[] CompressDxt5(byte[] data, int width, int height) {
@@ -258,13 +272,13 @@ namespace CBRE.Graphics {
 
         public void Bind() {
             // GlobalGraphics.GraphicsDevice.Textures[0] = this.monoGameTexture;
-            PrimitiveDrawing.texture = this.monoGameTexture;
+            PrimitiveDrawing.Texture = this.MonoGameTexture;
         }
 
         public void Unbind() {
             // GlobalGraphics.GraphicsDevice.Textures[0] = this.monoGameTexture;
-            if (PrimitiveDrawing.texture == this.monoGameTexture)
-                PrimitiveDrawing.texture = null;
+            if (PrimitiveDrawing.Texture == this.MonoGameTexture)
+                PrimitiveDrawing.Texture = null;
         }
     }
 }
