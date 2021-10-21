@@ -243,21 +243,21 @@ namespace CBRE.Editor.Rendering {
             for (int i = 0; i < GameMain.Instance.Popups.Count; i++) {
                 if (GameMain.Instance.Popups[i] is ViewportWindow viewportWindow) {
 
-                    viewportWindow.viewport.X = viewportWindow.view.Location.X;
-                    viewportWindow.viewport.Y = viewportWindow.view.Location.Y;
-                    viewportWindow.viewport.Width = viewportWindow.view.Size.X;
-                    viewportWindow.viewport.Height = viewportWindow.view.Size.Y;
+                    viewportWindow.Viewport.X = viewportWindow.View.Location.X;
+                    viewportWindow.Viewport.Y = viewportWindow.View.Location.Y;
+                    viewportWindow.Viewport.Width = viewportWindow.View.Size.X;
+                    viewportWindow.Viewport.Height = viewportWindow.View.Size.Y;
 
                     if (viewportWindow.IsOverAndOpen(mouseState)) {
 
                         if (!mouse1Down && !mouse3Down) {
-                            GameMain.Instance.SelectedTool?.MouseUp(viewportWindow.viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.MouseUp(viewportWindow.Viewport, new ViewportEvent() {
                                 Handled = false,
                                 Button = MouseButtons.Left,
-                                X = mouseState.X - viewportWindow.viewport.X,
-                                Y = mouseState.Y - viewportWindow.viewport.Y,
-                                LastX = viewportWindow.viewport.PrevMouseX,
-                                LastY = viewportWindow.viewport.PrevMouseY,
+                                X = mouseState.X - viewportWindow.Viewport.X,
+                                Y = mouseState.Y - viewportWindow.Viewport.Y,
+                                LastX = viewportWindow.Viewport.PrevMouseX,
+                                LastY = viewportWindow.Viewport.PrevMouseY,
                             });
                             MarkForRerender();
                             draggingCenterX = false;
@@ -265,23 +265,23 @@ namespace CBRE.Editor.Rendering {
                             draggingViewport = -1;
                         }
 
-                        GameMain.Instance.SelectedTool?.UpdateFrame(viewportWindow.viewport, new FrameInfo(0)); //TODO: fix FrameInfo
+                        GameMain.Instance.SelectedTool?.UpdateFrame(viewportWindow.Viewport, new FrameInfo(0)); //TODO: fix FrameInfo
 
                         foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
-                            GameMain.Instance.SelectedTool?.KeyDown(viewportWindow.viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.KeyDown(viewportWindow.Viewport, new ViewportEvent() {
                                 Handled = false,
                                 KeyCode = key
                             });
                         }
 
                         foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
-                            GameMain.Instance.SelectedTool?.KeyUp(viewportWindow.viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.KeyUp(viewportWindow.Viewport, new ViewportEvent() {
                                 Handled = false,
                                 KeyCode = key
                             });
                         }
 
-                        if (viewportWindow.viewport is Viewport3D vp3d) {
+                        if (viewportWindow.Viewport is Viewport3D vp3d) {
                             bool shiftDown = mouse2Down;
                             bool mustRerender = false;
                             // WASD
@@ -330,62 +330,62 @@ namespace CBRE.Editor.Rendering {
                             }
                         }
 
-                        int currMouseX = mouseState.X - viewportWindow.viewport.X;
-                        int currMouseY = mouseState.Y - viewportWindow.viewport.Y;
-                        if (viewportWindow.viewport.PrevMouseX != currMouseX || viewportWindow.viewport.PrevMouseY != currMouseY) {
-                            GameMain.Instance.SelectedTool?.MouseMove(viewportWindow.viewport, new ViewportEvent() {
+                        int currMouseX = mouseState.X - viewportWindow.Viewport.X;
+                        int currMouseY = mouseState.Y - viewportWindow.Viewport.Y;
+                        if (viewportWindow.Viewport.PrevMouseX != currMouseX || viewportWindow.Viewport.PrevMouseY != currMouseY) {
+                            GameMain.Instance.SelectedTool?.MouseMove(viewportWindow.Viewport, new ViewportEvent() {
                                 Handled = false,
                                 Button = MouseButtons.Left,
                                 X = currMouseX,
                                 Y = currMouseY,
-                                LastX = viewportWindow.viewport.PrevMouseX,
-                                LastY = viewportWindow.viewport.PrevMouseY,
+                                LastX = viewportWindow.Viewport.PrevMouseX,
+                                LastY = viewportWindow.Viewport.PrevMouseY,
                             });
                             MarkForRerender();
                         }
 
                         if (mouse1Hit) {
-                            GameMain.Instance.SelectedTool?.MouseClick(viewportWindow.viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.MouseClick(viewportWindow.Viewport, new ViewportEvent() {
                                 Handled = false,
                                 Button = MouseButtons.Left,
                                 X = currMouseX,
                                 Y = currMouseY,
-                                LastX = viewportWindow.viewport.PrevMouseX,
-                                LastY = viewportWindow.viewport.PrevMouseY,
+                                LastX = viewportWindow.Viewport.PrevMouseX,
+                                LastY = viewportWindow.Viewport.PrevMouseY,
                                 Clicks = 1
                             });
 
-                            GameMain.Instance.SelectedTool?.MouseDown(viewportWindow.viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.MouseDown(viewportWindow.Viewport, new ViewportEvent() {
                                 Handled = false,
                                 Button = MouseButtons.Left,
                                 X = currMouseX,
                                 Y = currMouseY,
-                                LastX = viewportWindow.viewport.PrevMouseX,
-                                LastY = viewportWindow.viewport.PrevMouseY,
+                                LastX = viewportWindow.Viewport.PrevMouseX,
+                                LastY = viewportWindow.Viewport.PrevMouseY,
                             });
                         }
                         if (mouse2Hit) {
-                            GameMain.Instance.SelectedTool?.MouseClick(viewportWindow.viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.MouseClick(viewportWindow.Viewport, new ViewportEvent() {
                                 Handled = false,
                                 Button = MouseButtons.Right,
                                 X = currMouseX,
                                 Y = currMouseY,
-                                LastX = viewportWindow.viewport.PrevMouseX,
-                                LastY = viewportWindow.viewport.PrevMouseY,
+                                LastX = viewportWindow.Viewport.PrevMouseX,
+                                LastY = viewportWindow.Viewport.PrevMouseY,
                                 Clicks = 1
                             });
 
-                            GameMain.Instance.SelectedTool?.MouseDown(viewportWindow.viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.MouseDown(viewportWindow.Viewport, new ViewportEvent() {
                                 Handled = false,
                                 Button = MouseButtons.Right,
                                 X = currMouseX,
                                 Y = currMouseY,
-                                LastX = viewportWindow.viewport.PrevMouseX,
-                                LastY = viewportWindow.viewport.PrevMouseY,
+                                LastX = viewportWindow.Viewport.PrevMouseX,
+                                LastY = viewportWindow.Viewport.PrevMouseY,
                             });
                         }
                         if (mouse3Down) {
-                            if (viewportWindow.viewport is Viewport2D vp) {
+                            if (viewportWindow.Viewport is Viewport2D vp) {
                                 MarkForRerender();
                                 vp.Position -= new DataStructures.Geometric.Vector3((decimal)(currMouseX - vp.PrevMouseX) / vp.Zoom, -(decimal)(currMouseY - vp.PrevMouseY) / vp.Zoom, 0m);
                             }
@@ -402,20 +402,20 @@ namespace CBRE.Editor.Rendering {
                     if (viewportWindow.IsOverAndOpen(mouseState)) {
                         mouseOver = true;
                     }
-                    viewportWindow.viewport.PrevMouseOver = mouseOver;
-                    viewportWindow.viewport.PrevMouseX = mouseState.X - viewportWindow.viewport.X;
-                    viewportWindow.viewport.PrevMouseY = mouseState.Y - viewportWindow.viewport.Y;
+                    viewportWindow.Viewport.PrevMouseOver = mouseOver;
+                    viewportWindow.Viewport.PrevMouseX = mouseState.X - viewportWindow.Viewport.X;
+                    viewportWindow.Viewport.PrevMouseY = mouseState.Y - viewportWindow.Viewport.Y;
 
                     if (mouseOver && scrollWheelValue != prevScrollWheelValue) {
-                        if (viewportWindow.viewport is Viewport2D vp) {
-                            var pos0 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - viewportWindow.viewport.X, mouseState.Y - viewportWindow.viewport.Y));
+                        if (viewportWindow.Viewport is Viewport2D vp) {
+                            var pos0 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - viewportWindow.Viewport.X, mouseState.Y - viewportWindow.Viewport.Y));
                             decimal scrollWheelDiff = (scrollWheelValue - prevScrollWheelValue) * 0.001m;
                             if (scrollWheelDiff > 0m) {
                                 vp.Zoom *= 1.0m + scrollWheelDiff;
                             } else {
                                 vp.Zoom /= 1.0m - scrollWheelDiff;
                             }
-                            var pos1 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - viewportWindow.viewport.X, mouseState.Y - viewportWindow.viewport.Y));
+                            var pos1 = vp.ScreenToWorld(new System.Drawing.Point(mouseState.X - viewportWindow.Viewport.X, mouseState.Y - viewportWindow.Viewport.Y));
                             vp.Position -= new DataStructures.Geometric.Vector3(pos1.X - pos0.X, pos0.Y - pos1.Y, 0m);
                             MarkForRerender();
                         }

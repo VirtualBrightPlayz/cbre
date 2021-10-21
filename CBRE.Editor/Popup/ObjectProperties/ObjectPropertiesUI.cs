@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -174,7 +175,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                             float fl = 0f;
                             float.TryParse(tmp, out fl);
                             if (ImGui.InputFloat(props[i].OriginalKey, ref fl)) {
-                                props[i].Value = fl.ToString();
+                                props[i].Value = fl.ToString(CultureInfo.InvariantCulture);
                                 props[i].IsModified = true;
                             }
                         }

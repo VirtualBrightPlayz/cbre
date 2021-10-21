@@ -46,10 +46,11 @@ namespace CBRE.Editor.Popup {
                             ImGui.EndChild();
                         }
 
-                        if (y++ < 3)
+                        if (y++ < 3) {
                             ImGui.SameLine();
-                        else
+                        } else {
                             y = 0;
+                        }
                     }
                 }
 

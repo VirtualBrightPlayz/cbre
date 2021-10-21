@@ -14,56 +14,56 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 namespace CBRE.Editor.Popup {
     public class ViewportWindow : WindowUI
     {
-        public ViewportBase viewport { get; private set; }
-        public Rectangle view { get; private set; }
-        public RenderTarget2D renderTarget { get; private set; }
-        public IntPtr renderTargetPtr { get; private set; }
-        public BasicEffect basicEffect { get; private set; }
-        public string name { get; private set; }
+        public ViewportBase Viewport { get; private set; }
+        public Rectangle View { get; private set; }
+        public RenderTarget2D RenderTarget { get; private set; }
+        public IntPtr RenderTargetPtr { get; private set; }
+        public BasicEffect BasicEffect { get; private set; }
+        public string Name { get; private set; }
         private bool selected = false;
 
         public ViewportWindow(ViewportBase view) : base("") {
-            viewport = view;
-            basicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
-            name = Guid.NewGuid().ToString();
+            Viewport = view;
+            BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+            Name = Guid.NewGuid().ToString();
         }
 
         public ViewportWindow(int viewid) : base("") {
-            viewport = ViewportManager.Viewports[viewid];
-            basicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
-            name = viewid.ToString();
+            Viewport = ViewportManager.Viewports[viewid];
+            BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+            Name = viewid.ToString();
         }
 
         public void ResetRenderTarget() {
-            if (view.Width <= 0 && view.Height <= 0) { return; }
-            if (renderTargetPtr != IntPtr.Zero) {
-                GlobalGraphics.ImGuiRenderer.UnbindTexture(renderTargetPtr);
-                renderTargetPtr = IntPtr.Zero;
+            if (View.Width <= 0 && View.Height <= 0) { return; }
+            if (RenderTargetPtr != IntPtr.Zero) {
+                GlobalGraphics.ImGuiRenderer.UnbindTexture(RenderTargetPtr);
+                RenderTargetPtr = IntPtr.Zero;
             }
-            renderTarget?.Dispose();
-            renderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, Math.Max(view.Width, 4), Math.Max(view.Height, 4), false, SurfaceFormat.Color, DepthFormat.Depth24);
+            RenderTarget?.Dispose();
+            RenderTarget = new RenderTarget2D(GlobalGraphics.GraphicsDevice, Math.Max(View.Width, 4), Math.Max(View.Height, 4), false, SurfaceFormat.Color, DepthFormat.Depth24);
 
-            ViewportManager.Render(viewport, new Viewport(0, 0, renderTarget.Width, renderTarget.Height), renderTarget);
-            renderTargetPtr = GlobalGraphics.ImGuiRenderer.BindTexture(renderTarget);
+            ViewportManager.Render(Viewport, new Viewport(0, 0, RenderTarget.Width, RenderTarget.Height), RenderTarget);
+            RenderTargetPtr = GlobalGraphics.ImGuiRenderer.BindTexture(RenderTarget);
         }
 
         public virtual bool IsOverAndOpen(MouseState mouseState) {
-            return (selected && mouseState.X >= -view.Left && mouseState.X <= view.Right && mouseState.Y >= -view.Top && mouseState.Y <= view.Bottom);
+            return (selected && mouseState.X >= -View.Left && mouseState.X <= View.Right && mouseState.Y >= -View.Top && mouseState.Y <= View.Bottom);
         }
 
         protected override bool ImGuiLayout() {
             ImGuiWindowFlags flags = ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar;
-            if (ImGui.Begin(name, ref open, flags)) {
+            if (ImGui.Begin(Name, ref open, flags)) {
                 Num.Vector2 pos = ImGui.GetWindowPos() + ImGui.GetCursorPos();
                 Num.Vector2 siz = ImGui.GetWindowSize() - ImGui.GetCursorPos() * 1.5f;
                 Rectangle tmpview = new Rectangle((int)pos.X, (int)pos.Y, (int)siz.X, (int)siz.Y);
-                if (!view.Equals(tmpview)) {
-                    view = tmpview;
+                if (!View.Equals(tmpview)) {
+                    View = tmpview;
                     ResetRenderTarget();
                 }
-                view = tmpview;
-                if (ImGui.BeginChildFrame(1, new Num.Vector2(view.Size.X, view.Size.Y), flags) && renderTargetPtr != IntPtr.Zero && open) {
-                    ImGui.Image(renderTargetPtr, new Num.Vector2(view.Size.X, view.Size.Y));
+                View = tmpview;
+                if (ImGui.BeginChildFrame(1, new Num.Vector2(View.Size.X, View.Size.Y), flags) && RenderTargetPtr != IntPtr.Zero && open) {
+                    ImGui.Image(RenderTargetPtr, new Num.Vector2(View.Size.X, View.Size.Y));
                     ImGui.EndChildFrame();
                 }
                 selected = ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows);
@@ -74,11 +74,11 @@ namespace CBRE.Editor.Popup {
 
         public override void Close() {
             base.Close();
-            basicEffect.Dispose();
-            if (renderTargetPtr != IntPtr.Zero) {
-                GlobalGraphics.ImGuiRenderer.UnbindTexture(renderTargetPtr);
+            BasicEffect.Dispose();
+            if (RenderTargetPtr != IntPtr.Zero) {
+                GlobalGraphics.ImGuiRenderer.UnbindTexture(RenderTargetPtr);
             }
-            renderTarget?.Dispose();
+            RenderTarget?.Dispose();
         }
     }
 }
