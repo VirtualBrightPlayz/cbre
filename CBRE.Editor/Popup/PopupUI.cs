@@ -1,6 +1,7 @@
 using ImGuiNET;
 using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
@@ -27,6 +28,8 @@ namespace CBRE.Editor.Popup {
             _color = color;
             _hasColor = true;
         }
+
+        public virtual void Update() { }
 
         public virtual bool Draw()
         {

@@ -31,7 +31,7 @@ namespace CBRE.Graphics {
 
         public int DownscaleFactor { get; private set; } = 2;
 
-        public TextureFlags Flags { get; set; } = TextureFlags.None;
+        public TextureFlags Flags { get; private set; } = TextureFlags.None;
 
         public string Name => Path.GetFileNameWithoutExtension(Filename);
 

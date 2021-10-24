@@ -178,6 +178,10 @@ namespace CBRE.Editor.Rendering {
             return ScreenToWorld(location.X, location.Y);
         }
 
+        public Vector3 ScreenToWorld(Microsoft.Xna.Framework.Point location) {
+            return ScreenToWorld(location.X, location.Y);
+        }
+
         public Vector3 ScreenToWorld(decimal x, decimal y) {
             return ScreenToWorld(new Vector3(x, y, 0));
         }

@@ -134,10 +134,7 @@ namespace CBRE.Editor {
             new ToolsWindow();
             new ToolPropsWindow();
             new StatsWindow();
-            new ViewportWindow(0);
-            new ViewportWindow(1);
-            new ViewportWindow(2);
-            new ViewportWindow(3);
+            new ViewportWindow();
             new VisgroupsWindow();
 
             base.Initialize();
@@ -187,7 +184,7 @@ namespace CBRE.Editor {
                 previousKeys = keys;
             }
 
-            timing.PerformTicks(ViewportManager.Update);
+            timing.PerformTicks(() => Popups.ForEach(p => p.Update()));
 
             LastTime = gameTime;
         }
@@ -234,7 +231,6 @@ namespace CBRE.Editor {
                                            ImGuiWindowFlags.NoCollapse |
                                            ImGuiWindowFlags.NoScrollbar)) {
                 if (ImGui.BeginMainMenuBar()) {
-                    ViewportManager.TopMenuOpen = false;
                     UpdateMenus();
                     ImGui.EndMainMenuBar();
                 }
