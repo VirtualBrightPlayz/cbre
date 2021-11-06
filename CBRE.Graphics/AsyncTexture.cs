@@ -30,6 +30,7 @@ namespace CBRE.Graphics {
         public IntPtr ImGuiTexture { get; private set; }
 
         public int DownscaleFactor { get; private set; } = 2;
+        public int DataBufferSize { get; private set; } = 0;
 
         public TextureFlags Flags { get; private set; } = TextureFlags.None;
 
@@ -119,6 +120,8 @@ namespace CBRE.Graphics {
                 Data data = task.Result;
                 MonoGameTexture = new Texture2D(GlobalGraphics.GraphicsDevice, data.Width, data.Height, false, data.Compressed ? SurfaceFormat.Dxt5 : SurfaceFormat.Color);
                 MonoGameTexture.SetData(data.Bytes);
+
+                DataBufferSize = data.Width * data.Height * (data.Compressed ? 1 : 4);
 
                 Array.Resize(ref data.Bytes, 0);
 
