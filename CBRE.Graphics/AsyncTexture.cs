@@ -62,7 +62,7 @@ namespace CBRE.Graphics {
         private async Task<Data> Load(Semaphore semaphore = null) {
             await Task.Delay(200);
             semaphore ??= highThroughputSemaphore;
-            while (!semaphore.WaitOne(200)) {
+            while (!semaphore.WaitOne(20)) {
                 await Task.Delay(200);
             }
             try {
