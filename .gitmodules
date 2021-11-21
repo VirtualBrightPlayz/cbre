@@ -4,4 +4,4 @@
 
 [submodule "metadata-extractor-dotnet"]
 	path = metadata-extractor-dotnet
-	url = git@github.com:drewnoakes/metadata-extractor-dotnet
+	url = git@github.com:juanjp600/metadata-extractor-dotnet
