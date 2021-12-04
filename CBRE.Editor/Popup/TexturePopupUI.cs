@@ -13,9 +13,10 @@ namespace CBRE.Editor.Popup {
         private Action<TextureTool.TextureData> _callback;
         private string _namefilter = "";
         public TexturePopupUI(Action<TextureTool.TextureData> textureCallback) : base("Texture Application Tool") {
-            foreach (var item1 in TextureProvider.Packages)
-                foreach (var item2 in item1.Items)
-                    textureList.Add(new TextureTool.TextureData(item2.Value.Texture as AsyncTexture, item2.Value));
+            foreach (var (_, value) in TextureProvider.Packages.SelectMany(item1 => item1.Items)) {
+                textureList.Add(new TextureTool.TextureData(value.Texture as AsyncTexture, value));
+            }
+
             GameMain.Instance.PopupSelected = true;
             _callback = textureCallback;
         }

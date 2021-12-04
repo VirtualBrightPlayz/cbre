@@ -27,9 +27,13 @@ namespace CBRE.Editor {
             yield return ($"Gen 2 collections: {GC.CollectionCount(2)}");
             yield return ($"Textures loaded: {TextureProvider.Packages.Sum(p => p.Items.Count())}");
             yield return ($"Texture buffer size total: "
-                + bytesToMiB(TextureProvider.Packages.Sum(
-                p => p.Items.Sum(
-                    i => i.Value.Texture is AsyncTexture { DataBufferSize: int bufferSz } ? bufferSz : 0))));
+                          + bytesToMiB(TextureProvider.Packages.Sum(
+                              p => p.Items.Sum(
+                                  i => i.Value.Texture is AsyncTexture { DataBufferSize: int bufferSz } ? bufferSz : 0))));
+            yield return ($"Loading texture buffer size total: "
+                          + bytesToMiB(TextureProvider.Packages.Sum(
+                              p => p.Items.Sum(
+                                  i => i.Value.Texture is AsyncTexture { LoadingBufferSize: int bufferSz } ? bufferSz : 0))));
         }
     }
 }

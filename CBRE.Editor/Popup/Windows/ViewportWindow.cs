@@ -17,6 +17,8 @@ namespace CBRE.Editor.Popup {
         public Rectangle WindowRectangle { get; private set; }
         public Vector2 ViewportCenter { get; private set; } = Vector2.One * 0.5f;
 
+        private bool draggingCenter = false;
+
         public Viewport GetXnaViewport(int viewportIndex) {
             int centerX = (int)(ViewportCenter.X * WindowRectangle.Width);
             int centerY = (int)(ViewportCenter.Y * WindowRectangle.Height);
@@ -87,7 +89,7 @@ namespace CBRE.Editor.Popup {
             void resetBasicEffect() {
                 basicEffect.Projection = viewport.GetViewportMatrix();
                 basicEffect.View = viewport.GetCameraMatrix();
-                basicEffect.World = Microsoft.Xna.Framework.Matrix.Identity;
+                basicEffect.World = Matrix.Identity;
                 basicEffect.CurrentTechnique.Passes[0].Apply();
             };
 
@@ -124,6 +126,9 @@ namespace CBRE.Editor.Popup {
                 doc.LightmapTextureOutdated = false;
                 shouldRerender = true;
             }
+
+            if (!selected) { return; }
+            
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
             var keysDown = keyboardState.GetPressedKeys();

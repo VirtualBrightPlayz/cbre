@@ -9,6 +9,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
+using static CBRE.Common.PrimitiveConversion;
+
 namespace CBRE.Providers.Map {
     public class VmfProvider : MapProvider {
         protected override IEnumerable<MapFeature> GetFormatFeatures() {
@@ -233,7 +235,7 @@ namespace CBRE.Providers.Map {
             }
 
             ret.Colour = editor.PropertyColour("color", Colour.GetRandomBrushColour());
-            ret.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(int.Parse).Where(x => x > 0));
+            ret.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(ParseInt).Where(x => x > 0));
             foreach (var face in ret.Faces) {
                 face.Parent = ret;
                 face.Colour = ret.Colour;
@@ -283,7 +285,7 @@ namespace CBRE.Providers.Map {
             };
             var editor = entity.GetChildren("editor").FirstOrDefault() ?? new GenericStructure("editor");
             ret.Colour = editor.PropertyColour("color", Colour.GetRandomBrushColour());
-            ret.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(int.Parse).Where(x => x > 0));
+            ret.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(ParseInt).Where(x => x > 0));
             foreach (var child in entity.GetChildren("solid").Select(solid => ReadSolid(solid, generator)).Where(s => s != null)) {
                 child.SetParent(ret, false);
             }
@@ -312,7 +314,7 @@ namespace CBRE.Providers.Map {
             var g = new Group(GetObjectID(group, generator));
             var editor = group.GetChildren("editor").FirstOrDefault() ?? new GenericStructure("editor");
             g.Colour = editor.PropertyColour("color", Colour.GetRandomBrushColour());
-            g.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(int.Parse).Where(x => x > 0));
+            g.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(ParseInt).Where(x => x > 0));
             return g;
         }
 

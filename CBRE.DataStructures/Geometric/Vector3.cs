@@ -3,6 +3,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
+using static CBRE.Common.PrimitiveConversion;
 
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
@@ -284,7 +285,7 @@ namespace CBRE.DataStructures.Geometric {
 
         public static Vector3 Parse(string x, string y, string z) {
             const NumberStyles ns = NumberStyles.Float;
-            return new Vector3(decimal.Parse(x, ns), decimal.Parse(y, ns), decimal.Parse(z, ns));
+            return new Vector3(ParseDecimal(x), ParseDecimal(y), ParseDecimal(z));
         }
 
         public Vector3F ToVector3F() {

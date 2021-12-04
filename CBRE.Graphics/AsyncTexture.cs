@@ -31,6 +31,7 @@ namespace CBRE.Graphics {
 
         public int DownscaleFactor { get; private set; } = 2;
         public int DataBufferSize { get; private set; } = 0;
+        public int LoadingBufferSize { get; private set; } = 0;
 
         public TextureFlags Flags { get; private set; } = TextureFlags.None;
 
@@ -65,8 +66,10 @@ namespace CBRE.Graphics {
                 int width;
                 int height;
                 var fileData = await File.ReadAllBytesAsync(Filename);
+                LoadingBufferSize += fileData.Length;
                 using (var stream = new MemoryStream(fileData)) {
                     bytes = Texture2D.TextureDataFromStream(stream, out width, out height, out _);
+                    LoadingBufferSize += bytes.Length;
                 }
 
                 if (DownscaleFactor > 1 && width > DownscaleFactor && height > DownscaleFactor) {
@@ -76,6 +79,7 @@ namespace CBRE.Graphics {
                     width /= DownscaleFactor;
                     height /= DownscaleFactor;
                     bytes = new byte[width * height * 4];
+                    LoadingBufferSize += bytes.Length;
                     for (int y = 0; y < height; y++) {
                         for (int x = 0; x < width; x++) {
                             void copyByte(int chn) {
@@ -87,6 +91,8 @@ namespace CBRE.Graphics {
                             copyByte(3);
                         }
                     }
+
+                    LoadingBufferSize -= oldBytes.Length;
                 } else {
                     DownscaleFactor = 1;
                 }
@@ -103,6 +109,8 @@ namespace CBRE.Graphics {
                     (width & 0x03) == 0 && (height & 0x03) == 0) {
                     var prevBytes = bytes;
                     bytes = CompressDxt5(bytes, width, height);
+                    LoadingBufferSize += bytes.Length;
+                    LoadingBufferSize -= prevBytes.Length;
                     Array.Resize(ref prevBytes, 0);
                     compressed = true;
                 }
@@ -124,6 +132,7 @@ namespace CBRE.Graphics {
                 DataBufferSize = data.Width * data.Height * (data.Compressed ? 1 : 4);
 
                 Array.Resize(ref data.Bytes, 0);
+                LoadingBufferSize = 0;
 
                 ImGuiTexture = GlobalGraphics.ImGuiRenderer.BindTexture(MonoGameTexture);
 

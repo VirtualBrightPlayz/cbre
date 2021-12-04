@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
@@ -9,9 +11,10 @@ namespace CBRE.Editor
 {
     static class Program {
         private static GameMain game;
-        
+
         public static void Main() {
             AppDomain currentDomain = AppDomain.CurrentDomain;
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             currentDomain.UnhandledException += CrashHandler;
 
             using (game = new GameMain()) {
