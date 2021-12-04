@@ -46,13 +46,18 @@ namespace CBRE.Providers.Map {
 
         private static void FlattenTree(MapObject parent, List<Solid> solids, List<Entity> entities, List<Group> groups) {
             foreach (var mo in parent.GetChildren()) {
-                if (mo is Solid) {
-                    solids.Add((Solid)mo);
-                } else if (mo is Entity) {
-                    entities.Add((Entity)mo);
-                } else if (mo is Group) {
-                    groups.Add((Group)mo);
-                    FlattenTree(mo, solids, entities, groups);
+                switch (mo)
+                {
+                    case Solid solid:
+                        solids.Add(solid);
+                        break;
+                    case Entity entity:
+                        entities.Add(entity);
+                        break;
+                    case Group group:
+                        groups.Add(group);
+                        FlattenTree(group, solids, entities, groups);
+                        break;
                 }
             }
         }
