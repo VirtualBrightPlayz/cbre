@@ -13,9 +13,13 @@ namespace CBRE.Editor
         private static GameMain game;
 
         public static void Main() {
-            AppDomain currentDomain = AppDomain.CurrentDomain;
+            try {
+                AppDomain currentDomain = AppDomain.CurrentDomain;
+                currentDomain.UnhandledException += CrashHandler;
+            } catch (Exception e) {
+                Console.WriteLine($"Could not set up exception handler: {e.Message} ({e.GetType().Name})\n{e.StackTrace}");
+            }
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-            currentDomain.UnhandledException += CrashHandler;
 
             using (game = new GameMain()) {
                 game.Run();
@@ -23,21 +27,31 @@ namespace CBRE.Editor
         }
 
         private static void CrashHandler(object sender, UnhandledExceptionEventArgs e) {
-            game.Exit();
             Exception exception = e.ExceptionObject as Exception;
+
+            Console.WriteLine($"Unhandled exception: {exception.Message} ({exception.GetType().Name})\n{exception.StackTrace}");
+
+            void swallowException(Action action) {
+                try {
+                    action();
+                } catch {
+                    //nobody cares!
+                }
+            }
+            swallowException(() => game.Exit());
             string stats;
             try {
                 stats = string.Join("\n", DebugStats.Get());
             } catch {
                 stats = "Failed to retrieve DebugStats";
             }
-            var writeTask = Task.Run(async() => {
-                await Task.Yield();
-                await File.AppendAllTextAsync(Logging.Logger.LogFile, stats);
-                await File.AppendAllTextAsync(Logging.Logger.LogFile, $"!!!CRASH!!!\n===Stack Trace: {e.ToString()}\n\n");
-            });
-            MessageBox.Show(MessageBox.Flags.Error, "CBRE has crashed", $"CBRE has crashed:\n\n{stats}\n\n{exception.Message}\n{exception.StackTrace}");
-            writeTask.Wait(10000);
+
+            string crashReportPath = "crashreport.txt";
+            if (File.Exists(crashReportPath)) { File.Delete(crashReportPath); }
+
+            File.AppendAllText(crashReportPath, stats);
+            File.AppendAllText(crashReportPath, $"!!!CRASH!!!\n===Exception: {exception.Message} ({exception.GetType().Name})\n{exception.StackTrace}\n\n");
+            swallowException(() => MessageBox.Show(MessageBox.Flags.Error, "CBRE has crashed", $"CBRE has crashed:\n\n{stats}\n\n{exception.Message}\n{exception.StackTrace}"));
 #if !DEBUG
             Environment.Exit(0);
 #endif

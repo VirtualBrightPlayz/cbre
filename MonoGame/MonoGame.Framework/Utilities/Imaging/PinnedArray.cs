@@ -67,7 +67,11 @@ namespace MonoGame.Utilities
             ElementSize = Marshal.SizeOf(typeof(T));
             Count = size;
             _size = Count * ElementSize;
-            _ptr = Marshal.AllocHGlobal((int)_size).ToPointer();
+            try {
+                _ptr = Marshal.AllocHGlobal((int)_size).ToPointer();
+            } catch (OutOfMemoryException oom) {
+                throw new OutOfMemoryException($"Failed to allocate {_size} bytes");
+            }
             GC.AddMemoryPressure(_size);
 
             lock (_lock)

@@ -1,3 +1,7 @@
 [submodule "NativeFileDialog.NET"]
 	path = NativeFileDialog.NET
 	url = git@github.com:juanjp600/NativeFileDialog.NET
+
+[submodule "metadata-extractor-dotnet"]
+	path = metadata-extractor-dotnet
+	url = git@github.com:juanjp600/metadata-extractor-dotnet
