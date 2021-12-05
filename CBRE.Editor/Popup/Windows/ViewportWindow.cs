@@ -17,18 +17,26 @@ namespace CBRE.Editor.Popup {
         public Rectangle WindowRectangle { get; private set; }
         public Vector2 ViewportCenter { get; private set; } = Vector2.One * 0.5f;
 
-        private bool draggingCenter = false;
+        [Flags]
+        private enum DraggingMode {
+            None = 0x0,
+            Horizontal = 0x1,
+            Vertical = 0x2
+        }
+        private DraggingMode draggingCenter = DraggingMode.None;
 
+        private const int viewportGap = 2;
+        
         public Viewport GetXnaViewport(int viewportIndex) {
             int centerX = (int)(ViewportCenter.X * WindowRectangle.Width);
             int centerY = (int)(ViewportCenter.Y * WindowRectangle.Height);
 
             (int left, int right) = viewportIndex % 2 == 0
-                ? (0, centerX - 2)
-                : (centerX + 2, WindowRectangle.Width);
+                ? (0, centerX - viewportGap)
+                : (centerX + viewportGap, WindowRectangle.Width);
             (int top, int bottom) = viewportIndex / 2 == 0
-                ? (0, centerY - 2)
-                : (centerY + 2, WindowRectangle.Height);
+                ? (0, centerY - viewportGap)
+                : (centerY + viewportGap, WindowRectangle.Height);
             return new Viewport(left, top, right - left, bottom - top);
         }
 
@@ -72,7 +80,14 @@ namespace CBRE.Editor.Popup {
             for (int i = 0; i < Viewports.Length; i++) {
                 Render(i);
             }
-            
+
+            basicEffect.Projection =
+                Matrix.CreateTranslation(-RenderTarget.Width / 2, -RenderTarget.Height / 2, 0.0f)
+                * Matrix.CreateOrthographic(RenderTarget.Width, RenderTarget.Height, -1.0f, 1.0f);
+            basicEffect.View = Matrix.Identity;
+            basicEffect.World = Matrix.Identity;
+            basicEffect.CurrentTechnique.Passes[0].Apply();
+
             GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
             RenderTargetImGuiPtr = GlobalGraphics.ImGuiRenderer.BindTexture(RenderTarget);
         }
@@ -128,6 +143,7 @@ namespace CBRE.Editor.Popup {
             }
 
             if (!selected) { return; }
+            if (draggingCenter != DraggingMode.None) { return; }
             
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
@@ -352,6 +368,25 @@ namespace CBRE.Editor.Popup {
             prevScrollWheelValue = scrollWheelValue;
         }
 
+        private (Rectangle HorizontalLine, Rectangle VerticalLine) GetDrawLines() {
+            int centerX = WindowRectangle.Left + (int)(ViewportCenter.X * WindowRectangle.Width);
+            int centerY = WindowRectangle.Top + (int)(ViewportCenter.Y * WindowRectangle.Height);
+            var horizontalLine = new Rectangle(
+                WindowRectangle.Left, centerY - (viewportGap - 1),
+                WindowRectangle.Width, (viewportGap - 1) * 2);
+            var verticalLine = new Rectangle(
+                centerX - (viewportGap - 1), WindowRectangle.Top,
+                (viewportGap - 1) * 2, WindowRectangle.Height);
+            return (horizontalLine, verticalLine);
+        }
+
+        private (Rectangle HorizontalLine, Rectangle VerticalLine) GetHoverLines() {
+            var (horizontalLine, verticalLine) = GetDrawLines();
+            horizontalLine.Y -= 1; horizontalLine.Height += 2;
+            verticalLine.X -= 1; verticalLine.Width += 2;
+            return (horizontalLine, verticalLine);
+        }
+        
         protected override bool ImGuiLayout() {
             ImGuiWindowFlags flags = ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar;
             if (ImGui.Begin(Name, ref open, flags)) {
@@ -364,7 +399,58 @@ namespace CBRE.Editor.Popup {
                 }
                 WindowRectangle = windowRectangle;
                 if (ImGui.BeginChildFrame(1, new Num.Vector2(WindowRectangle.Size.X, WindowRectangle.Size.Y), flags) && RenderTargetImGuiPtr != IntPtr.Zero && open) {
+                    ImGui.SetCursorPos(Num.Vector2.Zero);
+                    var cursorPos = ImGui.GetCursorPos();
                     ImGui.Image(RenderTargetImGuiPtr, new Num.Vector2(WindowRectangle.Size.X, WindowRectangle.Size.Y));
+
+                    uint unhoveredColor = 0xff494040;
+                    uint hoveredColor = 0xff995318;
+
+                    var (horizontalLine, verticalLine) = GetDrawLines();
+                    var (horizontalLineHover, verticalLineHover) = GetHoverLines();
+                    
+                    ImDrawListPtr drawList = ImGui.GetWindowDrawList();
+
+                    void addRect(Rectangle rect, uint color)
+                        => drawList.AddRect(new Num.Vector2(rect.Left, rect.Top) + cursorPos,
+                            new Num.Vector2(rect.Right, rect.Bottom) + cursorPos, color);
+                    addRect(horizontalLine, unhoveredColor);
+                    addRect(verticalLine, unhoveredColor);
+
+                    if (!ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
+                        draggingCenter = DraggingMode.None;
+                    }
+                    if (ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows)) {
+                        bool wasDragging = draggingCenter != DraggingMode.None;
+                        var mousePosImGui = ImGui.GetMousePos();
+                        var mousePos = new Point((int)mousePosImGui.X, (int)mousePosImGui.Y);
+
+                        void handleHover(Rectangle drawRect, Rectangle hoverRect, DraggingMode dragFlag) {
+                            if (hoverRect.Contains(mousePos) || draggingCenter.HasFlag(dragFlag)) {
+                                addRect(drawRect, hoveredColor);
+                                if (!wasDragging && ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
+                                    draggingCenter |= dragFlag;
+                                }
+                            }
+                        }
+                        handleHover(horizontalLine, horizontalLineHover, DraggingMode.Horizontal);
+                        handleHover(verticalLine, verticalLineHover, DraggingMode.Vertical);
+
+                        var viewportCenter = ViewportCenter;
+                        bool forceRerender = false;
+                        if (draggingCenter.HasFlag(DraggingMode.Horizontal)) {
+                            viewportCenter.Y = (float)(mousePos.Y - WindowRectangle.Top) / (float)WindowRectangle.Height;
+                            forceRerender = true;
+                        }
+                        if (draggingCenter.HasFlag(DraggingMode.Vertical)) {
+                            viewportCenter.X = (float)(mousePos.X - WindowRectangle.Left) / (float)WindowRectangle.Width;
+                            forceRerender = true;
+                        }
+                        ViewportCenter = viewportCenter;
+                        if (forceRerender) { ViewportManager.MarkForRerender(); }
+                    }
+                    
+                    
                     ImGui.EndChildFrame();
                 }
                 selected = ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows);

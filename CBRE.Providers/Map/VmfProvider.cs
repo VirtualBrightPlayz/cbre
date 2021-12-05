@@ -63,9 +63,9 @@ namespace CBRE.Providers.Map {
         }
 
         private static string FormatVector3(Vector3 c) {
-            return c.X.ToString("0.00000000")
-                + " " + c.Y.ToString("0.00000000")
-                + " " + c.Z.ToString("0.00000000");
+            return c.X.ToString("0.00000000", CultureInfo.InvariantCulture)
+                + " " + c.Y.ToString("0.00000000", CultureInfo.InvariantCulture)
+                + " " + c.Z.ToString("0.00000000", CultureInfo.InvariantCulture);
         }
 
         private static string FormatColor(Color c) {
@@ -180,9 +180,9 @@ namespace CBRE.Providers.Map {
                                          FormatVector3(face.Vertices[1].Location),
                                          FormatVector3(face.Vertices[2].Location));
             ret["material"] = face.Texture.Name;
-            ret["uaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.UAxis), face.Texture.XShift, face.Texture.XScale);
-            ret["vaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.VAxis), face.Texture.YShift, face.Texture.YScale);
-            ret["rotation"] = face.Texture.Rotation.ToString();
+            ret["uaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.UAxis), face.Texture.XShift.ToString(CultureInfo.InvariantCulture), face.Texture.XScale.ToString(CultureInfo.InvariantCulture));
+            ret["vaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.VAxis), face.Texture.YShift.ToString(CultureInfo.InvariantCulture), face.Texture.YScale.ToString(CultureInfo.InvariantCulture));
+            ret["rotation"] = face.Texture.Rotation.ToString(CultureInfo.InvariantCulture);
             // ret["lightmapscale"]
             // ret["smoothing_groups"]
 

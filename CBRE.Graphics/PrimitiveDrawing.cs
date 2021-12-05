@@ -85,6 +85,27 @@ namespace CBRE.Graphics {
             }
         }
 
+        public static void Rectangle(Rectangle rect) {
+            for (int i = 0; i < 4; i++) {
+                Vector2 pos = i switch {
+                    0 => new Vector2(rect.Left, rect.Top),
+                    1 => new Vector2(rect.Left, rect.Bottom),
+                    2 => new Vector2(rect.Right, rect.Bottom),
+                    3 => new Vector2(rect.Right, rect.Top)
+                };
+                Vertex3(pos.X, pos.Y, 0.0f);
+            }
+            for (int i = 0; i < 4; i++) {
+                Vector2 pos = i switch {
+                    0 => new Vector2(rect.Right, rect.Top),
+                    1 => new Vector2(rect.Right, rect.Bottom),
+                    2 => new Vector2(rect.Left, rect.Bottom),
+                    3 => new Vector2(rect.Left, rect.Top)
+                };
+                Vertex3(pos.X, pos.Y, 0.0f);
+            }
+        }
+
         public static void FacesWireframe(IEnumerable<Face> faces, CBRE.DataStructures.Geometric.Matrix m = null) {
             var matrix = m ?? CBRE.DataStructures.Geometric.Matrix.Identity;
             foreach (var face in faces) {
