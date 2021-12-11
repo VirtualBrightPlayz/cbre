@@ -148,15 +148,12 @@ namespace CBRE.Settings {
         }
 
         public static HotkeyImplementation GetHotkeyFor(Keys[] keys, bool ctrl, bool shift, bool alt) {
-            return Implementations.FirstOrDefault(p => ContainsAll(p.ShortcutKeys.ToArray(), keys) && ctrl == p.Ctrl && shift == p.Shift && alt == p.Alt);
+            return Implementations.FirstOrDefault(p => ContainsAll(p.ShortcutKeys, keys) && ctrl == p.Ctrl && shift == p.Shift && alt == p.Alt);
         }
 
-        private static bool ContainsAll<T>(T[] checkd, T[] arr) {
-            for (int i = 0; i < checkd.Length; i++) {
-                if (!arr.Contains(checkd[i]))
-                    return false;
-            }
-            return true;
+        private static bool ContainsAll<T>(IReadOnlyList<T> superset, IReadOnlyList<T> subset) {
+            if (subset.Count > superset.Count) { return false; }
+            return subset.All(superset.Contains);
         }
 
         public static HotkeyDefinition GetHotkeyDefinition(string id) {

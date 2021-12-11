@@ -19,6 +19,10 @@ namespace CBRE.Settings {
 
         public void SetupKeys() {
             ShortcutKeys = new List<Keys>();
+            if (Hotkey == "+") {
+                ShortcutKeys.Add(Keys.Add);
+                ShortcutKeys.Add(Keys.OemPlus);
+            }
             string[] keys = Hotkey.Split("+");
             for (int i = 0; i < keys.Length; i++) {
                 string keyLower = keys[i].ToLowerInvariant();
@@ -34,6 +38,9 @@ namespace CBRE.Settings {
                     ShortcutKeys.Add(Keys.OemCloseBrackets);
                 } else if (keyLower == "del") {
                     ShortcutKeys.Add(Keys.Delete);
+                } else if (keyLower == "-") {
+                    ShortcutKeys.Add(Keys.Subtract);
+                    ShortcutKeys.Add(Keys.OemMinus);
                 } else {
                     ShortcutKeys.Add(Enum.TryParse<Keys>(keys[i], true, out Keys res) ? res : Keys.None);
                 }

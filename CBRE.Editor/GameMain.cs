@@ -171,9 +171,9 @@ namespace CBRE.Editor {
 
             if (!PopupSelected) {
                 // Hotkeys
-                Keys[] keys = Keyboard.GetState().GetPressedKeys();
+                Keys[] keys = Keyboard.GetState().GetPressedKeys().Where(k => k != Keys.None).ToArray();
                 Keys[] hitKeys = keys.Where(k => !previousKeys.Contains(k)).ToArray();
-                
+
                 bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
                 bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
                 bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
