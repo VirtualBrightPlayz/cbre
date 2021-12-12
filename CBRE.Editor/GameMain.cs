@@ -157,7 +157,7 @@ namespace CBRE.Editor {
         }
 
         private Timing timing = new Timing();
-        private Keys[] previousKeys = new Keys[0];
+        private Keys[] previousKeys = Array.Empty<Keys>();
 
         protected override void Update(GameTime gameTime) {
             timing.EndMeasurement();

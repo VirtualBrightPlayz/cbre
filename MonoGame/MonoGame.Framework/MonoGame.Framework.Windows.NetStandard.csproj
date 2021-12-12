@@ -9,11 +9,7 @@
     <Authors>MonoGame Team</Authors>
     <Product>MonoGame.Framework</Product>
     <Version>3.7</Version>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>OPENGL;XNADESIGNPROVIDED;TRACE;WINDOWS;DESKTOPGL;SUPPORTS_EFX</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
