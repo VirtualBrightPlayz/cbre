@@ -452,6 +452,15 @@ namespace CBRE.Editor.Popup {
                             viewportCenter.X = (float)(mousePos.X - WindowRectangle.Left) / (float)WindowRectangle.Width;
                             forceRerender = true;
                         }
+
+                        viewportCenter.X = Math.Clamp(
+                            viewportCenter.X,
+                            5.0f / WindowRectangle.Width,
+                            (WindowRectangle.Width - 5.0f) / WindowRectangle.Width);
+                        viewportCenter.Y = Math.Clamp(
+                            viewportCenter.Y,
+                            5.0f / WindowRectangle.Height,
+                            (WindowRectangle.Height - 5.0f) / WindowRectangle.Height);
                         ViewportCenter = viewportCenter;
                         if (forceRerender) { ViewportManager.MarkForRerender(); }
                     }
