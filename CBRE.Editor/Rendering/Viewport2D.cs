@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Drawing;
 using System.Linq;
+using CBRE.Common;
 
 namespace CBRE.Editor.Rendering {
     public class Viewport2D : ViewportBase {
@@ -267,5 +268,8 @@ namespace CBRE.Editor.Rendering {
                 PrimitiveDrawing.End();
             }
         }
+
+        public override Either<ViewDirection, Viewport3D.ViewType> GetViewType()
+            => Direction;
     }
 }

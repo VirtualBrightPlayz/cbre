@@ -411,6 +411,12 @@ namespace CBRE.Editor.Popup {
                     
                     ImDrawListPtr drawList = ImGui.GetWindowDrawList();
 
+                    for (int i = 0; i < Viewports.Length; i++) {
+                        var topLeft = GetXnaRectangle(i).Location;
+                        var textPos = new Num.Vector2(topLeft.X + 5, topLeft.Y + 5);
+                        drawList.AddText(textPos, 0xffffffff, Viewports[i].GetViewType().ToString());
+                    }
+
                     void addRect(Rectangle rect, uint color)
                         => drawList.AddRect(new Num.Vector2(rect.Left, rect.Top) + cursorPos,
                             new Num.Vector2(rect.Right, rect.Bottom) + cursorPos, color);

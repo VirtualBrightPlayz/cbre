@@ -1,4 +1,5 @@
 ﻿using System;
+using CBRE.Common;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
@@ -189,5 +190,8 @@ namespace CBRE.Editor.Rendering {
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             }
         }
+
+        public override Either<Viewport2D.ViewDirection, ViewType> GetViewType()
+            => Type;
     }
 }
