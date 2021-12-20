@@ -135,16 +135,6 @@ namespace CBRE.Editor.Popup {
         private int prevScrollWheelValue = 0;
         
         public override void Update() {
-            GameMain.Instance.SelectedTool?.Update();
-            var doc = DocumentManager.CurrentDocument;
-            if (doc != null && doc.LightmapTextureOutdated) {
-                doc.LightmapTextureOutdated = false;
-                shouldRerender = true;
-            }
-
-            if (!selected) { return; }
-            if (draggingCenter != DraggingMode.None) { return; }
-            
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
             var keysDown = keyboardState.GetPressedKeys();
@@ -155,217 +145,234 @@ namespace CBRE.Editor.Popup {
             bool mouse3Down = mouseState.MiddleButton == ButtonState.Pressed;
             bool mouse3Hit = mouse3Down && !prevMouse3Down;
             int scrollWheelValue = mouseState.ScrollWheelValue;
-            ViewportManager.Ctrl = keyboardState.IsKeyDown(Keys.LeftControl) || keyboardState.IsKeyDown(Keys.RightControl);
-            ViewportManager.Shift = keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
-            ViewportManager.Alt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
 
-            foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
-                GameMain.Instance.SelectedTool?.KeyDown(new ViewportEvent() {
-                    Handled = false,
-                    KeyCode = key
-                });
-            }
-
-            foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
-                GameMain.Instance.SelectedTool?.KeyUp(new ViewportEvent() {
-                    Handled = false,
-                    KeyCode = key
-                });
-            }
-
-            var mousePos = mouseState.Position;
-
-            for (int i = 0; i < Viewports.Length; i++) {
-                var viewport = Viewports[i];
-
-                bool mouseOver = GetXnaRectangle(i).Contains(mousePos);
-                if (mouseOver) {
-                    if (!mouse1Down && !mouse3Down) {
-                        GameMain.Instance.SelectedTool?.MouseUp(viewport, new ViewportEvent() {
-                            Handled = false,
-                            Button = MouseButtons.Left,
-                            X = mouseState.X - viewport.X,
-                            Y = mouseState.Y - viewport.Y,
-                            LastX = viewport.PrevMouseX,
-                            LastY = viewport.PrevMouseY,
-                        });
-                        ViewportManager.MarkForRerender();
-                    }
-
-                    GameMain.Instance.SelectedTool?.UpdateFrame(viewport,
-                        new FrameInfo(0)); //TODO: fix FrameInfo
-
-                    foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
-                        GameMain.Instance.SelectedTool?.KeyDown(viewport, new ViewportEvent() {
-                            Handled = false,
-                            KeyCode = key
-                        });
-                    }
-
-                    foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
-                        GameMain.Instance.SelectedTool?.KeyUp(viewport, new ViewportEvent() {
-                            Handled = false,
-                            KeyCode = key
-                        });
-                    }
-
-                    if (viewport is Viewport3D vp3d) {
-                        bool shiftDown = mouse2Down;
-                        bool mustRerender = false;
-                        // WASD
-                        if (keyboardState.IsKeyDown(Keys.A)) {
-                            vp3d.Camera.Strafe(-5m - (shiftDown ? 5m : 0m));
-                            mustRerender = true;
-                        }
-
-                        if (keyboardState.IsKeyDown(Keys.D)) {
-                            vp3d.Camera.Strafe(5m + (shiftDown ? 5m : 0m));
-                            mustRerender = true;
-                        }
-
-                        if (keyboardState.IsKeyDown(Keys.W)) {
-                            vp3d.Camera.Advance(5m + (shiftDown ? 5m : 0m));
-                            mustRerender = true;
-                        }
-
-                        if (keyboardState.IsKeyDown(Keys.S)) {
-                            vp3d.Camera.Advance(-5m - (shiftDown ? 5m : 0m));
-                            mustRerender = true;
-                        }
-
-                        // look around
-                        var fovdiv = (vp3d.Width / 60m) / 2.5m;
-                        if (keyboardState.IsKeyDown(Keys.Left)) {
-                            vp3d.Camera.Pan(5m / fovdiv);
-                            mustRerender = true;
-                        }
-
-                        if (keyboardState.IsKeyDown(Keys.Right)) {
-                            vp3d.Camera.Pan(-5m / fovdiv);
-                            mustRerender = true;
-                        }
-
-                        if (keyboardState.IsKeyDown(Keys.Up)) {
-                            vp3d.Camera.Tilt(-5m / fovdiv);
-                            mustRerender = true;
-                        }
-
-                        if (keyboardState.IsKeyDown(Keys.Down)) {
-                            vp3d.Camera.Tilt(5m / fovdiv);
-                            mustRerender = true;
-                        }
-
-                        if (mustRerender) {
-                            var map = Documents.DocumentManager.CurrentDocument.Map;
-                            if (map.ActiveCamera == null) { map.ActiveCamera = map.Cameras.FirstOrDefault(); }
-
-                            if (map.ActiveCamera != null) {
-                                map.ActiveCamera.EyePosition = vp3d.Camera.EyePosition;
-                                map.ActiveCamera.LookPosition = vp3d.Camera.LookPosition;
-                            }
-
-                            ViewportManager.MarkForRerender();
-                        }
-                    }
-
-                    int currMouseX = mouseState.X - viewport.X;
-                    int currMouseY = mouseState.Y - viewport.Y;
-                    if (viewport.PrevMouseX != currMouseX ||
-                        viewport.PrevMouseY != currMouseY) {
-                        GameMain.Instance.SelectedTool?.MouseMove(viewport, new ViewportEvent() {
-                            Handled = false,
-                            Button = MouseButtons.Left,
-                            X = currMouseX,
-                            Y = currMouseY,
-                            LastX = viewport.PrevMouseX,
-                            LastY = viewport.PrevMouseY,
-                        });
-                        ViewportManager.MarkForRerender();
-                    }
-
-                    if (mouse1Hit) {
-                        GameMain.Instance.SelectedTool?.MouseClick(viewport, new ViewportEvent() {
-                            Handled = false,
-                            Button = MouseButtons.Left,
-                            X = currMouseX,
-                            Y = currMouseY,
-                            LastX = viewport.PrevMouseX,
-                            LastY = viewport.PrevMouseY,
-                            Clicks = 1
-                        });
-
-                        GameMain.Instance.SelectedTool?.MouseDown(viewport, new ViewportEvent() {
-                            Handled = false,
-                            Button = MouseButtons.Left,
-                            X = currMouseX,
-                            Y = currMouseY,
-                            LastX = viewport.PrevMouseX,
-                            LastY = viewport.PrevMouseY,
-                        });
-                    }
-
-                    if (mouse2Hit) {
-                        GameMain.Instance.SelectedTool?.MouseClick(viewport, new ViewportEvent() {
-                            Handled = false,
-                            Button = MouseButtons.Right,
-                            X = currMouseX,
-                            Y = currMouseY,
-                            LastX = viewport.PrevMouseX,
-                            LastY = viewport.PrevMouseY,
-                            Clicks = 1
-                        });
-
-                        GameMain.Instance.SelectedTool?.MouseDown(viewport, new ViewportEvent() {
-                            Handled = false,
-                            Button = MouseButtons.Right,
-                            X = currMouseX,
-                            Y = currMouseY,
-                            LastX = viewport.PrevMouseX,
-                            LastY = viewport.PrevMouseY,
-                        });
-                    }
-
-                    if (mouse3Down) {
-                        if (viewport is Viewport2D vp) {
-                            ViewportManager.MarkForRerender();
-                            vp.Position -= new DataStructures.Geometric.Vector3(
-                                (decimal)(currMouseX - vp.PrevMouseX) / vp.Zoom,
-                                -(decimal)(currMouseY - vp.PrevMouseY) / vp.Zoom, 0m);
-                        }
-                    }
-                    
-                    
-                    if (scrollWheelValue != prevScrollWheelValue) {
-                        if (viewport is Viewport2D vp) {
-                            var pos0 = vp.ScreenToWorld(new Point(mouseState.X - viewport.X,
-                                mouseState.Y - viewport.Y));
-                            decimal scrollWheelDiff = (scrollWheelValue - prevScrollWheelValue) * 0.001m;
-                            if (scrollWheelDiff > 0m) {
-                                vp.Zoom *= 1.0m + scrollWheelDiff;
-                            } else {
-                                vp.Zoom /= 1.0m - scrollWheelDiff;
-                            }
-
-                            var pos1 = vp.ScreenToWorld(new Point(mouseState.X - viewport.X,
-                                mouseState.Y - viewport.Y));
-                            vp.Position -= new DataStructures.Geometric.Vector3(pos1.X - pos0.X, pos0.Y - pos1.Y, 0m);
-                            ViewportManager.MarkForRerender();
-                        }
-                    }
+            try {
+                GameMain.Instance.SelectedTool?.Update();
+                var doc = DocumentManager.CurrentDocument;
+                if (doc != null && doc.LightmapTextureOutdated) {
+                    doc.LightmapTextureOutdated = false;
+                    shouldRerender = true;
                 }
 
-                //Reset the mouse state since the tool update methods can change it!
-                mouseState = Mouse.GetState();
-                viewport.PrevMouseOver = mouseOver;
-                viewport.PrevMouseX = mouseState.X - viewport.X;
-                viewport.PrevMouseY = mouseState.Y - viewport.Y;
-            }
+                if (!selected) { return; }
 
-            prevMouse1Down = mouse1Down;
-            prevMouse2Down = mouse2Down;
-            prevMouse3Down = mouse3Down;
-            prevKeysDown = keysDown;
-            prevScrollWheelValue = scrollWheelValue;
+                if (draggingCenter != DraggingMode.None) { return; }
+
+                ViewportManager.Ctrl = keyboardState.IsKeyDown(Keys.LeftControl) ||
+                                       keyboardState.IsKeyDown(Keys.RightControl);
+                ViewportManager.Shift =
+                    keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
+                ViewportManager.Alt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
+
+                foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
+                    GameMain.Instance.SelectedTool?.KeyDown(new ViewportEvent() {
+                        Handled = false,
+                        KeyCode = key
+                    });
+                }
+
+                foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
+                    GameMain.Instance.SelectedTool?.KeyUp(new ViewportEvent() {
+                        Handled = false,
+                        KeyCode = key
+                    });
+                }
+
+                var mousePos = mouseState.Position;
+
+                for (int i = 0; i < Viewports.Length; i++) {
+                    var viewport = Viewports[i];
+
+                    bool mouseOver = GetXnaRectangle(i).Contains(mousePos);
+                    if (mouseOver) {
+                        if (!mouse1Down && !mouse3Down) {
+                            GameMain.Instance.SelectedTool?.MouseUp(viewport, new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Left,
+                                X = mouseState.X - viewport.X,
+                                Y = mouseState.Y - viewport.Y,
+                                LastX = viewport.PrevMouseX,
+                                LastY = viewport.PrevMouseY,
+                            });
+                            ViewportManager.MarkForRerender();
+                        }
+
+                        GameMain.Instance.SelectedTool?.UpdateFrame(viewport,
+                            new FrameInfo(0)); //TODO: fix FrameInfo
+
+                        foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
+                            GameMain.Instance.SelectedTool?.KeyDown(viewport, new ViewportEvent() {
+                                Handled = false,
+                                KeyCode = key
+                            });
+                        }
+
+                        foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
+                            GameMain.Instance.SelectedTool?.KeyUp(viewport, new ViewportEvent() {
+                                Handled = false,
+                                KeyCode = key
+                            });
+                        }
+
+                        if (viewport is Viewport3D vp3d) {
+                            bool shiftDown = mouse2Down;
+                            bool mustRerender = false;
+                            // WASD
+                            if (keyboardState.IsKeyDown(Keys.A)) {
+                                vp3d.Camera.Strafe(-5m - (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+
+                            if (keyboardState.IsKeyDown(Keys.D)) {
+                                vp3d.Camera.Strafe(5m + (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+
+                            if (keyboardState.IsKeyDown(Keys.W)) {
+                                vp3d.Camera.Advance(5m + (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+
+                            if (keyboardState.IsKeyDown(Keys.S)) {
+                                vp3d.Camera.Advance(-5m - (shiftDown ? 5m : 0m));
+                                mustRerender = true;
+                            }
+
+                            // look around
+                            var fovdiv = (vp3d.Width / 60m) / 2.5m;
+                            if (keyboardState.IsKeyDown(Keys.Left)) {
+                                vp3d.Camera.Pan(5m / fovdiv);
+                                mustRerender = true;
+                            }
+
+                            if (keyboardState.IsKeyDown(Keys.Right)) {
+                                vp3d.Camera.Pan(-5m / fovdiv);
+                                mustRerender = true;
+                            }
+
+                            if (keyboardState.IsKeyDown(Keys.Up)) {
+                                vp3d.Camera.Tilt(-5m / fovdiv);
+                                mustRerender = true;
+                            }
+
+                            if (keyboardState.IsKeyDown(Keys.Down)) {
+                                vp3d.Camera.Tilt(5m / fovdiv);
+                                mustRerender = true;
+                            }
+
+                            if (mustRerender) {
+                                var map = Documents.DocumentManager.CurrentDocument.Map;
+                                if (map.ActiveCamera == null) { map.ActiveCamera = map.Cameras.FirstOrDefault(); }
+
+                                if (map.ActiveCamera != null) {
+                                    map.ActiveCamera.EyePosition = vp3d.Camera.EyePosition;
+                                    map.ActiveCamera.LookPosition = vp3d.Camera.LookPosition;
+                                }
+
+                                ViewportManager.MarkForRerender();
+                            }
+                        }
+
+                        int currMouseX = mouseState.X - viewport.X;
+                        int currMouseY = mouseState.Y - viewport.Y;
+                        if (viewport.PrevMouseX != currMouseX ||
+                            viewport.PrevMouseY != currMouseY) {
+                            GameMain.Instance.SelectedTool?.MouseMove(viewport, new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Left,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = viewport.PrevMouseX,
+                                LastY = viewport.PrevMouseY,
+                            });
+                            ViewportManager.MarkForRerender();
+                        }
+
+                        if (mouse1Hit) {
+                            GameMain.Instance.SelectedTool?.MouseClick(viewport, new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Left,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = viewport.PrevMouseX,
+                                LastY = viewport.PrevMouseY,
+                                Clicks = 1
+                            });
+
+                            GameMain.Instance.SelectedTool?.MouseDown(viewport, new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Left,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = viewport.PrevMouseX,
+                                LastY = viewport.PrevMouseY,
+                            });
+                        }
+
+                        if (mouse2Hit) {
+                            GameMain.Instance.SelectedTool?.MouseClick(viewport, new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Right,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = viewport.PrevMouseX,
+                                LastY = viewport.PrevMouseY,
+                                Clicks = 1
+                            });
+
+                            GameMain.Instance.SelectedTool?.MouseDown(viewport, new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Right,
+                                X = currMouseX,
+                                Y = currMouseY,
+                                LastX = viewport.PrevMouseX,
+                                LastY = viewport.PrevMouseY,
+                            });
+                        }
+
+                        if (mouse3Down) {
+                            if (viewport is Viewport2D vp) {
+                                ViewportManager.MarkForRerender();
+                                vp.Position -= new DataStructures.Geometric.Vector3(
+                                    (decimal)(currMouseX - vp.PrevMouseX) / vp.Zoom,
+                                    -(decimal)(currMouseY - vp.PrevMouseY) / vp.Zoom, 0m);
+                            }
+                        }
+
+
+                        if (scrollWheelValue != prevScrollWheelValue) {
+                            if (viewport is Viewport2D vp) {
+                                var pos0 = vp.ScreenToWorld(new Point(mouseState.X - viewport.X,
+                                    mouseState.Y - viewport.Y));
+                                decimal scrollWheelDiff = (scrollWheelValue - prevScrollWheelValue) * 0.001m;
+                                if (scrollWheelDiff > 0m) {
+                                    vp.Zoom *= 1.0m + scrollWheelDiff;
+                                } else {
+                                    vp.Zoom /= 1.0m - scrollWheelDiff;
+                                }
+
+                                var pos1 = vp.ScreenToWorld(new Point(mouseState.X - viewport.X,
+                                    mouseState.Y - viewport.Y));
+                                vp.Position -=
+                                    new DataStructures.Geometric.Vector3(pos1.X - pos0.X, pos0.Y - pos1.Y, 0m);
+                                ViewportManager.MarkForRerender();
+                            }
+                        }
+                    }
+
+                    //Reset the mouse state since the tool update methods can change it!
+                    mouseState = Mouse.GetState();
+                    viewport.PrevMouseOver = mouseOver;
+                    viewport.PrevMouseX = mouseState.X - viewport.X;
+                    viewport.PrevMouseY = mouseState.Y - viewport.Y;
+                }
+            } finally {
+                prevMouse1Down = mouse1Down;
+                prevMouse2Down = mouse2Down;
+                prevMouse3Down = mouse3Down;
+                prevKeysDown = keysDown;
+                prevScrollWheelValue = scrollWheelValue;
+            }
         }
 
         private (Rectangle HorizontalLine, Rectangle VerticalLine) GetDrawLines() {
