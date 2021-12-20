@@ -403,8 +403,8 @@ namespace CBRE.Editor.Popup {
                     var cursorPos = ImGui.GetCursorPos();
                     ImGui.Image(RenderTargetImGuiPtr, new Num.Vector2(WindowRectangle.Size.X, WindowRectangle.Size.Y));
 
-                    uint unhoveredColor = 0xff494040;
-                    uint hoveredColor = 0xff995318;
+                    const uint unhoveredColor = 0xff494040;
+                    const uint hoveredColor = 0xff995318;
 
                     var (horizontalLine, verticalLine) = GetDrawLines();
                     var (horizontalLineHover, verticalLineHover) = GetHoverLines();
@@ -432,7 +432,7 @@ namespace CBRE.Editor.Popup {
                         var mousePos = new Point((int)mousePosImGui.X, (int)mousePosImGui.Y);
 
                         void handleHover(Rectangle drawRect, Rectangle hoverRect, DraggingMode dragFlag) {
-                            if (hoverRect.Contains(mousePos) || draggingCenter.HasFlag(dragFlag)) {
+                            if ((hoverRect.Contains(mousePos) && !wasDragging) || draggingCenter.HasFlag(dragFlag)) {
                                 addRect(drawRect, hoveredColor);
                                 if (!wasDragging && ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
                                     draggingCenter |= dragFlag;

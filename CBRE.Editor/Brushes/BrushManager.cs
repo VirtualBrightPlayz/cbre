@@ -1,38 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using CBRE.Common;
+using BindingFlags = System.Reflection.BindingFlags;
 
 namespace CBRE.Editor.Brushes {
     public static class BrushManager {
         public static IBrush CurrentBrush { get; set; }
 
-        private static readonly List<IBrush> brushes;
-        public static IEnumerable<IBrush> Brushes => brushes;
+        public static readonly ImmutableHashSet<IBrush> Brushes;
 
         //private static ComboBox _comboBox;
         public static bool RoundCreatedVertices;
 
         static BrushManager() {
-            brushes = new List<IBrush>();
             RoundCreatedVertices = true;
-            Init();
-        }
+            var brushTypes = ReflectionUtils.GetDerivedNonAbstract<IBrush>();
+            var brushSet = new HashSet<IBrush>();
+            foreach (var type in brushTypes) {
+                brushSet.Add(
+                    type.GetConstructor(Array.Empty<Type>())
+                        .Invoke(Array.Empty<object>()) as IBrush);
+            }
 
-        public static void Init() {
-            brushes.Add(new BlockBrush());
-            brushes.Add(new TetrahedronBrush());
-            brushes.Add(new PyramidBrush());
-            brushes.Add(new WedgeBrush());
-            brushes.Add(new CylinderBrush());
-            brushes.Add(new ConeBrush());
-            brushes.Add(new PipeBrush());
-            brushes.Add(new ArchBrush());
-            brushes.Add(new SphereBrush());
-            brushes.Add(new TorusBrush());
-        }
-
-        public static void Register(IBrush brush) {
-            brushes.Add(brush);
+            Brushes = brushSet.ToImmutableHashSet();
         }
     }
 }
