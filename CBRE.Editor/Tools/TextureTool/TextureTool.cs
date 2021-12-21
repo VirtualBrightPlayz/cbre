@@ -155,8 +155,8 @@ namespace CBRE.Editor.Tools.TextureTool {
                     TextureApplied(this, _texture.Texture, xscl, yscl, xoff, yoff, trot);
                 }
 
-                ImGui.EndChild();
             }
+            ImGui.EndChild();
         }
 
         public override void DocumentChanged() {

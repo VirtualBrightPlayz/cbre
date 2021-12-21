@@ -80,8 +80,8 @@ namespace CBRE.Editor.Tools.VMTool
                     }
                     ImGui.TreePop();
                 }
-                ImGui.EndChild();
             }
+            ImGui.EndChild();
             ImGui.NewLine();
             if (ImGui.TreeNode("Errors")) {
                 var errs = GetErrors().ToArray();

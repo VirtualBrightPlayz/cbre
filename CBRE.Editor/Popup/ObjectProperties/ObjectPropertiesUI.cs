@@ -237,8 +237,8 @@ namespace CBRE.Editor.Popup.ObjectProperties {
 
                 ImGui.Columns(1);
                 ImGui.Separator();
-                ImGui.EndChild();
             }
+            ImGui.EndChild();
 
             ImGui.NewLine();
             /*if (ImGui.Button("+")) {

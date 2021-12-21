@@ -12,7 +12,7 @@ namespace CBRE.Editor.Popup {
         public bool DrawAlways { get; protected set; }
         
         protected virtual bool canBeClosed => true;
-        protected virtual bool canBeDefocused => true; //TODO: implement
+        protected virtual bool canBeDefocused => true;
 
         protected int popupIndex => GameMain.Instance.Popups.IndexOf(this);
 

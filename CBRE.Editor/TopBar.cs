@@ -97,7 +97,7 @@ namespace CBRE.Editor {
 
             public TopBarItem(AsyncTexture texture, string hotkey, bool isToggle = false) {
                 var h = Hotkeys.GetHotkeyDefinitions().FirstOrDefault(p => p.ID == hotkey);
-                // IsToggle = isToggle;
+                IsToggle = isToggle;
                 Texture = texture;
                 if (h == null) {
                     ToolTip = hotkey;
@@ -109,11 +109,9 @@ namespace CBRE.Editor {
             }
 
             public virtual void Draw() {
-                if (Toggled) {
-                    ImGui.PushStyleColor(ImGuiCol.Button, new Num.Vector4(0.3f, 0.6f, 0.7f, 1.0f));
-                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Num.Vector4(0.15f, 0.3f, 0.4f, 1.0f));
-                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Num.Vector4(0.45f, 0.9f, 1.0f, 1.0f));
-                }
+                using var _ = new ColorPush(ImGuiCol.Button, Toggled ? GlobalGraphics.SelectedColors.Button : null);
+                using var __ = new ColorPush(ImGuiCol.ButtonActive, Toggled ? GlobalGraphics.SelectedColors.ButtonActive : null);
+                using var ___ = new ColorPush(ImGuiCol.ButtonHovered, Toggled ? GlobalGraphics.SelectedColors.ButtonHovered : null);
 
                 bool pressed;
                 if (Texture.ImGuiTexture != IntPtr.Zero) {
@@ -122,10 +120,6 @@ namespace CBRE.Editor {
                     pressed = ImGui.Button($"##{Texture.Name}", new Num.Vector2(24, 22));
                 }
                 ImGui.SameLine();
-
-                if (Toggled) {
-                    ImGui.PopStyleColor(3);
-                }
 
                 if (pressed) {
                     if (IsToggle) { Toggled = !Toggled; }

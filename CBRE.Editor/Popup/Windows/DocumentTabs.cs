@@ -44,8 +44,8 @@ namespace CBRE.Editor.Popup {
                     }
                     ImGui.SameLine();
                 }
-                ImGui.EndChild();
             }
+            ImGui.EndChild();
         }
     }
 }

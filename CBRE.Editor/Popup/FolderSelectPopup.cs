@@ -78,8 +78,8 @@ namespace CBRE.Editor.Popup {
 
                 ImGui.Columns(1);
                 ImGui.Separator();
-                ImGui.EndChild();
             }
+            ImGui.EndChild();
 
             ImGui.NewLine();
             ImGui.Text(Filter);

@@ -61,11 +61,9 @@ namespace CBRE.Editor {
 
             public virtual void Draw() {
                 bool isSelected = GameMain.Instance.SelectedTool == Tool;
-                if (isSelected) {
-                    ImGui.PushStyleColor(ImGuiCol.Button, new Num.Vector4(0.3f, 0.6f, 0.7f, 1.0f));
-                    ImGui.PushStyleColor(ImGuiCol.ButtonActive, new Num.Vector4(0.15f, 0.3f, 0.4f, 1.0f));
-                    ImGui.PushStyleColor(ImGuiCol.ButtonHovered, new Num.Vector4(0.45f, 0.9f, 1.0f, 1.0f));
-                }
+                using var _ = new ColorPush(ImGuiCol.Button, isSelected ? GlobalGraphics.SelectedColors.Button : null);
+                using var __ = new ColorPush(ImGuiCol.ButtonActive, isSelected ? GlobalGraphics.SelectedColors.ButtonActive : null);
+                using var ___ = new ColorPush(ImGuiCol.ButtonHovered, isSelected ? GlobalGraphics.SelectedColors.ButtonHovered : null);
 
                 bool pressed;
                 if (Texture.ImGuiTexture != IntPtr.Zero) {
@@ -85,10 +83,6 @@ namespace CBRE.Editor {
                     ImGui.SetTooltip(ToolTip);
                     ImGui.EndTooltip();
                     ImGui.PopStyleVar();
-                }
-
-                if (isSelected) {
-                    ImGui.PopStyleColor(3);
                 }
             }
         }

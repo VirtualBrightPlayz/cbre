@@ -4,9 +4,12 @@ using Microsoft.Xna.Framework;
 using Num = System.Numerics;
 
 namespace CBRE.Editor {
-    struct ColorPush : IDisposable {
-        public ColorPush(ImGuiCol element, Num.Vector4 color) {
-            ImGui.PushStyleColor(element, color);
+    readonly struct ColorPush : IDisposable {
+        private readonly bool pushed;
+        
+        public ColorPush(ImGuiCol element, Num.Vector4? color) {
+            if (color.HasValue) { ImGui.PushStyleColor(element, color.Value); }
+            pushed = color.HasValue;
         }
 
         public ColorPush(ImGuiCol element, ImColor color) : this(element, color.Value) { }
@@ -24,7 +27,7 @@ namespace CBRE.Editor {
             (float)color.A / 255f)) { }
         
         public void Dispose() {
-            ImGui.PopStyleColor();
+            if (pushed) { ImGui.PopStyleColor(); }
         }
     }
 }

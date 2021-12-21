@@ -23,7 +23,6 @@ namespace CBRE.Editor.Brushes {
                     type.GetConstructor(Array.Empty<Type>())
                         .Invoke(Array.Empty<object>()) as IBrush);
             }
-
             Brushes = brushSet.ToImmutableHashSet();
         }
     }

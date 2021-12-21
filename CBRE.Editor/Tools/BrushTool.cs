@@ -106,7 +106,7 @@ namespace CBRE.Editor.Tools
         }
 
         public override void MouseDown(ViewportBase viewport, ViewportEvent e) {
-            if (BrushManager.CurrentBrush == null) return;
+            if (BrushManager.CurrentBrush == null) { return; }
             base.MouseDown(viewport, e);
         }
 
