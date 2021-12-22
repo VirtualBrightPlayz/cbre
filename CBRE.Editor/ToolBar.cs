@@ -61,28 +61,33 @@ namespace CBRE.Editor {
 
             public virtual void Draw() {
                 bool isSelected = GameMain.Instance.SelectedTool == Tool;
-                using var _ = new ColorPush(ImGuiCol.Button, isSelected ? GlobalGraphics.SelectedColors.Button : null);
-                using var __ = new ColorPush(ImGuiCol.ButtonActive, isSelected ? GlobalGraphics.SelectedColors.ButtonActive : null);
-                using var ___ = new ColorPush(ImGuiCol.ButtonHovered, isSelected ? GlobalGraphics.SelectedColors.ButtonHovered : null);
+                using (new AggregateDisposable(
+                           new ColorPush(ImGuiCol.Button,
+                               isSelected ? GlobalGraphics.SelectedColors.Button : null),
+                           new ColorPush(ImGuiCol.ButtonActive,
+                               isSelected ? GlobalGraphics.SelectedColors.ButtonActive : null),
+                           new ColorPush(ImGuiCol.ButtonHovered,
+                               isSelected ? GlobalGraphics.SelectedColors.ButtonHovered : null)))
+                {
+                    bool pressed;
+                    if (Texture.ImGuiTexture != IntPtr.Zero) {
+                        pressed = ImGui.ImageButton(Texture.ImGuiTexture, new Num.Vector2(32, 32));
+                    } else {
+                        pressed = ImGui.Button($"##{Tool}", new Num.Vector2(40, 38));
+                    }
 
-                bool pressed;
-                if (Texture.ImGuiTexture != IntPtr.Zero) {
-                    pressed = ImGui.ImageButton(Texture.ImGuiTexture, new Num.Vector2(32, 32));
-                } else {
-                    pressed = ImGui.Button($"##{Tool}", new Num.Vector2(40, 38));
-                }
+                    if (pressed && GameMain.Instance.SelectedTool != Tool) {
+                        GameMain.Instance.SelectedTool = Tool;
+                        ViewportManager.MarkForRerender();
+                    }
 
-                if (pressed && GameMain.Instance.SelectedTool != Tool) {
-                    GameMain.Instance.SelectedTool = Tool;
-                    ViewportManager.MarkForRerender();
-                }
-
-                if (ImGui.IsItemHovered()) {
-                    ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.One * 4);
-                    ImGui.BeginTooltip();
-                    ImGui.SetTooltip(ToolTip);
-                    ImGui.EndTooltip();
-                    ImGui.PopStyleVar();
+                    if (ImGui.IsItemHovered()) {
+                        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.One * 4);
+                        ImGui.BeginTooltip();
+                        ImGui.SetTooltip(ToolTip);
+                        ImGui.EndTooltip();
+                        ImGui.PopStyleVar();
+                    }
                 }
             }
         }

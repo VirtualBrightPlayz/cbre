@@ -109,21 +109,24 @@ namespace CBRE.Editor {
             }
 
             public virtual void Draw() {
-                using var _ = new ColorPush(ImGuiCol.Button, Toggled ? GlobalGraphics.SelectedColors.Button : null);
-                using var __ = new ColorPush(ImGuiCol.ButtonActive, Toggled ? GlobalGraphics.SelectedColors.ButtonActive : null);
-                using var ___ = new ColorPush(ImGuiCol.ButtonHovered, Toggled ? GlobalGraphics.SelectedColors.ButtonHovered : null);
+                using (new AggregateDisposable(
+                           new ColorPush(ImGuiCol.Button, Toggled ? GlobalGraphics.SelectedColors.Button : null),
+                           new ColorPush(ImGuiCol.ButtonActive,
+                               Toggled ? GlobalGraphics.SelectedColors.ButtonActive : null),
+                           new ColorPush(ImGuiCol.ButtonHovered,
+                               Toggled ? GlobalGraphics.SelectedColors.ButtonHovered : null))) {
+                    bool pressed;
+                    if (Texture.ImGuiTexture != IntPtr.Zero) {
+                        pressed = ImGui.ImageButton(Texture.ImGuiTexture, new Num.Vector2(16, 16));
+                    } else {
+                        pressed = ImGui.Button($"##{Texture.Name}", new Num.Vector2(24, 22));
+                    }
+                    ImGui.SameLine();
 
-                bool pressed;
-                if (Texture.ImGuiTexture != IntPtr.Zero) {
-                    pressed = ImGui.ImageButton(Texture.ImGuiTexture, new Num.Vector2(16, 16));
-                } else {
-                    pressed = ImGui.Button($"##{Texture.Name}", new Num.Vector2(24, 22));
-                }
-                ImGui.SameLine();
-
-                if (pressed) {
-                    if (IsToggle) { Toggled = !Toggled; }
-                    Action?.Invoke();
+                    if (pressed) {
+                        if (IsToggle) { Toggled = !Toggled; }
+                        Action?.Invoke();
+                    }
                 }
             }
         }
