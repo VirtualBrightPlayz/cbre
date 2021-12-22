@@ -434,7 +434,26 @@ namespace CBRE.Editor.Popup {
                         using (new ColorPush(ImGuiCol.ButtonActive, Color.DarkGray)) {
                             using (new ColorPush(ImGuiCol.ButtonHovered, Color.Gray)) {
                                 ImGui.SetCursorScreenPos(textPos);
-                                ImGui.Button($"{Viewports[i].GetViewType()}##viewType{i}");
+                                if (ImGui.Button($"{Viewports[i].GetViewType()}##viewType{i}")) {
+                                    ImGui.OpenPopup($"viewTypePopup{i}");
+                                }
+
+                                if (ImGui.BeginPopup($"viewTypePopup{i}")) {
+                                    foreach (Viewport3D.ViewType viewType in Enum.GetValues<Viewport3D.ViewType>()) {
+                                        if (ImGui.Selectable($"3D {viewType}")) {
+                                            Viewports[i] = new Viewport3D(viewType);
+                                        }
+                                    }
+                                    
+                                    ImGui.Separator();
+                                    
+                                    foreach (Viewport2D.ViewDirection viewType in Enum.GetValues<Viewport2D.ViewDirection>()) {
+                                        if (ImGui.Selectable($"2D {viewType}")) {
+                                            Viewports[i] = new Viewport2D(viewType);
+                                        }
+                                    }
+                                    ImGui.EndPopup();
+                                }
                             }
                         }
                     }
