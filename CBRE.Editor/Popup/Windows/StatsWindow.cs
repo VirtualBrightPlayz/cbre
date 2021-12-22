@@ -8,22 +8,19 @@ using ImGuiNET;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
-    public class StatsWindow : WindowUI {
-        public StatsWindow() : base("") { }
+    public class StatsWindow : DockableWindow {
+        public StatsWindow() : base("stats", ImGuiWindowFlags.None) { }
 
-        public override bool Draw() {
-            if (ImGui.Begin("stats", ref open)) {
-                var Window = GameMain.Instance.Window;
-                ImGui.SetWindowPos(new Num.Vector2(ViewportManager.VPRect.Right, Window.ClientBounds.Height - 60), ImGuiCond.FirstUseEver);
-                ImGui.SetWindowSize(new Num.Vector2(Window.ClientBounds.Width - ViewportManager.VPRect.Right, 60), ImGuiCond.FirstUseEver);
-                
-                foreach (string statLine in DebugStats.Get()) {
-                    ImGui.Text(statLine);
-                }
-
-                ImGui.End();
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
+            
+            var window = GameMain.Instance.Window;
+            ImGui.SetWindowPos(new Num.Vector2(ViewportManager.VPRect.Right, window.ClientBounds.Height - 60), ImGuiCond.FirstUseEver);
+            ImGui.SetWindowSize(new Num.Vector2(window.ClientBounds.Width - ViewportManager.VPRect.Right, 60), ImGuiCond.FirstUseEver);
+            
+            foreach (string statLine in DebugStats.Get()) {
+                ImGui.Text(statLine);
             }
-            return open;
         }
     }
 }

@@ -13,32 +13,31 @@ using Num = System.Numerics;
 namespace CBRE.Editor.Popup {
     public class EditVisgroupPopup : PopupUI {
 
-        private Visgroup _visgroup;
+        private Visgroup visgroup;
 
         public EditVisgroupPopup(Visgroup visgroup) : base("Edit Visgroup") {
-            _visgroup = visgroup;
-            GameMain.Instance.PopupSelected = true;
+            this.visgroup = visgroup;
         }
 
-        protected override bool ImGuiLayout() {
-            string name = _visgroup.Name;
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
+            string name = visgroup.Name;
             if (ImGui.InputText("Name", ref name, 1024)) {
-                _visgroup.Name = name;
+                visgroup.Name = name;
             }
-            Num.Vector4 col = new Num.Vector4(_visgroup.Colour.R, _visgroup.Colour.G, _visgroup.Colour.B, _visgroup.Colour.A) / 255f;
+            Num.Vector4 col = new Num.Vector4(visgroup.Colour.R, visgroup.Colour.G, visgroup.Colour.B, visgroup.Colour.A) / 255f;
             if (ImGui.ColorEdit4("Color", ref col)) {
                 col *= 255f;
-                _visgroup.Colour = System.Drawing.Color.FromArgb((int)col.W, (int)col.X, (int)col.Y, (int)col.Z);
+                visgroup.Colour = System.Drawing.Color.FromArgb((int)col.W, (int)col.X, (int)col.Y, (int)col.Z);
             }
             if (ImGui.Button("New Child")) {
-                _visgroup.Children.Add(new Visgroup() {
-                    Parent = _visgroup,
+                visgroup.Children.Add(new Visgroup() {
+                    Parent = visgroup,
                     Colour = Color.White,
                     Name = "New Visgroup",
                     Visible = true
                 });
             }
-            return base.ImGuiLayout();
         }
     }
 }

@@ -6,16 +6,13 @@ using System.Runtime.InteropServices;
 namespace CBRE.Editor.Popup {
     public class AboutPopup : PopupUI
     {
-        private const string githubURL = "https://github.com/VirtualBrightPlayz/cbre";
-        private const string juanjp600URL = "https://juanjp600.github.io/cbre/";
-        private const string cbreURL = "https://github.com/juanjp600/cbre";
-        private const string GPLv2URL = "https://www.gnu.org/licenses/gpl-2.0.html";
-        private const string LogicAndTrick = "https://logic-and-trick.com/";
+        private const string virtualRepo = "https://github.com/VirtualBrightPlayz/cbre";
+        private const string cbrePages = "https://juanjp600.github.io/cbre/";
+        private const string juanRepo = "https://github.com/juanjp600/cbre";
+        private const string gplV2 = "https://www.gnu.org/licenses/gpl-2.0.html";
+        private const string logicAndTrickWebsite = "https://logic-and-trick.com/";
 
-        public AboutPopup() : base("About")
-        {
-            GameMain.Instance.PopupSelected = true;
-        }
+        public AboutPopup() : base("About") { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OpenUrl(string url) {
@@ -38,16 +35,16 @@ namespace CBRE.Editor.Popup {
             }
         }
 
-        protected override bool ImGuiLayout() {
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
 
             ImGui.Text("Source:");
             ImGui.SameLine();
 
             if (ImGui.Button("Github")) {
                 try {
-                    Process.Start(githubURL);
+                    Process.Start(virtualRepo);
                 } catch {
-                    OpenUrl(githubURL);
+                    OpenUrl(virtualRepo);
                 }
             }
 
@@ -55,17 +52,17 @@ namespace CBRE.Editor.Popup {
             ImGui.SameLine();
             if (ImGui.Button("GitHub Pages CBRE")) {
                 try {
-                    Process.Start(juanjp600URL);
+                    Process.Start(cbrePages);
                 } catch {
-                    OpenUrl(juanjp600URL);
+                    OpenUrl(cbrePages);
                 }
             }
             ImGui.SameLine();
             if (ImGui.Button("CBRE GitHub")) {
                 try {
-                    Process.Start(cbreURL);
+                    Process.Start(juanRepo);
                 } catch {
-                    OpenUrl(cbreURL);
+                    OpenUrl(juanRepo);
                 }
             }
 
@@ -74,9 +71,9 @@ namespace CBRE.Editor.Popup {
 
             if (ImGui.Button("GPLv2")) {
                 try {
-                    Process.Start(GPLv2URL);
+                    Process.Start(gplV2);
                 } catch {
-                    OpenUrl(GPLv2URL);
+                    OpenUrl(gplV2);
                 }
             }
 
@@ -85,17 +82,16 @@ namespace CBRE.Editor.Popup {
 
             if (ImGui.Button("L&T")) {
                 try {
-                    Process.Start(LogicAndTrick);
+                    Process.Start(logicAndTrickWebsite);
                 } catch {
-                    OpenUrl(LogicAndTrick);
+                    OpenUrl(logicAndTrickWebsite);
                 }
             }
 
+            shouldBeOpen = true;
             if (ImGui.Button("Close")) {
-                return false;
+                shouldBeOpen = false;
             }
-
-            return true;
         }
     }
 }

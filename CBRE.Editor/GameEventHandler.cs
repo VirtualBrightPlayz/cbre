@@ -49,21 +49,21 @@ namespace CBRE.Editor {
                     DocumentManager.AddAndSwitch(new Document(outPath, _map));
                 }
                 catch (ProviderException e) {
-                    new MessagePopup("Error", e.Message, new ImColor() { Value = new Num.Vector4(1f, 0f, 0f, 1f) });
+                    GameMain.Instance.Popups.Add(new MessagePopup("Error", e.Message, new ImColor() { Value = new Num.Vector4(1f, 0f, 0f, 1f) }));
                 }
             }
         }
 
         public void Options() {
-            new SettingsPopup();
+            GameMain.Instance.Popups.Add(new SettingsPopup());
         }
 
         public void MapInformation() {
-            new MapInformationPopup();
+            GameMain.Instance.Popups.Add(new MapInformationPopup());
         }
 
         public void About() {
-            new AboutPopup();
+            GameMain.Instance.Popups.Add(new AboutPopup());
         }
     }
 }

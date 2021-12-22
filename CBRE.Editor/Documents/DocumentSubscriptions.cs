@@ -251,6 +251,7 @@ namespace CBRE.Editor.Documents {
 
         public void FileCompile() {
             ExportPopup form = new ExportPopup(_document);
+            GameMain.Instance.Popups.Add(form);
             // throw new NotImplementedException();
         }
 
@@ -336,10 +337,7 @@ namespace CBRE.Editor.Documents {
         }
 
         public void ObjectProperties() {
-            new ObjectPropertiesUI(_document, _document.Selection.GetSelectedParents().FirstOrDefault());
-            // throw new NotImplementedException();
-            /*var pd = new ObjectPropertiesDialog(_document);
-            pd.Show(Editor.Instance);*/
+            GameMain.Instance.Popups.Add(new ObjectPropertiesUI(_document, _document.Selection.GetSelectedParents().FirstOrDefault()));
         }
 
         public void SwitchTool(HotkeyTool tool) {

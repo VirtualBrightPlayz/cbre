@@ -11,34 +11,36 @@ namespace CBRE.Editor.Popup {
     public class TexturePopupUI : PopupUI {
         protected override bool canBeDefocused => false;
         
-        private List<TextureTool.TextureData> textureList = new List<TextureTool.TextureData>();
-        private Action<TextureTool.TextureData> _callback;
-        private string namefilter = "";
+        private readonly List<TextureTool.TextureData> textureList = new List<TextureTool.TextureData>();
+        private readonly Action<TextureTool.TextureData> callback;
+        private string nameFilter = "";
         public TexturePopupUI(Action<TextureTool.TextureData> textureCallback) : base("Texture Application Tool") {
             foreach (var (_, value) in TextureProvider.Packages.SelectMany(item1 => item1.Items)) {
                 textureList.Add(new TextureTool.TextureData(value.Texture as AsyncTexture, value));
             }
 
-            GameMain.Instance.PopupSelected = true;
-            _callback = textureCallback;
+            callback = textureCallback;
         }
 
-        protected override bool ImGuiLayout() {
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
             if (ImGui.Button("Close")) {
-                return false;
+                shouldBeOpen = false;
+                return;
             }
-            ImGui.InputText("Search", ref namefilter, 255);
+            ImGui.InputText("Search", ref nameFilter, 255);
             ImGui.NewLine();
             if (ImGui.BeginChild("TextureSelect")) {
                 for (int i = 0; i < textureList.Count; i++) {
-                    if (string.IsNullOrWhiteSpace(namefilter) 
-                        || textureList[i].Texture.Name.Contains(namefilter, StringComparison.OrdinalIgnoreCase)
-                        || namefilter.Contains(textureList[i].Texture.Name, StringComparison.OrdinalIgnoreCase)) {
+                    if (string.IsNullOrWhiteSpace(nameFilter) 
+                        || textureList[i].Texture.Name.Contains(nameFilter, StringComparison.OrdinalIgnoreCase)
+                        || nameFilter.Contains(textureList[i].Texture.Name, StringComparison.OrdinalIgnoreCase)) {
 
                         var cursorPos = ImGui.GetCursorScreenPos();
                         if (ImGui.Button($"##TextureBox_{i}", new Num.Vector2(200, 200))) {
-                            _callback?.Invoke(textureList[i]);
-                            return false;
+                            callback?.Invoke(textureList[i]);
+                            shouldBeOpen = false;
+                            return;
                         }
 
                         var drawList = ImGui.GetWindowDrawList();
@@ -66,8 +68,6 @@ namespace CBRE.Editor.Popup {
 
                 ImGui.EndChild();
             }
-
-            return true;
         }
     }
 }

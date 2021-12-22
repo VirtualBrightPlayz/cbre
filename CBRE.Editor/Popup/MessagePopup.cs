@@ -2,21 +2,15 @@ using ImGuiNET;
 
 namespace CBRE.Editor.Popup {
     public class MessagePopup : PopupUI {
-        private string _message;
+        private readonly string message;
 
-        public MessagePopup(string title, string message) : base(title) {
-            _message = message;
-            GameMain.Instance.PopupSelected = true;
+        public MessagePopup(string title, string message, ImColor? color = null) : base(title, color) {
+            this.message = message;
         }
 
-        public MessagePopup(string title, string message, ImColor color) : base(title, color) {
-            _message = message;
-            GameMain.Instance.PopupSelected = true;
-        }
-
-        protected override bool ImGuiLayout() {
-            ImGui.Text(_message);
-            return base.ImGuiLayout();
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
+            ImGui.Text(message);
         }
     }
 }

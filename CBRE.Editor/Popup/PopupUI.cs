@@ -5,33 +5,23 @@ using Microsoft.Xna.Framework.Input;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
-    public class PopupUI : IDisposable {
-        private string _title;
-        private bool _hasColor = false;
-        private ImColor _color;
-        public bool DrawAlways { get; protected set; }
+    public abstract class PopupUI : IDisposable {
+        private readonly string title;
+        private readonly ImColor? color = null;
         
         protected virtual bool canBeClosed => true;
         protected virtual bool canBeDefocused => true;
 
         protected int popupIndex => GameMain.Instance.Popups.IndexOf(this);
 
-        public PopupUI(string title)
-        {
-            _title = title;
-            DrawAlways = false;
-            GameMain.Instance.Popups.Add(this);
-        }
-
-        public PopupUI(string title, ImColor color) : this(title)
-        {
-            _color = color;
-            _hasColor = true;
+        protected PopupUI(string title, ImColor? color = null) {
+            this.title = title;
+            this.color = color;
         }
 
         public virtual void Update() { }
 
-        public virtual bool Draw()
+        public void Draw(out bool shouldBeOpen)
         {
             if (!canBeDefocused) {
                 ImGui.SetNextWindowPos(new Num.Vector2(0,0));
@@ -49,11 +39,12 @@ namespace CBRE.Editor.Popup {
                 }
             }
             
-            bool shouldBeOpen = true;
+            shouldBeOpen = true;
             bool closeButtonWasntHit = true; //must default to true because ImGui.Begin only writes this when the X button is hit
-            if (_hasColor) { ImGui.PushStyleColor(ImGuiCol.WindowBg, _color.Value); }
+            
+            using var _ = new ColorPush(ImGuiCol.WindowBg, color);
 
-            string titleAndIndex = $"{_title}##popup{popupIndex}";
+            string titleAndIndex = $"{title}##popup{popupIndex}";
             bool windowWasInitialized = false;
             if (!canBeDefocused) {
                 ImGui.SetWindowFocus(titleAndIndex);
@@ -66,28 +57,24 @@ namespace CBRE.Editor.Popup {
             }
             if (windowWasInitialized) {
                 if (!closeButtonWasntHit) { OnCloseButtonHit(ref shouldBeOpen); }
-                if (shouldBeOpen) { shouldBeOpen = ImGuiLayout(); }
+
+                if (shouldBeOpen) {
+                    ImGuiLayout(out shouldBeOpen);
+                    OkButton(out bool okButtonHit);
+                    if (okButtonHit) { shouldBeOpen = false; }
+                }
                 ImGui.End();
             }
-            if (_hasColor) { ImGui.PopStyleColor(); }
-            return shouldBeOpen;
         }
 
-        public virtual void Close() {
-            GameMain.Instance.Popups.Remove(this);
-        }
-
-        protected virtual bool ImGuiLayout() {
-            if (ImGui.Button("OK")) {
-                return false;
-            }
-            return true;
+        protected abstract void ImGuiLayout(out bool shouldBeOpen);
+        
+        protected void OkButton(out bool hit) {
+            hit = ImGui.Button("OK");
         }
 
         protected virtual void OnCloseButtonHit(ref bool shouldBeOpen) { shouldBeOpen = false; }
 
-        public virtual void Dispose() {
-            Close();
-        }
+        public virtual void Dispose() { }
     }
 }

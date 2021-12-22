@@ -13,11 +13,11 @@ namespace CBRE.Editor.Popup {
         public ProgressPopup(string title) : base(title) {
         }
 
-        protected override bool ImGuiLayout() {
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
             ImGui.Text(message);
             ImGui.SameLine();
             ImGui.ProgressBar(progress);
-            return base.ImGuiLayout();
+            shouldBeOpen = true;
         }
     }
 }

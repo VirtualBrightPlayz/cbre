@@ -11,7 +11,7 @@ using Num = System.Numerics;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CBRE.Editor.Popup {
-    public class ViewportWindow : WindowUI {
+    public class ViewportWindow : DockableWindow {
         public ViewportBase[] Viewports => ViewportManager.Viewports;
 
         public Rectangle WindowRectangle { get; private set; }
@@ -61,7 +61,7 @@ namespace CBRE.Editor.Popup {
             basicEffect.VertexColorEnabled = true;
         }
 
-        public ViewportWindow() : base("Viewports") {
+        public ViewportWindow() : base("Viewports", ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar) {
             BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
             Name = "Viewports";
         }
@@ -394,95 +394,91 @@ namespace CBRE.Editor.Popup {
             return (horizontalLine, verticalLine);
         }
         
-        protected override bool ImGuiLayout() {
-            ImGuiWindowFlags flags = ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar;
-            if (ImGui.Begin(Name, ref open, flags)) {
-                Num.Vector2 pos = ImGui.GetWindowPos() + ImGui.GetCursorPos();
-                Num.Vector2 siz = ImGui.GetWindowSize() - ImGui.GetCursorPos() * 1.5f;
-                Rectangle windowRectangle = new Rectangle((int)pos.X, (int)pos.Y, (int)siz.X, (int)siz.Y);
-                if (!WindowRectangle.Equals(windowRectangle)) {
-                    WindowRectangle = windowRectangle;
-                    ResetRenderTarget();
-                }
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
+            
+            Num.Vector2 pos = ImGui.GetWindowPos() + ImGui.GetCursorPos();
+            Num.Vector2 siz = ImGui.GetWindowSize() - ImGui.GetCursorPos() * 1.5f;
+            Rectangle windowRectangle = new Rectangle((int)pos.X, (int)pos.Y, (int)siz.X, (int)siz.Y);
+            if (!WindowRectangle.Equals(windowRectangle)) {
                 WindowRectangle = windowRectangle;
-                if (ImGui.BeginChildFrame(1, new Num.Vector2(WindowRectangle.Size.X, WindowRectangle.Size.Y), flags) && RenderTargetImGuiPtr != IntPtr.Zero && open) {
-                    ImGui.SetCursorPos(Num.Vector2.Zero);
-                    var cursorPos = ImGui.GetCursorPos();
-                    ImGui.Image(RenderTargetImGuiPtr, new Num.Vector2(WindowRectangle.Size.X, WindowRectangle.Size.Y));
+                ResetRenderTarget();
+            }
+            WindowRectangle = windowRectangle;
+            if (ImGui.BeginChildFrame(1, new Num.Vector2(WindowRectangle.Size.X, WindowRectangle.Size.Y), flags) && RenderTargetImGuiPtr != IntPtr.Zero && Open) {
+                ImGui.SetCursorPos(Num.Vector2.Zero);
+                var cursorPos = ImGui.GetCursorPos();
+                ImGui.Image(RenderTargetImGuiPtr, new Num.Vector2(WindowRectangle.Size.X, WindowRectangle.Size.Y));
 
-                    const uint unhoveredColor = 0xff494040;
-                    const uint hoveredColor = 0xff995318;
+                const uint unhoveredColor = 0xff494040;
+                const uint hoveredColor = 0xff995318;
 
-                    var (horizontalLine, verticalLine) = GetDrawLines();
-                    var (horizontalLineHover, verticalLineHover) = GetHoverLines();
-                    
-                    ImDrawListPtr drawList = ImGui.GetWindowDrawList();
+                var (horizontalLine, verticalLine) = GetDrawLines();
+                var (horizontalLineHover, verticalLineHover) = GetHoverLines();
+                
+                ImDrawListPtr drawList = ImGui.GetWindowDrawList();
 
-                    for (int i = 0; i < Viewports.Length; i++) {
-                        var topLeft = GetXnaRectangle(i).Location;
-                        var textPos = new Num.Vector2(topLeft.X + 5, topLeft.Y + 5);
-                        drawList.AddText(textPos, 0xffffffff, Viewports[i].GetViewType().ToString());
-                    }
+                for (int i = 0; i < Viewports.Length; i++) {
+                    var topLeft = GetXnaRectangle(i).Location;
+                    var textPos = new Num.Vector2(topLeft.X + 5, topLeft.Y + 5);
+                    drawList.AddText(textPos, 0xffffffff, Viewports[i].GetViewType().ToString());
+                }
 
-                    void addRect(Rectangle rect, uint color)
-                        => drawList.AddRect(new Num.Vector2(rect.Left, rect.Top) + cursorPos,
-                            new Num.Vector2(rect.Right, rect.Bottom) + cursorPos, color);
-                    addRect(horizontalLine, unhoveredColor);
-                    addRect(verticalLine, unhoveredColor);
+                void addRect(Rectangle rect, uint color)
+                    => drawList.AddRect(new Num.Vector2(rect.Left, rect.Top) + cursorPos,
+                        new Num.Vector2(rect.Right, rect.Bottom) + cursorPos, color);
+                addRect(horizontalLine, unhoveredColor);
+                addRect(verticalLine, unhoveredColor);
 
-                    if (!ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
-                        draggingCenter = DraggingMode.None;
-                    }
-                    if (ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows)) {
-                        bool wasDragging = draggingCenter != DraggingMode.None;
-                        var mousePosImGui = ImGui.GetMousePos();
-                        var mousePos = new Point((int)mousePosImGui.X, (int)mousePosImGui.Y);
+                if (!ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
+                    draggingCenter = DraggingMode.None;
+                }
+                if (ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows)) {
+                    bool wasDragging = draggingCenter != DraggingMode.None;
+                    var mousePosImGui = ImGui.GetMousePos();
+                    var mousePos = new Point((int)mousePosImGui.X, (int)mousePosImGui.Y);
 
-                        void handleHover(Rectangle drawRect, Rectangle hoverRect, DraggingMode dragFlag) {
-                            if ((hoverRect.Contains(mousePos) && !wasDragging) || draggingCenter.HasFlag(dragFlag)) {
-                                addRect(drawRect, hoveredColor);
-                                if (!wasDragging && ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
-                                    draggingCenter |= dragFlag;
-                                }
+                    void handleHover(Rectangle drawRect, Rectangle hoverRect, DraggingMode dragFlag) {
+                        if ((hoverRect.Contains(mousePos) && !wasDragging) || draggingCenter.HasFlag(dragFlag)) {
+                            addRect(drawRect, hoveredColor);
+                            if (!wasDragging && ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
+                                draggingCenter |= dragFlag;
                             }
                         }
-                        handleHover(horizontalLine, horizontalLineHover, DraggingMode.Horizontal);
-                        handleHover(verticalLine, verticalLineHover, DraggingMode.Vertical);
-
-                        var viewportCenter = ViewportCenter;
-                        bool forceRerender = false;
-                        if (draggingCenter.HasFlag(DraggingMode.Horizontal)) {
-                            viewportCenter.Y = (float)(mousePos.Y - WindowRectangle.Top) / (float)WindowRectangle.Height;
-                            forceRerender = true;
-                        }
-                        if (draggingCenter.HasFlag(DraggingMode.Vertical)) {
-                            viewportCenter.X = (float)(mousePos.X - WindowRectangle.Left) / (float)WindowRectangle.Width;
-                            forceRerender = true;
-                        }
-
-                        viewportCenter.X = Math.Clamp(
-                            viewportCenter.X,
-                            5.0f / WindowRectangle.Width,
-                            (WindowRectangle.Width - 5.0f) / WindowRectangle.Width);
-                        viewportCenter.Y = Math.Clamp(
-                            viewportCenter.Y,
-                            5.0f / WindowRectangle.Height,
-                            (WindowRectangle.Height - 5.0f) / WindowRectangle.Height);
-                        ViewportCenter = viewportCenter;
-                        if (forceRerender) { ViewportManager.MarkForRerender(); }
                     }
-                    
-                    
-                    ImGui.EndChildFrame();
+                    handleHover(horizontalLine, horizontalLineHover, DraggingMode.Horizontal);
+                    handleHover(verticalLine, verticalLineHover, DraggingMode.Vertical);
+
+                    var viewportCenter = ViewportCenter;
+                    bool forceRerender = false;
+                    if (draggingCenter.HasFlag(DraggingMode.Horizontal)) {
+                        viewportCenter.Y = (float)(mousePos.Y - WindowRectangle.Top) / (float)WindowRectangle.Height;
+                        forceRerender = true;
+                    }
+                    if (draggingCenter.HasFlag(DraggingMode.Vertical)) {
+                        viewportCenter.X = (float)(mousePos.X - WindowRectangle.Left) / (float)WindowRectangle.Width;
+                        forceRerender = true;
+                    }
+
+                    viewportCenter.X = Math.Clamp(
+                        viewportCenter.X,
+                        5.0f / WindowRectangle.Width,
+                        (WindowRectangle.Width - 5.0f) / WindowRectangle.Width);
+                    viewportCenter.Y = Math.Clamp(
+                        viewportCenter.Y,
+                        5.0f / WindowRectangle.Height,
+                        (WindowRectangle.Height - 5.0f) / WindowRectangle.Height);
+                    ViewportCenter = viewportCenter;
+                    if (forceRerender) { ViewportManager.MarkForRerender(); }
                 }
-                selected = ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows);
-                ImGui.End();
+                
+                
+                ImGui.EndChildFrame();
             }
-            return open;
+            selected = ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows);
         }
 
-        public override void Close() {
-            base.Close();
+        public override void Dispose() {
             BasicEffect.Dispose();
             if (RenderTargetImGuiPtr != IntPtr.Zero) {
                 GlobalGraphics.ImGuiRenderer.UnbindTexture(RenderTargetImGuiPtr);

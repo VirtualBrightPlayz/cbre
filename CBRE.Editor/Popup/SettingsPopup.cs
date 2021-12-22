@@ -13,19 +13,17 @@ using Num = System.Numerics;
 namespace CBRE.Editor.Popup {
     public class SettingsPopup : PopupUI {
 
-        public SettingsPopup() : base("Options") {
-            GameMain.Instance.PopupSelected = true;
-        }
+        public SettingsPopup() : base("Options") { }
 
-        protected override bool ImGuiLayout() {
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
             TextureDirGui();
             HotkeysGui();
             if (ImGui.Button("Close")) {
                 Hotkeys.SetupHotkeys(SettingsManager.Hotkeys);
                 SettingsManager.Write();
-                return false;
+                shouldBeOpen = false;
             }
-            return true;
         }
 
         protected virtual void TextureDirGui() {
@@ -34,7 +32,8 @@ namespace CBRE.Editor.Popup {
                 ImGui.Text("Click a listing to remove it");
                 ImGui.SameLine();
                 if (ImGui.Button("+")) {
-                    new CallbackFolderSelect("Select Texture Directory", "", Directories.TextureDirs.Add);
+                    throw new NotImplementedException();
+                    //new CallbackFolderSelect("Select Texture Directory", "", Directories.TextureDirs.Add);
                 }
                 for (int i = 0; i < Directories.TextureDirs.Count; i++) {
                     var dir = Directories.TextureDirs[i];

@@ -7,12 +7,10 @@ using ImGuiNET;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
-    public class VisgroupsWindow : WindowUI
+    public class VisgroupsWindow : DockableWindow
     {
-        public VisgroupsWindow() : base("")
-        {
-        }
-
+        public VisgroupsWindow() : base("visgroups", ImGuiWindowFlags.None) { }
+        
         public void DrawVisgroupUI(Visgroup visgroup) {
             ImGui.PushStyleColor(ImGuiCol.HeaderHovered, new Vector4(visgroup.Colour.R / 255f, visgroup.Colour.G / 255f, visgroup.Colour.B / 255f, 1f));
             bool tOpened = ImGui.TreeNodeEx(visgroup.Name);
@@ -36,19 +34,15 @@ namespace CBRE.Editor.Popup {
             }
         }
 
-        public override bool Draw() {
-            if (ImGui.Begin("visgroups", ref open)) {
-                var Window = GameMain.Instance.Window;
-                var doc = DocumentManager.CurrentDocument;
-                if (doc != null) {
-                    var visgroups = doc.Map?.Visgroups;
-                    for (int i = 0; i < visgroups.Count; i++) {
-                        DrawVisgroupUI(visgroups[i]);
-                    }
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
+            var window = GameMain.Instance.Window;
+            var doc = DocumentManager.CurrentDocument;
+            if (doc?.Map?.Visgroups is { } visgroups) {
+                for (int i = 0; i < visgroups.Count; i++) {
+                    DrawVisgroupUI(visgroups[i]);
                 }
-                ImGui.End();
             }
-            return open;
         }
     }
 }

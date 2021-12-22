@@ -34,7 +34,6 @@ namespace CBRE.Editor.Popup.ObjectProperties {
         public ObjectPropertiesUI(Document document, MapObject mapobject) : base("Object Properties") {
             _document = document;
             _obj = mapobject;
-            GameMain.Instance.PopupSelected = true;
             Setup();
         }
 
@@ -78,12 +77,12 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             _propVals = list;
         }
 
-        protected override bool ImGuiLayout() {
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
             if (_obj is Entity || _obj is World) {
                 EntityGui(_obj);
                 VisgroupGui(_obj);
             }
-            return ImGuiButtons();
+            shouldBeOpen = ImGuiButtons();
         }
 
         protected virtual void VisgroupGui(MapObject obj) {

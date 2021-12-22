@@ -20,17 +20,13 @@ namespace CBRE.Editor.Popup {
         }
         public ImmutableArray<Button> Buttons { get; init; }
 
-        public ConfirmPopup(string title, string message) : base(title) {
+        public ConfirmPopup(string title, string message, ImColor? color = null) : base(title, color) {
             _message = message;
-            GameMain.Instance.PopupSelected = true;
         }
 
-        public ConfirmPopup(string title, string message, ImColor color) : base(title, color) {
-            _message = message;
-            GameMain.Instance.PopupSelected = true;
-        }
-
-        protected override bool ImGuiLayout() {
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
+            
             ImGui.Text(_message);
 
             for (int i=0; i<Buttons.Length; i++) {
@@ -38,10 +34,10 @@ namespace CBRE.Editor.Popup {
                 if (i > 0) { ImGui.SameLine(); }
                 if (ImGui.Button($"{btn.Label}##popup{popupIndex}btn{i}")) {
                     btn.Action();
-                    return false;
+                    shouldBeOpen = false;
+                    return;
                 }
             }
-            return true;
         }
     }
 }

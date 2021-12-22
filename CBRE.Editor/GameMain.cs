@@ -26,8 +26,8 @@ namespace CBRE.Editor {
     {
         public static GameMain Instance { get; private set; }
 
-        private GraphicsDeviceManager _graphics;
-        private ImGuiRenderer _imGuiRenderer;
+        private GraphicsDeviceManager graphics;
+        private ImGuiRenderer imGuiRenderer;
 
         private AsyncTexture rotateCursorTexture;
         private MouseCursor rotateCursor;
@@ -42,22 +42,22 @@ namespace CBRE.Editor {
             }
         }
 
-        public bool PopupSelected { get; set; } = false;
         public GameTime LastTime { get; set; }
 
         public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
+        public List<DockableWindow> Dockables { get; private set; } = new List<DockableWindow>();
         public Queue<Action> PostDrawActions { get; private set; } = new Queue<Action>();
 
         public GameMain()
         {
             Instance = this;
 
-            _graphics = new GraphicsDeviceManager(this);
-            _graphics.PreferredBackBufferWidth = 1600;
-            _graphics.PreferredBackBufferHeight = 900;
-            _graphics.PreferMultiSampling = false;
-            _graphics.SynchronizeWithVerticalRetrace = false;
-            _graphics.ApplyChanges();
+            graphics = new GraphicsDeviceManager(this);
+            graphics.PreferredBackBufferWidth = 1600;
+            graphics.PreferredBackBufferHeight = 900;
+            graphics.PreferMultiSampling = false;
+            graphics.SynchronizeWithVerticalRetrace = false;
+            graphics.ApplyChanges();
             Window.AllowUserResizing = true;
 
             IsMouseVisible = true;
@@ -65,7 +65,7 @@ namespace CBRE.Editor {
 
         public static Dictionary<string, AsyncTexture> MenuTextures;
 
-        ImGuiStylePtr ImGuiStyle;
+        private ImGuiStylePtr imGuiStyle;
 
         private DocumentTabs documentTabs;
 
@@ -74,25 +74,25 @@ namespace CBRE.Editor {
             SettingsManager.Read();
             ToolManager.Init();
 
-            _imGuiRenderer = new ImGuiRenderer(this);
-            _imGuiRenderer.RebuildFontAtlas();
+            imGuiRenderer = new ImGuiRenderer(this);
+            imGuiRenderer.RebuildFontAtlas();
 
-            GlobalGraphics.Set(GraphicsDevice, Window, _imGuiRenderer);
+            GlobalGraphics.Set(GraphicsDevice, Window, imGuiRenderer);
 
-            ImGuiStyle = ImGui.GetStyle();
-            ImGuiStyle.TabMinWidthForCloseButton = 50f;
-            ImGuiStyle.ChildRounding = 0;
-            ImGuiStyle.FrameRounding = 0;
-            ImGuiStyle.GrabRounding = 0;
-            ImGuiStyle.PopupRounding = 0;
-            ImGuiStyle.ScrollbarRounding = 0;
-            ImGuiStyle.TabRounding = 0;
-            ImGuiStyle.WindowRounding = 0;
-            ImGuiStyle.FrameBorderSize = 0;
-            ImGuiStyle.DisplayWindowPadding = Num.Vector2.Zero;
-            ImGuiStyle.WindowPadding = Num.Vector2.Zero;
-            ImGuiStyle.IndentSpacing = 0;
-            var colors = ImGuiStyle.Colors;
+            imGuiStyle = ImGui.GetStyle();
+            imGuiStyle.TabMinWidthForCloseButton = 50f;
+            imGuiStyle.ChildRounding = 0;
+            imGuiStyle.FrameRounding = 0;
+            imGuiStyle.GrabRounding = 0;
+            imGuiStyle.PopupRounding = 0;
+            imGuiStyle.ScrollbarRounding = 0;
+            imGuiStyle.TabRounding = 0;
+            imGuiStyle.WindowRounding = 0;
+            imGuiStyle.FrameBorderSize = 0;
+            imGuiStyle.DisplayWindowPadding = Num.Vector2.Zero;
+            imGuiStyle.WindowPadding = Num.Vector2.Zero;
+            imGuiStyle.IndentSpacing = 0;
+            var colors = imGuiStyle.Colors;
             colors[(int)ImGuiCol.FrameBg] = new Num.Vector4(0.05f, 0.05f, 0.07f, 1.0f);
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
@@ -120,22 +120,19 @@ namespace CBRE.Editor {
 
             ModelProvider.Register(new AssimpProvider());
 
-            /*Map map = MapProvider.GetMapFromFile("gateA.3dw");
-            Map map2 = MapProvider.GetMapFromFile("room2_2.3dw");
-            DocumentManager.AddAndSwitch(new Document("gateA.3dw", map));
-            DocumentManager.Add(new Document("room2_2.3dw", map2));*/
-
             ViewportManager.Init();
             DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
 
             documentTabs = new DocumentTabs();
             
             // Initial windows
-            new ToolsWindow();
-            new ToolPropsWindow();
-            new StatsWindow();
-            new ViewportWindow();
-            new VisgroupsWindow();
+            Dockables.AddRange(new DockableWindow[] {
+                new ToolsWindow(),
+                new ToolPropsWindow(),
+                new StatsWindow(),
+                new ViewportWindow(),
+                new VisgroupsWindow()
+            });
 
             base.Initialize();
 
@@ -151,12 +148,7 @@ namespace CBRE.Editor {
             return new AsyncTexture(filename);
         }
 
-        protected override void LoadContent()
-        {
-            base.LoadContent();
-        }
-
-        private Timing timing = new Timing();
+        private readonly Timing timing = new Timing();
         private Keys[] previousKeys = Array.Empty<Keys>();
 
         protected override void Update(GameTime gameTime) {
@@ -165,26 +157,25 @@ namespace CBRE.Editor {
 
             base.Update(gameTime);
 
-            if (PopupSelected && !Popups.Any(p => !(p is WindowUI))) {
-                PopupSelected = false;
-            }
-
-            if (!PopupSelected) {
+            if (!Popups.Any()) {
                 // Hotkeys
-                Keys[] keys = Keyboard.GetState().GetPressedKeys().Where(k => k != Keys.None).ToArray();
-                Keys[] hitKeys = keys.Where(k => !previousKeys.Contains(k)).ToArray();
+                Keys[] pressedKeys = Keyboard.GetState().GetPressedKeys().Where(k => k != Keys.None).ToArray();
+                Keys[] hitKeys = pressedKeys.Where(k => !previousKeys.Contains(k)).ToArray();
 
-                bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
-                bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
-                bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
-                HotkeyImplementation def = Hotkeys.GetHotkeyFor(hitKeys, ctrlpressed, shiftpressed, altpressed);
+                bool ctrlPressed = pressedKeys.Contains(Keys.LeftControl) || pressedKeys.Contains(Keys.RightControl);
+                bool shiftPressed = pressedKeys.Contains(Keys.LeftShift) || pressedKeys.Contains(Keys.RightShift);
+                bool altPressed = pressedKeys.Contains(Keys.LeftAlt) || pressedKeys.Contains(Keys.RightAlt);
+                HotkeyImplementation def = Hotkeys.GetHotkeyFor(hitKeys, ctrlPressed, shiftPressed, altPressed);
                 if (def != null) {
                     Mediator.Publish(def.Definition.Action, def.Definition.Parameter);
                 }
-                previousKeys = keys;
+                previousKeys = pressedKeys;
             }
 
-            timing.PerformTicks(() => Popups.ForEach(p => p.Update()));
+            timing.PerformTicks(() => {
+                Popups.ForEach(p => p.Update());
+                Dockables.ForEach(d => d.Update());
+            });
 
             LastTime = gameTime;
         }
@@ -200,13 +191,13 @@ namespace CBRE.Editor {
             GraphicsDevice.Clear(new Color(50, 50, 60));
 
             // Call BeforeLayout first to set things up
-            _imGuiRenderer.BeforeLayout(gameTime);
+            imGuiRenderer.BeforeLayout(gameTime);
 
             // Draw our UI
             ImGuiLayout();
 
             // Call AfterLayout now to finish up and draw all the things
-            _imGuiRenderer.AfterLayout();
+            imGuiRenderer.AfterLayout();
 
             base.Draw(gameTime);
 
@@ -251,12 +242,21 @@ namespace CBRE.Editor {
                 ImGui.End();
             }
 
-            for (int i = 0; i < Popups.Count; i++)
-            {
+            for (int i = 0; i < Popups.Count; i++) {
+                Popups[i].Draw(out bool shouldBeOpen);
+                if (!shouldBeOpen) {
+                    Popups[i].Dispose();
+                    Popups.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            for (int i = 0; i < Dockables.Count; i++) {
                 ImGui.SetNextWindowDockID(dockId, ImGuiCond.FirstUseEver);
-                if (!Popups[i].Draw())
-                {
-                    Popups[i].Close();
+                Dockables[i].Draw(out bool shouldBeOpen);
+                if (!shouldBeOpen) {
+                    Dockables[i].Dispose();
+                    Dockables.RemoveAt(i);
                     i--;
                 }
             }

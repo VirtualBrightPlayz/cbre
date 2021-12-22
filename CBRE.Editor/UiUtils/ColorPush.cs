@@ -12,7 +12,7 @@ namespace CBRE.Editor {
             pushed = color.HasValue;
         }
 
-        public ColorPush(ImGuiCol element, ImColor color) : this(element, color.Value) { }
+        public ColorPush(ImGuiCol element, ImColor? color) : this(element, color?.Value) { }
 
         public ColorPush(ImGuiCol element, Color color) : this(element, new Num.Vector4(
             (float)color.R / 255f,
