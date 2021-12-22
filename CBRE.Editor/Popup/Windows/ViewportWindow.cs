@@ -427,9 +427,17 @@ namespace CBRE.Editor.Popup {
                         xnaRect.Right,
                         xnaRect.Bottom);
                     drawList.PushClipRectButItDoesntSuckAss(clipRectMin, clipRectMax);
+
                     var topLeft = xnaRect.Location;
                     var textPos = new Num.Vector2(topLeft.X + 5, topLeft.Y + 5);
-                    drawList.AddText(textPos, 0xffffffff, Viewports[i].GetViewType().ToString());
+                    using (new ColorPush(ImGuiCol.Button, Color.Black)) {
+                        using (new ColorPush(ImGuiCol.ButtonActive, Color.DarkGray)) {
+                            using (new ColorPush(ImGuiCol.ButtonHovered, Color.Gray)) {
+                                ImGui.SetCursorScreenPos(textPos);
+                                ImGui.Button($"{Viewports[i].GetViewType()}##viewType{i}");
+                            }
+                        }
+                    }
                     drawList.PopClipRect();
                 }
 

@@ -11,7 +11,6 @@ namespace CBRE.Editor.Brushes {
 
         public static readonly ImmutableHashSet<IBrush> Brushes;
 
-        //private static ComboBox _comboBox;
         public static bool RoundCreatedVertices;
 
         static BrushManager() {
