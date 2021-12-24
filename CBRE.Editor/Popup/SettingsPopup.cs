@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design.Serialization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,10 +9,12 @@ using CBRE.Settings;
 using CBRE.Settings.Models;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
+using NativeFileDialog;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
     public class SettingsPopup : PopupUI {
+        protected override bool canBeDefocused => false;
 
         public SettingsPopup() : base("Options") { }
 
@@ -28,29 +31,45 @@ namespace CBRE.Editor.Popup {
 
         protected virtual void TextureDirGui() {
             ImGui.Text("Texture Directories");
+            ImGui.Separator();
             if (ImGui.BeginChild("TextureDirs", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 5))) {
-                ImGui.Text("Click a listing to remove it");
+                bool addNew = ImGui.Button("+");
                 ImGui.SameLine();
-                if (ImGui.Button("+")) {
-                    throw new NotImplementedException();
-                    //new CallbackFolderSelect("Select Texture Directory", "", Directories.TextureDirs.Add);
+                addNew |= ImGui.Selectable("Click to add a new texture directory", false);
+                if (addNew) {
+                    var result =
+                        PickFolderDialog.Open(Directory.GetCurrentDirectory(), out string path);
+                    if (result == Result.Okay) {
+                        Directories.TextureDirs.Add(path.Replace('\\', '/'));
+                    }
                 }
                 for (int i = 0; i < Directories.TextureDirs.Count; i++) {
                     var dir = Directories.TextureDirs[i];
+
+                    using (ColorPush.RedButton()) {
+                        if (ImGui.Button($"X##textureDirs{i}")) {
+                            Directories.TextureDirs.RemoveAt(i);
+                            break;
+                        }
+                    }
+                    
+                    ImGui.SameLine();
+
                     if (ImGui.Selectable(dir, false)) {
-                        Directories.TextureDirs.RemoveAt(i);
+                        var result =
+                            PickFolderDialog.Open(Directory.GetCurrentDirectory(), out string path);
+                        if (result == Result.Okay) {
+                            Directories.TextureDirs[i] = path.Replace('\\', '/');
+                        }
                         break;
                     }
                 }
             }
             ImGui.EndChild();
+            ImGui.Separator();
         }
 
         private HotkeyDefinition definition;
-        private Keys key = Keys.None;
-        private bool ctrl = false;
-        private bool shift = false;
-        private bool alt = false;
 
         protected virtual void HotkeysGui() {
             ImGui.Text("Hotkeys");
@@ -64,31 +83,8 @@ namespace CBRE.Editor.Popup {
                 }
                 ImGui.EndCombo();
             }
-            ImGui.Checkbox("Control Key", ref ctrl);
-            ImGui.Checkbox("Shift Key", ref shift);
-            ImGui.Checkbox("Alt Key", ref alt);
-            if (ImGui.BeginCombo("Key", key.ToString())) {
-                var hks = Enum.GetValues<Keys>();
-                for (int i = 0; i < hks.Length; i++) {
-                    if (ImGui.Selectable(hks[i].ToString(), hks[i] == key)) {
-                        key = hks[i];
-                    }
-                }
-                ImGui.EndCombo();
-            }
             if (ImGui.Button("+")) {
-                if (key != Keys.None) {
-                    List<string> str = new List<string>();
-                    if (ctrl)
-                        str.Add("Ctrl");
-                    if (shift)
-                        str.Add("Shift");
-                    if (alt)
-                        str.Add("Alt");
-                    str.Add(key.ToString());
-                    Hotkey hkey = new Hotkey() { ID = definition.ID, HotkeyString = string.Join("+", str) };
-                    SettingsManager.Hotkeys.Add(hkey);
-                }
+                
             }
             ImGui.NewLine();
             if (ImGui.BeginChild("Hotkeys", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 10))) {

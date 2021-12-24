@@ -5,6 +5,12 @@ using Num = System.Numerics;
 
 namespace CBRE.Editor {
     readonly struct ColorPush : IDisposable {
+        public static AggregateDisposable RedButton()
+            => new AggregateDisposable(
+                new ColorPush(ImGuiCol.Button, Color.DarkRed),
+                new ColorPush(ImGuiCol.ButtonActive, Color.DarkRed),
+                new ColorPush(ImGuiCol.ButtonHovered, Color.Red));
+        
         private readonly bool pushed;
         
         public ColorPush(ImGuiCol element, Num.Vector4? color) {

@@ -426,38 +426,37 @@ namespace CBRE.Editor.Popup {
                     Num.Vector2 clipRectMax = new Num.Vector2(
                         xnaRect.Right,
                         xnaRect.Bottom);
-                    drawList.PushClipRectButItDoesntSuckAss(clipRectMin, clipRectMax);
+                    ImGui.PushClipRect(clipRectMin, clipRectMax, intersect_with_current_clip_rect: true);
 
                     var topLeft = xnaRect.Location;
                     var textPos = new Num.Vector2(topLeft.X + 5, topLeft.Y + 5);
-                    using (new ColorPush(ImGuiCol.Button, Color.Black)) {
-                        using (new ColorPush(ImGuiCol.ButtonActive, Color.DarkGray)) {
-                            using (new ColorPush(ImGuiCol.ButtonHovered, Color.Gray)) {
-                                ImGui.SetCursorScreenPos(textPos);
-                                if (ImGui.Button($"{Viewports[i].GetViewType()}##viewType{i}")) {
-                                    ImGui.OpenPopup($"viewTypePopup{i}");
-                                }
+                    using (new AggregateDisposable(
+                               new ColorPush(ImGuiCol.Button, Color.Black),
+                               new ColorPush(ImGuiCol.ButtonActive, Color.DarkGray),
+                               new ColorPush(ImGuiCol.ButtonHovered, Color.Gray))) {
+                        ImGui.SetCursorScreenPos(textPos);
+                        if (ImGui.Button($"{Viewports[i].GetViewType()}##viewType{i}")) {
+                            ImGui.OpenPopup($"viewTypePopup{i}");
+                        }
 
-                                if (ImGui.BeginPopup($"viewTypePopup{i}")) {
-                                    foreach (Viewport3D.ViewType viewType in Enum.GetValues<Viewport3D.ViewType>()) {
-                                        if (ImGui.Selectable($"3D {viewType}")) {
-                                            Viewports[i] = new Viewport3D(viewType);
-                                        }
-                                    }
-                                    
-                                    ImGui.Separator();
-                                    
-                                    foreach (Viewport2D.ViewDirection viewType in Enum.GetValues<Viewport2D.ViewDirection>()) {
-                                        if (ImGui.Selectable($"2D {viewType}")) {
-                                            Viewports[i] = new Viewport2D(viewType);
-                                        }
-                                    }
-                                    ImGui.EndPopup();
+                        if (ImGui.BeginPopup($"viewTypePopup{i}")) {
+                            foreach (Viewport3D.ViewType viewType in Enum.GetValues<Viewport3D.ViewType>()) {
+                                if (ImGui.Selectable($"3D {viewType}")) {
+                                    Viewports[i] = new Viewport3D(viewType);
                                 }
                             }
+                                    
+                            ImGui.Separator();
+                                    
+                            foreach (Viewport2D.ViewDirection viewType in Enum.GetValues<Viewport2D.ViewDirection>()) {
+                                if (ImGui.Selectable($"2D {viewType}")) {
+                                    Viewports[i] = new Viewport2D(viewType);
+                                }
+                            }
+                            ImGui.EndPopup();
                         }
                     }
-                    drawList.PopClipRect();
+                    ImGui.PopClipRect();
                 }
 
                 void addRect(Rectangle rect, uint color)

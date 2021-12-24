@@ -30,16 +30,12 @@ namespace CBRE.Editor.Popup {
                     ImGui.SameLine();
                     var cursorPos = ImGui.GetCursorPos();
                     ImGui.SetCursorPos(cursorPos - new Num.Vector2(8, 0));
-                    using (new ColorPush(ImGuiCol.Button, Color.DarkRed)) {
-                        using (new ColorPush(ImGuiCol.ButtonActive, Color.DarkRed)) {
-                            using (new ColorPush(ImGuiCol.ButtonHovered, Color.Red)) {
-                                if (ImGui.Button($"X##doc{DocumentManager.Documents.IndexOf(doc)}")) {
-                                    var currDoc = DocumentManager.CurrentDocument;
-                                    DocumentManager.SwitchTo(doc);
-                                    Mediator.Publish(CBRE.Settings.HotkeysMediator.FileClose);
-                                    if (doc != currDoc) { DocumentManager.SwitchTo(currDoc); }
-                                }
-                            }
+                    using (ColorPush.RedButton()) {
+                        if (ImGui.Button($"X##doc{DocumentManager.Documents.IndexOf(doc)}")) {
+                            var currDoc = DocumentManager.CurrentDocument;
+                            DocumentManager.SwitchTo(doc);
+                            Mediator.Publish(CBRE.Settings.HotkeysMediator.FileClose);
+                            if (doc != currDoc) { DocumentManager.SwitchTo(currDoc); }
                         }
                     }
                     ImGui.SameLine();

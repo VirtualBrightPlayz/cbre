@@ -144,10 +144,10 @@ namespace CBRE.Editor.Tools.TextureTool {
                     }
 
                     if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
-                        new TexturePopupUI(t => {
+                        GameMain.Instance.Popups.Add(new TexturePopupUI(t => {
                             _texture = t;
                             TextureChanged(this, t.Texture);
-                        });
+                        }));
                     }
                 }
 

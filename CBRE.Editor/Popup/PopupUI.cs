@@ -11,6 +11,7 @@ namespace CBRE.Editor.Popup {
         
         protected virtual bool canBeClosed => true;
         protected virtual bool canBeDefocused => true;
+        protected virtual bool hasOkButton => true;
 
         protected int popupIndex => GameMain.Instance.Popups.IndexOf(this);
 
@@ -69,7 +70,8 @@ namespace CBRE.Editor.Popup {
 
         protected abstract void ImGuiLayout(out bool shouldBeOpen);
         
-        protected void OkButton(out bool hit) {
+        private void OkButton(out bool hit) {
+            if (!hasOkButton) { hit = false; return; }
             hit = ImGui.Button("OK");
         }
 
