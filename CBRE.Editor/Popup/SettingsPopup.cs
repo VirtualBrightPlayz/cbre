@@ -16,33 +16,37 @@ namespace CBRE.Editor.Popup {
     public class SettingsPopup : PopupUI {
         protected override bool canBeDefocused => false;
 
+        private int fixedHeight = 0;
+        
         public SettingsPopup() : base("Options") { }
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
             shouldBeOpen = true;
             TextureDirGui();
             HotkeysGui();
-            if (ImGui.Button("Close")) {
-                Hotkeys.SetupHotkeys(SettingsManager.Hotkeys);
-                SettingsManager.Write();
-                shouldBeOpen = false;
+            if (fixedHeight <= 0) {
+                fixedHeight = (int)ImGui.GetCursorPosY();
             }
         }
 
+        private const int minNonFixedHeight = 24;
+        private int GetNonFixedHeight()
+            => fixedHeight > 0 ? Math.Max((int)ImGui.GetWindowHeight() - fixedHeight, minNonFixedHeight) : minNonFixedHeight;
+        
         protected virtual void TextureDirGui() {
             ImGui.Text("Texture Directories");
             ImGui.Separator();
-            if (ImGui.BeginChild("TextureDirs", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 5))) {
-                bool addNew = ImGui.Button("+");
-                ImGui.SameLine();
-                addNew |= ImGui.Selectable("Click to add a new texture directory", false);
-                if (addNew) {
-                    var result =
-                        PickFolderDialog.Open(Directory.GetCurrentDirectory(), out string path);
-                    if (result == Result.Okay) {
-                        Directories.TextureDirs.Add(path.Replace('\\', '/'));
-                    }
+            bool addNew = ImGui.Button("+");
+            ImGui.SameLine();
+            addNew |= ImGui.Selectable("Click to add a new texture directory", false);
+            if (addNew) {
+                var result =
+                    PickFolderDialog.Open(Directory.GetCurrentDirectory(), out string path);
+                if (result == Result.Okay) {
+                    Directories.TextureDirs.Add(path.Replace('\\', '/'));
                 }
+            }
+            if (ImGui.BeginChild("TextureDirs", new Num.Vector2(0, GetNonFixedHeight() * 0.5f))) {
                 for (int i = 0; i < Directories.TextureDirs.Count; i++) {
                     var dir = Directories.TextureDirs[i];
 
@@ -69,34 +73,45 @@ namespace CBRE.Editor.Popup {
             ImGui.Separator();
         }
 
-        private HotkeyDefinition definition;
+        public static string GetActionName(string action)
+            => Hotkeys.GetHotkeyDefinition(action)?.Name ?? action;
 
         protected virtual void HotkeysGui() {
             ImGui.Text("Hotkeys");
-            ImGui.Text("Click a listing to remove it");
-            if (ImGui.BeginCombo("Hotkey", definition?.ID)) {
-                var hks = Hotkeys.GetHotkeyDefinitions().ToArray();
-                for (int i = 0; i < hks.Length; i++) {
-                    if (ImGui.Selectable(hks[i].ID, hks[i].ID == definition?.ID)) {
-                        definition = hks[i];
-                    }
-                }
-                ImGui.EndCombo();
+            bool addNew = ImGui.Button("+");
+            ImGui.SameLine();
+            addNew |= ImGui.Selectable("Click to add new bind");
+            if (addNew) {
+                GameMain.Instance.Popups.Add(new HotkeyListenerPopup(hotkeyIndex: null));
             }
-            if (ImGui.Button("+")) {
-                
-            }
-            ImGui.NewLine();
-            if (ImGui.BeginChild("Hotkeys", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 10))) {
+            if (ImGui.BeginChild("Hotkeys", new Num.Vector2(0, GetNonFixedHeight() * 0.5f))) {
                 for (int i = 0; i < SettingsManager.Hotkeys.Count; i++) {
-                    var dir = SettingsManager.Hotkeys[i];
-                    if (ImGui.Selectable($"{dir.ID} {dir.HotkeyString}", false)) {
-                        SettingsManager.Hotkeys.RemoveAt(i);
+                    var hotkey = SettingsManager.Hotkeys[i];
+                    
+                    using (ColorPush.RedButton()) {
+                        if (ImGui.Button($"X##hotkeys{i}")) {
+                            SettingsManager.Hotkeys.RemoveAt(i);
+                            break;
+                        }
+                    }
+                    ImGui.SameLine();
+                    if (ImGui.Selectable($"{GetActionName(hotkey.ID)} - {hotkey.HotkeyString}", false)) {
+                        GameMain.Instance.Popups.Add(new HotkeyListenerPopup(hotkeyIndex: i) {
+                            SelectedAction = Hotkeys.GetHotkeyDefinition(hotkey.ID),
+                            Combo = hotkey.HotkeyString
+                        });
                         break;
                     }
                 }
             }
             ImGui.EndChild();
+        }
+
+        public override void Dispose() {
+            base.Dispose();
+            
+            Hotkeys.SetupHotkeys(SettingsManager.Hotkeys);
+            SettingsManager.Write();
         }
     }
 }

@@ -1,5 +1,6 @@
 using ImGuiNET;
 using System;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Num = System.Numerics;
@@ -22,13 +23,13 @@ namespace CBRE.Editor.Popup {
 
         public virtual void Update() { }
 
-        public void Draw(out bool shouldBeOpen)
-        {
+        public void Draw(out bool shouldBeOpen) {
+            string blockerTitleAndIndex = $"##blocker{popupIndex}";
             if (!canBeDefocused) {
                 ImGui.SetNextWindowPos(new Num.Vector2(0,0));
                 ImGui.SetNextWindowSize(ImGui.GetWindowViewport().Size);
-                using (new ColorPush(ImGuiCol.WindowBg, Color.Transparent)) {
-                    if (ImGui.Begin($"##blocker{popupIndex}",
+                using (new ColorPush(ImGuiCol.WindowBg, Color.Black * 0.5f)) {
+                    if (ImGui.Begin(blockerTitleAndIndex,
                         ImGuiWindowFlags.NoCollapse
                         | ImGuiWindowFlags.NoDecoration
                         | ImGuiWindowFlags.NoMove
@@ -47,7 +48,7 @@ namespace CBRE.Editor.Popup {
 
             string titleAndIndex = $"{title}##popup{popupIndex}";
             bool windowWasInitialized = false;
-            if (!canBeDefocused) {
+            if (!canBeDefocused && GameMain.Instance.Popups.Last(p => !p.canBeDefocused) == this) {
                 ImGui.SetWindowFocus(titleAndIndex);
             }
             if (canBeClosed) {
@@ -62,7 +63,10 @@ namespace CBRE.Editor.Popup {
                 if (shouldBeOpen) {
                     ImGuiLayout(out shouldBeOpen);
                     OkButton(out bool okButtonHit);
-                    if (okButtonHit) { shouldBeOpen = false; }
+                    if (okButtonHit) {
+                        OnOkHit();
+                        shouldBeOpen = false;
+                    }
                 }
                 ImGui.End();
             }
@@ -77,6 +81,8 @@ namespace CBRE.Editor.Popup {
 
         protected virtual void OnCloseButtonHit(ref bool shouldBeOpen) { shouldBeOpen = false; }
 
+        public virtual void OnOkHit() { }
+        
         public virtual void Dispose() { }
     }
 }
