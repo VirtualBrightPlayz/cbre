@@ -1,14 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design.Serialization;
 using System.IO;
-using System.Linq;
-using System.Text;
-using CBRE.Providers.Texture;
 using CBRE.Settings;
-using CBRE.Settings.Models;
 using ImGuiNET;
-using Microsoft.Xna.Framework.Input;
 using NativeFileDialog;
 using Num = System.Numerics;
 
