@@ -190,27 +190,20 @@ namespace CBRE.Editor.Compiling.Lightmap {
             faces = new List<LMFace>();
             lmGroups = new List<LightmapGroup>();
             foreach (Solid solid in map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
-                foreach (Face tface in solid.Faces) {
-                    tface.Vertices.ForEach(v => { v.LMU = -500.0f; v.LMV = -500.0f; });
-                    tface.UpdateBoundingBox();
-                    if (tface.Texture?.Texture == null) continue;
-                    if (tface.Texture.Name.ToLowerInvariant() == "tooltextures/invisible_collision") continue;
-                    if (tface.Texture.Name.ToLowerInvariant() == "tooltextures/remove_face") continue;
-                    if (tface.Texture.Name.ToLowerInvariant() == "tooltextures/block_light") continue;
-                    if (tface.Texture.Texture.HasTransparency()) continue;
-                    LMFace face = new LMFace(tface, solid);
+                foreach (Face solidFace in solid.Faces) {
+                    solidFace.Vertices.ForEach(v => { v.LMU = -500.0f; v.LMV = -500.0f; });
+                    solidFace.UpdateBoundingBox();
+                    if (solidFace.Texture?.Texture is null) { continue; }
+                    if (solidFace.Texture.Name.StartsWith("tooltextures/", StringComparison.OrdinalIgnoreCase)) { continue; }
+                    if (solidFace.Texture.Texture.HasTransparency()) { continue; } //TODO: use translucent textures for lighting effects!
+                    LMFace face = new LMFace(solidFace, solid);
                     LightmapGroup group = LightmapGroup.FindCoplanar(lmGroups, face);
                     BoxF faceBox = new BoxF(face.BoundingBox.Start - new Vector3F(3.0f, 3.0f, 3.0f), face.BoundingBox.End + new Vector3F(3.0f, 3.0f, 3.0f));
-                    if (group == null) {
+                    if (group is null) {
                         group = new LightmapGroup();
-                        group.BoundingBox = faceBox;
-                        group.Faces = new List<LMFace>();
-                        group.Plane = new PlaneF(face.Plane.Normal, face.Vertices[0].Location);
                         lmGroups.Add(group);
                     }
-                    group.Faces.Add(face);
-                    group.Plane = new PlaneF(group.Plane.Normal, (face.Vertices[0].Location + group.Plane.PointOnPlane) / 2);
-                    group.BoundingBox = new BoxF(new BoxF[] { group.BoundingBox, faceBox });
+                    group.AddFace(face);
                 }
             }
         }

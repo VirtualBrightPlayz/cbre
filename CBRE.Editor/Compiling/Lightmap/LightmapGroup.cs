@@ -1,4 +1,5 @@
-﻿using CBRE.DataStructures.Geometric;
+﻿#nullable enable
+using CBRE.DataStructures.Geometric;
 using CBRE.Settings;
 using System;
 using System.Collections.Generic;
@@ -6,92 +7,113 @@ using System.Linq;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     public class LightmapGroup {
-        public PlaneF Plane;
-        public BoxF BoundingBox;
-        public List<LMFace> Faces;
+        public PlaneF? Plane { get; private set; }
+        public BoxF? BoundingBox { get; private set; }
 
-        public Vector3F uAxis;
-        public Vector3F vAxis;
-        public float? minTotalX;
-        public float? minTotalY;
-        public float? maxTotalX;
-        public float? maxTotalY;
-        public int writeX;
-        public int writeY;
+        private readonly HashSet<LMFace> faces;
+        public IEnumerable<LMFace> Faces => faces;
+
+        public Vector3F? UAxis;
+        public Vector3F? VAxis;
+        public float? MinTotalU;
+        public float? MinTotalV;
+        public float? MaxTotalU;
+        public float? MaxTotalV;
+        public int WriteU;
+        public int WriteV;
+
+        public LightmapGroup() {
+            faces = new HashSet<LMFace>();
+        }
+
+        public void AddFace(LMFace face) {
+            faces.Add(face);
+            Vector3F boxPadding = new Vector3F(3.0f, 3.0f, 3.0f);
+            BoxF faceBox = new BoxF(face.BoundingBox.Start - boxPadding, face.BoundingBox.End + boxPadding);
+            BoundingBox ??= faceBox;
+            BoundingBox = new BoxF(new[] {faceBox, BoundingBox});
+            var newPlane = new PlaneF(face.Normal, face.Vertices[0].Location);
+            Plane ??= newPlane;
+            Plane = new PlaneF(Plane.Normal, (newPlane.PointOnPlane + Plane.PointOnPlane) / 2.0f);
+
+        }
 
         private void CalculateInitialUV() {
-            if (uAxis == null || vAxis == null) {
+            if (UAxis == null || VAxis == null) {
                 var direction = Plane.GetClosestAxisToNormal();
                 var tempV = direction == Vector3F.UnitZ ? -Vector3F.UnitY : -Vector3F.UnitZ;
-                uAxis = Plane.Normal.Cross(tempV).Normalise();
-                vAxis = uAxis.Cross(Plane.Normal).Normalise();
+                UAxis = Plane.Normal.Cross(tempV).Normalise();
+                VAxis = UAxis.Cross(Plane.Normal).Normalise();
 
-                if (Plane.OnPlane(Plane.PointOnPlane + uAxis * 1000f) != 0) {
+                if (Plane.OnPlane(Plane.PointOnPlane + UAxis * 1000f) != 0) {
                     throw new Exception("uAxis is misaligned");
                 }
-                if (Plane.OnPlane(Plane.PointOnPlane + vAxis * 1000f) != 0) {
+                if (Plane.OnPlane(Plane.PointOnPlane + VAxis * 1000f) != 0) {
                     throw new Exception("vAxis is misaligned");
                 }
             }
 
-            if (minTotalX == null || minTotalY == null || maxTotalX == null || maxTotalY == null) {
+            if (MinTotalU == null || MinTotalV == null || MaxTotalU == null || MaxTotalV == null) {
                 foreach (LMFace face in Faces) {
                     foreach (Vector3F coord in face.Vertices.Select(x => x.Location)) {
-                        float x = coord.Dot(uAxis);
-                        float y = coord.Dot(vAxis);
+                        float x = coord.Dot(UAxis);
+                        float y = coord.Dot(VAxis);
 
-                        if (minTotalX == null || x < minTotalX) minTotalX = x;
-                        if (minTotalY == null || y < minTotalY) minTotalY = y;
-                        if (maxTotalX == null || x > maxTotalX) maxTotalX = x;
-                        if (maxTotalY == null || y > maxTotalY) maxTotalY = y;
+                        if (MinTotalU == null || x < MinTotalU) { MinTotalU = x; }
+                        if (MinTotalV == null || y < MinTotalV) { MinTotalV = y; }
+                        if (MaxTotalU == null || x > MaxTotalU) { MaxTotalU = x; }
+                        if (MaxTotalV == null || y > MaxTotalV) { MaxTotalV = y; }
                     }
                 }
+            }
 
-                minTotalX -= LightmapConfig.DownscaleFactor; minTotalY -= LightmapConfig.DownscaleFactor;
-                maxTotalX += LightmapConfig.DownscaleFactor; maxTotalY += LightmapConfig.DownscaleFactor;
+            if (MinTotalU == null || MinTotalV == null || MaxTotalU == null || MaxTotalV == null) {
+                throw new Exception("Could not determine face minimum and maximum UVs");
+            }
 
-                minTotalX /= LightmapConfig.DownscaleFactor; minTotalX = (float)Math.Ceiling(minTotalX.Value); minTotalX *= LightmapConfig.DownscaleFactor;
-                minTotalY /= LightmapConfig.DownscaleFactor; minTotalY = (float)Math.Ceiling(minTotalY.Value); minTotalY *= LightmapConfig.DownscaleFactor;
-                maxTotalX /= LightmapConfig.DownscaleFactor; maxTotalX = (float)Math.Ceiling(maxTotalX.Value); maxTotalX *= LightmapConfig.DownscaleFactor;
-                maxTotalY /= LightmapConfig.DownscaleFactor; maxTotalY = (float)Math.Ceiling(maxTotalY.Value); maxTotalY *= LightmapConfig.DownscaleFactor;
+            MinTotalU -= LightmapConfig.DownscaleFactor; MinTotalV -= LightmapConfig.DownscaleFactor;
+            MaxTotalU += LightmapConfig.DownscaleFactor; MaxTotalV += LightmapConfig.DownscaleFactor;
 
-                if ((maxTotalX - minTotalX) < (maxTotalY - minTotalY)) {
-                    SwapUV();
-                }
+            void roundValue(ref float? v)
+                => v = (float)Math.Ceiling(v.Value / LightmapConfig.DownscaleFactor) * LightmapConfig.DownscaleFactor;
+            
+            roundValue(ref MinTotalU);
+            roundValue(ref MinTotalV);
+            roundValue(ref MaxTotalU);
+            roundValue(ref MaxTotalV);
+
+            if ((MaxTotalU - MinTotalU) < (MaxTotalV - MinTotalV)) {
+                SwapUv();
             }
         }
 
         public float Width {
             get {
                 CalculateInitialUV();
-                return (maxTotalX - minTotalX).Value;
+                return (MaxTotalU - MinTotalU).Value;
             }
         }
 
         public float Height {
             get {
                 CalculateInitialUV();
-                return (maxTotalY - minTotalY).Value;
+                return (MaxTotalV - MinTotalV).Value;
             }
         }
 
-        public void SwapUV() {
-            float maxSwap = maxTotalX.Value; float minSwap = minTotalX.Value;
-            maxTotalX = maxTotalY; minTotalX = minTotalY;
-            maxTotalY = maxSwap; minTotalY = minSwap;
-
-            Vector3F swapAxis = uAxis;
-            uAxis = vAxis;
-            vAxis = swapAxis;
+        public void SwapUv() {
+            (MaxTotalU, MaxTotalV) = (MaxTotalV, MaxTotalU);
+            (MinTotalU, MinTotalV) = (MinTotalV, MinTotalU);
+            (UAxis, VAxis) = (VAxis, UAxis);
         }
 
-        public static LightmapGroup FindCoplanar(List<LightmapGroup> lmGroups, LMFace otherFace) {
+        public static LightmapGroup? FindCoplanar(IEnumerable<LightmapGroup> lmGroups, LMFace otherFace) {
             foreach (LightmapGroup group in lmGroups) {
                 if ((group.Plane.Normal - otherFace.Plane.Normal).LengthSquared() < 0.01f) {
                     PlaneF plane2 = new PlaneF(otherFace.Plane.Normal, otherFace.Vertices[0].Location);
-                    if (Math.Abs(plane2.EvalAtPoint((group.Plane.PointOnPlane))) > 4.0f) continue;
+                    if (Math.Abs(plane2.EvalAtPoint((group.Plane.PointOnPlane))) > 4.0f) { continue; }
                     BoxF faceBox = new BoxF(otherFace.BoundingBox.Start - new Vector3F(3.0f, 3.0f, 3.0f), otherFace.BoundingBox.End + new Vector3F(3.0f, 3.0f, 3.0f));
-                    if (faceBox.IntersectsWith(group.BoundingBox)) return group;
+                    if (faceBox.IntersectsWith(group.BoundingBox)) { return group; }
                 }
             }
             return null;

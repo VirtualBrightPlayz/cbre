@@ -39,9 +39,10 @@ namespace CBRE.Editor.Compiling {
             filename = System.IO.Path.GetFileNameWithoutExtension(filename) + ".rmesh";
             string lmPath = System.IO.Path.GetFileNameWithoutExtension(filename) + "_lm";
 
-            List<Lightmap.LMFace> faces; int lmCount;
+            List<Lightmap.LMFace> faces = new List<LMFace>();
+            int lmCount = 0;
             List<Lightmap.Light> lights;
-            Lightmap.Lightmapper.Render(document, out faces, out lmCount);
+            //Lightmap.Lightmapper.Render(document, out faces, out lmCount);
             Lightmap.Light.FindLights(map, out lights);
             lights.RemoveAll(l => !l.HasSprite);
 
@@ -55,7 +56,7 @@ namespace CBRE.Editor.Compiling {
 
             IEnumerable<Face> invisibleCollisionFaces = map.WorldSpawn.Find(x => x is Solid).OfType<Solid>().SelectMany(x => x.Faces).Where(x => x.Texture.Name == "tooltextures/invisible_collision");
 
-            Lightmap.Lightmapper.SaveLightmaps(document, lmCount, filepath + "/" + lmPath, false);
+            //Lightmap.Lightmapper.SaveLightmaps(document, lmCount, filepath + "/" + lmPath, false);
             lmPath = System.IO.Path.GetFileName(lmPath);
 
             List<Waypoint> waypoints = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "waypoint").OfType<Entity>().Select(x => new Waypoint(x)).ToList();
