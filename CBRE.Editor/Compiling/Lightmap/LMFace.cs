@@ -37,6 +37,11 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         public BoxF BoundingBox { get; set; }
 
+        public BoxF PaddedBoundingBox(float padding = 3.0f) {
+            Vector3F boxPadding = new Vector3F(padding, padding, padding);
+            return new BoxF(BoundingBox.Start - boxPadding, BoundingBox.End + boxPadding);
+        }
+
         public string Texture;
 
         public Face OriginalFace;
@@ -198,7 +203,6 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     if (solidFace.Texture.Texture.HasTransparency()) { continue; } //TODO: use translucent textures for lighting effects!
                     LMFace face = new LMFace(solidFace, solid);
                     LightmapGroup group = LightmapGroup.FindCoplanar(lmGroups, face);
-                    BoxF faceBox = new BoxF(face.BoundingBox.Start - new Vector3F(3.0f, 3.0f, 3.0f), face.BoundingBox.End + new Vector3F(3.0f, 3.0f, 3.0f));
                     if (group is null) {
                         group = new LightmapGroup();
                         lmGroups.Add(group);

@@ -28,14 +28,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         public void AddFace(LMFace face) {
             faces.Add(face);
-            Vector3F boxPadding = new Vector3F(3.0f, 3.0f, 3.0f);
-            BoxF faceBox = new BoxF(face.BoundingBox.Start - boxPadding, face.BoundingBox.End + boxPadding);
+            BoxF faceBox = face.PaddedBoundingBox();
             BoundingBox ??= faceBox;
             BoundingBox = new BoxF(new[] {faceBox, BoundingBox});
             var newPlane = new PlaneF(face.Normal, face.Vertices[0].Location);
             Plane ??= newPlane;
             Plane = new PlaneF(Plane.Normal, (newPlane.PointOnPlane + Plane.PointOnPlane) / 2.0f);
-
         }
 
         private void CalculateInitialUV() {
@@ -112,7 +110,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 if ((group.Plane.Normal - otherFace.Plane.Normal).LengthSquared() < 0.01f) {
                     PlaneF plane2 = new PlaneF(otherFace.Plane.Normal, otherFace.Vertices[0].Location);
                     if (Math.Abs(plane2.EvalAtPoint((group.Plane.PointOnPlane))) > 4.0f) { continue; }
-                    BoxF faceBox = new BoxF(otherFace.BoundingBox.Start - new Vector3F(3.0f, 3.0f, 3.0f), otherFace.BoundingBox.End + new Vector3F(3.0f, 3.0f, 3.0f));
+                    BoxF faceBox = otherFace.PaddedBoundingBox();
                     if (faceBox.IntersectsWith(group.BoundingBox)) { return group; }
                 }
             }
