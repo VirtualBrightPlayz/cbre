@@ -75,7 +75,7 @@ namespace CBRE.Editor.Compiling {
             List<Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>> textures = new List<Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>>();
             RMeshLoadFlags loadFlag = RMeshLoadFlags.COLOR; RMeshBlendFlags blendFlag = RMeshBlendFlags.DIFFUSE;
             foreach (LMFace face in faces) {
-                if (!textures.Any(x => x.Item1 == face.Texture)) textures.Add(new Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>(face.Texture, loadFlag, blendFlag, 0));
+                if (!textures.Any(x => x.Item1 == face.Texture.Name)) textures.Add(new Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>(face.Texture.Name, loadFlag, blendFlag, 0));
             }
             loadFlag = RMeshLoadFlags.ALPHA; blendFlag = RMeshBlendFlags.NORMAL;
             foreach (Face face in transparentFaces) {
@@ -95,7 +95,7 @@ namespace CBRE.Editor.Compiling {
 
             int texCount = 0;
             for (int i = 0; i < textures.Count; i++) {
-                texCount += faces.Where(x => x.Texture == textures[i].Item1).Select(x => x.LmIndex).Distinct().Count();
+                texCount += faces.Where(x => x.Texture.Name == textures[i].Item1).Select(x => x.LmIndex).Distinct().Count();
                 texCount += transparentFaces.Any(x => x.Texture.Name == textures[i].Item1) ? 1 : 0;
             }
 
@@ -105,7 +105,7 @@ namespace CBRE.Editor.Compiling {
                 string texName = Directories.GetTextureExtension(textures[i].Item1);
 
                 for (int lmInd = 0; lmInd < lmCount; lmInd++) {
-                    IEnumerable<LMFace> tLmFaces = faces.FindAll(x => x.Texture == textures[i].Item1 && x.LmIndex == lmInd);
+                    IEnumerable<LMFace> tLmFaces = faces.FindAll(x => x.Texture.Name == textures[i].Item1 && x.LmIndex == lmInd);
                     IEnumerable<Face> tTrptFaces = transparentFaces.Where(x => x.Texture.Name == textures[i].Item1);
                     vertCount = 0;
                     vertOffset = 0;

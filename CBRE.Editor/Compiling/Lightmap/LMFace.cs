@@ -6,17 +6,17 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace CBRE.Editor.Compiling.Lightmap {
-    public class LMFace {
-        public PlaneF Plane { get; set; }
-        public Vector3F Normal;
-        public Vector3F Tangent;
-        public Vector3F Bitangent;
+    sealed class LMFace {
+        public readonly PlaneF Plane;
+        public readonly Vector3F Normal;
+        public readonly Vector3F Tangent;
+        public readonly Vector3F Bitangent;
+
+        public readonly bool CastsShadows;
 
         public Vector3F LightBasis0;
         public Vector3F LightBasis1;
         public Vector3F LightBasis2;
-
-        public bool CastsShadows;
 
         public int LmIndex;
 
@@ -42,22 +42,27 @@ namespace CBRE.Editor.Compiling.Lightmap {
             return new BoxF(BoundingBox.Start - boxPadding, BoundingBox.End + boxPadding);
         }
 
-        public string Texture;
+        public TextureReference Texture => OriginalFace.Texture;
 
-        public Face OriginalFace;
+        public readonly Face OriginalFace;
 
-        public LMFace(Face face, Solid solid) {
+        public LMFace(Face face) {
+            var solid = face.Parent;
+            
             Plane = new PlaneF(face.Plane);
 
             Normal = Plane.Normal;
 
             Vertices = face.Vertices.Select(x => new Vertex(x)).ToList();
 
-            CastsShadows = !(solid?.Parent?.GetEntityData()?.Name.Equals("noshadow", StringComparison.OrdinalIgnoreCase) ?? false);
+            CastsShadows
+                = solid?.Parent?.GetEntityData()?.Name is { } solidName
+                    ? !string.Equals(solidName, "noShadow", StringComparison.OrdinalIgnoreCase)
+                    : true;
 
-            int i1 = 0;
-            int i2 = 1;
-            int i3 = 2;
+            const int i1 = 0;
+            const int i2 = 1;
+            const int i3 = 2;
 
             Vector3F v1 = Vertices[i1].Location;
             Vector3F v2 = Vertices[i2].Location;
@@ -86,32 +91,37 @@ namespace CBRE.Editor.Compiling.Lightmap {
             Tangent = (sdir - Normal * Normal.Dot(sdir)).Normalise();
             Bitangent = (tdir - Normal * Normal.Dot(tdir)).Normalise();
 
-            LightBasis0 = Tangent * (-1.0f / (float)Math.Sqrt(6.0)) + Bitangent * (-1.0f / (float)Math.Sqrt(2.0)) + Normal * (1.0f / (float)Math.Sqrt(3.0));
-            LightBasis1 = Tangent * (-1.0f / (float)Math.Sqrt(6.0)) + Bitangent * (1.0f / (float)Math.Sqrt(2.0)) + Normal * (1.0f / (float)Math.Sqrt(3.0));
-            LightBasis2 = Tangent * ((float)Math.Sqrt(2.0 / 3.0)) + Normal * (1.0f / (float)Math.Sqrt(3.0));
-
-            Texture = face.Texture.Name;
+            float sqrt2 = MathF.Sqrt(2.0f);
+            float sqrt3 = MathF.Sqrt(3.0f);
+            float sqrt6 = sqrt2 * sqrt3;
+            float invSqrt2 = 1.0f / sqrt2;
+            float invSqrt3 = 1.0f / sqrt3;
+            float invSqrt6 = 1.0f / sqrt6;
+            
+            LightBasis0 = Tangent * (-invSqrt6) + Bitangent * (-invSqrt2) + Normal * invSqrt3;
+            LightBasis1 = Tangent * (-invSqrt6) + Bitangent * invSqrt2 + Normal * invSqrt3;
+            LightBasis2 = Tangent * (sqrt2 / sqrt3) + Normal * invSqrt3;
 
             OriginalFace = face;
 
             UpdateBoundingBox();
         }
 
-        public virtual IEnumerable<LineF> GetLines() {
+        public IEnumerable<LineF> GetLines() {
             return GetEdges();
         }
 
-        public virtual IEnumerable<LineF> GetEdges() {
+        public IEnumerable<LineF> GetEdges() {
             for (var i = 0; i < Vertices.Count; i++) {
                 yield return new LineF(Vertices[i].Location, Vertices[(i + 1) % Vertices.Count].Location);
             }
         }
 
-        public virtual IEnumerable<Vertex> GetIndexedVertices() {
+        public IEnumerable<Vertex> GetIndexedVertices() {
             return Vertices;
         }
 
-        public virtual IEnumerable<uint> GetTriangleIndices() {
+        public IEnumerable<uint> GetTriangleIndices() {
             for (uint i = 1; i < Vertices.Count - 1; i++) {
                 yield return 0;
                 yield return i;
@@ -119,7 +129,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
         }
 
-        public virtual IEnumerable<Vertex[]> GetTriangles() {
+        public IEnumerable<Vertex[]> GetTriangles() {
             for (var i = 1; i < Vertices.Count - 1; i++) {
                 yield return new[]
                 {
@@ -130,18 +140,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
         }
 
-        public virtual void UpdateBoundingBox() {
+        public void UpdateBoundingBox() {
             BoundingBox = new BoxF(Vertices.Select(x => x.Location));
-        }
-
-        /// <summary>
-        /// Returns the point that this line intersects with this face.
-        /// </summary>
-        /// <param name="line">The intersection line</param>
-        /// <returns>The point of intersection between the face and the line.
-        /// Returns null if the line does not intersect this face.</returns>
-        public virtual Vector3F GetIntersectionPoint(LineF line) {
-            return GetIntersectionPoint(this, line);
         }
 
         /// <summary>
@@ -161,18 +161,24 @@ namespace CBRE.Editor.Compiling.Lightmap {
         /// <returns>True if the box intersects</returns>
         public bool IntersectsWithBox(BoxF box) {
             var verts = Vertices.ToList();
-            return box.GetBoxLines().Any(x => GetIntersectionPoint(this, x, true) != null);
+            return box.GetBoxLines().Any(x => GetIntersectionPoint(x, true) != null);
         }
 
-        protected static Vector3F GetIntersectionPoint(LMFace face, LineF line, bool ignoreDirection = false) {
-            var plane = face.Plane;
+        /// <summary>
+        /// Returns the point where this line intersects with this face.
+        /// </summary>
+        /// <param name="line">The intersection line</param>
+        /// <returns>The point of intersection between the face and the line.
+        /// Returns null if the line does not intersect this face.</returns>
+        public Vector3F GetIntersectionPoint(LineF line, bool ignoreDirection = false) {
+            var plane = Plane;
             var intersect = plane.GetIntersectionPoint(line, ignoreDirection);
-            List<Vector3F> coordinates = face.Vertices.Select(x => x.Location).ToList();
-            if (intersect == null) return null;
-            BoxF bbox = new BoxF(face.BoundingBox.Start - new Vector3F(0.5f, 0.5f, 0.5f), face.BoundingBox.End + new Vector3F(0.5f, 0.5f, 0.5f));
-            if (!bbox.Vector3IsInside(intersect)) return null;
+            List<Vector3F> coordinates = Vertices.Select(x => x.Location).ToList();
+            if (intersect == null) { return null; }
+            BoxF bbox = PaddedBoundingBox(0.5f);
+            if (!bbox.Vector3IsInside(intersect)) { return null; }
 
-            Vector3F centerPoint = face.BoundingBox.Center;
+            Vector3F centerPoint = BoundingBox.Center;
             for (var i = 0; i < coordinates.Count; i++) {
                 var i1 = i;
                 var i2 = (i + 1) % coordinates.Count;
@@ -180,36 +186,15 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 var lineMiddle = (coordinates[i1] + coordinates[i2]) * 0.5f;
                 var middleToCenter = centerPoint - lineMiddle;
                 var v = coordinates[i1] - coordinates[i2];
-                var lineNormal = face.Plane.Normal.Cross(v);
+                var lineNormal = Plane.Normal.Cross(v);
 
                 if ((middleToCenter - lineNormal).LengthSquared() > (middleToCenter + lineNormal).LengthSquared()) {
                     lineNormal = -lineNormal;
                 }
 
-                if (lineNormal.Dot(intersect - lineMiddle) < 0.0f) return null;
+                if (lineNormal.Dot(intersect - lineMiddle) < 0.0f) { return null; }
             }
             return intersect;
-        }
-
-        public static void FindFacesAndGroups(Map map, out List<LMFace> faces, out List<LightmapGroup> lmGroups) {
-            faces = new List<LMFace>();
-            lmGroups = new List<LightmapGroup>();
-            foreach (Solid solid in map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
-                foreach (Face solidFace in solid.Faces) {
-                    solidFace.Vertices.ForEach(v => { v.LMU = -500.0f; v.LMV = -500.0f; });
-                    solidFace.UpdateBoundingBox();
-                    if (solidFace.Texture?.Texture is null) { continue; }
-                    if (solidFace.Texture.Name.StartsWith("tooltextures/", StringComparison.OrdinalIgnoreCase)) { continue; }
-                    if (solidFace.Texture.Texture.HasTransparency()) { continue; } //TODO: use translucent textures for lighting effects!
-                    LMFace face = new LMFace(solidFace, solid);
-                    LightmapGroup group = LightmapGroup.FindCoplanar(lmGroups, face);
-                    if (group is null) {
-                        group = new LightmapGroup();
-                        lmGroups.Add(group);
-                    }
-                    group.AddFace(face);
-                }
-            }
         }
     }
 }

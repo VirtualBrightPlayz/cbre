@@ -50,12 +50,12 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
                 if (obj == null) return;
 
                 // Unclone will reset children, need to reselect them if needed
-                var deselect = obj.GetSelfAndChildren().Where(x => x.IsSelected).SelectMany(GetSelfAndChildren).ToList();
+                var deselect = obj.GetSelfAndAllChildren().Where(x => x.IsSelected).SelectMany(GetSelfAndChildren).ToList();
                 document.Selection.Deselect(deselect);
 
                 EditOperation.PerformOperation(obj);
 
-                var select = obj.GetSelfAndChildren().Where(x => deselect.Any(y => x.ID == y.ID));
+                var select = obj.GetSelfAndAllChildren().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);
 
                 document.Map.UpdateAutoVisgroups(obj, true);
@@ -67,13 +67,13 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
                 if (obj == null) { return; }
 
                 // Unclone will reset children, need to reselect them if needed
-                var deselect = obj.GetSelfAndChildren().Where(x => x.IsSelected).SelectMany(GetSelfAndChildren).ToList();
+                var deselect = obj.GetSelfAndAllChildren().Where(x => x.IsSelected).SelectMany(GetSelfAndChildren).ToList();
                 document.Selection.Deselect(deselect);
 
                 document.ObjectRenderer.RemoveFaces(obj);
                 obj.Unclone(Before);
 
-                var select = obj.GetSelfAndChildren().Where(x => deselect.Any(y => x.ID == y.ID));
+                var select = obj.GetSelfAndAllChildren().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);
 
                 document.Map.UpdateAutoVisgroups(obj, true);
@@ -147,7 +147,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             => GetSelfAndChildren(reference.MapObject);
 
         private static IEnumerable<MapObject> GetSelfAndChildren(MapObject obj)
-            => obj.GetSelfAndChildren();
+            => obj.GetSelfAndAllChildren();
 
         public virtual void Reverse(Document document) {
             // Edit
@@ -185,11 +185,9 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
         }
 
         private static void RecalculatePastedFaces(Document doc, MapObject x) {
-            foreach (var o in x.GetSelfAndChildren().Where(s => s is Solid).Cast<Solid>()) {
-                o.Faces.ForEach(f => {
-                    f.Texture.Texture = doc.GetTexture(f.Texture.Name);
-                    f.CalculateTextureCoordinates(minimizeShiftValues: false);
-                });
+            foreach (var f in x.GetSelfAndAllChildren().OfType<Solid>().SelectMany(o => o.Faces)) {
+                f.Texture.Texture = doc.GetTexture(f.Texture.Name);
+                f.CalculateTextureCoordinates(minimizeShiftValues: false);
             }
         }
         

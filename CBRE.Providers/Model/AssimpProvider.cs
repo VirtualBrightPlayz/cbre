@@ -212,7 +212,7 @@ namespace CBRE.Providers.Model {
                 newNode.MeshIndices.Add(scene.MeshCount - 1);
             }
 
-            foreach (MapObject mapObject in map.WorldSpawn.GetSelfAndChildren()) {
+            foreach (MapObject mapObject in map.WorldSpawn.GetSelfAndAllChildren()) {
                 DataStructures.GameData.GameDataObject data = gameData.Classes.Find(p => p.Name == mapObject.ClassName);
                 if (data == null) {
                     continue;

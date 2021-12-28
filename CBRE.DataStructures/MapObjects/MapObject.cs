@@ -401,14 +401,14 @@ namespace CBRE.DataStructures.MapObjects {
         /// Flattens the tree underneath this node.
         /// </summary>
         /// <returns>A list containing all the descendants of this node (including this node)</returns>
-        public List<MapObject> GetSelfAndChildren() {
+        public List<MapObject> GetSelfAndAllChildren() {
             return Find(x => true);
         }
 
         /// <summary>
         /// Flattens the tree and selects the nodes that match the test.
         /// </summary>
-        /// <param name="matcher">The prediacate to match</param>
+        /// <param name="matcher">The predicate to match</param>
         /// <param name="forceMatchIfParentMatches">If true and a parent matches the predicate, all children will be added regardless of match status.</param>
         /// <returns>A list of all the descendants that match the test (including this node)</returns>
         public List<MapObject> Find(Predicate<MapObject> matcher, bool forceMatchIfParentMatches = false) {

@@ -101,7 +101,7 @@ namespace CBRE.Editor.Compiling {
             List<Tuple<string, byte>> textures = new List<Tuple<string, byte>>();
             byte flag = (byte)RM2TextureLoadFlag.Opaque;
             foreach (Lightmap.LMFace face in faces) {
-                if (!textures.Any(x => x.Item1 == face.Texture)) textures.Add(new Tuple<string, byte>(face.Texture, flag));
+                if (!textures.Any(x => x.Item1 == face.Texture.Name)) textures.Add(new Tuple<string, byte>(face.Texture.Name, flag));
             }
             flag = (byte)RM2TextureLoadFlag.Alpha;
             foreach (Face face in transparentFaces) {
@@ -123,7 +123,7 @@ namespace CBRE.Editor.Compiling {
 
             for (int i = 0; i < textures.Count; i++) {
                 for (int lmInd = 0; lmInd < lmCount; lmInd++) {
-                    IEnumerable<Lightmap.LMFace> tLmFaces = faces.FindAll(x => x.Texture == textures[i].Item1 && x.LmIndex == lmInd);
+                    IEnumerable<Lightmap.LMFace> tLmFaces = faces.FindAll(x => x.Texture.Name == textures[i].Item1 && x.LmIndex == lmInd);
                     vertCount = 0;
                     vertOffset = 0;
                     triCount = 0;

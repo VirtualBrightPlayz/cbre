@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace CBRE.Editor.Compiling.Lightmap {
-    public class LightmapGroup {
+    sealed class LightmapGroup {
         public PlaneF? Plane { get; private set; }
         public BoxF? BoundingBox { get; private set; }
 

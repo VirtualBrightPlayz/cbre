@@ -29,12 +29,12 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
                 if (obj == null) return;
 
                 // Unclone will reset children, need to reselect them if needed
-                var deselect = obj.GetSelfAndChildren().Where(x => x.IsSelected).ToList();
+                var deselect = obj.GetSelfAndAllChildren().Where(x => x.IsSelected).ToList();
                 document.Selection.Deselect(deselect);
 
                 obj.Unclone(kv.Value);
 
-                var select = obj.GetSelfAndChildren().Where(x => deselect.Any(y => x.ID == y.ID));
+                var select = obj.GetSelfAndAllChildren().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);
 
                 document.Map.UpdateAutoVisgroups(obj, true);
@@ -57,7 +57,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
                 _reverse.Add(kv.Key, obj.Clone());
 
                 // Unclone will reset children, need to reselect them if needed
-                var deselect = obj.GetSelfAndChildren().Where(x => x.IsSelected).ToList();
+                var deselect = obj.GetSelfAndAllChildren().Where(x => x.IsSelected).ToList();
                 document.Selection.Deselect(deselect);
 
                 if (obj is Solid s) {
@@ -68,7 +68,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
                     v.Faces.ForEach(p => document.ObjectRenderer.AddFace(p));
                 }
 
-                var select = obj.GetSelfAndChildren().Where(x => deselect.Any(y => x.ID == y.ID));
+                var select = obj.GetSelfAndAllChildren().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);
 
                 document.Map.UpdateAutoVisgroups(obj, true);
