@@ -100,9 +100,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
         }
 
         public void SwapUv() {
-            (MaxTotalU, MaxTotalV) = (MaxTotalV, MaxTotalU);
-            (MinTotalU, MinTotalV) = (MinTotalV, MinTotalU);
-            (UAxis, VAxis) = (VAxis, UAxis);
+            void swap<T>(ref T a, ref T b)
+                => (a, b) = (b, a);
+            
+            swap(ref MaxTotalU, ref MaxTotalV);
+            swap(ref MinTotalU, ref MinTotalV);
+            swap(ref UAxis, ref VAxis);
         }
 
         public static LightmapGroup? FindCoplanar(IEnumerable<LightmapGroup> lmGroups, LMFace otherFace) {
