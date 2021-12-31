@@ -78,12 +78,68 @@ namespace CBRE.Editor.Compiling.Lightmap {
             Groups = groups.ToImmutableHashSet();
         }
 
+
+        public class Atlas {
+            public readonly ImmutableHashSet<LightmapGroup> Groups;
+
+            public Atlas(IEnumerable<LightmapGroup> groups) {
+                Groups = groups.ToImmutableHashSet();
+                foreach (var group in Groups) {
+                    foreach (var face in group.Faces) {
+                        face.UpdateLmUv(group);
+                    }
+                }
+            }
+        }
+
+        public void Render() {
+            var atlases = PrepareUvCoords();
+            
+        }
+        
+        private List<Atlas> PrepareUvCoords() {
+            List<LightmapGroup> remainingGroups = Groups
+                .OrderByDescending(g => g.Width * g.Height)
+                .ThenByDescending(g => g.Width)
+                .ThenByDescending(g => g.Height)
+                .ToList();
+
+            List<Atlas> atlases = new();
+            
+            while (remainingGroups.Any()) {
+                int prevCount = remainingGroups.Count;
+                
+                var prevGroups = remainingGroups.ToArray();
+                CalculateUv(
+                    remainingGroups,
+                    new Rectangle(
+                        1,
+                        1,
+                        LightmapConfig.TextureDims-2,
+                        LightmapConfig.TextureDims-2),
+                    out _,
+                    out _);
+
+                if (prevCount == remainingGroups.Count) {
+                    throw new Exception(
+                        $"{prevCount} lightmap groups do not fit within the given resolution and downscale factor");
+                }
+
+                var newAtlas = new Atlas(prevGroups.Where(g => !remainingGroups.Contains(g)));
+                atlases.Add(newAtlas);
+            }
+
+            return atlases;
+        }
+        
+        
+
         private static void CalculateUv(
             List<LightmapGroup> lmGroups,
             Rectangle area,
             out int usedWidth,
-            out int usedHeight) {
-            
+            out int usedHeight
+        ) {
             usedWidth = 0;
             usedHeight = 0;
             if (lmGroups.Count <= 0) { return; }
@@ -91,6 +147,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
             for (int i = 0; i < lmGroups.Count; i++) {
                 LightmapGroup lmGroup = lmGroups[i];
 
+                //Make the aspect ratio of the group
+                //closer to the aspect ratio of the
+                //available area, since this gives
+                //better odds of the group fitting
                 if ((area.Width <= area.Height) != (lmGroup.Width <= lmGroup.Height)) {
                     lmGroup.SwapUv();
                 }
@@ -104,6 +164,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     downscaledHeight = (int)Math.Ceiling(lmGroup.Height / LightmapConfig.DownscaleFactor);
 
                     if (downscaledWidth > area.Width || downscaledHeight > area.Height) {
+                        //The group did not fit, try flipping the group
+                        //because it might be able to fit that way
                         lmGroup.SwapUv();
                     } else {
                         fits = true;
@@ -111,14 +173,28 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     }
                 }
 
-                if (!fits) { return; }
+                if (!fits) { return; } //The given group simply does not fit in the given area, give up
 
                 usedWidth += downscaledWidth;
                 usedHeight += downscaledHeight;
-                lmGroups.RemoveAt(i);
+                lmGroups.RemoveAt(i); i--; //Remove the current group from the list of pending groups
                 lmGroup.WriteU = area.Left;
                 lmGroup.WriteV = area.Top;
+                
+                //There are now four regions that are considered to introduce more groups:
+                //  XXXXXXXX | AAAAAAAA
+                //  XXXXXXXX | AAAAAAAA
+                //  XXXXXXXX | AAAAAAAA
+                //  -------------------
+                //  BBBBBBBB | CCCCCCCC
+                //  BBBBBBBB | CCCCCCCC
+                //  BBBBBBBB | CCCCCCCC
+                //
+                //Region X is completely taken up by the current group.
+                //Regions A, B and C are extra space that should be filled,
+                //their dimensions are based on the size of region X
 
+                //Try to fill region A
                 if (downscaledWidth < area.Width) {
                     int subWidth = -1;
                     usedWidth += LightmapConfig.PlaneMargin;
@@ -133,11 +209,13 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     }
                 }
 
+                //Try to fill region B
                 if (downscaledHeight < area.Height) {
                     int subHeight = -1;
                     usedHeight += LightmapConfig.PlaneMargin;
                     while (subHeight != 0) {
-                        CalculateUv(lmGroups, new Rectangle(area.Left,
+                        CalculateUv(lmGroups, new Rectangle(
+                                area.Left,
                                 area.Top + usedHeight,
                                 downscaledWidth,
                                 area.Height - usedHeight),
@@ -146,6 +224,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     }
                 }
 
+                //Try to fill region C
                 if (downscaledWidth < area.Width && downscaledHeight < area.Height) {
                     Rectangle remainder = new Rectangle(
                         area.Left + downscaledWidth + LightmapConfig.PlaneMargin,
@@ -162,19 +241,4 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
         }
     }
-    
-    /*
-        List<LightmapGroup> uvCalcFaces = new List<LightmapGroup>(lmGroups);
-
-        int totalTextureDims = LightmapConfig.TextureDims;
-        lmCount = 0;
-        for (int i = 0; i < 4; i++) {
-            int x = 1 + ((i % 2) * LightmapConfig.TextureDims);
-            int y = 1 + ((i / 2) * LightmapConfig.TextureDims);
-            CalculateUV(uvCalcFaces, new Rectangle(x, y, LightmapConfig.TextureDims - 2, LightmapConfig.TextureDims - 2), out _, out _);
-            lmCount++;
-            if (uvCalcFaces.Count == 0) { break; }
-            totalTextureDims = LightmapConfig.TextureDims * 2;
-        }
-    */
 }

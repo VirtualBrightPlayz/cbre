@@ -285,12 +285,12 @@ namespace CBRE.Editor.Documents {
         }
 
         public Matrix SelectListTransform {
-            get { return ObjectRenderer.TexturedShaded.Parameters["Selection"].GetValueMatrix().ToCbre(); }
+            get { return ObjectRenderer.ViewportSpace.TexturedShaded.Parameters["Selection"].GetValueMatrix().ToCbre(); }
             set {
-                ObjectRenderer.TexturedLightmapped.Parameters["Selection"].SetValue(value.ToXna());
-                ObjectRenderer.TexturedShaded.Parameters["Selection"].SetValue(value.ToXna());
-                ObjectRenderer.SolidShaded.Parameters["Selection"].SetValue(value.ToXna());
-                ObjectRenderer.Solid.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.ViewportSpace.TexturedLightmapped.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.ViewportSpace.TexturedShaded.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.ViewportSpace.SolidShaded.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.ViewportSpace.Solid.Parameters["Selection"].SetValue(value.ToXna());
             }
         }
 

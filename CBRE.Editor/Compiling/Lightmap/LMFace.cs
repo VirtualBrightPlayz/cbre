@@ -3,6 +3,7 @@ using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace CBRE.Editor.Compiling.Lightmap {
@@ -23,19 +24,28 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public class Vertex {
             public Vertex(DataStructures.MapObjects.Vertex original) {
                 OriginalVertex = original;
-                Location = new Vector3F(original.Location);
-                DiffU = (float)original.TextureU; DiffV = (float)original.TextureV;
-                LMU = original.LMU; LMV = original.LMV;
             }
-            public Vector3F Location;
-            public float DiffU; public float DiffV;
-            public float LMU; public float LMV;
-            public DataStructures.MapObjects.Vertex OriginalVertex;
+
+            public Vector3F Location => OriginalVertex.Location.ToVector3F();
+            public float DiffU => (float)OriginalVertex.TextureU;
+            public float DiffV => (float)OriginalVertex.TextureV;
+
+            public float LMU {
+                get => OriginalVertex.LMU;
+                set => OriginalVertex.LMU = value;
+            }
+
+            public float LMV {
+                get => OriginalVertex.LMV;
+                set => OriginalVertex.LMV = value;
+            }
+            
+            public readonly DataStructures.MapObjects.Vertex OriginalVertex;
         };
 
-        public List<Vertex> Vertices { get; set; }
+        public readonly ImmutableArray<Vertex> Vertices;
 
-        public BoxF BoundingBox { get; set; }
+        public readonly BoxF BoundingBox;
 
         public BoxF PaddedBoundingBox(float padding = 3.0f) {
             Vector3F boxPadding = new Vector3F(padding, padding, padding);
@@ -53,12 +63,11 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
             Normal = Plane.Normal;
 
-            Vertices = face.Vertices.Select(x => new Vertex(x)).ToList();
+            Vertices = face.Vertices.Select(x => new Vertex(x)).ToImmutableArray();
 
             CastsShadows
-                = solid?.Parent?.GetEntityData()?.Name is { } solidName
-                    ? !string.Equals(solidName, "noShadow", StringComparison.OrdinalIgnoreCase)
-                    : true;
+                = solid?.Parent?.GetEntityData()?.Name is not { } solidEntityName
+                  || !string.Equals(solidEntityName, "noShadow", StringComparison.OrdinalIgnoreCase);
 
             const int i1 = 0;
             const int i2 = 1;
@@ -104,16 +113,19 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
             OriginalFace = face;
 
-            UpdateBoundingBox();
+            BoundingBox = new BoxF(Vertices.Select(x => x.Location));
         }
 
-        public IEnumerable<LineF> GetLines() {
-            return GetEdges();
+        public void UpdateLmUv(LightmapGroup group) {
+            foreach (var vertex in Vertices) {
+                vertex.LMU = group.WriteU + (vertex.Location.Dot(group.UAxis)) - group.MinTotalU.Value;
+                vertex.LMV = group.WriteV + (vertex.Location.Dot(group.VAxis)) - group.MinTotalV.Value;
+            }
         }
 
         public IEnumerable<LineF> GetEdges() {
-            for (var i = 0; i < Vertices.Count; i++) {
-                yield return new LineF(Vertices[i].Location, Vertices[(i + 1) % Vertices.Count].Location);
+            for (var i = 0; i < Vertices.Length; i++) {
+                yield return new LineF(Vertices[i].Location, Vertices[(i + 1) % Vertices.Length].Location);
             }
         }
 
@@ -122,7 +134,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
         }
 
         public IEnumerable<uint> GetTriangleIndices() {
-            for (uint i = 1; i < Vertices.Count - 1; i++) {
+            for (uint i = 1; i < Vertices.Length - 1; i++) {
                 yield return 0;
                 yield return i;
                 yield return i + 1;
@@ -130,7 +142,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
         }
 
         public IEnumerable<Vertex[]> GetTriangles() {
-            for (var i = 1; i < Vertices.Count - 1; i++) {
+            for (var i = 1; i < Vertices.Length - 1; i++) {
                 yield return new[]
                 {
                     Vertices[0],
@@ -140,18 +152,14 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
         }
 
-        public void UpdateBoundingBox() {
-            BoundingBox = new BoxF(Vertices.Select(x => x.Location));
-        }
-
         /// <summary>
         /// Test all the edges of this face against a bounding box to see if they intersect.
         /// </summary>
         /// <param name="box">The box to intersect</param>
         /// <returns>True if one of the face's edges intersects with the box.</returns>
-        public bool IntersectsWithLine(BoxF box) {
+        public bool IntersectsWithEdge(BoxF box) {
             // Shortcut through the bounding box to avoid the line computations if they aren't needed
-            return BoundingBox.IntersectsWith(box) && GetLines().Any(box.IntersectsWith);
+            return BoundingBox.IntersectsWith(box) && GetEdges().Any(box.IntersectsWith);
         }
 
         /// <summary>
@@ -160,7 +168,6 @@ namespace CBRE.Editor.Compiling.Lightmap {
         /// <param name="box">The box to test against</param>
         /// <returns>True if the box intersects</returns>
         public bool IntersectsWithBox(BoxF box) {
-            var verts = Vertices.ToList();
             return box.GetBoxLines().Any(x => GetIntersectionPoint(x, true) != null);
         }
 
@@ -185,8 +192,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
                 var lineMiddle = (coordinates[i1] + coordinates[i2]) * 0.5f;
                 var middleToCenter = centerPoint - lineMiddle;
-                var v = coordinates[i1] - coordinates[i2];
-                var lineNormal = Plane.Normal.Cross(v);
+                var lineDirection = coordinates[i1] - coordinates[i2];
+                var lineNormal = Plane.Normal.Cross(lineDirection);
 
                 if ((middleToCenter - lineNormal).LengthSquared() > (middleToCenter + lineNormal).LengthSquared()) {
                     lineNormal = -lineNormal;

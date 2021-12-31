@@ -6,6 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace CBRE.Editor.Compiling.Lightmap {
+    /// <summary>
+    /// Class representing a group of faces that are
+    /// (almost) coplanar and close enough to each
+    /// other to justify merging together in a
+    /// contiguous region on a lightmap.
+    /// </summary>
     sealed class LightmapGroup {
         public PlaneF? Plane { get; private set; }
         public BoxF? BoundingBox { get; private set; }
@@ -36,32 +42,37 @@ namespace CBRE.Editor.Compiling.Lightmap {
             Plane = new PlaneF(Plane.Normal, (newPlane.PointOnPlane + Plane.PointOnPlane) / 2.0f);
         }
 
-        private void CalculateInitialUV() {
-            if (UAxis == null || VAxis == null) {
-                var direction = Plane.GetClosestAxisToNormal();
-                var tempV = direction == Vector3F.UnitZ ? -Vector3F.UnitY : -Vector3F.UnitZ;
-                UAxis = Plane.Normal.Cross(tempV).Normalise();
-                VAxis = UAxis.Cross(Plane.Normal).Normalise();
+        private void CalculateInitialUv() {
+            if (UAxis != null
+                && VAxis != null
+                && MinTotalU != null
+                && MinTotalV != null
+                && MaxTotalU != null
+                && MaxTotalV != null) {
+                return;
+            }
+            
+            var direction = Plane.GetClosestAxisToNormal();
+            var tempV = direction == Vector3F.UnitZ ? -Vector3F.UnitY : -Vector3F.UnitZ;
+            UAxis = Plane.Normal.Cross(tempV).Normalise();
+            VAxis = UAxis.Cross(Plane.Normal).Normalise();
 
-                if (Plane.OnPlane(Plane.PointOnPlane + UAxis * 1000f) != 0) {
-                    throw new Exception("uAxis is misaligned");
-                }
-                if (Plane.OnPlane(Plane.PointOnPlane + VAxis * 1000f) != 0) {
-                    throw new Exception("vAxis is misaligned");
-                }
+            if (Plane.OnPlane(Plane.PointOnPlane + UAxis * 1000f) != 0) {
+                throw new Exception("uAxis is misaligned");
+            }
+            if (Plane.OnPlane(Plane.PointOnPlane + VAxis * 1000f) != 0) {
+                throw new Exception("vAxis is misaligned");
             }
 
-            if (MinTotalU == null || MinTotalV == null || MaxTotalU == null || MaxTotalV == null) {
-                foreach (LMFace face in Faces) {
-                    foreach (Vector3F coord in face.Vertices.Select(x => x.Location)) {
-                        float x = coord.Dot(UAxis);
-                        float y = coord.Dot(VAxis);
+            foreach (LMFace face in Faces) {
+                foreach (Vector3F coord in face.Vertices.Select(x => x.Location)) {
+                    float x = coord.Dot(UAxis);
+                    float y = coord.Dot(VAxis);
 
-                        if (MinTotalU == null || x < MinTotalU) { MinTotalU = x; }
-                        if (MinTotalV == null || y < MinTotalV) { MinTotalV = y; }
-                        if (MaxTotalU == null || x > MaxTotalU) { MaxTotalU = x; }
-                        if (MaxTotalV == null || y > MaxTotalV) { MaxTotalV = y; }
-                    }
+                    if (MinTotalU == null || x < MinTotalU) { MinTotalU = x; }
+                    if (MinTotalV == null || y < MinTotalV) { MinTotalV = y; }
+                    if (MaxTotalU == null || x > MaxTotalU) { MaxTotalU = x; }
+                    if (MaxTotalV == null || y > MaxTotalV) { MaxTotalV = y; }
                 }
             }
 
@@ -87,14 +98,14 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         public float Width {
             get {
-                CalculateInitialUV();
+                CalculateInitialUv();
                 return (MaxTotalU - MinTotalU).Value;
             }
         }
 
         public float Height {
             get {
-                CalculateInitialUV();
+                CalculateInitialUv();
                 return (MaxTotalV - MinTotalV).Value;
             }
         }
