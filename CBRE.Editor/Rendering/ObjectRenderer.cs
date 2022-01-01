@@ -6,6 +6,7 @@ using System.Text;
 using CBRE.Common;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
+using CBRE.Editor.Compiling.Lightmap;
 using CBRE.Editor.Documents;
 using CBRE.Extensions;
 using CBRE.FileSystem;
@@ -17,19 +18,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Rendering {
     public class ObjectRenderer {
-        public struct VpSpace {
+        public struct EffectStruct {
             public BasicEffect BasicEffect;
             public Effect TexturedLightmapped;
             public Effect TexturedShaded;
             public Effect SolidShaded;
             public Effect Solid;
         }
-        public VpSpace ViewportSpace;
-
-        public struct LmSpace {
-            public Effect Phong;
-        }
-        public LmSpace LightmapSpace;
+        public EffectStruct Effects;
 
         public Document Document;
 
@@ -219,6 +215,21 @@ namespace CBRE.Editor.Rendering {
                 this.Selected = selected ? 1.0f : 0.0f;
             }
 
+            public BrushVertex(Vertex vertex) {
+                Microsoft.Xna.Framework.Vector3 toMgVec3(Vector3 v)
+                    => new((float)v.X, (float)v.Y, (float)v.Z);
+
+                Microsoft.Xna.Framework.Color toMgColor(System.Drawing.Color c)
+                    => new(c.R, c.G, c.B, c.A);
+                
+                this.Position = toMgVec3(vertex.Location);
+                this.Normal = toMgVec3(vertex.Parent.Plane.Normal);
+                this.DiffuseUV = new((float)vertex.TextureU, (float)vertex.TextureV);
+                this.LightmapUV = new(vertex.LMU, vertex.LMV);
+                this.Color = toMgColor(vertex.Parent.Colour);
+                this.Selected = 0.0f;
+            }
+
             VertexDeclaration IVertexType.VertexDeclaration {
                 get {
                     return VertexDeclaration;
@@ -403,7 +414,7 @@ namespace CBRE.Editor.Rendering {
             }
 
             public void UpdateLightmapBuffers(int id) {
-                if (!dirty) return;
+                if (!dirty) { return; }
                 dirty = false;
                 var filteredFaces = faces.ToList();
 
@@ -498,23 +509,14 @@ namespace CBRE.Editor.Rendering {
 
         private Dictionary<string, BrushGeometry> brushGeom = new Dictionary<string, BrushGeometry>();
 
-        private Effect LoadEffect(string filename) {
-            using (var fs = File.OpenRead(filename)) {
-                byte[] bytes = new byte[fs.Length];
-                fs.Read(bytes, 0, bytes.Length);
-                return new Effect(GlobalGraphics.GraphicsDevice, bytes);
-            }
-        }
-
         public ObjectRenderer(Document doc) {
             Document = doc;
 
-            ViewportSpace.BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
-            ViewportSpace.TexturedLightmapped = LoadEffect("Shaders/texturedLightmapped.mgfx");
-            ViewportSpace.TexturedShaded = LoadEffect("Shaders/texturedShaded.mgfx");
-            ViewportSpace.SolidShaded = LoadEffect("Shaders/solidShaded.mgfx");
-            ViewportSpace.Solid = LoadEffect("Shaders/solid.mgfx");
-            ViewportSpace.Solid = LoadEffect("Shaders/solid.mgfx");
+            Effects.BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+            Effects.TexturedLightmapped = GlobalGraphics.LoadEffect("Shaders/texturedLightmapped.mgfx");
+            Effects.TexturedShaded = GlobalGraphics.LoadEffect("Shaders/texturedShaded.mgfx");
+            Effects.SolidShaded = GlobalGraphics.LoadEffect("Shaders/solidShaded.mgfx");
+            Effects.Solid = GlobalGraphics.LoadEffect("Shaders/solid.mgfx");
 
             foreach (Solid solid in doc.Map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
                 solid.Faces.ForEach(f => AddFace(f));
@@ -543,35 +545,35 @@ namespace CBRE.Editor.Rendering {
         }
 
         public Microsoft.Xna.Framework.Matrix World {
-            get { return ViewportSpace.BasicEffect.World; }
+            get { return Effects.BasicEffect.World; }
             set {
-                ViewportSpace.BasicEffect.World = value;
-                ViewportSpace.TexturedLightmapped.Parameters["World"].SetValue(value);
-                ViewportSpace.TexturedShaded.Parameters["World"].SetValue(value);
-                ViewportSpace.SolidShaded.Parameters["World"].SetValue(value);
-                ViewportSpace.Solid.Parameters["World"].SetValue(value);
+                Effects.BasicEffect.World = value;
+                Effects.TexturedLightmapped.Parameters["World"].SetValue(value);
+                Effects.TexturedShaded.Parameters["World"].SetValue(value);
+                Effects.SolidShaded.Parameters["World"].SetValue(value);
+                Effects.Solid.Parameters["World"].SetValue(value);
             }
         }
 
         public Microsoft.Xna.Framework.Matrix View {
-            get { return ViewportSpace.BasicEffect.View; }
+            get { return Effects.BasicEffect.View; }
             set {
-                ViewportSpace.BasicEffect.View = value;
-                ViewportSpace.TexturedLightmapped.Parameters["View"].SetValue(value);
-                ViewportSpace.TexturedShaded.Parameters["View"].SetValue(value);
-                ViewportSpace.SolidShaded.Parameters["View"].SetValue(value);
-                ViewportSpace.Solid.Parameters["View"].SetValue(value);
+                Effects.BasicEffect.View = value;
+                Effects.TexturedLightmapped.Parameters["View"].SetValue(value);
+                Effects.TexturedShaded.Parameters["View"].SetValue(value);
+                Effects.SolidShaded.Parameters["View"].SetValue(value);
+                Effects.Solid.Parameters["View"].SetValue(value);
             }
         }
 
         public Microsoft.Xna.Framework.Matrix Projection {
-            get { return ViewportSpace.BasicEffect.Projection; }
+            get { return Effects.BasicEffect.Projection; }
             set {
-                ViewportSpace.BasicEffect.Projection = value;
-                ViewportSpace.TexturedLightmapped.Parameters["Projection"].SetValue(value);
-                ViewportSpace.TexturedShaded.Parameters["Projection"].SetValue(value);
-                ViewportSpace.SolidShaded.Parameters["Projection"].SetValue(value);
-                ViewportSpace.Solid.Parameters["Projection"].SetValue(value);
+                Effects.BasicEffect.Projection = value;
+                Effects.TexturedLightmapped.Parameters["Projection"].SetValue(value);
+                Effects.TexturedShaded.Parameters["Projection"].SetValue(value);
+                Effects.SolidShaded.Parameters["Projection"].SetValue(value);
+                Effects.Solid.Parameters["Projection"].SetValue(value);
             }
         }
 
@@ -588,30 +590,30 @@ namespace CBRE.Editor.Rendering {
                         translucentGeom.Add((asyncTexture, kvp.Value));
                         continue;
                     } else {
-                        ViewportSpace.TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
-                        ViewportSpace.TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                        Effects.TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
+                        Effects.TexturedShaded.CurrentTechnique.Passes[0].Apply();
                     }
                 } else {
-                    ViewportSpace.SolidShaded.CurrentTechnique.Passes[0].Apply();
+                    Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
                 }
                 kvp.Value.RenderSolid();
             }
             
-            ViewportSpace.SolidShaded.CurrentTechnique.Passes[0].Apply();
+            Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
 
             var prevDepthStencilState = GlobalGraphics.GraphicsDevice.DepthStencilState;
             GlobalGraphics.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true, DepthBufferWriteEnable = false };
             foreach (var (texture, geometry) in translucentGeom) {
-                ViewportSpace.TexturedShaded.Parameters["xTexture"].SetValue(texture.MonoGameTexture);
-                ViewportSpace.TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                Effects.TexturedShaded.Parameters["xTexture"].SetValue(texture.MonoGameTexture);
+                Effects.TexturedShaded.CurrentTechnique.Passes[0].Apply();
                 geometry.RenderSolid();
             }
             GlobalGraphics.GraphicsDevice.DepthStencilState = prevDepthStencilState;
         }
 
         public void RenderSprites(Viewport3D vp) {
-            ViewportSpace.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
             var sprites = Document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData != null && e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
             foreach (var sprite in sprites) {
                 string key = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "sprite").Values.FirstOrDefault();
@@ -633,22 +635,22 @@ namespace CBRE.Editor.Rendering {
                     PrimitiveDrawing.Vertex3(c + up + right, 1f, 0f);
                     PrimitiveDrawing.Vertex3(c - up + right, 1f, 1f);
                     PrimitiveDrawing.Vertex3(c - up - right, 0f, 1f);
-                    ViewportSpace.BasicEffect.Texture = PrimitiveDrawing.Texture;
-                    ViewportSpace.BasicEffect.DiffuseColor = fcolor.ToXna() / 255f;
-                    ViewportSpace.BasicEffect.TextureEnabled = true;
-                    ViewportSpace.BasicEffect.VertexColorEnabled = false;
-                    ViewportSpace.BasicEffect.CurrentTechnique.Passes[0].Apply();
+                    Effects.BasicEffect.Texture = PrimitiveDrawing.Texture;
+                    Effects.BasicEffect.DiffuseColor = fcolor.ToXna() / 255f;
+                    Effects.BasicEffect.TextureEnabled = true;
+                    Effects.BasicEffect.VertexColorEnabled = false;
+                    Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
                     PrimitiveDrawing.End();
                     t.Unbind();
                 }
             }
-            ViewportSpace.BasicEffect.TextureEnabled = false;
-            ViewportSpace.BasicEffect.VertexColorEnabled = true;
+            Effects.BasicEffect.TextureEnabled = false;
+            Effects.BasicEffect.VertexColorEnabled = true;
         }
 
         public void RenderModels() {
             // Models
-            ViewportSpace.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
             var models = Document.Map.WorldSpawn
                 .Find(x => x is Entity e && e.GameData != null && e.GameData.Behaviours.Any(p => p.Name == "model"))
                 .OfType<Entity>().ToList();
@@ -666,7 +668,7 @@ namespace CBRE.Editor.Rendering {
                                       * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
                                       * Matrix.RotationZ(DMath.DegreesToRadians(euler.Y))
                                       * Matrix.Scale(scale);
-                    ModelRenderer.Render(this.models[path].Model, modelMat, ViewportSpace.BasicEffect);
+                    ModelRenderer.Render(this.models[path].Model, modelMat, Effects.BasicEffect);
                 } else if (ModelProvider.CanLoad(file)) {
                     ModelReference mref = ModelProvider.CreateModelReference(file);
                     this.models.Add(path, mref);
@@ -676,23 +678,23 @@ namespace CBRE.Editor.Rendering {
 
         public void RenderLightmapped() {
             TextureItem rem = TextureProvider.GetItem("tooltextures/remove_face");
-            ViewportSpace.TexturedLightmapped.Parameters["Alpha"].SetValue(1f/*Document.MGLightmaps.Length*/);
+            Effects.TexturedLightmapped.Parameters["Alpha"].SetValue(1f/*Document.MGLightmaps.Length*/);
             foreach (var kvp in brushGeom) {
                 kvp.Value.ResetLightmapped();
                 for (int i = 0; i < Document.MGLightmaps.Length; i++) {
                     TextureItem item = TextureProvider.GetItem(kvp.Key);
                     
                     if (Document.MGLightmaps[i] != null) {
-                        ViewportSpace.TexturedLightmapped.Parameters["yTexture"].SetValue(Document.MGLightmaps[i]);
+                        Effects.TexturedLightmapped.Parameters["yTexture"].SetValue(Document.MGLightmaps[i]);
                     }
                     else {
                         // Logging.Logger.Log(new Logging.ExceptionInfo(new Exception("No lightmap texture."), ""));
                     }
 
                     if (item != null && item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
-                        ViewportSpace.TexturedLightmapped.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
+                        Effects.TexturedLightmapped.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
                     }
-                    ViewportSpace.TexturedLightmapped.CurrentTechnique.Passes[0].Apply();
+                    Effects.TexturedLightmapped.CurrentTechnique.Passes[0].Apply();
                     kvp.Value.UpdateLightmapBuffers(i);
                 }
                 {
@@ -700,31 +702,31 @@ namespace CBRE.Editor.Rendering {
                     kvp.Value.RenderLightmapped(i, i + 1 >= Document.MGLightmaps.Length);
                 }
             }
-            ViewportSpace.SolidShaded.CurrentTechnique.Passes[0].Apply();
+            Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
 
         }
 
         public void RenderSolidUntextured() {
             foreach (var kvp in brushGeom) {
-                ViewportSpace.SolidShaded.CurrentTechnique.Passes[0].Apply();
+                Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
                 kvp.Value.RenderSolid();
             }
-            ViewportSpace.SolidShaded.CurrentTechnique.Passes[0].Apply();
+            Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
         }
 
         public void RenderFlatUntextured() {
             foreach (var kvp in brushGeom) {
-                ViewportSpace.Solid.CurrentTechnique.Passes[0].Apply();
+                Effects.Solid.CurrentTechnique.Passes[0].Apply();
                 kvp.Value.RenderSolid();
             }
-            ViewportSpace.SolidShaded.CurrentTechnique.Passes[0].Apply();
+            Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
             pointEntityGeometry.RenderSolid();
         }
 
         public void RenderWireframe() {
-            ViewportSpace.Solid.CurrentTechnique.Passes[0].Apply();
+            Effects.Solid.CurrentTechnique.Passes[0].Apply();
             foreach (var kvp in brushGeom) {
                 kvp.Value.RenderWireframe();
             }

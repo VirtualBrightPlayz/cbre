@@ -12,7 +12,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
@@ -20,6 +19,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
+using Color = Microsoft.Xna.Framework.Color;
+using Rectangle = System.Drawing.Rectangle;
+using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     sealed class Lightmapper {
@@ -93,11 +96,66 @@ namespace CBRE.Editor.Compiling.Lightmap {
         }
 
         public void Render() {
-            var atlases = PrepareUvCoords();
+            using Effect lmPhong = GlobalGraphics.LoadEffect("Shaders/lmPhong.mgfx");
+            lmPhong.Parameters["lightRange"].SetValue(1000.0f);
+            lmPhong.Parameters["lightPos"].SetValue(new Vector3(0.0f, 0.0f, 400.0f));
+            lmPhong.Parameters["lightColor"].SetValue(Color.LightSlateGray.ToVector4());
             
+            lmPhong.CurrentTechnique.Passes[0].Apply();
+            
+            var gd = GlobalGraphics.GraphicsDevice;
+            
+            var atlases = PrepareUvCoords();
+            foreach (int atlasIndex in Enumerable.Range(0, atlases.Length)) {
+                var atlas = atlases[atlasIndex];
+                var faces = atlas.Groups
+                    .SelectMany(g => g.Faces)
+                    .ToImmutableArray();
+                var vertices = faces
+                    .SelectMany(f => f.Vertices)
+                    .ToImmutableArray();
+                var indices = new List<ushort>();
+                long indexOffset = 0;
+                foreach (var f in faces) {
+                    indices.AddRange(f.GetTriangleIndices().Select(i => (ushort)(i+indexOffset)));
+                    indexOffset += f.Vertices.Length;
+                }
+                
+                using VertexBuffer vertexBuffer = new VertexBuffer(
+                    gd,
+                    ObjectRenderer.BrushVertex.VertexDeclaration,
+                    vertices.Length,
+                    BufferUsage.None);
+                using IndexBuffer indexBuffer = new IndexBuffer(
+                    gd,
+                    IndexElementSize.SixteenBits,
+                    indices.Count,
+                    BufferUsage.None);
+                using RenderTarget2D atlasTexture = new RenderTarget2D(
+                    gd,
+                    LightmapConfig.TextureDims,
+                    LightmapConfig.TextureDims);
+                
+                gd.SetRenderTarget(atlasTexture);
+                gd.Clear(Color.Magenta);
+                vertexBuffer.SetData(vertices
+                    .Select(v => new ObjectRenderer.BrushVertex(v.OriginalVertex))
+                    .ToArray());
+                indexBuffer.SetData(indices.ToArray());
+                gd.SetVertexBuffer(vertexBuffer);
+                gd.Indices = indexBuffer;
+                gd.DrawIndexedPrimitives(
+                    primitiveType: PrimitiveType.TriangleList,
+                    0, 0, indices.Count / 3);
+                gd.SetRenderTarget(null);
+
+                string resultFilename = $"lm{atlasIndex}.png";
+                using var fileSaveStream = File.Open(resultFilename, FileMode.Create);
+                atlasTexture.SaveAsPng(fileSaveStream, atlasTexture.Width, atlasTexture.Height);
+            }
         }
         
-        private List<Atlas> PrepareUvCoords() {
+        private ImmutableArray<Atlas> PrepareUvCoords() {
             List<LightmapGroup> remainingGroups = Groups
                 .OrderByDescending(g => g.Width * g.Height)
                 .ThenByDescending(g => g.Width)
@@ -129,7 +187,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 atlases.Add(newAtlas);
             }
 
-            return atlases;
+            return atlases.ToImmutableArray();
         }
         
         
@@ -173,13 +231,14 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     }
                 }
 
-                if (!fits) { return; } //The given group simply does not fit in the given area, give up
+                if (!fits) { continue; } //The given group simply does not fit in the given area, try the next one
 
-                usedWidth += downscaledWidth;
-                usedHeight += downscaledHeight;
-                lmGroups.RemoveAt(i); i--; //Remove the current group from the list of pending groups
+                lmGroups.RemoveAt(i); //Remove the current group from the list of pending groups
+                
                 lmGroup.WriteU = area.Left;
                 lmGroup.WriteV = area.Top;
+                usedWidth += downscaledWidth;
+                usedHeight += downscaledHeight;
                 
                 //There are now four regions that are considered to introduce more groups:
                 //  XXXXXXXX | AAAAAAAA
@@ -235,9 +294,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     CalculateUv(lmGroups, remainder,
                         out int subWidth, out int subHeight);
 
-                    usedWidth += subWidth;
-                    usedHeight += subHeight;
+                    usedWidth = Math.Max(usedWidth, downscaledWidth + LightmapConfig.PlaneMargin + subWidth);
+                    usedHeight = Math.Max(usedHeight, downscaledHeight + LightmapConfig.PlaneMargin + subHeight);
                 }
+
+                //We managed to fit at least one group, we're done here!
+                return;
             }
         }
     }

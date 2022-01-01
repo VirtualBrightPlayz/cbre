@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using CBRE.Settings;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     sealed class LMFace {
@@ -118,8 +119,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         public void UpdateLmUv(LightmapGroup group) {
             foreach (var vertex in Vertices) {
-                vertex.LMU = group.WriteU + (vertex.Location.Dot(group.UAxis)) - group.MinTotalU.Value;
-                vertex.LMV = group.WriteV + (vertex.Location.Dot(group.VAxis)) - group.MinTotalV.Value;
+                var u = vertex.Location.Dot(group.UAxis);
+                var v = vertex.Location.Dot(group.VAxis);
+                vertex.LMU = (group.WriteU + (u - group.MinTotalU.Value) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
+                vertex.LMV = (group.WriteV + (v - group.MinTotalV.Value) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
             }
         }
 

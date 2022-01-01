@@ -25,10 +25,12 @@ namespace CBRE.Editor.Popup {
         public ExportPopup(Document document) : base("Export / Compile") {
             this.document = document;
             downscaleFactor = LightmapConfig.DownscaleFactor;
+            var lightmapper = new Lightmapper(document);
+            lightmapper.Render();
         }
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
-            throw new NotImplementedException();
+            shouldBeOpen = false;
         }
     }
 }

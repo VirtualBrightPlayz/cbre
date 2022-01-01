@@ -66,13 +66,13 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
             foreach (LMFace face in Faces) {
                 foreach (Vector3F coord in face.Vertices.Select(x => x.Location)) {
-                    float x = coord.Dot(UAxis);
-                    float y = coord.Dot(VAxis);
+                    float u = coord.Dot(UAxis);
+                    float v = coord.Dot(VAxis);
 
-                    if (MinTotalU == null || x < MinTotalU) { MinTotalU = x; }
-                    if (MinTotalV == null || y < MinTotalV) { MinTotalV = y; }
-                    if (MaxTotalU == null || x > MaxTotalU) { MaxTotalU = x; }
-                    if (MaxTotalV == null || y > MaxTotalV) { MaxTotalV = y; }
+                    if (MinTotalU == null || u < MinTotalU) { MinTotalU = u; }
+                    if (MinTotalV == null || v < MinTotalV) { MinTotalV = v; }
+                    if (MaxTotalU == null || u > MaxTotalU) { MaxTotalU = u; }
+                    if (MaxTotalV == null || v > MaxTotalV) { MaxTotalV = v; }
                 }
             }
 

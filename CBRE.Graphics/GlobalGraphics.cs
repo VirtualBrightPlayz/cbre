@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,6 +26,14 @@ namespace CBRE.Graphics {
             GraphicsDevice = gfxDev;
             Window = window;
             ImGuiRenderer = imGuiRenderer;
+        }
+        
+        
+        public static Effect LoadEffect(string filename) {
+            using var fs = File.OpenRead(filename);
+            byte[] bytes = new byte[fs.Length];
+            fs.Read(bytes, 0, bytes.Length);
+            return new Effect(GraphicsDevice, bytes);
         }
     }
 }
