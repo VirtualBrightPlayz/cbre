@@ -27,11 +27,11 @@ using Vector3 = Microsoft.Xna.Framework.Vector3;
 namespace CBRE.Editor.Compiling.Lightmap {
     sealed class Lightmapper {
         public readonly Document Document;
-        public readonly ImmutableHashSet<LMFace> OpaqueFaces;
-        public readonly ImmutableHashSet<LMFace> TranslucentFaces;
-        public readonly ImmutableHashSet<LMFace> ToolFaces;
-        public readonly ImmutableHashSet<LMFace> UnclassifiedFaces;
-        public readonly ImmutableHashSet<LightmapGroup> Groups;
+        public readonly ImmutableArray<LMFace> OpaqueFaces;
+        public readonly ImmutableArray<LMFace> TranslucentFaces;
+        public readonly ImmutableArray<LMFace> ToolFaces;
+        public readonly ImmutableArray<LMFace> UnclassifiedFaces;
+        public readonly ImmutableArray<LightmapGroup> Groups;
         
         public Lightmapper(Document document) {
             Document = document;
@@ -42,12 +42,11 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 .OfType<Solid>();
             var allFaces = solids.SelectMany(s => s.Faces);
             
-            HashSet<LMFace> opaqueFaces = new();
-            HashSet<LMFace> translucentFaces = new();
-            HashSet<LMFace> toolFaces = new();
-            HashSet<LMFace> unclassifiedFaces = new();
+            List<LMFace> opaqueFaces = new();
+            List<LMFace> translucentFaces = new();
+            List<LMFace> toolFaces = new();
+            List<LMFace> unclassifiedFaces = new();
             foreach (var face in allFaces) {
-                face.Vertices.ForEach(v => { v.LMU = -500.0f; v.LMV = -500.0f; });
                 face.UpdateBoundingBox();
                 
                 LMFace lmFace = new LMFace(face);
@@ -62,12 +61,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
             }
 
-            OpaqueFaces = opaqueFaces.ToImmutableHashSet();
-            TranslucentFaces = translucentFaces.ToImmutableHashSet();
-            ToolFaces = toolFaces.ToImmutableHashSet();
-            UnclassifiedFaces = unclassifiedFaces.ToImmutableHashSet();
+            OpaqueFaces = opaqueFaces.ToImmutableArray();
+            TranslucentFaces = translucentFaces.ToImmutableArray();
+            ToolFaces = toolFaces.ToImmutableArray();
+            UnclassifiedFaces = unclassifiedFaces.ToImmutableArray();
 
-            HashSet<LightmapGroup> groups = new();
+            List<LightmapGroup> groups = new();
 
             foreach (var face in OpaqueFaces) {
                 LightmapGroup group = LightmapGroup.FindCoplanar(groups, face);
@@ -78,18 +77,18 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 group.AddFace(face);
             }
 
-            Groups = groups.ToImmutableHashSet();
+            Groups = groups.ToImmutableArray();
         }
 
 
         public class Atlas {
             public readonly ImmutableHashSet<LightmapGroup> Groups;
 
-            public Atlas(IEnumerable<LightmapGroup> groups) {
+            public Atlas(IEnumerable<LightmapGroup> groups, int lmIndex) {
                 Groups = groups.ToImmutableHashSet();
                 foreach (var group in Groups) {
                     foreach (var face in group.Faces) {
-                        face.UpdateLmUv(group);
+                        face.UpdateLmUv(group, lmIndex);
                     }
                 }
             }
@@ -120,6 +119,13 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 .ToImmutableArray();
 
             var gd = GlobalGraphics.GraphicsDevice;
+
+            if (Document.MGLightmaps is not null) {
+                foreach (var lm in Document.MGLightmaps) {
+                    lm.Dispose();
+                }
+                Document.MGLightmaps = null;
+            }
             
             var atlases = PrepareUvCoords();
             foreach (int atlasIndex in Enumerable.Range(0, atlases.Length)) {
@@ -133,7 +139,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 var indices = new List<ushort>();
                 long indexOffset = 0;
                 foreach (var f in faces) {
-                    indices.AddRange(f.GetTriangleIndices().Select(i => (ushort)(i+indexOffset)));
+                    indices.AddRange(
+                        f.GetTriangleIndices()
+                        .Select(i => (ushort)(i+indexOffset))
+                        .Reverse());
                     indexOffset += f.Vertices.Length;
                 }
                 
@@ -147,10 +156,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     IndexElementSize.SixteenBits,
                     indices.Count,
                     BufferUsage.None);
-                using RenderTarget2D atlasTexture = new RenderTarget2D(
+                RenderTarget2D atlasTexture = new RenderTarget2D(
                     gd,
                     LightmapConfig.TextureDims,
                     LightmapConfig.TextureDims);
+                Document.MGLightmaps ??= new List<Texture2D>();
+                Document.MGLightmaps.Add(atlasTexture);
                 
                 gd.SetRenderTarget(atlasTexture);
                 gd.Clear(Color.Magenta);
@@ -182,6 +193,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 using var fileSaveStream = File.Open(resultFilename, FileMode.Create);
                 atlasTexture.SaveAsPng(fileSaveStream, atlasTexture.Width, atlasTexture.Height);
             }
+            
+            Document.ObjectRenderer.MarkDirty();
         }
         
         private ImmutableArray<Atlas> PrepareUvCoords() {
@@ -192,7 +205,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 .ToList();
 
             List<Atlas> atlases = new();
-            
+
             while (remainingGroups.Any()) {
                 int prevCount = remainingGroups.Count;
                 
@@ -212,10 +225,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
                         $"{prevCount} lightmap groups do not fit within the given resolution and downscale factor");
                 }
 
-                var newAtlas = new Atlas(prevGroups.Where(g => !remainingGroups.Contains(g)));
+                var newAtlas = new Atlas(prevGroups.Where(g => !remainingGroups.Contains(g)), atlases.Count);
                 atlases.Add(newAtlas);
             }
-
+            
             return atlases.ToImmutableArray();
         }
         

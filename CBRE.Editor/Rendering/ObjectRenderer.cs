@@ -6,6 +6,7 @@ using System.Text;
 using CBRE.Common;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
+using CBRE.Editor.Actions.MapObjects.Operations;
 using CBRE.Editor.Compiling.Lightmap;
 using CBRE.Editor.Documents;
 using CBRE.Extensions;
@@ -254,84 +255,170 @@ namespace CBRE.Editor.Rendering {
             public BrushGeometry(Document doc) { document = doc; }
 
             private readonly Document document;
-            private BrushVertex[] vertices = null;
-            private int vertexCount = 0;
-            private VertexBuffer vertexBuffer = null;
-            
-            private ushort[] indicesSolid = null;
-            private int indexSolidCount = 0;
-            private IndexBuffer indexBufferSolid = null;
-            
-            private ushort[] indicesWireframe = null;
-            private int indexWireframeCount = 0;
-            private IndexBuffer indexBufferWireframe = null;
 
-            private List<Face> faces = new List<Face>();
+            private class Mesh : IDisposable {
+                public abstract class BufferTracker<BufferType, ElemType> : IDisposable
+                    where BufferType : GraphicsResource
+                    where ElemType : struct {
+
+                    protected ElemType[] elements { get; private set; } = Array.Empty<ElemType>();
+                    public BufferType Buffer { get; private set; } = null;
+
+                    public int Count { get; private set; } = 0;
+
+                    public bool Empty => Count <= 0;
+                    
+                    public void ResizeAndReset(int newSize) {
+                        Count = 0;
+                        if (Buffer is null
+                            || elements.Length < newSize
+                            || elements.Length > newSize * 2
+                           ) {
+                            elements = new ElemType[(int)(newSize * 1.5f)];
+                            Buffer?.Dispose();
+                            Buffer = CreateResource();
+                        }
+                    }
+
+                    public void Add(ElemType newElem) {
+                        elements[Count] = newElem;
+                        Count++;
+                    }
+
+                    public abstract void Submit();
+                    
+                    protected abstract BufferType CreateResource();
+
+                    public void Dispose() {
+                        Buffer?.Dispose();
+                    }
+                }
+                
+                public class VertexCollection : BufferTracker<VertexBuffer, BrushVertex> {
+                    public override void Submit()
+                        => Buffer.SetData(elements, 0, Count);
+
+                    protected override VertexBuffer CreateResource()
+                        => new(
+                            GlobalGraphics.GraphicsDevice,
+                            BrushVertex.VertexDeclaration,
+                            elements.Length,
+                            BufferUsage.None);
+                }
+
+                public class IndexCollection : BufferTracker<IndexBuffer, ushort> {
+                    public override void Submit()
+                        => Buffer.SetData(elements, 0, Count);
+                    
+                    protected override IndexBuffer CreateResource()
+                        => new(
+                            GlobalGraphics.GraphicsDevice,
+                            IndexElementSize.SixteenBits,
+                            elements.Length,
+                            BufferUsage.None);
+                }
+
+                public readonly VertexCollection Vertices = new();
+                public readonly IndexCollection SolidIndices = new();
+                public readonly IndexCollection WireframeIndices = new();
+
+                public bool Empty => Vertices.Empty || SolidIndices.Empty || WireframeIndices.Empty;
+
+                public void RenderWireframe() {
+                    if (WireframeIndices.Count <= 0) { return; }
+                    GlobalGraphics.GraphicsDevice.SetVertexBuffer(Vertices.Buffer);
+                    GlobalGraphics.GraphicsDevice.Indices = WireframeIndices.Buffer;
+                    GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, WireframeIndices.Count / 2);
+                }
+                
+                public void RenderSolid() {
+                    if (SolidIndices.Count <= 0) { return; }
+                    GlobalGraphics.GraphicsDevice.SetVertexBuffer(Vertices.Buffer);
+                    GlobalGraphics.GraphicsDevice.Indices = SolidIndices.Buffer;
+                    GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, SolidIndices.Count / 3);
+                }
+                
+                public void Submit() {
+                    Vertices.Submit();
+                    SolidIndices.Submit();
+                    WireframeIndices.Submit();
+                }
+                
+                public void Dispose() {
+                    Vertices?.Dispose();
+                    SolidIndices?.Dispose();
+                    WireframeIndices?.Dispose();
+                }
+            }
+
+            private readonly Dictionary<int, Mesh> lmMeshes = new();
+
+            private readonly List<Face> faces = new();
 
             private bool dirty = false;
 
             private void UpdateBuffers() {
                 if (!dirty) { return; }
 
-                vertexCount = 0;
-                indexSolidCount = 0;
-                indexWireframeCount = 0;
+                Dictionary<int, int> vertexCounts = new();
+                Dictionary<int, int> indexSolidCounts = new();
+                Dictionary<int, int> indexWireframeCounts = new();
+
+                void addCount(Dictionary<int, int> counts, int lmIndex, int valueToAdd)
+                    => counts[lmIndex] = (counts.TryGetValue(lmIndex, out var prevValue)
+                        ? prevValue
+                        : 0) + valueToAdd;
                 for (int i=0;i<faces.Count;i++) {
-                    faces[i].CalculateTextureCoordinates(true);
-                    vertexCount += faces[i].Vertices.Count;
-                    indexSolidCount += (faces[i].Vertices.Count - 2) * 3;
-                    indexWireframeCount += faces[i].Vertices.Count * 2;
+                    faces[i].CalculateTextureCoordinates(minimizeShiftValues: true);
+                    addCount(vertexCounts, faces[i].LmIndex, faces[i].Vertices.Count);
+                    addCount(indexSolidCounts, faces[i].LmIndex, (faces[i].Vertices.Count - 2) * 3);
+                    addCount(indexWireframeCounts, faces[i].LmIndex, faces[i].Vertices.Count * 2);
                 }
 
-                if (vertices == null || vertices.Length < vertexCount) {
-                    vertices = new BrushVertex[vertexCount * 2];
-                    vertexBuffer?.Dispose();
-                    vertexBuffer = new VertexBuffer(GlobalGraphics.GraphicsDevice, BrushVertex.VertexDeclaration, vertexCount * 2, BufferUsage.None);
+                Mesh getMeshForLmIndex(int lmIndex) {
+                    if (!lmMeshes.ContainsKey(lmIndex)) {
+                        lmMeshes[lmIndex] = new Mesh();
+                    }
+                    return lmMeshes[lmIndex];
+                }
+                
+                foreach (var lmIndex in vertexCounts.Keys) {
+                    var mesh = getMeshForLmIndex(lmIndex);
+                    mesh.Vertices.ResizeAndReset(vertexCounts[lmIndex]);
+                    mesh.SolidIndices.ResizeAndReset(indexSolidCounts[lmIndex]);
+                    mesh.WireframeIndices.ResizeAndReset(indexWireframeCounts[lmIndex]);
                 }
 
-                if (indicesSolid == null || indicesSolid.Length < indexSolidCount) {
-                    indicesSolid = new ushort[indexSolidCount * 2];
-                    indexBufferSolid?.Dispose();
-                    indexBufferSolid = new IndexBuffer(GlobalGraphics.GraphicsDevice, IndexElementSize.SixteenBits, indexSolidCount * 2, BufferUsage.None);
-                }
+                foreach (var lmIndex in lmMeshes.Keys.ToArray()) {
+                    if (vertexCounts.ContainsKey(lmIndex)) { continue; }
 
-                if (indicesWireframe == null || indicesWireframe.Length < indexWireframeCount) {
-                    indicesWireframe = new ushort[indexWireframeCount * 2];
-                    indexBufferWireframe?.Dispose();
-                    indexBufferWireframe = new IndexBuffer(GlobalGraphics.GraphicsDevice, IndexElementSize.SixteenBits, indexWireframeCount * 2, BufferUsage.None);
+                    lmMeshes[lmIndex].Dispose();
+                    lmMeshes.Remove(lmIndex);
                 }
 
                 int vertexIndex = 0;
-                int index3dIndex = 0;
-                int index2dIndex = 0;
-                for (int i = 0; i < faces.Count; i++) {
-                    for (int j=0;j<faces[i].Vertices.Count;j++) {
-                        var location = faces[i].Vertices[j].Location;
-                        vertices[vertexIndex + j].Position = new Microsoft.Xna.Framework.Vector3((float)location.X, (float)location.Y, (float)location.Z);
-                        var normal = faces[i].Plane.Normal;
-                        vertices[vertexIndex + j].Normal = new Microsoft.Xna.Framework.Vector3((float)normal.X, (float)normal.Y, (float)normal.Z);
-                        var diffUv = new Microsoft.Xna.Framework.Vector2((float)faces[i].Vertices[j].DTextureU, (float)faces[i].Vertices[j].DTextureV);
-                        vertices[vertexIndex + j].DiffuseUV = diffUv;
-                        var lmUv = new Microsoft.Xna.Framework.Vector2((float)faces[i].Vertices[j].LMU, (float)faces[i].Vertices[j].LMV);
-                        vertices[vertexIndex + j].LightmapUV = lmUv;
-                        vertices[vertexIndex + j].Color = new Microsoft.Xna.Framework.Color(faces[i].Colour.R, faces[i].Colour.G, faces[i].Colour.B, faces[i].Colour.A);
-                        vertices[vertexIndex + j].Selected = document.Selection.IsFaceSelected(faces[i]) ? 1.0f : 0.0f;
-                        indicesWireframe[index2dIndex + (j * 2)] = (ushort)(vertexIndex + j);
-                        indicesWireframe[index2dIndex + (j * 2) + 1] = (ushort)(vertexIndex + ((j + 1) % faces[i].Vertices.Count));
+                foreach (var face in faces) {
+                    var mesh = getMeshForLmIndex(face.LmIndex);
+                    
+                    for (int vertIndex=0;vertIndex<face.Vertices.Count;vertIndex++) {
+                        var newVertex = new BrushVertex(face.Vertices[vertIndex]) {
+                            Selected = document.Selection.IsFaceSelected(face) ? 1.0f : 0.0f
+                        };
+                        mesh.Vertices.Add(newVertex);
+                        mesh.WireframeIndices.Add((ushort)(vertexIndex + vertIndex));
+                        mesh.WireframeIndices.Add((ushort)(vertexIndex + ((vertIndex + 1) % face.Vertices.Count)));
                     }
 
-                    index2dIndex += faces[i].Vertices.Count * 2;
-
-                    foreach (var triangleIndex in faces[i].GetTriangleIndices()) {
-                        indicesSolid[index3dIndex] = (ushort)(vertexIndex + triangleIndex);
-                        index3dIndex++;
+                    foreach (var triangleIndex in face.GetTriangleIndices()) {
+                        mesh.SolidIndices.Add((ushort)(vertexIndex + triangleIndex));
                     }
-                    vertexIndex += faces[i].Vertices.Count;
+                    vertexIndex += face.Vertices.Count;
                 }
 
-                vertexBuffer.SetData(vertices);
-                indexBufferSolid.SetData(indicesSolid);
-                indexBufferWireframe.SetData(indicesWireframe);
+                foreach (var lmIndex in vertexCounts.Keys) {
+                    var mesh = getMeshForLmIndex(lmIndex);
+                    mesh.Submit();
+                }
 
                 dirty = false;
             }
@@ -358,103 +445,29 @@ namespace CBRE.Editor.Rendering {
 
             public void RenderWireframe() {
                 UpdateBuffers();
-                if (indexSolidCount <= 0) { return; }
-                GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
-                GlobalGraphics.GraphicsDevice.Indices = indexBufferWireframe;
-                GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, indexWireframeCount / 2);
+                foreach (var mesh in lmMeshes.Values) {
+                    mesh.RenderWireframe();
+                }
             }
 
-            public void RenderSolid() {
+            public void RenderSolid(int lmIndex = -1) {
                 UpdateBuffers();
-                if (indexSolidCount <= 0) { return; }
-                GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
-                GlobalGraphics.GraphicsDevice.Indices = indexBufferSolid;
-                GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
-            }
-
-            public void ResetLightmapped() {
-                vertexCount = 0;
-                indexSolidCount = 0;
-                indexWireframeCount = 0;
-                for (int i=0;i<faces.Count;i++) {
-                    faces[i].CalculateTextureCoordinates(true);
-                    vertexCount += faces[i].Vertices.Count;
-                    indexSolidCount += (faces[i].Vertices.Count - 2) * 3;
-                    indexWireframeCount += faces[i].Vertices.Count * 2;
-                }
-
-                if (vertices == null || vertices.Length < vertexCount) {
-                    vertices = new BrushVertex[vertexCount * 2];
-                    vertexBuffer?.Dispose();
-                    vertexBuffer = new VertexBuffer(GlobalGraphics.GraphicsDevice, BrushVertex.VertexDeclaration, vertexCount * 2, BufferUsage.None);
-                }
-
-                if (indicesSolid == null || indicesSolid.Length < indexSolidCount) {
-                    indicesSolid = new ushort[indexSolidCount * 2];
-                    indexBufferSolid?.Dispose();
-                    indexBufferSolid = new IndexBuffer(GlobalGraphics.GraphicsDevice, IndexElementSize.SixteenBits, indexSolidCount * 2, BufferUsage.None);
-                }
-
-                if (indicesWireframe == null || indicesWireframe.Length < indexWireframeCount) {
-                    indicesWireframe = new ushort[indexWireframeCount * 2];
-                    indexBufferWireframe?.Dispose();
-                    indexBufferWireframe = new IndexBuffer(GlobalGraphics.GraphicsDevice, IndexElementSize.SixteenBits, indexWireframeCount * 2, BufferUsage.None);
-                }
-            }
-
-            public void RenderLightmapped(int id, bool last) {
-                // if (!dirty) { return; }
-                // UpdateLightmapBuffers(id);
-                if (indexSolidCount <= 0)
+                if (lmIndex >= 0) {
+                    if (lmMeshes.ContainsKey(lmIndex)) {
+                        lmMeshes[lmIndex].RenderSolid();
+                    }
                     return;
-                GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
-                GlobalGraphics.GraphicsDevice.Indices = indexBufferSolid;
-                GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
-                // dirty |= last;
-            }
-
-            public void UpdateLightmapBuffers(int id) {
-                if (!dirty) { return; }
-                dirty = false;
-                var filteredFaces = faces.ToList();
-
-                int vertexIndex = 0;
-                int index3dIndex = 0;
-                int index2dIndex = 0;
-                for (int i = 0; i < filteredFaces.Count; i++) {
-                    // if (filteredFaces[i].LmIndex != id) continue;
-                    for (int j=0;j<filteredFaces[i].Vertices.Count;j++) {
-                        var location = faces[i].Vertices[j].Location;
-                        vertices[vertexIndex + j].Position = new Microsoft.Xna.Framework.Vector3((float)location.X, (float)location.Y, (float)location.Z);
-                        var normal = filteredFaces[i].Plane.Normal;
-                        vertices[vertexIndex + j].Normal = new Microsoft.Xna.Framework.Vector3((float)normal.X, (float)normal.Y, (float)normal.Z);
-                        var diffUv = new Microsoft.Xna.Framework.Vector2((float)filteredFaces[i].Vertices[j].DTextureU, (float)filteredFaces[i].Vertices[j].DTextureV);
-                        vertices[vertexIndex + j].DiffuseUV = diffUv;
-                        var lmUv = new Microsoft.Xna.Framework.Vector2((float)filteredFaces[i].Vertices[j].LMU, (float)filteredFaces[i].Vertices[j].LMV);
-                        vertices[vertexIndex + j].LightmapUV = lmUv;
-                        vertices[vertexIndex + j].Color = new Microsoft.Xna.Framework.Color(filteredFaces[i].Colour.R, filteredFaces[i].Colour.G, filteredFaces[i].Colour.B, filteredFaces[i].Colour.A);
-                        vertices[vertexIndex + j].Selected = document.Selection.IsFaceSelected(filteredFaces[i]) ? 1.0f : 0.0f;
-                        indicesWireframe[index2dIndex + (j * 2)] = (ushort)(vertexIndex + j);
-                        indicesWireframe[index2dIndex + (j * 2) + 1] = (ushort)(vertexIndex + ((j + 1) % filteredFaces[i].Vertices.Count));
-                    }
-
-                    index2dIndex += filteredFaces[i].Vertices.Count * 2;
-
-                    foreach (var triangleIndex in filteredFaces[i].GetTriangleIndices()) {
-                        indicesSolid[index3dIndex] = (ushort)(vertexIndex + triangleIndex);
-                        index3dIndex++;
-                    }
-                    vertexIndex += filteredFaces[i].Vertices.Count;
                 }
-
-                vertexBuffer.SetData(vertices);
-                indexBufferSolid.SetData(indicesSolid);
-                indexBufferWireframe.SetData(indicesWireframe);
+                foreach (var mesh in lmMeshes.Values) {
+                    mesh.RenderSolid();
+                }
             }
 
             public void Dispose() {
-                vertexBuffer?.Dispose();
-                indexBufferSolid?.Dispose();
+                foreach (var mesh in lmMeshes.Values) {
+                    mesh.Dispose();
+                }
+                lmMeshes.Clear();
             }
         }
 
@@ -677,29 +690,22 @@ namespace CBRE.Editor.Rendering {
         }
 
         public void RenderLightmapped() {
-            TextureItem rem = TextureProvider.GetItem("tooltextures/remove_face");
-            Effects.TexturedLightmapped.Parameters["Alpha"].SetValue(1f/*Document.MGLightmaps.Length*/);
+            if (Document.MGLightmaps is not {Count: > 0}) {
+                RenderTextured();
+                return;
+            }
+
             foreach (var kvp in brushGeom) {
-                kvp.Value.ResetLightmapped();
-                for (int i = 0; i < Document.MGLightmaps.Length; i++) {
+                for (int i = 0; i < Document.MGLightmaps.Count; i++) {
                     TextureItem item = TextureProvider.GetItem(kvp.Key);
                     
-                    if (Document.MGLightmaps[i] != null) {
-                        Effects.TexturedLightmapped.Parameters["yTexture"].SetValue(Document.MGLightmaps[i]);
-                    }
-                    else {
-                        // Logging.Logger.Log(new Logging.ExceptionInfo(new Exception("No lightmap texture."), ""));
-                    }
+                    Effects.TexturedLightmapped.Parameters["lmTexture"].SetValue(Document.MGLightmaps[i]);
 
-                    if (item != null && item.Texture is AsyncTexture asyncTexture && asyncTexture.MonoGameTexture != null) {
-                        Effects.TexturedLightmapped.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
+                    if (item is {Texture: AsyncTexture {MonoGameTexture: { }} asyncTexture}) {
+                        Effects.TexturedLightmapped.Parameters["diffTexture"].SetValue(asyncTexture.MonoGameTexture);
                     }
                     Effects.TexturedLightmapped.CurrentTechnique.Passes[0].Apply();
-                    kvp.Value.UpdateLightmapBuffers(i);
-                }
-                {
-                    int i = 0;
-                    kvp.Value.RenderLightmapped(i, i + 1 >= Document.MGLightmaps.Length);
+                    kvp.Value.RenderSolid(i);
                 }
             }
             Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();

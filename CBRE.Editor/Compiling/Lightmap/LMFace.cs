@@ -117,7 +117,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
             BoundingBox = new BoxF(Vertices.Select(x => x.Location));
         }
 
-        public void UpdateLmUv(LightmapGroup group) {
+        public void UpdateLmUv(LightmapGroup group, int lmIndex) {
+            LmIndex = lmIndex;
             foreach (var vertex in Vertices) {
                 var u = vertex.Location.Dot(group.UAxis);
                 var v = vertex.Location.Dot(group.VAxis);

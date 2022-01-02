@@ -41,8 +41,7 @@ namespace CBRE.Editor.Documents {
 
         public ObjectRenderer ObjectRenderer { get; private set; }
         public bool LightmapTextureOutdated { get; set; }
-        public ITexture[] Lightmaps { get; set; } = new ITexture[4];
-        public Texture2D[] MGLightmaps { get; set; } = new Texture2D[4];
+        public List<Texture2D> MGLightmaps { get; set; } = null;
 
         private readonly DocumentSubscriptions _subscriptions;
         private readonly DocumentMemory _memory;

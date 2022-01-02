@@ -168,7 +168,7 @@ namespace CBRE.DataStructures.MapObjects {
         }
 
         public virtual void CalculateTextureCoordinates(bool minimizeShiftValues) {
-            if (minimizeShiftValues) MinimiseTextureShiftValues();
+            if (minimizeShiftValues) { MinimiseTextureShiftValues(); }
             Vertices.ForEach(c => c.TextureU = c.TextureV = 0);
 
             if (Texture.Texture == null) return;

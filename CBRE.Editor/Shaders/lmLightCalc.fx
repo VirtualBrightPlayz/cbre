@@ -22,7 +22,7 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
 {
     VertexShaderOutput output;
 
-    output.DrawPosition = float4((input.LmCoord.x*2)-1.0, (input.LmCoord.y*2)-1.0, 0.0, 1.0);
+    output.DrawPosition = float4((input.LmCoord.x*2)-1.0, -(input.LmCoord.y*2)+1.0, 0.0, 1.0);
     output.WorldPosition = input.Position;
     output.Normal = input.Normal;
     output.Color = input.Color;

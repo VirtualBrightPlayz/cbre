@@ -16,8 +16,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public PlaneF? Plane { get; private set; }
         public BoxF? BoundingBox { get; private set; }
 
-        private readonly HashSet<LMFace> faces;
-        public IEnumerable<LMFace> Faces => faces;
+        private readonly List<LMFace> faces;
+        public IReadOnlyList<LMFace> Faces => faces;
 
         public Vector3F? UAxis;
         public Vector3F? VAxis;
@@ -29,7 +29,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public int WriteV;
 
         public LightmapGroup() {
-            faces = new HashSet<LMFace>();
+            faces = new List<LMFace>();
         }
 
         public void AddFace(LMFace face) {
@@ -39,7 +39,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
             BoundingBox = new BoxF(new[] {faceBox, BoundingBox});
             var newPlane = new PlaneF(face.Normal, face.Vertices[0].Location);
             Plane ??= newPlane;
-            Plane = new PlaneF(Plane.Normal, (newPlane.PointOnPlane + Plane.PointOnPlane) / 2.0f);
+            var otherPointOnPlane = Plane.Project(newPlane.PointOnPlane);
+            Plane = new PlaneF(Plane.Normal, (otherPointOnPlane + Plane.PointOnPlane) / 2.0f);
         }
 
         private void CalculateInitialUv() {
@@ -119,7 +120,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             swap(ref UAxis, ref VAxis);
         }
 
-        public static LightmapGroup? FindCoplanar(IEnumerable<LightmapGroup> lmGroups, LMFace otherFace) {
+        public static LightmapGroup? FindCoplanar(IReadOnlyList<LightmapGroup> lmGroups, LMFace otherFace) {
             foreach (LightmapGroup group in lmGroups) {
                 if ((group.Plane.Normal - otherFace.Plane.Normal).LengthSquared() < 0.01f) {
                     PlaneF plane2 = new PlaneF(otherFace.Plane.Normal, otherFace.Vertices[0].Location);
