@@ -95,14 +95,30 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
         }
 
+        private record PointLight(Vector3 Location, float Range, Vector3 Color) {
+            public PointLight(MapObject lightEntity) : this(default, default, default) {
+                Location = lightEntity.BoundingBox.Center.ToXna();
+                
+                var data = lightEntity.GetEntityData();
+                float getPropertyFloat(string key)
+                    => float.TryParse(data.GetPropertyValue(key), NumberStyles.Any, CultureInfo.InvariantCulture,
+                        out float v)
+                        ? v
+                        : 0.0f;
+                
+                Range = getPropertyFloat("range");
+                Color = data.GetPropertyVector3("color").ToXna() * getPropertyFloat("intensity") / 255.0f;
+            }
+        }
+        
         public void Render() {
-            using Effect lmPhong = GlobalGraphics.LoadEffect("Shaders/lmPhong.mgfx");
-            lmPhong.Parameters["lightRange"].SetValue(1000.0f);
-            lmPhong.Parameters["lightPos"].SetValue(new Vector3(0.0f, 0.0f, 400.0f));
-            lmPhong.Parameters["lightColor"].SetValue(Color.LightSlateGray.ToVector4());
-            
-            lmPhong.CurrentTechnique.Passes[0].Apply();
-            
+            using Effect lmLightCalc = GlobalGraphics.LoadEffect("Shaders/lmLightCalc.mgfx");
+
+            var pointLights = Document.Map.WorldSpawn.Find(
+                e => string.Equals(e.GetEntityData()?.Name, "light", StringComparison.OrdinalIgnoreCase))
+                .Select(e => new PointLight(e))
+                .ToImmutableArray();
+
             var gd = GlobalGraphics.GraphicsDevice;
             
             var atlases = PrepareUvCoords();
@@ -144,10 +160,23 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 indexBuffer.SetData(indices.ToArray());
                 gd.SetVertexBuffer(vertexBuffer);
                 gd.Indices = indexBuffer;
-                gd.DrawIndexedPrimitives(
-                    primitiveType: PrimitiveType.TriangleList,
-                    0, 0, indices.Count / 3);
+                for (int i = 0; i < pointLights.Length; i++) {
+                    var pointLight = pointLights[i];
+                    
+                    gd.BlendState = i == 0 ? BlendState.NonPremultiplied : BlendState.Additive;
+
+                    lmLightCalc.Parameters["lightPos"].SetValue(pointLight.Location);
+                    lmLightCalc.Parameters["lightRange"].SetValue(pointLight.Range);
+                    lmLightCalc.Parameters["lightColor"].SetValue(new Vector4(pointLight.Color, 1.0f));
+
+                    lmLightCalc.CurrentTechnique.Passes[0].Apply();
+
+                    gd.DrawIndexedPrimitives(
+                        primitiveType: PrimitiveType.TriangleList,
+                        0, 0, indices.Count / 3);
+                }
                 gd.SetRenderTarget(null);
+                gd.BlendState = BlendState.NonPremultiplied;
 
                 string resultFilename = $"lm{atlasIndex}.png";
                 using var fileSaveStream = File.Open(resultFilename, FileMode.Create);

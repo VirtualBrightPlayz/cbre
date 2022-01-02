@@ -32,9 +32,10 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
 
 float4 PixelShaderF(VertexShaderOutput input) : COLOR0
 {
-    float4 c = lightColor;
-    c *= saturate((lightRange - distance(lightPos, input.WorldPosition.xyz)) / lightRange);
-    c *= saturate(dot(input.WorldPosition.xyz-lightPos, input.Normal));
+    float4 c = saturate((lightRange - distance(lightPos, input.WorldPosition.xyz)) / lightRange);
+    c *= c;
+    c *= saturate(dot(normalize(lightPos - input.WorldPosition.xyz), input.Normal));
+    c *= lightColor;
 
     c.a = 1.0f;
     c.xyz = saturate(c.xyz);

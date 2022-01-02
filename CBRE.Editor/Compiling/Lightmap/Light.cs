@@ -8,7 +8,7 @@ using System.Globalization;
 using System.Linq;
 
 namespace CBRE.Editor.Compiling.Lightmap {
-    class Light {
+    struct Light {
         public Vector3F Color;
         public float Intensity;
         public bool HasSprite;

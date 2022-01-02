@@ -305,7 +305,7 @@
     <None Update="Resources\Tool_Zoom.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Shaders\lmPhong.mgfx">
+    <None Update="Shaders\lmLightCalc.mgfx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Shaders\solid.mgfx">
