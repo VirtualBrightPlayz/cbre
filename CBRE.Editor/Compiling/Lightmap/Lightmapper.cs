@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Color = Microsoft.Xna.Framework.Color;
+using Matrix = Microsoft.Xna.Framework.Matrix;
 using Rectangle = System.Drawing.Rectangle;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
 
@@ -80,7 +81,6 @@ namespace CBRE.Editor.Compiling.Lightmap {
             Groups = groups.ToImmutableArray();
         }
 
-
         public class Atlas {
             public readonly ImmutableHashSet<LightmapGroup> Groups;
 
@@ -107,6 +107,72 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 
                 Range = getPropertyFloat("range");
                 Color = data.GetPropertyVector3("color").ToXna() * getPropertyFloat("intensity") / 255.0f;
+            }
+        }
+
+        private class ShadowMap : IDisposable {
+            private Matrix projectionMatrix;
+            
+            private readonly Matrix[] viewMatrices;
+            
+            private readonly ImmutableArray<Matrix> baseViewMatrices;
+
+            private readonly RenderTarget2D[] renderTargets;
+
+            public ShadowMap(int rtResolution) {
+                projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathF.Tau / 4.0f, 1.0f, 0.0f, 1.0f);
+                
+                var lookAt = new Vector3[] {
+                    new(0, 1, 0),
+                    new(1, 0, 0),
+                    new(0, -1, 0),
+                    new(-1, 0, 0),
+                    new(0, 0, 1),
+                    new(0, 0, -1)
+                };
+                viewMatrices = new Matrix[6];
+                for (int i = 0; i < 6; i++) {
+                    viewMatrices[i] = Matrix.CreateLookAt(
+                        Vector3.Zero,
+                        lookAt[i],
+                        Math.Abs(lookAt[i].Z) > 0.01f ? Vector3.UnitX : Vector3.UnitZ);
+                }
+                baseViewMatrices = viewMatrices.ToImmutableArray();
+
+                renderTargets = new RenderTarget2D[6];
+                for (int i = 0; i < renderTargets.Length; i++) {
+                    renderTargets[i] = new RenderTarget2D(GlobalGraphics.GraphicsDevice, rtResolution, rtResolution);
+                }
+            }
+
+            public void SetRange(float range) {
+                projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathF.Tau / 4.0f, 1.0f, 0.0f, range);
+            }
+
+            public void SetPosition(Vector3 position) {
+                var translation = Matrix.CreateTranslation(-position);
+                for (int i = 0; i < 6; i++) {
+                    viewMatrices[i] = baseViewMatrices[i] * translation;
+                }
+            }
+
+            private void ReleaseUnmanagedResources()
+            {
+                for (int i = 0; i < 6; i++) {
+                    renderTargets[i]?.Dispose();
+                    renderTargets[i] = null;
+                }
+            }
+
+            public void Dispose()
+            {
+                ReleaseUnmanagedResources();
+                GC.SuppressFinalize(this);
+            }
+
+            ~ShadowMap()
+            {
+                ReleaseUnmanagedResources();
             }
         }
         
