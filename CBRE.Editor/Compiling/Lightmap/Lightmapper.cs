@@ -12,6 +12,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.SymbolStore;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
@@ -81,8 +82,13 @@ namespace CBRE.Editor.Compiling.Lightmap {
             Groups = groups.ToImmutableArray();
         }
 
-        public class Atlas {
+        public class Atlas : IDisposable {
             public readonly ImmutableHashSet<LightmapGroup> Groups;
+
+            public VertexBuffer VertexBuffer { get; private set; }
+            public IndexBuffer IndexBuffer { get; private set; }
+
+            private readonly int indexCount;
 
             public Atlas(IEnumerable<LightmapGroup> groups, int lmIndex) {
                 Groups = groups.ToImmutableHashSet();
@@ -91,6 +97,60 @@ namespace CBRE.Editor.Compiling.Lightmap {
                         face.UpdateLmUv(group, lmIndex);
                     }
                 }
+                
+                var faces = Groups
+                    .SelectMany(g => g.Faces)
+                    .ToImmutableArray();
+                var vertices = faces
+                    .SelectMany(f => f.Vertices)
+                    .ToImmutableArray();
+                var indices = new List<ushort>();
+                long indexOffset = 0;
+                foreach (var f in faces) {
+                    indices.AddRange(
+                        f.GetTriangleIndices()
+                            .Select(i => (ushort)(i+indexOffset)));
+                    indexOffset += f.Vertices.Length;
+                }
+                
+                var gd = GlobalGraphics.GraphicsDevice;
+                
+                VertexBuffer = new VertexBuffer(
+                    gd,
+                    ObjectRenderer.BrushVertex.VertexDeclaration,
+                    vertices.Length,
+                    BufferUsage.None);
+                IndexBuffer = new IndexBuffer(
+                    gd,
+                    IndexElementSize.SixteenBits,
+                    indices.Count,
+                    BufferUsage.None);
+                
+                VertexBuffer.SetData(vertices
+                    .Select(v => new ObjectRenderer.BrushVertex(v.OriginalVertex))
+                    .ToArray());
+                IndexBuffer.SetData(indices.ToArray());
+                indexCount = indices.Count;
+            }
+
+            public void Render() {
+                var gd = GlobalGraphics.GraphicsDevice;
+                
+                gd.SetVertexBuffer(VertexBuffer);
+                gd.Indices = IndexBuffer;
+                gd.DrawIndexedPrimitives(
+                    primitiveType: PrimitiveType.TriangleList,
+                    0, 0, indexCount / 3);
+            }
+
+            public void Dispose()
+            {
+                VertexBuffer?.Dispose(); VertexBuffer = null;
+                IndexBuffer?.Dispose(); IndexBuffer = null;
+            }
+
+            ~Atlas() {
+                Dispose();
             }
         }
 
@@ -112,15 +172,18 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         private class ShadowMap : IDisposable {
             private Matrix projectionMatrix;
+            private float lightRange;
             
-            private readonly Matrix[] viewMatrices;
+            public readonly Matrix[] ProjectionViewMatrices;
             
             private readonly ImmutableArray<Matrix> baseViewMatrices;
 
-            private readonly RenderTarget2D[] renderTargets;
+            private Effect depthEffect;
+
+            public readonly RenderTarget2D[] RenderTargets;
 
             public ShadowMap(int rtResolution) {
-                projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathF.Tau / 4.0f, 1.0f, 0.0f, 1.0f);
+                projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathF.Tau / 4.0f, 1.0f, 0.001f, 1.0f);
                 
                 var lookAt = new Vector3[] {
                     new(0, 1, 0),
@@ -130,37 +193,58 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     new(0, 0, 1),
                     new(0, 0, -1)
                 };
-                viewMatrices = new Matrix[6];
+                ProjectionViewMatrices = new Matrix[6];
                 for (int i = 0; i < 6; i++) {
-                    viewMatrices[i] = Matrix.CreateLookAt(
+                    ProjectionViewMatrices[i] = Matrix.CreateLookAt(
                         Vector3.Zero,
                         lookAt[i],
                         Math.Abs(lookAt[i].Z) > 0.01f ? Vector3.UnitX : Vector3.UnitZ);
                 }
-                baseViewMatrices = viewMatrices.ToImmutableArray();
+                baseViewMatrices = ProjectionViewMatrices.ToImmutableArray();
 
-                renderTargets = new RenderTarget2D[6];
-                for (int i = 0; i < renderTargets.Length; i++) {
-                    renderTargets[i] = new RenderTarget2D(GlobalGraphics.GraphicsDevice, rtResolution, rtResolution);
+                depthEffect = GlobalGraphics.LoadEffect("Shaders/depth.mgfx");
+                
+                RenderTargets = new RenderTarget2D[6];
+                for (int i = 0; i < RenderTargets.Length; i++) {
+                    RenderTargets[i] = new RenderTarget2D(
+                        GlobalGraphics.GraphicsDevice,
+                        rtResolution,
+                        rtResolution,
+                        mipMap: false,
+                        preferredFormat: SurfaceFormat.Single,
+                        preferredDepthFormat: DepthFormat.Depth24Stencil8);
                 }
             }
 
-            public void SetRange(float range) {
-                projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathF.Tau / 4.0f, 1.0f, 0.0f, range);
+            public void Prepare(int viewMatrixIndex) {
+                depthEffect.Parameters["ProjectionView"].SetValue(ProjectionViewMatrices[viewMatrixIndex]);
+                depthEffect.Parameters["World"].SetValue(Matrix.Identity);
+
+                depthEffect.CurrentTechnique.Passes[0].Apply();
+                
+                GlobalGraphics.GraphicsDevice.SetRenderTarget(RenderTargets[viewMatrixIndex]);
+                GlobalGraphics.GraphicsDevice.Clear(
+                    ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil,
+                    new Vector4(lightRange, 0.0f, 0.0f, 1.0f),
+                    1.0f, 0);
             }
 
-            public void SetPosition(Vector3 position) {
-                var translation = Matrix.CreateTranslation(-position);
+            public void SetLight(in PointLight light) {
+                projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathF.Tau / 4.0f, 1.0f, 1.0f, light.Range);
+                lightRange = light.Range;
+                
+                Vector3 lightXzy = light.Location.ToCbre().XYZ().ToXna();
+                var translation = Matrix.CreateTranslation(-lightXzy);
                 for (int i = 0; i < 6; i++) {
-                    viewMatrices[i] = baseViewMatrices[i] * translation;
+                    ProjectionViewMatrices[i] = (translation * baseViewMatrices[i]) * projectionMatrix;
                 }
             }
 
             private void ReleaseUnmanagedResources()
             {
                 for (int i = 0; i < 6; i++) {
-                    renderTargets[i]?.Dispose();
-                    renderTargets[i] = null;
+                    RenderTargets[i]?.Dispose();
+                    RenderTargets[i] = null;
                 }
             }
 
@@ -193,77 +277,81 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 Document.MGLightmaps = null;
             }
             
-            var atlases = PrepareUvCoords();
-            foreach (int atlasIndex in Enumerable.Range(0, atlases.Length)) {
-                var atlas = atlases[atlasIndex];
-                var faces = atlas.Groups
-                    .SelectMany(g => g.Faces)
-                    .ToImmutableArray();
-                var vertices = faces
-                    .SelectMany(f => f.Vertices)
-                    .ToImmutableArray();
-                var indices = new List<ushort>();
-                long indexOffset = 0;
-                foreach (var f in faces) {
-                    indices.AddRange(
-                        f.GetTriangleIndices()
-                        .Select(i => (ushort)(i+indexOffset))
-                        .Reverse());
-                    indexOffset += f.Vertices.Length;
+            var atlases = PrepareAtlases();
+
+            void renderAllAtlases() {
+                foreach (var atlas in atlases) {
+                    atlas.Render();
                 }
-                
-                using VertexBuffer vertexBuffer = new VertexBuffer(
-                    gd,
-                    ObjectRenderer.BrushVertex.VertexDeclaration,
-                    vertices.Length,
-                    BufferUsage.None);
-                using IndexBuffer indexBuffer = new IndexBuffer(
-                    gd,
-                    IndexElementSize.SixteenBits,
-                    indices.Count,
-                    BufferUsage.None);
+            }
+
+            void saveTexture(string filePath, Texture2D texture) {
+                using var fileSaveStream = File.Open(filePath, FileMode.Create);
+                texture.SaveAsPng(fileSaveStream, texture.Width, texture.Height);
+            }
+            
+            for (int atlasIndex = 0; atlasIndex < atlases.Length; atlasIndex++) {
+                var atlas = atlases[atlasIndex];
+
                 RenderTarget2D atlasTexture = new RenderTarget2D(
                     gd,
                     LightmapConfig.TextureDims,
-                    LightmapConfig.TextureDims);
+                    LightmapConfig.TextureDims,
+                    mipMap: false,
+                    preferredFormat: SurfaceFormat.Color, /* TODO: HDR */
+                    preferredDepthFormat: DepthFormat.None,
+                    preferredMultiSampleCount: 0,
+                    usage: RenderTargetUsage.PreserveContents);
                 Document.MGLightmaps ??= new List<Texture2D>();
                 Document.MGLightmaps.Add(atlasTexture);
                 
                 gd.SetRenderTarget(atlasTexture);
-                gd.Clear(Color.Magenta);
-                vertexBuffer.SetData(vertices
-                    .Select(v => new ObjectRenderer.BrushVertex(v.OriginalVertex))
-                    .ToArray());
-                indexBuffer.SetData(indices.ToArray());
-                gd.SetVertexBuffer(vertexBuffer);
-                gd.Indices = indexBuffer;
+                gd.Clear(Color.Black);
+
+                using var shadowMap = new ShadowMap(LightmapConfig.TextureDims);
+                
                 for (int i = 0; i < pointLights.Length; i++) {
                     var pointLight = pointLights[i];
+
+                    shadowMap.SetLight(pointLight);
+                    GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
+                    GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
+                    GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                    for (int j = 0; j < 6; j++) {
+                        shadowMap.Prepare(j);
+                        GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                        renderAllAtlases();
+                        saveTexture($"shadowMap_{i}_{j}.png", shadowMap.RenderTargets[j]);
+                    }
                     
+                    gd.SetRenderTarget(atlasTexture);
+
                     gd.BlendState = i == 0 ? BlendState.NonPremultiplied : BlendState.Additive;
 
                     lmLightCalc.Parameters["lightPos"].SetValue(pointLight.Location);
                     lmLightCalc.Parameters["lightRange"].SetValue(pointLight.Range);
                     lmLightCalc.Parameters["lightColor"].SetValue(new Vector4(pointLight.Color, 1.0f));
+                    for (int j = 0; j < 6; j++) {
+                        lmLightCalc.Parameters[$"lightProjView{j}"].SetValue(shadowMap.ProjectionViewMatrices[j]);
+                        lmLightCalc.Parameters[$"lightShadowMap{j}"].SetValue(shadowMap.RenderTargets[j]);
+                    }
 
                     lmLightCalc.CurrentTechnique.Passes[0].Apply();
 
-                    gd.DrawIndexedPrimitives(
-                        primitiveType: PrimitiveType.TriangleList,
-                        0, 0, indices.Count / 3);
+                    GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                    atlas.Render();
                 }
+                
+                saveTexture($"atlas_{atlasIndex}.png", atlasTexture);
+                
                 gd.SetRenderTarget(null);
                 gd.BlendState = BlendState.NonPremultiplied;
-
-                string resultFilename = $"lm{atlasIndex}.png";
-                using var fileSaveStream = File.Open(resultFilename, FileMode.Create);
-                atlasTexture.SaveAsPng(fileSaveStream, atlasTexture.Width, atlasTexture.Height);
             }
             
             Document.ObjectRenderer.MarkDirty();
         }
         
-        private ImmutableArray<Atlas> PrepareUvCoords() {
+        private ImmutableArray<Atlas> PrepareAtlases() {
             List<LightmapGroup> remainingGroups = Groups
                 .OrderByDescending(g => g.Width * g.Height)
                 .ThenByDescending(g => g.Width)

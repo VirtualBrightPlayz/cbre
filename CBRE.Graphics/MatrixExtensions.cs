@@ -36,5 +36,9 @@ namespace CBRE.Graphics {
         public static Microsoft.Xna.Framework.Vector3 ToXna(this Vector3F vector) {
             return new Microsoft.Xna.Framework.Vector3((float)vector.X, (float)vector.Y, (float)vector.Z);
         }
+        
+        public static Vector3 ToCbre(this Microsoft.Xna.Framework.Vector3 vector) {
+            return new Vector3((decimal)vector.X, (decimal)vector.Y, (decimal)vector.Z);
+        }
     }
 }

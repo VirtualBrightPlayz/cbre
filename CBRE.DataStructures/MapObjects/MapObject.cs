@@ -427,7 +427,7 @@ namespace CBRE.DataStructures.MapObjects {
             var thisMatch = matcher(this);
             if (thisMatch) {
                 items.Add(this);
-                if (forceMatchIfParentMatches) matcher = x => true;
+                if (forceMatchIfParentMatches) { matcher = x => true; }
             }
             foreach (var mo in GetChildren()) {
                 mo.FindRecursive(items, matcher, forceMatchIfParentMatches);
