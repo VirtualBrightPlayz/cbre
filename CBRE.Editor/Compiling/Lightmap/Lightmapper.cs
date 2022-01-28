@@ -219,13 +219,14 @@ namespace CBRE.Editor.Compiling.Lightmap {
             public void Prepare(int viewMatrixIndex) {
                 depthEffect.Parameters["ProjectionView"].SetValue(ProjectionViewMatrices[viewMatrixIndex]);
                 depthEffect.Parameters["World"].SetValue(Matrix.Identity);
+                depthEffect.Parameters["maxDepth"].SetValue(lightRange);
 
                 depthEffect.CurrentTechnique.Passes[0].Apply();
                 
                 GlobalGraphics.GraphicsDevice.SetRenderTarget(RenderTargets[viewMatrixIndex]);
                 GlobalGraphics.GraphicsDevice.Clear(
                     ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil,
-                    new Vector4(lightRange, 0.0f, 0.0f, 1.0f),
+                    new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
                     1.0f, 0);
             }
 
@@ -286,7 +287,6 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
 
             void saveTexture(string filePath, Texture2D texture) {
-                return;
                 using var fileSaveStream = File.Open(filePath, FileMode.Create);
                 texture.SaveAsPng(fileSaveStream, texture.Width, texture.Height);
             }
@@ -322,7 +322,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                         shadowMap.Prepare(j);
                         GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
                         renderAllAtlases();
-                        saveTexture($"shadowMap_{i}_{j}.png", shadowMap.RenderTargets[j]);
+                        //saveTexture($"shadowMap_{i}_{j}.png", shadowMap.RenderTargets[j]);
                     }
                     
                     gd.SetRenderTarget(atlasTexture);
@@ -332,6 +332,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     lmLightCalc.Parameters["lightPos"].SetValue(pointLight.Location);
                     lmLightCalc.Parameters["lightRange"].SetValue(pointLight.Range);
                     lmLightCalc.Parameters["lightColor"].SetValue(new Vector4(pointLight.Color, 1.0f));
+                    lmLightCalc.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
                     for (int j = 0; j < 6; j++) {
                         lmLightCalc.Parameters[$"lightProjView{j}"].SetValue(shadowMap.ProjectionViewMatrices[j]);
                         lmLightCalc.Parameters[$"lightShadowMap{j}"].SetValue(shadowMap.RenderTargets[j]);

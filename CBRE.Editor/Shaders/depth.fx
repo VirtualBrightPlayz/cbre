@@ -1,5 +1,6 @@
 float4x4 World;
 float4x4 ProjectionView;
+float maxDepth;
 
 struct VertexShaderInput
 {
@@ -28,7 +29,11 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
 
 float4 PixelShaderF(VertexShaderOutput input) : COLOR0
 {
-    float4 c = float4(input.Position_VisibleToFragShader.z, 0.0, 0.0, 1.0);
+    float4 c = float4(
+        saturate(input.Position_VisibleToFragShader.z / maxDepth),
+        0.0,
+        0.0,
+        1.0);
     //c *= 0.001;
     //c += float4((input.Normal.x + 0.5) / 2.0, (input.Normal.y + 0.5) / 2.0, (input.Normal.z + 0.5) / 2.0, 1.0);
 

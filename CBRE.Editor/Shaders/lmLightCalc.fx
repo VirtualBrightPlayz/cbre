@@ -1,6 +1,7 @@
 float lightRange;
 float3 lightPos;
 float4 lightColor;
+float shadowMapTexelSize;
 
 Matrix lightProjView0;
 Matrix lightProjView1;
@@ -67,8 +68,31 @@ float shadowMapBlocked(sampler smp, float4 position) {
     uv.x += 1.0; uv.y += 1.0;
     uv.xy *= 0.5;
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { return 0.0; }
-    float sample = tex2D(smp, uv).r;
-    return (sample+1.0) < position.z ? 0.0 : 1.0;
+    
+    float sample00 = tex2D(smp, uv+float2(-shadowMapTexelSize, -shadowMapTexelSize)).r * lightRange;
+    float sample10 = tex2D(smp, uv+float2(0, -shadowMapTexelSize)).r * lightRange;
+    float sample20 = tex2D(smp, uv+float2(shadowMapTexelSize, -shadowMapTexelSize)).r * lightRange;
+    
+    float sample01 = tex2D(smp, uv+float2(-shadowMapTexelSize, 0)).r * lightRange;
+    float sample11 = tex2D(smp, uv).r * lightRange;
+    float sample21 = tex2D(smp, uv+float2(shadowMapTexelSize, 0)).r * lightRange;
+    
+    float sample02 = tex2D(smp, uv+float2(-shadowMapTexelSize, shadowMapTexelSize)).r * lightRange;
+    float sample12 = tex2D(smp, uv+float2(0, shadowMapTexelSize)).r * lightRange;
+    float sample22 = tex2D(smp, uv+float2(shadowMapTexelSize, shadowMapTexelSize)).r * lightRange; 
+    
+    float sample =
+        max(sample00, max(
+            sample10, max(
+            sample20, max(
+            sample01, max(
+            sample11, max(
+            sample21, max(
+            sample02, max(
+            sample12, sample22
+            ))))))));
+    
+    return ((sample+10.0) > position.z) ? 1.0 : 0.0;
 }
 
 float4 PixelShaderF(VertexShaderOutput input) : COLOR0 {
