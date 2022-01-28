@@ -20,7 +20,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public Vector3F LightBasis1;
         public Vector3F LightBasis2;
 
-        public int LmIndex;
+        public int LmIndex {
+            get => OriginalFace.LmIndex;
+            set => OriginalFace.LmIndex = value;
+        }
 
         public class Vertex {
             public Vertex(DataStructures.MapObjects.Vertex original) {

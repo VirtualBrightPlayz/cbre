@@ -286,6 +286,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
 
             void saveTexture(string filePath, Texture2D texture) {
+                return;
                 using var fileSaveStream = File.Open(filePath, FileMode.Create);
                 texture.SaveAsPng(fileSaveStream, texture.Width, texture.Height);
             }

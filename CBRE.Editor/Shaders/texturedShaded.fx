@@ -55,10 +55,6 @@ float4 PixelShaderF(VertexShaderOutput input) : COLOR0
     float lighting = dot(input.Normal, float3(0.2672,0.8017,0.5345)) * 0.25 + 0.75;
 
     float4 c = tex2D(TextureSampler, input.TexCoord) * float4(lighting, lighting, lighting, 1.0) * float4(1.0, 1.0 - input.Selected, 1.0 - input.Selected, 1.0);
-    c *= 0.001;
-    c.x = ((input.Position_VisibleToFragShader.x / input.Position_VisibleToFragShader.w) + 1.0) * 0.5;
-    c.y = ((input.Position_VisibleToFragShader.y / input.Position_VisibleToFragShader.w) + 1.0) * 0.5;
-    c.w = 1.0;
 
     return c;
 }

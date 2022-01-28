@@ -396,9 +396,9 @@ namespace CBRE.Editor.Rendering {
                     lmMeshes.Remove(lmIndex);
                 }
 
-                int vertexIndex = 0;
                 foreach (var face in faces) {
                     var mesh = getMeshForLmIndex(face.LmIndex);
+                    int vertexIndex = mesh.Vertices.Count;
                     
                     for (int vertIndex=0;vertIndex<face.Vertices.Count;vertIndex++) {
                         var newVertex = new BrushVertex(face.Vertices[vertIndex]) {
@@ -412,7 +412,6 @@ namespace CBRE.Editor.Rendering {
                     foreach (var triangleIndex in face.GetTriangleIndices()) {
                         mesh.SolidIndices.Add((ushort)(vertexIndex + triangleIndex));
                     }
-                    vertexIndex += face.Vertices.Count;
                 }
 
                 foreach (var lmIndex in vertexCounts.Keys) {
