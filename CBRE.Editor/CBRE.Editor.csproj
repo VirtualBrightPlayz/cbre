@@ -5,11 +5,11 @@
     <TargetFramework>net5.0</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
-    <Platforms>AnyCPU;x86</Platforms>
+    <Platforms>x64;x86</Platforms>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <PlatformTarget></PlatformTarget>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -26,6 +26,25 @@
     <ProjectReference Include="..\CBRE.Settings\CBRE.Settings.csproj" />
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
     <ProjectReference Include="..\NativeFileDialog.NET\dotnet\NativeFileDialog.csproj" />
+  </ItemGroup>
+
+  <!-- TODO: detect target operating system? -->
+  <ItemGroup Condition="'$(Platform)'=='x86'">
+    <None Include="..\ImGui.NET\cimgui\win-x86\cimgui.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Platform)'=='x64'">
+    <None Include="..\ImGui.NET\cimgui\win-x64\cimgui.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\ImGui.NET\cimgui\osx-x64\cimgui.dylib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\ImGui.NET\cimgui\linux-x64\cimgui.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
