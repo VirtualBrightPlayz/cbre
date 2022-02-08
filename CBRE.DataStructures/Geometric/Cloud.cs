@@ -21,15 +21,16 @@ namespace CBRE.DataStructures.Geometric {
 
         public Cloud(IEnumerable<Vector3> points) {
             Points = new List<Vector3>(points);
-            BoundingBox = new Box(points);
-            MinX = MinY = MinZ = MaxX = MaxY = MaxZ = null;
-            foreach (var p in points) {
-                if (MinX == null || p.X < MinX.X) MinX = p;
-                if (MinY == null || p.Y < MinY.Y) MinY = p;
-                if (MinZ == null || p.Z < MinZ.Z) MinZ = p;
-                if (MaxX == null || p.X > MaxX.X) MaxX = p;
-                if (MaxY == null || p.Y > MaxY.Y) MaxY = p;
-                if (MaxZ == null || p.Z > MaxZ.Z) MaxZ = p;
+            BoundingBox = new Box(Points);
+            MinX = MinY = MinZ = new Vector3(decimal.MaxValue, decimal.MaxValue, decimal.MaxValue);
+            MaxX = MaxY = MaxZ = new Vector3(decimal.MinValue, decimal.MinValue, decimal.MinValue);
+            foreach (var p in Points) {
+                if (p.X < MinX.X) { MinX = p; }
+                if (p.Y < MinY.Y) { MinY = p; }
+                if (p.Z < MinZ.Z) { MinZ = p; }
+                if (p.X > MaxX.X) { MaxX = p; }
+                if (p.Y > MaxY.Y) { MaxY = p; }
+                if (p.Z > MaxZ.Z) { MaxZ = p; }
             }
         }
 

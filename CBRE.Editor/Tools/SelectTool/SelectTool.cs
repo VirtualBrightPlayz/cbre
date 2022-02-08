@@ -383,9 +383,9 @@ namespace CBRE.Editor.Tools.SelectTool
             base.MouseMove3D(viewport, e);
         }
 
-        private Vector3 GetIntersectionPoint(MapObject obj, Line line)
+        private Vector3? GetIntersectionPoint(MapObject obj, Line line)
         {
-            if (obj == null) return null;
+            if (obj == null) { return null; }
 
             var solid = obj as Solid;
             if (solid == null) return obj.GetIntersectionPoint(line);
@@ -393,7 +393,7 @@ namespace CBRE.Editor.Tools.SelectTool
             return solid.Faces.Where(x => x.Opacity > 0 && !x.IsHidden)
                 .Select(x => x.GetIntersectionPoint(line))
                 .Where(x => x != null)
-                .OrderBy(x => (x - line.Start).VectorMagnitude())
+                .OrderBy(x => (x.Value - line.Start).VectorMagnitude())
                 .FirstOrDefault();
         }
 
@@ -418,7 +418,7 @@ namespace CBRE.Editor.Tools.SelectTool
             IntersectingObjectsFor3DSelection = hits
                 .Select(x => new { Item = x, Intersection = GetIntersectionPoint(x, ray) })
                 .Where(x => x.Intersection != null)
-                .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                 .Select(x => x.Item)
                 .ToList();
 
@@ -536,8 +536,8 @@ namespace CBRE.Editor.Tools.SelectTool
             State.ActiveViewport = null;
 
             var now = viewport.ScreenToWorld(e.X, viewport.Height - e.Y);
-            var start = viewport.Flatten(State.BoxStart);
-            var end = viewport.Flatten(State.BoxEnd);
+            var start = viewport.Flatten(State.BoxStart ?? Vector3.Zero);
+            var end = viewport.Flatten(State.BoxEnd ?? Vector3.Zero);
 
             var ccs = new Vector3(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y), 0);
             var cce = new Vector3(Math.Max(start.X, end.X), Math.Max(start.Y, end.Y), 0);
@@ -681,7 +681,7 @@ namespace CBRE.Editor.Tools.SelectTool
             SelectionChanged();
         }
 
-        protected override Vector3 GetResizeOrigin(Viewport2D viewport)
+        protected override Vector3? GetResizeOrigin(Viewport2D viewport)
         {
             if (State.Action == BoxAction.Resizing && State.Handle == ResizeHandle.Center && !Document.Selection.IsEmpty())
             {
@@ -707,7 +707,7 @@ namespace CBRE.Editor.Tools.SelectTool
             if (CurrentTransform != null)
             {
                 Document.SetSelectListTransform(CurrentTransform);
-                var box = new Box(State.PreTransformBoxStart, State.PreTransformBoxEnd);
+                var box = new Box(State.PreTransformBoxStart ?? Vector3.Zero, State.PreTransformBoxEnd ?? Vector3.Zero);
                 var trans = CreateMatrixMultTransformation(CurrentTransform);
                 Mediator.Publish(EditorMediator.SelectionBoxChanged, box.Transform(trans));
             }
@@ -719,9 +719,8 @@ namespace CBRE.Editor.Tools.SelectTool
 
         public override void KeyDown(ViewportBase viewport, ViewportEvent e)
         {
-            var nudge = GetNudgeValue(e.KeyCode);
-            var vp = viewport as Viewport2D;
-            if (nudge != null && vp != null && (State.Action == BoxAction.ReadyToResize || State.Action == BoxAction.Drawn) && !Document.Selection.IsEmpty())
+            var nudge = GetNudgeValue(e.KeyCode) ?? Vector3.Zero;
+            if (viewport is Viewport2D vp && (State.Action == BoxAction.ReadyToResize || State.Action == BoxAction.Drawn) && !Document.Selection.IsEmpty())
             {
                 var translate = vp.Expand(nudge);
                 var transformation = Matrix.Translation(translate);
@@ -839,8 +838,8 @@ namespace CBRE.Editor.Tools.SelectTool
                 return;
             }
 
-            var start = viewport.Flatten(State.BoxStart);
-            var end = viewport.Flatten(State.BoxEnd);
+            var start = viewport.Flatten(State.BoxStart ?? Vector3.Zero);
+            var end = viewport.Flatten(State.BoxEnd ?? Vector3.Zero);
 
             if (ShouldDrawBox(viewport))
             {
@@ -876,7 +875,7 @@ namespace CBRE.Editor.Tools.SelectTool
         {
             if (CurrentTransform == null) { return; }
 
-            var box = new Box(State.PreTransformBoxStart, State.PreTransformBoxEnd);
+            var box = new Box(State.PreTransformBoxStart ?? Vector3.Zero, State.PreTransformBoxEnd ?? Vector3.Zero);
             var trans = CreateMatrixMultTransformation(CurrentTransform);
             box = box.Transform(trans);
             var s = viewport.Flatten(box.Start);

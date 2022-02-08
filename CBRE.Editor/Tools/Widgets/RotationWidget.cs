@@ -62,7 +62,7 @@ namespace CBRE.Editor.Tools.Widgets
         private CircleType _mouseOver;
         private CircleType _mouseDown;
         private Vector3 _mouseDownPoint;
-        private Vector3 _mouseMovePoint;
+        private Vector3? _mouseMovePoint;
 
         public Vector3 GetPivotPoint()
         {
@@ -87,7 +87,7 @@ namespace CBRE.Editor.Tools.Widgets
             if (cls == PlaneClassification.Back) return;
             if (cls == PlaneClassification.Spanning)
             {
-                var isect = test.GetIntersectionPoint(line, true);
+                var isect = test.GetIntersectionPoint(line, ignoreDirection: true).Value;
                 var first = test.OnPlane(line.Start) > 0 ? line.Start : line.End;
                 line = new Line(first, isect);
             }
@@ -437,7 +437,7 @@ namespace CBRE.Editor.Tools.Widgets
 
                 PrimitiveDrawing.SetColor(Color.LightGray);
                 PrimitiveDrawing.Vertex3(_pivotPoint);
-                PrimitiveDrawing.Vertex3(viewport.ScreenToWorld(_mouseMovePoint));
+                PrimitiveDrawing.Vertex3(viewport.ScreenToWorld(_mouseMovePoint ?? Vector3.Zero));
 
                 PrimitiveDrawing.End();
                 /*GL.Disable(EnableCap.LineStipple);

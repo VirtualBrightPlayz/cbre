@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using CBRE.Editor.Popup;
 using Select = CBRE.Settings.Select;
 using View = CBRE.Settings.View;
 using Microsoft.Xna.Framework.Input;
@@ -42,7 +43,7 @@ namespace CBRE.Editor.Tools.VMTool
         public List<VMPoint> MoveSelection { get; private set; }
 
         private VMPoint _movingPoint;
-        private Vector3 _snapPointOffset;
+        private Vector3? _snapPointOffset;
         private bool _dirty;
 
         private ShowPoints _showPoints;
@@ -493,9 +494,9 @@ namespace CBRE.Editor.Tools.VMTool
             }
         }
 
-        private Vector3 GetIntersectionPoint(MapObject obj, Line line)
+        private Vector3? GetIntersectionPoint(MapObject obj, Line line)
         {
-            if (obj == null) return null;
+            if (obj == null) { return null; }
 
             var solid = obj as Solid;
             if (solid == null) return obj.GetIntersectionPoint(line);
@@ -503,7 +504,7 @@ namespace CBRE.Editor.Tools.VMTool
             return solid.Faces.Where(x => x.Opacity > 0 && !x.IsHidden)
                 .Select(x => x.GetIntersectionPoint(line))
                 .Where(x => x != null)
-                .OrderBy(x => (x - line.Start).VectorMagnitude())
+                .OrderBy(x => (x.Value - line.Start).VectorMagnitude())
                 .FirstOrDefault();
         }
 
@@ -558,7 +559,7 @@ namespace CBRE.Editor.Tools.VMTool
                     .OfType<Solid>()
                     .Select(x => new { Item = x, Intersection = GetIntersectionPoint(x, ray) })
                     .Where(x => x.Intersection != null)
-                    .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                    .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                     .Select(x => x.Item)
                     .FirstOrDefault();
 
@@ -793,7 +794,7 @@ namespace CBRE.Editor.Tools.VMTool
                 if (!ViewportManager.Alt && ViewportManager.Shift)
                 {
                     // If shift is down, retain the offset the point was at before (relative to the grid)
-                    point += _snapPointOffset;
+                    point += _snapPointOffset ?? Vector3.Zero;
                 }
                 var moveDistance = point - viewport.ZeroUnusedCoordinate(_movingPoint.Vector3);
                 _currentTool.DragMove(moveDistance);
@@ -805,12 +806,12 @@ namespace CBRE.Editor.Tools.VMTool
 
         public override HotkeyInterceptResult InterceptHotkey(HotkeysMediator hotkeyMessage, object parameters)
         {
-            throw new NotImplementedException();
-            /*switch (hotkeyMessage)
+            switch (hotkeyMessage)
             {
                 case HotkeysMediator.HistoryUndo:
                 case HotkeysMediator.HistoryRedo:
-                    MessageBox.Show("Please exit the VM tool to undo any changes.");
+                    GameMain.Instance.Popups.Add(
+                        new MessagePopup("Error", "Please exit the VM tool to undo any changes."));
                     return HotkeyInterceptResult.Abort;
                 case HotkeysMediator.OperationsPaste:
                 case HotkeysMediator.OperationsPasteSpecial:
@@ -823,7 +824,7 @@ namespace CBRE.Editor.Tools.VMTool
                     }
                     break;
             }
-            return HotkeyInterceptResult.Continue;*/
+            return HotkeyInterceptResult.Continue;
         }
 
         private void CycleShowPoints()
@@ -856,12 +857,12 @@ namespace CBRE.Editor.Tools.VMTool
             if (_currentTool != null) _currentTool.Render2D(vp);
 
             // Render out the solid previews
-            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            PrimitiveDrawing.Begin(PrimitiveType.TriangleList);
             PrimitiveDrawing.SetColor(Color.Pink);
             // Matrix.Push();
             var matrix = vp.GetModelViewMatrix();
             // GL.MultMatrix(ref matrix);
-            PrimitiveDrawing.FacesWireframe(_copies.Keys.SelectMany(x => x.Faces), matrix.ToCbre());
+            PrimitiveDrawing.FacesWireframe(_copies.Keys.SelectMany(x => x.Faces), thickness: 1m / vp.Zoom, m: matrix.ToCbre());
             // Matrix.Pop();
             PrimitiveDrawing.End();
 
@@ -878,9 +879,9 @@ namespace CBRE.Editor.Tools.VMTool
             {
                 var c = vp.Flatten(point.Vector3);
                 PrimitiveDrawing.SetColor(Color.Black);
-                PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 4);
+                PrimitiveDrawing.Square(new Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 4m / vp.Zoom);
                 PrimitiveDrawing.SetColor(point.GetColour());
-                PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 3);
+                PrimitiveDrawing.Square(new Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 3m / vp.Zoom);
                 // GLX.Square(new Vector2d(c.DX, c.DY), 3, z, true);
             }
             PrimitiveDrawing.End();
@@ -891,9 +892,6 @@ namespace CBRE.Editor.Tools.VMTool
             base.Render3D(vp);
 
             if (_currentTool != null) _currentTool.Render3D(vp);
-
-            // throw new NotImplementedException();
-            // TextureHelper.Unbind();
 
             if (_currentTool == null || _currentTool.DrawVertices())
             {
@@ -915,26 +913,10 @@ namespace CBRE.Editor.Tools.VMTool
                     c -= half;
 
                     PrimitiveDrawing.SetColor(Color.Black);
-                    PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 4);
-                    /*PrimitiveDrawing.Vertex2(c.DX - 4, c.DY - 4);
-                    PrimitiveDrawing.Vertex2(c.DX - 4, c.DY + 4);
-                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY + 4);
-                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY - 4);*/
-                    /*PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 4, (decimal)c.DY - 4, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 4, (decimal)c.DY + 4, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 4, (decimal)c.DY + 4, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 4, (decimal)c.DY - 4, 0) * matrix));*/
+                    PrimitiveDrawing.Square(new Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 4d);
 
                     PrimitiveDrawing.SetColor(point.GetColour());
-                    PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 3);
-                    /*PrimitiveDrawing.Vertex2(c.DX - 3, c.DY - 3);
-                    PrimitiveDrawing.Vertex2(c.DX - 3, c.DY + 3);
-                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY + 3);
-                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY - 3);*/
-                    /*PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 3, (decimal)c.DY - 3, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX - 3, (decimal)c.DY + 3, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 3, (decimal)c.DY + 3, 0) * matrix));
-                    PrimitiveDrawing.Vertex3(ToXna(new Vector3((decimal)c.DX + 3, (decimal)c.DY - 3, 0) * matrix));*/
+                    PrimitiveDrawing.Square(new Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 3d);
                 }
                 PrimitiveDrawing.End();
 
@@ -965,16 +947,16 @@ namespace CBRE.Editor.Tools.VMTool
 
                 PrimitiveDrawing.Begin(PrimitiveType.LineList);
                 PrimitiveDrawing.SetColor(Color.Pink);
-                PrimitiveDrawing.FacesWireframe(faces);
+                PrimitiveDrawing.FacesWireframe(faces, thickness: 0f);
                 PrimitiveDrawing.End();
             }
             else
             {
                 PrimitiveDrawing.Begin(PrimitiveType.LineList);
                 PrimitiveDrawing.SetColor(Color.FromArgb(255, 64, 192, 64));
-                PrimitiveDrawing.FacesWireframe(faces.Where(x => !x.IsSelected));
+                PrimitiveDrawing.FacesWireframe(faces.Where(x => !x.IsSelected), thickness: 0f);
                 PrimitiveDrawing.SetColor(Color.FromArgb(255, 255, 128, 128));
-                PrimitiveDrawing.FacesWireframe(faces.Where(x => x.IsSelected));
+                PrimitiveDrawing.FacesWireframe(faces.Where(x => x.IsSelected), thickness: 0f);
                 PrimitiveDrawing.End();
             }
         }

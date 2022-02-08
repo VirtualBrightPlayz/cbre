@@ -179,7 +179,7 @@ namespace CBRE.DataStructures.MapObjects {
             UpdateBoundingBox();
         }
 
-        public virtual Vector3 GetIntersectionPoint(Line line) {
+        public virtual Vector3? GetIntersectionPoint(Line line) {
             return null;
         }
 

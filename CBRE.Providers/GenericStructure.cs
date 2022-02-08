@@ -161,9 +161,8 @@ namespace CBRE.Providers {
             return defaultValue;
         }
 
-        public Vector3 PropertyVector3(string name, Vector3 defaultValue = null) {
+        public Vector3 PropertyVector3(string name, Vector3 defaultValue = default) {
             var prop = this[name];
-            if (defaultValue == null) defaultValue = Vector3.Zero;
             if (prop == null || prop.Count(c => c == ' ') != 2) return defaultValue;
             var split = prop.Replace("[", "").Replace("]", "").Replace("(", "").Replace(")", "").Split(' ');
             decimal x, y, z;

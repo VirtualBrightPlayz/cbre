@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29911.84
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AssimpNet", "AssimpNet\AssimpNet\AssimpNet.csproj", "{582ED347-E705-4EF5-B6DD-5AC1191D2FC2}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -143,14 +143,14 @@ Global
 		{CF7BC4FD-FE3F-4D1E-A15E-B88FA99FBA1E}.Release|x64.Build.0 = Release|Any CPU
 		{CF7BC4FD-FE3F-4D1E-A15E-B88FA99FBA1E}.Release|x86.ActiveCfg = Release|x86
 		{CF7BC4FD-FE3F-4D1E-A15E-B88FA99FBA1E}.Release|x86.Build.0 = Release|x86
-		{C54F3129-8144-490A-A551-01788EBC7F2F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{C54F3129-8144-490A-A551-01788EBC7F2F}.Debug|x64.Build.0 = Debug|Any CPU
 		{C54F3129-8144-490A-A551-01788EBC7F2F}.Debug|x86.ActiveCfg = Debug|x86
 		{C54F3129-8144-490A-A551-01788EBC7F2F}.Debug|x86.Build.0 = Debug|x86
 		{C54F3129-8144-490A-A551-01788EBC7F2F}.Release|x64.ActiveCfg = Release|x64
 		{C54F3129-8144-490A-A551-01788EBC7F2F}.Release|x64.Build.0 = Release|x64
 		{C54F3129-8144-490A-A551-01788EBC7F2F}.Release|x86.ActiveCfg = Release|x86
 		{C54F3129-8144-490A-A551-01788EBC7F2F}.Release|x86.Build.0 = Release|x86
+		{C54F3129-8144-490A-A551-01788EBC7F2F}.Debug|x64.ActiveCfg = Debug|x64
+		{C54F3129-8144-490A-A551-01788EBC7F2F}.Debug|x64.Build.0 = Debug|x64
 		{BD129872-8A70-4CA7-AE0C-E55A92729DBE}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{BD129872-8A70-4CA7-AE0C-E55A92729DBE}.Debug|x64.Build.0 = Debug|Any CPU
 		{BD129872-8A70-4CA7-AE0C-E55A92729DBE}.Debug|x86.ActiveCfg = Debug|x86
@@ -159,14 +159,14 @@ Global
 		{BD129872-8A70-4CA7-AE0C-E55A92729DBE}.Release|x64.Build.0 = Release|x64
 		{BD129872-8A70-4CA7-AE0C-E55A92729DBE}.Release|x86.ActiveCfg = Release|x86
 		{BD129872-8A70-4CA7-AE0C-E55A92729DBE}.Release|x86.Build.0 = Release|x86
-		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Debug|x64.Build.0 = Debug|Any CPU
 		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Debug|x86.ActiveCfg = Debug|x86
 		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Debug|x86.Build.0 = Debug|x86
-		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Release|x64.ActiveCfg = Release|Any CPU
-		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Release|x64.Build.0 = Release|Any CPU
+		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Release|x64.ActiveCfg = Release|x64
+		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Release|x64.Build.0 = Release|x64
 		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Release|x86.ActiveCfg = Release|x86
 		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Release|x86.Build.0 = Release|x86
+		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Debug|x64.ActiveCfg = Debug|x64
+		{345880C4-890C-4FCA-B11E-0AAB3161293E}.Debug|x64.Build.0 = Debug|x64
 		{DD54EACE-AF7A-4C25-B964-D6F2BBE13C55}.Debug|x64.ActiveCfg = Debug|x64
 		{DD54EACE-AF7A-4C25-B964-D6F2BBE13C55}.Debug|x64.Build.0 = Debug|x64
 		{DD54EACE-AF7A-4C25-B964-D6F2BBE13C55}.Debug|x86.ActiveCfg = Debug|x86

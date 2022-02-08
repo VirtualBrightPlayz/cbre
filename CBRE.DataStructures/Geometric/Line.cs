@@ -1,5 +1,6 @@
 ﻿using CBRE.DataStructures.Transformations;
 using System;
+using System.Net;
 using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric {
@@ -98,5 +99,11 @@ namespace CBRE.DataStructures.Geometric {
         public static bool operator !=(Line left, Line right) {
             return !Equals(left, right);
         }
+
+        public decimal Length()
+            => (End - Start).VectorMagnitude();
+
+        public Vector3 Direction()
+            => (End - Start).Normalise();
     }
 }

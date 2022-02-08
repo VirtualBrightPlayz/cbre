@@ -157,13 +157,13 @@ namespace CBRE.Editor.Tools
             var hit = hits
                 .Select(x => new { Item = x, Intersection = x.GetIntersectionPoint(ray) })
                 .Where(x => x.Intersection != null)
-                .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                 .FirstOrDefault();
 
-            if (hit == null) return; // Nothing was clicked
+            if (hit == null) { return; } // Nothing was clicked
 
             _state = EntityState.Moving;
-            _location = hit.Intersection;
+            _location = hit.Intersection.Value;
         }
 
         public override void MouseClick(ViewportBase viewport, ViewportEvent e)

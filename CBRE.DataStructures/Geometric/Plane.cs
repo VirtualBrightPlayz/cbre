@@ -88,16 +88,16 @@ namespace CBRE.DataStructures.Geometric {
         /// <param name="ignoreSegment">Set to true to ignore the start and
         /// end points of the line in the intersection. Defaults to false.</param>
         /// <returns>The point of intersection, or null if the line does not intersect</returns>
-        public Vector3 GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
+        public Vector3? GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
             // http://softsurfer.com/Archive/algorithm_0104/algorithm_0104B.htm#Line%20Intersections
             // http://paulbourke.net/geometry/planeline/
 
             var dir = line.End - line.Start;
             var denominator = -Normal.Dot(dir);
             var numerator = Normal.Dot(line.Start - Normal * DistanceFromOrigin);
-            if (Math.Abs(denominator) < 0.00001m || (!ignoreDirection && denominator < 0)) return null;
+            if (Math.Abs(denominator) < 0.00001m || (!ignoreDirection && denominator < 0)) { return null; }
             var u = numerator / denominator;
-            if (!ignoreSegment && (u < 0 || u > 1)) return null;
+            if (!ignoreSegment && (u < 0 || u > 1)) { return null; }
             return line.Start + u * dir;
         }
 
@@ -138,7 +138,7 @@ namespace CBRE.DataStructures.Geometric {
         /// Intersects three planes and gets the point of their intersection.
         /// </summary>
         /// <returns>The point that the planes intersect at, or null if they do not intersect at a point.</returns>
-        public static Vector3 Intersect(Plane p1, Plane p2, Plane p3) {
+        public static Vector3? Intersect(Plane p1, Plane p2, Plane p3) {
             // http://paulbourke.net/geometry/3planes/
 
             var c1 = p2.Normal.Cross(p3.Normal);
@@ -146,7 +146,7 @@ namespace CBRE.DataStructures.Geometric {
             var c3 = p1.Normal.Cross(p2.Normal);
 
             var denom = p1.Normal.Dot(c1);
-            if (denom < 0.00001m) return null; // No intersection, planes must be parallel
+            if (denom < 0.00001m) { return null; } // No intersection, planes must be parallel
 
             var numer = (-p1.D * c1) + (-p2.D * c2) + (-p3.D * c3);
             return numer / denom;

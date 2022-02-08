@@ -28,7 +28,7 @@ namespace CBRE.Editor.Tools
         private SketchState _state;
         private Face _currentFace;
         private Face _cloneFace;
-        private Vector3 _intersection;
+        private Vector3? _intersection;
         private Polygon _base;
         private decimal _depth;
         private Plane _volumePlane;
@@ -107,7 +107,7 @@ namespace CBRE.Editor.Tools
                 case SketchState.Ready:
                     if (e.Button != MouseButtons.Left) break;
                     _base = new Polygon(_currentFace.Plane, 1);
-                    _base.Transform(new UnitTranslate(_intersection - _base.Vertices[0]));
+                    _base.Transform(new UnitTranslate(_intersection.Value - _base.Vertices[0]));
                     _state = SketchState.DrawingBase;
                     break;
                 case SketchState.DrawingBase:
@@ -119,7 +119,7 @@ namespace CBRE.Editor.Tools
                     }
                     else if (e.Button == MouseButtons.Left)
                     {
-                        ExpandBase(_intersection);
+                        ExpandBase(_intersection.Value);
                         _volumePlane = new Plane(_base.Vertices[1], _base.Vertices[2], _base.Vertices[2] + _base.Plane.Normal);
                         _state = SketchState.DrawingVolume;
                     }
@@ -132,8 +132,8 @@ namespace CBRE.Editor.Tools
                     }
                     else if (e.Button == MouseButtons.Left)
                     {
-                        var diff = _intersection - _base.Vertices[2];
-                        var sign = _base.Plane.OnPlane(_intersection) < 0 ? -1 : 1;
+                        var diff = _intersection.Value - _base.Vertices[2];
+                        var sign = _base.Plane.OnPlane(_intersection.Value) < 0 ? -1 : 1;
                         _depth = diff.VectorMagnitude() * sign;
                         CreateBrush(_base, _depth);
                         _base = null;
@@ -225,9 +225,9 @@ namespace CBRE.Editor.Tools
             }
             var linex = new Line(start + addx, start + addx + axis);
             var liney = new Line(start + addy, start + addy + axis);
-            _base.Vertices[1] = _base.Plane.GetIntersectionPoint(linex, true, true);
+            _base.Vertices[1] = _base.Plane.GetIntersectionPoint(linex, true, true) ?? Vector3.Zero;
             _base.Vertices[2] = endPoint;
-            _base.Vertices[3] = _base.Plane.GetIntersectionPoint(liney, true, true);
+            _base.Vertices[3] = _base.Plane.GetIntersectionPoint(liney, true, true) ?? Vector3.Zero;
         }
 
         public override void MouseMove(ViewportBase viewport, ViewportEvent e)
@@ -244,12 +244,12 @@ namespace CBRE.Editor.Tools
                     // face detect
                     break;
                 case SketchState.DrawingBase:
-                    ExpandBase(_intersection);
+                    ExpandBase(_intersection.Value);
                     break;
                 case SketchState.DrawingVolume:
-                    var diff = _intersection - _base.Vertices[2];
+                    var diff = _intersection.Value - _base.Vertices[2];
                     diff = diff.ComponentMultiply(_base.Plane.GetClosestAxisToNormal());
-                    var sign = _base.Plane.OnPlane(_intersection) < 0 ? -1 : 1;
+                    var sign = _base.Plane.OnPlane(_intersection.Value) < 0 ? -1 : 1;
                     _depth = diff.VectorMagnitude() * sign;
                     break;
                 default:
@@ -273,7 +273,7 @@ namespace CBRE.Editor.Tools
                 .SelectMany(x => x.Faces)
                 .Select(x => new { Item = x, Intersection = x.GetIntersectionPoint(ray) })
                 .Where(x => x.Intersection != null)
-                .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                 .FirstOrDefault();
 
             if (isect != null)

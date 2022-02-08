@@ -32,10 +32,10 @@ namespace CBRE.Editor.Tools
             Back
         }
 
-        private Vector3 _clipPlanePoint1;
-        private Vector3 _clipPlanePoint2;
-        private Vector3 _clipPlanePoint3;
-        private Vector3 _drawingPoint;
+        private Vector3? _clipPlanePoint1;
+        private Vector3? _clipPlanePoint2;
+        private Vector3? _clipPlanePoint3;
+        private Vector3? _drawingPoint;
         private ClipState _prevState;
         private ClipState _state;
         private ClipSide _side;
@@ -75,9 +75,9 @@ namespace CBRE.Editor.Tools
             if (_clipPlanePoint1 == null || _clipPlanePoint2 == null || _clipPlanePoint3 == null) return ClipState.None;
 
             var p = viewport.ScreenToWorld(x, y);
-            var p1 = viewport.Flatten(_clipPlanePoint1);
-            var p2 = viewport.Flatten(_clipPlanePoint2);
-            var p3 = viewport.Flatten(_clipPlanePoint3);
+            var p1 = viewport.Flatten(_clipPlanePoint1 ?? Vector3.Zero);
+            var p2 = viewport.Flatten(_clipPlanePoint2 ?? Vector3.Zero);
+            var p3 = viewport.Flatten(_clipPlanePoint3 ?? Vector3.Zero);
 
             var d = 5 / viewport.Zoom;
 
@@ -153,7 +153,7 @@ namespace CBRE.Editor.Tools
             else if (_state == ClipState.MovingPoint1)
             {
                 // Move point 1
-                var cp1 = viewport.GetUnusedCoordinate(_clipPlanePoint1) + point;
+                var cp1 = viewport.GetUnusedCoordinate(_clipPlanePoint1 ?? Vector3.Zero) + point;
                 if (ViewportManager.Ctrl)
                 {
                     var diff = _clipPlanePoint1 - cp1;
@@ -165,7 +165,7 @@ namespace CBRE.Editor.Tools
             else if (_state == ClipState.MovingPoint2)
             {
                 // Move point 2
-                var cp2 = viewport.GetUnusedCoordinate(_clipPlanePoint2) + point;
+                var cp2 = viewport.GetUnusedCoordinate(_clipPlanePoint2 ?? Vector3.Zero) + point;
                 if (ViewportManager.Ctrl)
                 {
                     var diff = _clipPlanePoint2 - cp2;
@@ -177,7 +177,7 @@ namespace CBRE.Editor.Tools
             else if (_state == ClipState.MovingPoint3)
             {
                 // Move point 3
-                var cp3 = viewport.GetUnusedCoordinate(_clipPlanePoint3) + point;
+                var cp3 = viewport.GetUnusedCoordinate(_clipPlanePoint3 ?? Vector3.Zero) + point;
                 if (ViewportManager.Ctrl)
                 {
                     var diff = _clipPlanePoint3 - cp3;
@@ -199,18 +199,21 @@ namespace CBRE.Editor.Tools
             }
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
-        {
-            if (e.KeyChar == 13) // Enter
+        public override void KeyPress(ViewportBase viewport, ViewportEvent e) {
+            if (_clipPlanePoint1 is not { } clipPlanePoint1
+                || _clipPlanePoint2 is not { } clipPlanePoint2
+                || _clipPlanePoint3 is not { } clipPlanePoint3) { return; }
+            
+            if (e.KeyCode == Keys.Enter) // Enter
             {
-                if (!_clipPlanePoint1.EquivalentTo(_clipPlanePoint2)
-                    && !_clipPlanePoint2.EquivalentTo(_clipPlanePoint3)
-                    && !_clipPlanePoint1.EquivalentTo(_clipPlanePoint3)) // Don't clip if the points are too close together
+                if (!clipPlanePoint1.EquivalentTo(clipPlanePoint2)
+                    && !clipPlanePoint2.EquivalentTo(clipPlanePoint3)
+                    && !clipPlanePoint1.EquivalentTo(clipPlanePoint3)) // Don't clip if the points are too close together
                 {
                     PerformClip();
                 }
             }
-            if (e.KeyChar == 27 || e.KeyChar == 13) // Escape cancels, Enter commits and resets
+            if (e.KeyCode == Keys.Escape || e.KeyCode == Keys.Enter) // Escape cancels, Enter commits and resets
             {
                 _clipPlanePoint1 = _clipPlanePoint2 = _clipPlanePoint3 = _drawingPoint = null;
                 _state = _prevState = ClipState.None;
@@ -219,8 +222,12 @@ namespace CBRE.Editor.Tools
 
         private void PerformClip()
         {
+            if (_clipPlanePoint1 is not { } clipPlanePoint1
+                || _clipPlanePoint2 is not { } clipPlanePoint2
+                || _clipPlanePoint3 is not { } clipPlanePoint3) { return; }
+            
             var objects = Document.Selection.GetSelectedObjects().OfType<Solid>().ToList();
-            var plane = new Plane(_clipPlanePoint1, _clipPlanePoint2, _clipPlanePoint3);
+            var plane = new Plane(clipPlanePoint1, clipPlanePoint2, clipPlanePoint3);
             Document.PerformAction("Perform Clip", new Clip(objects, plane, _side != ClipSide.Back, _side != ClipSide.Front));
         }
 
@@ -258,25 +265,22 @@ namespace CBRE.Editor.Tools
         private void Render2D(Viewport2D vp)
         {
             if (_state == ClipState.None
-                || _clipPlanePoint1 == null
-                || _clipPlanePoint2 == null
-                || _clipPlanePoint3 == null) return; // Nothing to draw at this point
+                || _clipPlanePoint1 is not { } clipPlanePoint1
+                || _clipPlanePoint2 is not { } clipPlanePoint2
+                || _clipPlanePoint3 is not { } clipPlanePoint3) { return; }  // Nothing to draw at this point
 
             var z = (double)vp.Zoom;
-            var p1 = vp.Flatten(_clipPlanePoint1);
-            var p2 = vp.Flatten(_clipPlanePoint2);
-            var p3 = vp.Flatten(_clipPlanePoint3);
+            var p1 = vp.Flatten(clipPlanePoint1);
+            var p2 = vp.Flatten(clipPlanePoint2);
+            var p3 = vp.Flatten(clipPlanePoint3);
 
             // Draw points
             PrimitiveDrawing.Begin(PrimitiveType.QuadList);
             PrimitiveDrawing.SetColor(Color.White);
-            PrimitiveDrawing.Square(new Vector3(p1.X, p1.Y, (decimal)z), 4);
-            PrimitiveDrawing.Square(new Vector3(p2.X, p2.Y, (decimal)z), 4);
-            PrimitiveDrawing.Square(new Vector3(p3.X, p3.Y, (decimal)z), 4);
+            PrimitiveDrawing.Square(new Vector3(p1.X, p1.Y, (decimal)z), 4m / vp.Zoom);
+            PrimitiveDrawing.Square(new Vector3(p2.X, p2.Y, (decimal)z), 4m / vp.Zoom);
+            PrimitiveDrawing.Square(new Vector3(p3.X, p3.Y, (decimal)z), 4m / vp.Zoom);
             PrimitiveDrawing.End();
-
-            /*GL.Enable(EnableCap.LineSmooth);
-            GL.Hint(HintTarget.LineSmoothHint, HintMode.Nicest);*/
 
             // Draw lines between points and point outlines
             PrimitiveDrawing.Begin(PrimitiveType.LineList);
@@ -288,17 +292,17 @@ namespace CBRE.Editor.Tools
             PrimitiveDrawing.Vertex2(p3.DX, p3.DY);
             PrimitiveDrawing.Vertex2(p1.DX, p1.DY);
             PrimitiveDrawing.SetColor(Color.Black);
-            PrimitiveDrawing.Square(new Vector3(p1.X, p1.Y, (decimal)z), 4);
-            PrimitiveDrawing.Square(new Vector3(p2.X, p2.Y, (decimal)z), 4);
-            PrimitiveDrawing.Square(new Vector3(p3.X, p3.Y, (decimal)z), 4);
+            PrimitiveDrawing.Square(new Vector3(p1.X, p1.Y, (decimal)z), 4m / vp.Zoom);
+            PrimitiveDrawing.Square(new Vector3(p2.X, p2.Y, (decimal)z), 4m / vp.Zoom);
+            PrimitiveDrawing.Square(new Vector3(p3.X, p3.Y, (decimal)z), 4m / vp.Zoom);
             PrimitiveDrawing.End();
 
             // Draw the clipped brushes
-            if (!_clipPlanePoint1.EquivalentTo(_clipPlanePoint2)
-                    && !_clipPlanePoint2.EquivalentTo(_clipPlanePoint3)
-                    && !_clipPlanePoint1.EquivalentTo(_clipPlanePoint3))
+            if (!clipPlanePoint1.EquivalentTo(clipPlanePoint2)
+                    && !clipPlanePoint2.EquivalentTo(clipPlanePoint3)
+                    && !clipPlanePoint1.EquivalentTo(clipPlanePoint3))
             {
-                var plane = new Plane(_clipPlanePoint1, _clipPlanePoint2, _clipPlanePoint3);
+                var plane = new Plane(clipPlanePoint1, clipPlanePoint2, clipPlanePoint3);
                 var faces = new List<Face>();
                 var idg = new IDGenerator();
                 foreach (var solid in Document.Selection.GetSelectedObjects().OfType<Solid>().ToList())
@@ -310,63 +314,45 @@ namespace CBRE.Editor.Tools
                         if (_side != ClipSide.Back) faces.AddRange(front.Faces);
                     }
                 }
-                /* TODO: reimplement
-                GL.LineWidth(2);
-                GL.Color3(Color.White);
-                Matrix.Push();
+                PrimitiveDrawing.Begin(PrimitiveType.TriangleList);
+                PrimitiveDrawing.SetColor(Color.White);
                 var mat = vp.GetModelViewMatrix();
-                GL.MultMatrix(ref mat);
-                Rendering.Immediate.MapObjectRenderer.DrawWireframe(faces, true, false);
-                Matrix.Pop();
-                GL.LineWidth(1);*/
+                PrimitiveDrawing.FacesWireframe(faces, thickness: 1.0m / vp.Zoom, m: mat.ToCbre());
+                PrimitiveDrawing.End();
             }
-
-            /*GL.Hint(HintTarget.LineSmoothHint, HintMode.Fastest);
-            GL.Disable(EnableCap.LineSmooth);*/
-
         }
 
         private void Render3D(Viewport3D vp)
         {
             if (_state == ClipState.None
-                || _clipPlanePoint1 == null
-                || _clipPlanePoint2 == null
-                || _clipPlanePoint3 == null
+                || _clipPlanePoint1 is not { } clipPlanePoint1
+                || _clipPlanePoint2 is not { } clipPlanePoint2
+                || _clipPlanePoint3 is not { } clipPlanePoint3
                 || Document.Selection.IsEmpty()) return; // Nothing to draw at this point
-
-            throw new NotImplementedException();
-            /*TextureHelper.Unbind();
 
             // Draw points
 
-            if (!_clipPlanePoint1.EquivalentTo(_clipPlanePoint2)
-                    && !_clipPlanePoint2.EquivalentTo(_clipPlanePoint3)
-                    && !_clipPlanePoint1.EquivalentTo(_clipPlanePoint3))
+            if (!clipPlanePoint1.EquivalentTo(clipPlanePoint2)
+                    && !clipPlanePoint2.EquivalentTo(clipPlanePoint3)
+                    && !clipPlanePoint1.EquivalentTo(clipPlanePoint3))
             {
-                var plane = new Plane(_clipPlanePoint1, _clipPlanePoint2, _clipPlanePoint3);
+                var plane = new Plane(clipPlanePoint1, clipPlanePoint2, clipPlanePoint3);
 
                 // Draw clipped solids
-                GL.Enable(EnableCap.LineSmooth);
-                GL.Hint(HintTarget.LineSmoothHint, HintMode.Nicest);
-
                 var faces = new List<Face>();
                 var idg = new IDGenerator();
                 foreach (var solid in Document.Selection.GetSelectedObjects().OfType<Solid>().ToList())
                 {
-                    Solid back, front;
-                    if (solid.Split(plane, out back, out front, idg))
+                    if (solid.Split(plane, out var back, out var front, idg))
                     {
                         if (_side != ClipSide.Front) faces.AddRange(back.Faces);
                         if (_side != ClipSide.Back) faces.AddRange(front.Faces);
                     }
                 }
-                GL.LineWidth(2);
-                GL.Color3(Color.White);
-                Rendering.Immediate.MapObjectRenderer.DrawWireframe(faces, true, false);
-                GL.LineWidth(1);
-
-                GL.Hint(HintTarget.LineSmoothHint, HintMode.Fastest);
-                GL.Disable(EnableCap.LineSmooth);
+                PrimitiveDrawing.Begin(PrimitiveType.TriangleList);
+                PrimitiveDrawing.SetColor(Color.White);
+                PrimitiveDrawing.FacesWireframe(faces, thickness: 2.0f);
+                PrimitiveDrawing.End();
 
                 // Draw the clipping plane
                 var poly = new Polygon(plane);
@@ -379,13 +365,12 @@ namespace CBRE.Editor.Tools
                     poly.Split(new Plane(boxPlane.Normal, proj + boxPlane.Normal * Math.Max(dist, 100)));
                 }
 
-                GL.Disable(EnableCap.CullFace);
-                GL.Begin(PrimitiveType.Polygon);
-                GL.Color4(Color.FromArgb(100, Color.Turquoise));
-                foreach (var c in poly.Vertices) GL.Vertex3(c.DX, c.DY, c.DZ);
-                GL.End();
-                GL.Enable(EnableCap.CullFace);
-            }*/
+                PrimitiveDrawing.Begin(PrimitiveType.TriangleFan);
+                PrimitiveDrawing.SetColor(Color.FromArgb(100, Color.Turquoise));
+                foreach (var c in poly.Vertices)  { PrimitiveDrawing.Vertex3(c.DX, c.DY, c.DZ); }
+                foreach (var c in Enumerable.Reverse(poly.Vertices))  { PrimitiveDrawing.Vertex3(c.DX, c.DY, c.DZ); }
+                PrimitiveDrawing.End();
+            }
         }
 
         public override void MouseEnter(ViewportBase viewport, ViewportEvent e)

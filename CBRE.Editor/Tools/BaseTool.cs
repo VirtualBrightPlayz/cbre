@@ -88,9 +88,9 @@ namespace CBRE.Editor.Tools
             return closest;
         }
 
-        protected Vector3 GetNudgeValue(Keys k)
+        protected Vector3? GetNudgeValue(Keys k)
         {
-            if (!Select.ArrowKeysNudgeSelection) return null;
+            if (!Select.ArrowKeysNudgeSelection) { return null; }
             var keyboardState = Keyboard.GetState();
             var ctrl = keyboardState.IsKeyDown(Keys.LeftControl) || keyboardState.IsKeyDown(Keys.RightControl);
             var gridoff = Select.NudgeStyle == NudgeStyle.GridOffCtrl;

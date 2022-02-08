@@ -231,9 +231,9 @@ namespace CBRE.DataStructures.Geometric {
                     var start = Vertices[i - 1];
                     var line = new Line(start, end);
                     var isect = clip.GetIntersectionPoint(line, true);
-                    if (isect == null) throw new Exception("Expected intersection, got null.");
-                    frontVerts.Add(isect);
-                    backVerts.Add(isect);
+                    if (isect is null) { throw new Exception("Expected intersection, got null."); }
+                    frontVerts.Add(isect.Value);
+                    backVerts.Add(isect.Value);
                 }
 
                 // Add original points

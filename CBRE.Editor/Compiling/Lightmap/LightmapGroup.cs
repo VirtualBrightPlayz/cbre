@@ -56,19 +56,19 @@ namespace CBRE.Editor.Compiling.Lightmap {
             var direction = Plane.GetClosestAxisToNormal();
             var tempV = direction == Vector3F.UnitZ ? -Vector3F.UnitY : -Vector3F.UnitZ;
             UAxis = Plane.Normal.Cross(tempV).Normalise();
-            VAxis = UAxis.Cross(Plane.Normal).Normalise();
+            VAxis = UAxis.Value.Cross(Plane.Normal).Normalise();
 
-            if (Plane.OnPlane(Plane.PointOnPlane + UAxis * 1000f) != 0) {
+            if (Plane.OnPlane(Plane.PointOnPlane + UAxis.Value * 1000f) != 0) {
                 throw new Exception("uAxis is misaligned");
             }
-            if (Plane.OnPlane(Plane.PointOnPlane + VAxis * 1000f) != 0) {
+            if (Plane.OnPlane(Plane.PointOnPlane + VAxis.Value * 1000f) != 0) {
                 throw new Exception("vAxis is misaligned");
             }
 
             foreach (LMFace face in Faces) {
                 foreach (Vector3F coord in face.Vertices.Select(x => x.Location)) {
-                    float u = coord.Dot(UAxis);
-                    float v = coord.Dot(VAxis);
+                    float u = coord.Dot(UAxis.Value);
+                    float v = coord.Dot(VAxis.Value);
 
                     if (MinTotalU == null || u < MinTotalU) { MinTotalU = u; }
                     if (MinTotalV == null || v < MinTotalV) { MinTotalV = v; }

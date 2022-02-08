@@ -15,7 +15,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public Vector3F Origin;
         public float Range;
 
-        public Vector3F Direction;
+        public Vector3F? Direction;
         public float? innerCos;
         public float? outerCos;
 

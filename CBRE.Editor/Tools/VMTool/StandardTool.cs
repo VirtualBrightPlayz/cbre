@@ -343,10 +343,9 @@ Select two (non-adjacent) points on a face to enable splitting.";
 
         public override void KeyDown(ViewportBase viewport, ViewportEvent e)
         {
-            var nudge = GetNudgeValue(e.KeyCode);
-            var vp = viewport as Viewport2D;
+            var nudge = GetNudgeValue(e.KeyCode) ?? Vector3.Zero;
             var sel = MainTool.GetSelectedPoints();
-            if (nudge != null && vp != null && _state == VMState.None && sel.Any())
+            if (viewport is Viewport2D vp && _state == VMState.None && sel.Any())
             {
                 var translate = vp.Expand(nudge);
                 foreach (var p in sel)

@@ -123,8 +123,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public void UpdateLmUv(LightmapGroup group, int lmIndex) {
             LmIndex = lmIndex;
             foreach (var vertex in Vertices) {
-                var u = vertex.Location.Dot(group.UAxis);
-                var v = vertex.Location.Dot(group.VAxis);
+                var u = vertex.Location.Dot(group.UAxis.Value);
+                var v = vertex.Location.Dot(group.VAxis.Value);
                 vertex.LMU = (group.WriteU + (u - group.MinTotalU.Value) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
                 vertex.LMV = (group.WriteV + (v - group.MinTotalV.Value) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
             }
@@ -184,13 +184,13 @@ namespace CBRE.Editor.Compiling.Lightmap {
         /// <param name="line">The intersection line</param>
         /// <returns>The point of intersection between the face and the line.
         /// Returns null if the line does not intersect this face.</returns>
-        public Vector3F GetIntersectionPoint(LineF line, bool ignoreDirection = false) {
+        public Vector3F? GetIntersectionPoint(LineF line, bool ignoreDirection = false) {
             var plane = Plane;
             var intersect = plane.GetIntersectionPoint(line, ignoreDirection);
             List<Vector3F> coordinates = Vertices.Select(x => x.Location).ToList();
             if (intersect == null) { return null; }
             BoxF bbox = PaddedBoundingBox(0.5f);
-            if (!bbox.Vector3IsInside(intersect)) { return null; }
+            if (!bbox.Vector3IsInside(intersect.Value)) { return null; }
 
             Vector3F centerPoint = BoundingBox.Center;
             for (var i = 0; i < coordinates.Count; i++) {
@@ -206,7 +206,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     lineNormal = -lineNormal;
                 }
 
-                if (lineNormal.Dot(intersect - lineMiddle) < 0.0f) { return null; }
+                if (lineNormal.Dot(intersect.Value - lineMiddle) < 0.0f) { return null; }
             }
             return intersect;
         }

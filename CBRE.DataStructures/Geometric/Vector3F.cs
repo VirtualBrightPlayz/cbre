@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
-    public class Vector3F : ISerializable {
+    public struct Vector3F : ISerializable {
         public readonly static Vector3F MaxValue = new Vector3F(float.MaxValue, float.MaxValue, float.MaxValue);
         public readonly static Vector3F MinValue = new Vector3F(float.MinValue, float.MinValue, float.MinValue);
         public readonly static Vector3F Zero = new Vector3F(0, 0, 0);
@@ -29,7 +29,7 @@ namespace CBRE.DataStructures.Geometric {
             Z = z;
         }
 
-        protected Vector3F(SerializationInfo info, StreamingContext context) {
+        internal Vector3F(SerializationInfo info, StreamingContext context) {
             X = info.GetSingle("X");
             Y = info.GetSingle("Y");
             Z = info.GetSingle("Z");

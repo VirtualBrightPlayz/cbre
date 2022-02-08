@@ -391,7 +391,7 @@ namespace CBRE.Editor.Tools.TextureTool {
             var clickedFace = hits.SelectMany(f => f.Faces)
                 .Select(x => new { Item = x, Intersection = x.GetIntersectionPoint(ray) })
                 .Where(x => x.Intersection != null)
-                .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                 .Select(x => x.Item)
                 .FirstOrDefault();
 

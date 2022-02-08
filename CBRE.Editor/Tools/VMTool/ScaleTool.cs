@@ -213,9 +213,8 @@ Move the origin point around by *clicking and dragging* it.";
 
         public override void KeyDown(ViewportBase viewport, ViewportEvent e)
         {
-            var nudge = GetNudgeValue(e.KeyCode);
-            var vp = viewport as Viewport2D;
-            if (nudge != null && vp != null && _state == VMState.None)
+            var nudge = GetNudgeValue(e.KeyCode) ?? Vector3.Zero;
+            if (nudge != null && viewport is Viewport2D vp && _state == VMState.None)
             {
                 var translate = vp.Expand(nudge);
                 _origin.Move(translate);

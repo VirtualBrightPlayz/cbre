@@ -5,6 +5,8 @@ using CBRE.Graphics;
 using CBRE.Settings;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Drawing;
 using System.Linq;
 using CBRE.Common;
@@ -52,16 +54,12 @@ namespace CBRE.Editor.Rendering {
         }
 
         private static Vector3 Flatten(Vector3 c, ViewDirection direction) {
-            switch (direction) {
-                case ViewDirection.Top:
-                    return new Vector3(c.X, c.Y, 0);
-                case ViewDirection.Front:
-                    return new Vector3(c.Y, c.Z, 0);
-                case ViewDirection.Side:
-                    return new Vector3(c.X, c.Z, 0);
-                default:
-                    throw new ArgumentOutOfRangeException("direction");
-            }
+            return direction switch {
+                ViewDirection.Top => new Vector3(c.X, c.Y, 0),
+                ViewDirection.Front => new Vector3(c.Y, c.Z, 0),
+                ViewDirection.Side => new Vector3(c.X, c.Z, 0),
+                _ => throw new ArgumentOutOfRangeException("direction")
+            };
         }
 
         private static Vector3 Expand(Vector3 c, ViewDirection direction) {

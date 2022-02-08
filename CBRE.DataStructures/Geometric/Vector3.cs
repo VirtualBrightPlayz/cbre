@@ -7,7 +7,7 @@ using static CBRE.Common.PrimitiveConversion;
 
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
-    public class Vector3 : ISerializable {
+    public struct Vector3 : ISerializable {
         public readonly static Vector3 MaxValue = new Vector3(Decimal.MaxValue, Decimal.MaxValue, Decimal.MaxValue);
         public readonly static Vector3 MinValue = new Vector3(Decimal.MinValue, Decimal.MinValue, Decimal.MinValue);
         public readonly static Vector3 Zero = new Vector3(0, 0, 0);
@@ -17,183 +17,137 @@ namespace CBRE.DataStructures.Geometric {
         public readonly static Vector3 UnitZ = new Vector3(0, 0, 1);
 
         #region X, Y, Z
-        private decimal _z;
-        private decimal _y;
-        private decimal _x;
 
-        private double _dx;
-        private double _dy;
-        private double _dz;
-
-        public decimal X {
-            get { return _x; }
-            set {
-                _x = value;
-                _dx = (double)value;
-            }
-        }
-
-        public decimal Y {
-            get { return _y; }
-            set {
-                _y = value;
-                _dy = (double)value;
-            }
-        }
-
-        public decimal Z {
-            get { return _z; }
-            set {
-                _z = value;
-                _dz = (double)value;
-            }
-        }
+        public decimal X;
+        public decimal Y;
+        public decimal Z;
 
         public double DX {
-            get { return _dx; }
-            set {
-                _dx = value;
-                _x = (decimal)value;
-            }
+            get { return (double)X; }
+            set { X = (decimal)value; }
         }
 
         public double DY {
-            get { return _dy; }
-            set {
-                _dy = value;
-                _y = (decimal)value;
-            }
+            get { return (double)Y; }
+            set { Y = (decimal)value; }
         }
 
         public double DZ {
-            get { return _dz; }
-            set {
-                _dz = value;
-                _z = (decimal)value;
-            }
+            get { return (double)Z; }
+            set { Z = (decimal)value; }
         }
         #endregion
 
         public Vector3(decimal x, decimal y, decimal z) {
-            _x = x;
-            _y = y;
-            _z = z;
-            _dx = (double)x;
-            _dy = (double)y;
-            _dz = (double)z;
+            X = x;
+            Y = y;
+            Z = z;
         }
 
         public Vector3(Vector3F other) {
-            _x = (decimal)other.X;
-            _y = (decimal)other.Y;
-            _z = (decimal)other.Z;
-            _dx = other.X;
-            _dy = other.Y;
-            _dy = other.Z;
+            X = (decimal)other.X;
+            Y = (decimal)other.Y;
+            Z = (decimal)other.Z;
         }
 
-        protected Vector3(SerializationInfo info, StreamingContext context) {
+        internal Vector3(SerializationInfo info, StreamingContext context) {
             X = info.GetDecimal("X");
             Y = info.GetDecimal("Y");
             Z = info.GetDecimal("Z");
         }
 
-        public virtual void GetObjectData(SerializationInfo info, StreamingContext context) {
+        public void GetObjectData(SerializationInfo info, StreamingContext context) {
             info.AddValue("X", X);
             info.AddValue("Y", Y);
             info.AddValue("Z", Z);
         }
 
         public bool EquivalentTo(Vector3 test, decimal delta = 0.0001m) {
-            var xd = Math.Abs(_x - test._x);
-            var yd = Math.Abs(_y - test._y);
-            var zd = Math.Abs(_z - test._z);
+            var xd = Math.Abs(X - test.X);
+            var yd = Math.Abs(Y - test.Y);
+            var zd = Math.Abs(Z - test.Z);
             return (xd < delta) && (yd < delta) && (zd < delta);
         }
 
         public bool Equals(Vector3 other) {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
             return EquivalentTo(other);
         }
 
         public override bool Equals(object obj) {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == typeof(Vector3) && Equals((Vector3)obj);
+            return obj is Vector3 otherVec && Equals(otherVec);
         }
 
         public override int GetHashCode() {
             unchecked {
-                var result = _x.GetHashCode();
-                result = (result * 397) ^ _y.GetHashCode();
-                result = (result * 397) ^ _z.GetHashCode();
+                var result = X.GetHashCode();
+                result = (result * 397) ^ Y.GetHashCode();
+                result = (result * 397) ^ Z.GetHashCode();
                 return result;
             }
         }
 
         public decimal Dot(Vector3 c) {
-            return ((_x * c._x) + (_y * c._y) + (_z * c._z));
+            return ((X * c.X) + (Y * c.Y) + (Z * c.Z));
         }
 
         public Vector3 Cross(Vector3 that) {
-            var xv = (_y * that._z) - (_z * that._y);
-            var yv = (_z * that._x) - (_x * that._z);
-            var zv = (_x * that._y) - (_y * that._x);
+            var xv = (Y * that.Z) - (Z * that.Y);
+            var yv = (Z * that.X) - (X * that.Z);
+            var zv = (X * that.Y) - (Y * that.X);
             return new Vector3(xv, yv, zv);
         }
 
         public Vector3 Round(int num = 8) {
-            return new Vector3(Math.Round(_x, num), Math.Round(_y, num), Math.Round(_z, num));
+            return new Vector3(Math.Round(X, num), Math.Round(Y, num), Math.Round(Z, num));
         }
 
         public Vector3 Snap(decimal snapTo) {
             return new Vector3(
-                Math.Round(_x / snapTo) * snapTo,
-                Math.Round(_y / snapTo) * snapTo,
-                Math.Round(_z / snapTo) * snapTo
+                Math.Round(X / snapTo) * snapTo,
+                Math.Round(Y / snapTo) * snapTo,
+                Math.Round(Z / snapTo) * snapTo
             );
         }
 
         public decimal VectorMagnitude() {
-            return (decimal)Math.Sqrt(Math.Pow(_dx, 2) + Math.Pow(_dy, 2) + Math.Pow(_dz, 2));
+            return (decimal)Math.Sqrt(Math.Pow(DX, 2) + Math.Pow(DY, 2) + Math.Pow(DZ, 2));
         }
 
         public decimal LengthSquared() {
-            return (decimal)(Math.Pow(_dx, 2) + Math.Pow(_dy, 2) + Math.Pow(_dz, 2));
+            return (decimal)(Math.Pow(DX, 2) + Math.Pow(DY, 2) + Math.Pow(DZ, 2));
         }
 
         public Vector3 Normalise() {
             var len = VectorMagnitude();
-            return len == 0 ? new Vector3(0, 0, 0) : new Vector3(_x / len, _y / len, _z / len);
+            return len == 0 ? new Vector3(0, 0, 0) : new Vector3(X / len, Y / len, Z / len);
         }
 
         public Vector3 Absolute() {
-            return new Vector3(Math.Abs(_x), Math.Abs(_y), Math.Abs(_z));
+            return new Vector3(Math.Abs(X), Math.Abs(Y), Math.Abs(Z));
         }
 
         public Vector3 XYZ() {
-            return new Vector3(_x, _y, _z);
+            return new Vector3(X, Y, Z);
         }
 
         public Vector3 ZXY() {
-            return new Vector3(_z, _x, _y);
+            return new Vector3(Z, X, Y);
         }
 
         public Vector3 YZX() {
-            return new Vector3(_y, _z, _x);
+            return new Vector3(Y, Z, X);
         }
 
         public Vector3 ZYX() {
-            return new Vector3(_z, _y, _x);
+            return new Vector3(Z, Y, X);
         }
 
         public Vector3 YXZ() {
-            return new Vector3(_y, _x, _z);
+            return new Vector3(Y, X, Z);
         }
 
         public Vector3 XZY() {
-            return new Vector3(_x, _z, _y);
+            return new Vector3(X, Z, Y);
         }
 
 
@@ -206,23 +160,23 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public static Vector3 operator +(Vector3 c1, Vector3 c2) {
-            return new Vector3(c1._x + c2._x, c1._y + c2._y, c1._z + c2._z);
+            return new Vector3(c1.X + c2.X, c1.Y + c2.Y, c1.Z + c2.Z);
         }
 
         public static Vector3 operator -(Vector3 c1, Vector3 c2) {
-            return new Vector3(c1._x - c2._x, c1._y - c2._y, c1._z - c2._z);
+            return new Vector3(c1.X - c2.X, c1.Y - c2.Y, c1.Z - c2.Z);
         }
 
         public static Vector3 operator -(Vector3 c1) {
-            return new Vector3(-c1._x, -c1._y, -c1._z);
+            return new Vector3(-c1.X, -c1.Y, -c1.Z);
         }
 
         public static Vector3 operator /(Vector3 c, decimal f) {
-            return f == 0 ? new Vector3(0, 0, 0) : new Vector3(c._x / f, c._y / f, c._z / f);
+            return f == 0 ? new Vector3(0, 0, 0) : new Vector3(c.X / f, c.Y / f, c.Z / f);
         }
 
         public static Vector3 operator *(Vector3 c, decimal f) {
-            return new Vector3(c._x * f, c._y * f, c._z * f);
+            return new Vector3(c.X * f, c.Y * f, c.Z * f);
         }
 
         public static Vector3 operator *(Vector3 c, double f) {
@@ -242,14 +196,14 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public Vector3 ComponentMultiply(Vector3 c) {
-            return new Vector3(_x * c._x, _y * c._y, _z * c._z);
+            return new Vector3(X * c.X, Y * c.Y, Z * c.Z);
         }
 
         public Vector3 ComponentDivide(Vector3 c) {
-            var x = c._x == 0 ? 1 : c._x;
-            var y = c._y == 0 ? 1 : c._y;
-            var z = c._z == 0 ? 1 : c._z;
-            return new Vector3(_x / x, _y / y, _z / z);
+            var x = c.X == 0 ? 1 : c.X;
+            var y = c.Y == 0 ? 1 : c.Y;
+            var z = c.Z == 0 ? 1 : c.Z;
+            return new Vector3(X / x, Y / y, Z / z);
         }
 
         /// <summary>
@@ -258,13 +212,13 @@ namespace CBRE.DataStructures.Geometric {
         /// <returns></returns>
         public Vector3 ToEulerAngles() {
             // http://www.gamedev.net/topic/399701-convert-vector-to-euler-cardan-angles/#entry3651854
-            var yaw = DMath.Atan2(_y, _x);
-            var pitch = DMath.Atan2(-_z, DMath.Sqrt(_x * _x + _y * _y));
+            var yaw = DMath.Atan2(Y, X);
+            var pitch = DMath.Atan2(-Z, DMath.Sqrt(X * X + Y * Y));
             return new Vector3(0, pitch, yaw); // HL FGD has X = roll, Y = pitch, Z = yaw
         }
 
         public override string ToString() {
-            return "(" + _x.ToString("0.0000") + " " + _y.ToString("0.0000") + " " + _z.ToString("0.0000") + ")";
+            return "(" + X.ToString("0.0000") + " " + Y.ToString("0.0000") + " " + Z.ToString("0.0000") + ")";
         }
 
         public string ToDataString() {
@@ -276,11 +230,11 @@ namespace CBRE.DataStructures.Geometric {
                 }
                 return retVal;
             };
-            return toStringNoTrailing(_x) + " " + toStringNoTrailing(_y) + " " + toStringNoTrailing(_z);
+            return toStringNoTrailing(X) + " " + toStringNoTrailing(Y) + " " + toStringNoTrailing(Z);
         }
 
         public Vector3 Clone() {
-            return new Vector3(_x, _y, _z);
+            return new Vector3(X, Y, Z);
         }
 
         public static Vector3 Parse(string x, string y, string z) {
@@ -289,7 +243,7 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public Vector3F ToVector3F() {
-            return new Vector3F((float)_dx, (float)_dy, (float)_dz);
+            return new Vector3F((float)X, (float)Y, (float)Z);
         }
     }
 

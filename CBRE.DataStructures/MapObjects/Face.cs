@@ -273,8 +273,8 @@ namespace CBRE.DataStructures.MapObjects {
                 refV = transform.Transform(refV);
 
                 // Rotate the texture reference points as well, but around the intersection line, not the origin
-                refX = transform.Transform(refX + intersect) - intersect;
-                refY = transform.Transform(refY + intersect) - intersect;
+                refX = transform.Transform(refX + intersect.Value) - intersect.Value;
+                refY = transform.Transform(refY + intersect.Value) - intersect.Value;
             }
 
             // Convert the reference points back to get the final values
@@ -438,7 +438,7 @@ namespace CBRE.DataStructures.MapObjects {
         /// <param name="line">The intersection line</param>
         /// <returns>The point of intersection between the face and the line.
         /// Returns null if the line does not intersect this face.</returns>
-        public virtual Vector3 GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
+        public virtual Vector3? GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
             return GetIntersectionPoint(Vertices.Select(x => x.Location).ToList(), line, ignoreDirection, ignoreSegment);
         }
 
@@ -483,10 +483,10 @@ namespace CBRE.DataStructures.MapObjects {
             return PlaneClassification.Spanning;
         }
 
-        protected static Vector3 GetIntersectionPoint(IList<Vector3> coordinates, Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
+        protected static Vector3? GetIntersectionPoint(IList<Vector3> coordinates, Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
             var plane = new Plane(coordinates[0], coordinates[1], coordinates[2]);
             var intersect = plane.GetIntersectionPoint(line, ignoreDirection, ignoreSegment);
-            if (intersect == null) return null;
+            if (intersect == null) { return null; }
 
             // http://paulbourke.net/geometry/insidepoly/
 
@@ -497,8 +497,8 @@ namespace CBRE.DataStructures.MapObjects {
                 var i2 = (i + 1) % coordinates.Count;
 
                 // Translate the vertices so that the intersect point is on the origin
-                var v1 = coordinates[i1] - intersect;
-                var v2 = coordinates[i2] - intersect;
+                var v1 = coordinates[i1] - intersect.Value;
+                var v2 = coordinates[i2] - intersect.Value;
 
                 var m1 = (double)v1.LengthSquared();
                 var m2 = (double)v2.LengthSquared();

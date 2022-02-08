@@ -205,6 +205,10 @@ namespace CBRE.Editor.Popup {
                                 Handled = false,
                                 KeyCode = key
                             });
+                            GameMain.Instance.SelectedTool?.KeyPress(viewport, new ViewportEvent() {
+                                Handled = false,
+                                KeyCode = key
+                            });
                         }
 
                         foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {

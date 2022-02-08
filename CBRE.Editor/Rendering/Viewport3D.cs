@@ -48,7 +48,7 @@ namespace CBRE.Editor.Rendering {
             var dist = System.Math.Max(System.Math.Max(box.Width, box.Length), box.Height);
             var normal = Camera.EyePosition - Camera.LookPosition;
             var v = new Vector(new Vector3(normal.X, normal.Y, normal.Z), dist);
-            FocusOn(box.Center, new Vector3(v.X, v.Y, v.Z));
+            FocusOn(box.Center, v);
         }
 
         public override void FocusOn(Vector3 coordinate) {
@@ -118,7 +118,7 @@ namespace CBRE.Editor.Rendering {
                 new Microsoft.Xna.Framework.Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z),
                 new Microsoft.Xna.Framework.Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z),
                 Microsoft.Xna.Framework.Vector3.UnitZ).ToCbre();
-            return MathFunctions.Project(world, viewport, pm, vm);
+            return MathFunctions.Project(world, viewport, pm, vm) ?? Vector3.Zero;
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace CBRE.Editor.Rendering {
             var viewport = new[] { 0, 0, Width, Height };
             var un = MathFunctions.Unproject(near, viewport, pm, vm);
             var uf = MathFunctions.Unproject(far, viewport, pm, vm);
-            return (un == null || uf == null) ? null : new Line(un, uf);
+            return (un == null || uf == null) ? null : new Line(un.Value, uf.Value);
         }
 
         public override void Render() {
