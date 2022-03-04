@@ -34,6 +34,7 @@ namespace CBRE.Editor.Rendering {
             public Microsoft.Xna.Framework.Vector3 Position;
             public Microsoft.Xna.Framework.Vector3 Normal;
             public Microsoft.Xna.Framework.Color Color;
+            public float Selected;
             public static readonly VertexDeclaration VertexDeclaration;
             public PointEntityVertex(
                     Microsoft.Xna.Framework.Vector3 position,
@@ -43,6 +44,7 @@ namespace CBRE.Editor.Rendering {
                 this.Position = position;
                 this.Normal = normal;
                 this.Color = color;
+                this.Selected = 0.0f;
             }
 
             VertexDeclaration IVertexType.VertexDeclaration {
@@ -52,10 +54,11 @@ namespace CBRE.Editor.Rendering {
             }
 
             static PointEntityVertex() {
-                VertexElement[] elements = new VertexElement[] {
+                VertexElement[] elements = {
                     new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
                     new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
-                    new VertexElement(24, VertexElementFormat.Color, VertexElementUsage.Color, 0)
+                    new VertexElement(24, VertexElementFormat.Color, VertexElementUsage.Color, 0),
+                    new VertexElement(28, VertexElementFormat.Single, VertexElementUsage.Color, 1)
                 };
                 VertexDeclaration declaration = new VertexDeclaration(elements);
                 VertexDeclaration = declaration;
@@ -65,7 +68,7 @@ namespace CBRE.Editor.Rendering {
         private class PointEntityGeometry {
             public PointEntityGeometry(Document doc) { document = doc; }
 
-            private Document document = null;
+            private readonly Document document;
             private PointEntityVertex[] vertices = null;
             private ushort[] indicesSolid = null;
             private ushort[] indicesWireframe = null;
@@ -110,6 +113,7 @@ namespace CBRE.Editor.Rendering {
                             vertices[(i * 24) + j].Position = new Microsoft.Xna.Framework.Vector3((float)point.X, (float)point.Y, (float)point.Z);
                             vertices[(i * 24) + j].Normal = new Microsoft.Xna.Framework.Vector3((float)normal.X, (float)normal.Y, (float)normal.Z);
                             vertices[(i * 24) + j].Color = new Microsoft.Xna.Framework.Color(entity.Colour.R, entity.Colour.G, entity.Colour.B, entity.Colour.A);
+                            vertices[(i * 24) + j].Selected = entity.IsSelected ? 1.0f : 0.0f;
                             j++;
                         }
                     }
@@ -190,7 +194,7 @@ namespace CBRE.Editor.Rendering {
                 GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
             }
         };
-        private PointEntityGeometry pointEntityGeometry;
+        private readonly PointEntityGeometry pointEntityGeometry;
 
         public struct BrushVertex : IVertexType {
             public Microsoft.Xna.Framework.Vector3 Position;
@@ -238,7 +242,7 @@ namespace CBRE.Editor.Rendering {
             }
 
             static BrushVertex() {
-                VertexElement[] elements = new VertexElement[] {
+                VertexElement[] elements = {
                     new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
                     new VertexElement(12, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
                     new VertexElement(24, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
@@ -531,7 +535,7 @@ namespace CBRE.Editor.Rendering {
             Effects.Solid = GlobalGraphics.LoadEffect("Shaders/solid.mgfx");
 
             foreach (Solid solid in doc.Map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
-                solid.Faces.ForEach(f => AddFace(f));
+                solid.Faces.ForEach(AddFace);
             }
             pointEntityGeometry = new PointEntityGeometry(doc);
         }
