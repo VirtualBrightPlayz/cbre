@@ -4,30 +4,24 @@ using ImGuiNET;
 
 namespace CBRE.Editor.Popup {
     public class ConfirmPopup : PopupUI {
-        private string _message;
+        private readonly string message;
 
         protected override bool canBeClosed => true;
         protected override bool canBeDefocused => false;
+        protected override bool hasOkButton => false;
 
-        public readonly struct Button {
-            public readonly string Label;
-            public readonly Action Action;
-
-            public Button(string label, Action action) {
-                Label = label;
-                Action = action;
-            }
-        }
+        public readonly record struct Button(string Label, Action Action);
+        
         public ImmutableArray<Button> Buttons { get; init; }
 
         public ConfirmPopup(string title, string message, ImColor? color = null) : base(title, color) {
-            _message = message;
+            this.message = message;
         }
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
             shouldBeOpen = true;
             
-            ImGui.Text(_message);
+            ImGui.Text(message);
 
             for (int i=0; i<Buttons.Length; i++) {
                 var btn = Buttons[i];

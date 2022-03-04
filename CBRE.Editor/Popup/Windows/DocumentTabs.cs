@@ -1,3 +1,4 @@
+using System.Linq;
 using CBRE.Common.Mediator;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
@@ -35,7 +36,7 @@ namespace CBRE.Editor.Popup {
                             var currDoc = DocumentManager.CurrentDocument;
                             DocumentManager.SwitchTo(doc);
                             Mediator.Publish(CBRE.Settings.HotkeysMediator.FileClose);
-                            if (doc != currDoc) { DocumentManager.SwitchTo(currDoc); }
+                            DocumentManager.SwitchTo(currDoc);
                         }
                     }
                     ImGui.SameLine();

@@ -205,7 +205,7 @@ namespace CBRE.Editor.Documents {
 
         public void FileClose() {
             if (_document.History.TotalActionsSinceLastSave > 0) {
-                new ConfirmPopup($"Closing {_document.MapFileName}",
+                GameMain.Instance.Popups.Add(new ConfirmPopup($"Closing {_document.MapFileName}",
                     $"{_document.MapFileName} has unsaved changes.\nWould you like to save before closing?") {
                     Buttons = new [] {
                         new ConfirmPopup.Button("Yes", () => {
@@ -224,7 +224,7 @@ namespace CBRE.Editor.Documents {
                         }),
                         new ConfirmPopup.Button("Cancel", () => { }),
                     }.ToImmutableArray()
-                };
+                });
             } else {
                 DocumentManager.Remove(_document);
             }
