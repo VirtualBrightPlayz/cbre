@@ -97,7 +97,7 @@ namespace CBRE.Editor.Rendering {
                     indexBufferSolid = new IndexBuffer(GlobalGraphics.GraphicsDevice, IndexElementSize.SixteenBits, indexSolidCount, BufferUsage.None);
                 }
 
-                if (indexBufferWireframe == null || indexBufferWireframe == null || indicesWireframe.Length < indexWireframeCount) {
+                if (indexBufferWireframe == null || indicesWireframe == null || indicesWireframe.Length < indexWireframeCount) {
                     indexBufferWireframe = new IndexBuffer(GlobalGraphics.GraphicsDevice, IndexElementSize.SixteenBits, indexWireframeCount, BufferUsage.None);
                 }
 
