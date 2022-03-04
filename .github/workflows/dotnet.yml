@@ -21,5 +21,5 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: CBRE.Editor Build
-        path: CBRE.Editor/bin/Debug/net5.0/
+        path: CBRE.Editor/bin/Debug/net6.0/
         retention-days: 5

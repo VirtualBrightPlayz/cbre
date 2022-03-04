@@ -28,11 +28,11 @@ In the folder `CBRE.Editor/` run the command `dotnet build`
 
 ### Windows 64-bit
 
-Run the file `CBRE.Editor/bin/Debug/net5.0/CBRE.Editor.exe`
+Run the file `CBRE.Editor/bin/Debug/net6.0/CBRE.Editor.exe`
 
 ### Linux 64-bit (Not tested yet)
 
-Run the file `CBRE.Editor/bin/Debug/net5.0/CBRE.Editor.dll` using the `dotnet` command
+Run the file `CBRE.Editor/bin/Debug/net6.0/CBRE.Editor.dll` using the `dotnet` command
 
 ## Contributing
 

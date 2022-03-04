@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>MonoGame.Framework.MacOS.NetStandard</AssemblyName>
     <RootNamespace>Microsoft.Xna.Framework</RootNamespace>
     <Platforms>AnyCPU;x64</Platforms>
