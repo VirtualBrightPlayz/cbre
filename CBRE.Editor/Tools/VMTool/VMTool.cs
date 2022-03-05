@@ -324,12 +324,12 @@ namespace CBRE.Editor.Tools.VMTool
 
         private void Commit(IList<Solid> solids)
         {
-            if (!solids.Any()) return;
+            if (!solids.Any()) { return; }
 
             // Unhide the solids
             foreach (var solid in solids)
             {
-                solid.IsCodeHidden = false;
+                Document.ObjectRenderer.ShowSolid(solid);
             }
             var kvs = _copies.Where(x => solids.Contains(x.Value)).ToList();
             foreach (var kv in kvs)
@@ -361,8 +361,7 @@ namespace CBRE.Editor.Tools.VMTool
 
                 // Set all the original solids to hidden
                 // (do this after we clone it so the clones aren't hidden too)
-                solid.IsCodeHidden = true;
-                solid.Faces.ForEach(p => Document.ObjectRenderer.RemoveFace(p));
+                Document.ObjectRenderer.HideSolid(solid);
             }
             RefreshPoints();
             RefreshMidpoints();
@@ -597,15 +596,15 @@ namespace CBRE.Editor.Tools.VMTool
                 _currentTool.MouseDown(vp, e);
                 if (e.Handled) return;
             }
-            if (!(vp is Viewport2D))
+            if (vp is Viewport3D vp3d)
             {
-                MouseDown((Viewport3D)vp, e);
+                MouseDown(vp3d, e);
                 return;
             }
 
-            if (_currentTool == null) return;
+            if (_currentTool == null) { return; }
 
-            if (_currentTool.NoSelection()) return;
+            if (_currentTool.NoSelection()) { return; }
 
             var viewport = (Viewport2D)vp;
 
@@ -641,7 +640,7 @@ namespace CBRE.Editor.Tools.VMTool
                 {
                     // select solid
                     var select = new[] { solid };
-                    var deselect = !ViewportManager.Ctrl ? Document.Selection.GetSelectedObjects() : new MapObject[0];
+                    var deselect = !ViewportManager.Ctrl ? Document.Selection.GetSelectedObjects() : Array.Empty<MapObject>();
                     Document.PerformAction("Select VM solid", new ChangeSelection(select, deselect));
 
                     // Don't do other click operations

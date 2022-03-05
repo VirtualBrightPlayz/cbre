@@ -511,6 +511,24 @@ namespace CBRE.Editor.Rendering {
             }
         }
         
+        public void SetSolidHidden(Solid solid, bool hide) {
+            if (hide) {
+                HideSolid(solid);
+            } else {
+                ShowSolid(solid);
+            }
+        }
+
+        public void HideSolid(Solid solid) {
+            solid.IsCodeHidden = true;
+            solid.Faces.ForEach(RemoveFace);
+        }
+
+        public void ShowSolid(Solid solid) {
+            solid.IsCodeHidden = false;
+            solid.Faces.ForEach(AddFace);
+        }
+
         public void MarkDirty(MapObject mapObject) {
             switch (mapObject)
             {

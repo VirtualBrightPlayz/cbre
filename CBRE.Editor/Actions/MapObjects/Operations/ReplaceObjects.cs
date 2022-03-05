@@ -26,13 +26,13 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             var root = document.Map.WorldSpawn;
             foreach (var kv in _reverse) {
                 var obj = root.FindByID(kv.Key);
-                if (obj == null) return;
+                if (obj == null) { return; }
 
                 // Unclone will reset children, need to reselect them if needed
                 var deselect = obj.GetSelfAndAllChildren().Where(x => x.IsSelected).ToList();
                 document.Selection.Deselect(deselect);
 
-                obj.Unclone(kv.Value);
+                SwapObjects(document, obj, kv.Value);
 
                 var select = obj.GetSelfAndAllChildren().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);
@@ -47,12 +47,18 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             _reverse.Clear();
         }
 
+        private void SwapObjects(Document document, MapObject prev, MapObject newObj) {
+            document.ObjectRenderer.RemoveFaces(prev);
+            prev.Unclone(newObj);
+            document.ObjectRenderer.AddFaces(prev);
+        }
+
         public void Perform(Document document) {
             var root = document.Map.WorldSpawn;
             _reverse.Clear();
             foreach (var kv in _perform) {
                 var obj = root.FindByID(kv.Key);
-                if (obj == null) return;
+                if (obj == null) { return; }
 
                 _reverse.Add(kv.Key, obj.Clone());
 
@@ -60,13 +66,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
                 var deselect = obj.GetSelfAndAllChildren().Where(x => x.IsSelected).ToList();
                 document.Selection.Deselect(deselect);
 
-                if (obj is Solid s) {
-                    s.Faces.ForEach(p => document.ObjectRenderer.RemoveFace(p));
-                }
-                obj.Unclone(kv.Value);
-                if (kv.Value is Solid v) {
-                    v.Faces.ForEach(p => document.ObjectRenderer.AddFace(p));
-                }
+                SwapObjects(document, obj, kv.Value);
 
                 var select = obj.GetSelfAndAllChildren().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);
