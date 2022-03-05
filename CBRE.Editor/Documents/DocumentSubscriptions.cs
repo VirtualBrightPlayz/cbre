@@ -215,7 +215,8 @@ namespace CBRE.Editor.Documents {
                                     _document.SaveFile(outPath);
                                     DocumentManager.Remove(_document);
                                 } catch (ProviderNotFoundException e) {
-                                    new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) });
+                                    GameMain.Instance.Popups.Add(
+                                        new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) }));
                                 }
                             }
                         }),
