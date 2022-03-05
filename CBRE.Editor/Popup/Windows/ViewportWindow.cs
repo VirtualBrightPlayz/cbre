@@ -127,12 +127,12 @@ namespace CBRE.Editor.Popup {
             GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
         }
 
-        private bool shouldRerender = true;
         private bool prevMouse1Down = false;
         private bool prevMouse2Down = false;
         private bool prevMouse3Down = false;
         private Keys[] prevKeysDown = Array.Empty<Keys>();
         private int prevScrollWheelValue = 0;
+        private int focusedViewport = -1;
         
         public override void Update() {
             var mouseState = Mouse.GetState();
@@ -149,20 +149,20 @@ namespace CBRE.Editor.Popup {
             try {
                 GameMain.Instance.SelectedTool?.Update();
                 var doc = DocumentManager.CurrentDocument;
-                if (doc != null && doc.LightmapTextureOutdated) {
+                if (doc is { LightmapTextureOutdated: true }) {
                     doc.LightmapTextureOutdated = false;
-                    shouldRerender = true;
                 }
 
                 if (!selected) { return; }
 
                 if (draggingCenter != DraggingMode.None) { return; }
 
-                ViewportManager.Ctrl = keyboardState.IsKeyDown(Keys.LeftControl) ||
-                                       keyboardState.IsKeyDown(Keys.RightControl);
-                ViewportManager.Shift =
-                    keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift);
-                ViewportManager.Alt = keyboardState.IsKeyDown(Keys.LeftAlt) || keyboardState.IsKeyDown(Keys.RightAlt);
+                ViewportManager.Ctrl = keyboardState.IsKeyDown(Keys.LeftControl)
+                                       || keyboardState.IsKeyDown(Keys.RightControl);
+                ViewportManager.Shift = keyboardState.IsKeyDown(Keys.LeftShift)
+                                        || keyboardState.IsKeyDown(Keys.RightShift);
+                ViewportManager.Alt = keyboardState.IsKeyDown(Keys.LeftAlt)
+                                      || keyboardState.IsKeyDown(Keys.RightAlt);
 
                 foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
                     GameMain.Instance.SelectedTool?.KeyDown(new ViewportEvent() {
@@ -183,7 +183,8 @@ namespace CBRE.Editor.Popup {
                 for (int i = 0; i < Viewports.Length; i++) {
                     var viewport = Viewports[i];
 
-                    bool mouseOver = GetXnaRectangle(i).Contains(mousePos);
+                    bool mouseOver = (focusedViewport == -1 && GetXnaRectangle(i).Contains(mousePos))
+                                     || focusedViewport == i;
                     if (mouseOver) {
                         if (!mouse1Down && !mouse3Down) {
                             GameMain.Instance.SelectedTool?.MouseUp(viewport, new ViewportEvent() {
@@ -195,6 +196,7 @@ namespace CBRE.Editor.Popup {
                                 LastY = viewport.PrevMouseY,
                             });
                             ViewportManager.MarkForRerender();
+                            focusedViewport = -1;
                         }
 
                         GameMain.Instance.SelectedTool?.UpdateFrame(viewport,
@@ -311,6 +313,8 @@ namespace CBRE.Editor.Popup {
                                 LastX = viewport.PrevMouseX,
                                 LastY = viewport.PrevMouseY,
                             });
+
+                            focusedViewport = i;
                         }
 
                         if (mouse2Hit) {
@@ -478,7 +482,8 @@ namespace CBRE.Editor.Popup {
                     var mousePos = new Point((int)mousePosImGui.X, (int)mousePosImGui.Y);
 
                     void handleHover(Rectangle drawRect, Rectangle hoverRect, DraggingMode dragFlag) {
-                        if ((hoverRect.Contains(mousePos) && !wasDragging) || draggingCenter.HasFlag(dragFlag)) {
+                        if ((hoverRect.Contains(mousePos) && !wasDragging && focusedViewport < 0)
+                            || draggingCenter.HasFlag(dragFlag)) {
                             addRect(drawRect, hoveredColor);
                             if (!wasDragging && ImGui.IsMouseDown(ImGuiMouseButton.Left)) {
                                 draggingCenter |= dragFlag;
