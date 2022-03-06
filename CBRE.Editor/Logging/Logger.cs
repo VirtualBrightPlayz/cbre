@@ -24,7 +24,9 @@ namespace CBRE.Editor.Logging {
         public static void ShowException(Exception ex, string message = "") {
             var info = new ExceptionInfo(ex, message);
             Log(info);
-            new CopyMessagePopup($"Exception", $"{info.Message}\nThis error has been logged to the file \"{LogFile}\"", new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) });
+            GameMain.Instance.Popups.Add(
+                new CopyMessagePopup($"Exception", $"{info.Message}\nThis error has been logged to the file \"{LogFile}\"",
+                        new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) }));
             /*var window = new ExceptionWindow(info);
             if (Editor.Instance == null || Editor.Instance.IsDisposed) window.Show();
             else window.Show(Editor.Instance);*/

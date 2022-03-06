@@ -270,7 +270,7 @@ namespace CBRE.Editor.Documents {
                 action.Perform(this);
             } catch (Exception ex) {
                 var st = new StackTrace();
-                var frames = st.GetFrames() ?? new StackFrame[0];
+                var frames = st.GetFrames();
                 var msg = "Action exception: " + name + " (" + action + ")";
                 foreach (var frame in frames) {
                     var method = frame.GetMethod();
