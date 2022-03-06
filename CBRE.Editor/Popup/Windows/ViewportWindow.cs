@@ -135,6 +135,8 @@ namespace CBRE.Editor.Popup {
         private int focusedViewport = -1;
         
         public override void Update() {
+            if (!DocumentManager.Documents.Contains(DocumentManager.CurrentDocument)) { return; }
+            
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();
             var keysDown = keyboardState.GetPressedKeys();
