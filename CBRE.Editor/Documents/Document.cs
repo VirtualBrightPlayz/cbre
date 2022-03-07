@@ -128,11 +128,9 @@ namespace CBRE.Editor.Documents {
 
             if (!string.IsNullOrEmpty(path)) {
                 IEnumerable<string> noSaveExtensions = FileTypeRegistration.GetSupportedExtensions().Where(x => !x.CanSave).Select(x => x.Extension);
-                foreach (string ext in noSaveExtensions) {
-                    if (path.EndsWith(ext, StringComparison.OrdinalIgnoreCase)) {
-                        path = null;
-                        break;
-                    }
+                if (noSaveExtensions.Any(ext => path.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    path = null;
                 }
             }
 
@@ -236,13 +234,12 @@ namespace CBRE.Editor.Documents {
                 if (!match.Success) continue;
 
                 // Parse the date and add it if it is valid
-                DateTime date;
-                var result = DateTime.TryParse(String.Format("{0}-{1}-{2}T{3}:{4}:{5}Z",
+                var result = DateTime.TryParse(string.Format("{0}-{1}-{2}T{3}:{4}:{5}Z",
                                                              match.Groups[1].Value, match.Groups[2].Value,
                                                              match.Groups[3].Value, match.Groups[4].Value,
                                                              match.Groups[5].Value, match.Groups[6].Value),
                                                              CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal,
-                                                             out date);
+                                                             out var date);
                 if (result) {
                     ret.Add(file, date);
                 }
@@ -253,9 +250,8 @@ namespace CBRE.Editor.Documents {
         public Vector3 Snap(Vector3 c, decimal spacing = 0) {
             if (!Map.SnapToGrid) return c;
 
-            bool snap = true;
-            /*var snap = (Select.SnapStyle == SnapStyle.SnapOnAlt && ViewportManager.Alt) ||
-                       (Select.SnapStyle == SnapStyle.SnapOffAlt && !ViewportManager.Alt);*/
+            bool snap = (Select.SnapStyle == SnapStyle.SnapOnAlt && ViewportManager.Alt) ||
+                       (Select.SnapStyle == SnapStyle.SnapOffAlt && !ViewportManager.Alt);
 
             return snap ? c.Snap(spacing == 0 ? Map.GridSpacing : spacing) : c;
         }
