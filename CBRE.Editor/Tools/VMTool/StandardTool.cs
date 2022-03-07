@@ -5,7 +5,9 @@ using CBRE.Settings;
 using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using CBRE.Editor.Popup;
 using ImGuiNET;
 
 namespace CBRE.Editor.Tools.VMTool
@@ -225,9 +227,18 @@ Select two (non-adjacent) points on a face to enable splitting.";
         {
             if (_state == VMState.Moving)
             {
-                if (AutomaticallyMerge()) CheckMergedVertices();
-                else if (CanMerge() && ConfirmMerge()) CheckMergedVertices();
-                else MainTool.SetDirty(true, true);
+                if (AutomaticallyMerge()) { CheckMergedVertices(); }
+                else if (CanMerge()) {
+                    GameMain.Instance.Popups.Add(new ConfirmPopup(
+                        "Merge vertices?",
+                        "Overlapping vertices detected! Merge vertices?") {
+                        Buttons = new[]{
+                            new ConfirmPopup.Button("Yes", CheckMergedVertices),
+                            new ConfirmPopup.Button("No", () => MainTool.SetDirty(true, true) )
+                        }.ToImmutableArray()
+                    });
+                }
+                else { MainTool.SetDirty(true, true); }
             }
             _state = VMState.None;
             // throw new NotImplementedException();
@@ -262,12 +273,6 @@ Select two (non-adjacent) points on a face to enable splitting.";
                 }
             }
             return false;
-        }
-
-        private bool ConfirmMerge()
-        {
-            throw new NotImplementedException();
-            /*return MessageBox.Show("Merge vertices?", "Overlapping vertices detected", MessageBoxButtons.YesNo) == DialogResult.Yes;*/
         }
 
         private void CheckMergedVertices()
