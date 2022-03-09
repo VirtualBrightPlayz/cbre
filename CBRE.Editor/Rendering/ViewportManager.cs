@@ -19,7 +19,7 @@ namespace CBRE.Editor.Rendering {
         Mouse5 = 0x10
     }
 
-    public class ViewportEvent : EventArgs {
+    public struct ViewportEvent {
         public bool Handled { get; set; }
 
         // Key

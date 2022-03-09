@@ -238,13 +238,13 @@ namespace CBRE.Editor.Tools.SelectTool
         #endregion
 
         #region Widget
-        private bool WidgetAction(Action<Widget, ViewportBase, ViewportEvent> action, ViewportBase viewport, ViewportEvent ev)
+        private bool WidgetAction(Action<Widget, ViewportBase, ViewportEvent> action, ViewportBase viewport, ViewportEvent? ev)
         {
             if (_widgets == null) return false;
             foreach (var widget in _widgets)
             {
-                action(widget, viewport, ev);
-                if (ev != null && ev.Handled) return true;
+                action(widget, viewport, ev ?? default);
+                if (ev is { Handled: true }) return true;
             }
             return false;
         }

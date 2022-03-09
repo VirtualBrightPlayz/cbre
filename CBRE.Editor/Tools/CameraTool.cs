@@ -276,6 +276,7 @@ namespace CBRE.Editor.Tools
                 capturedTool = GameMain.Instance.SelectedTool;
                 GameMain.Instance.SelectedTool = this;
                 _state = State.Moving3d;
+                ViewportManager.SetCursorPos(viewport, viewport.Width / 2, viewport.Height / 2);
             }
         }
         
