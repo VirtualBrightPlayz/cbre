@@ -73,6 +73,27 @@ namespace CBRE.Editor.Tools.TextureTool {
         private double yoff = 0;
         private double trot = 0;
 
+        private class Popup : PopupUI {
+            private readonly Action guiMethod;
+
+            protected override bool hasOkButton => false;
+
+            protected override void OnCloseButtonHit(ref bool shouldBeOpen) {
+                GameMain.Instance.SelectedTool = GameMain.Instance.ToolBarItems
+                    .Select(tb => tb.Tool)
+                    .First(t => t is SelectTool.SelectTool);
+            }
+
+            public Popup(Action guiMethod) : base("Texture Tool", color: null) {
+                this.guiMethod = guiMethod;
+            }
+
+            protected override void ImGuiLayout(out bool shouldBeOpen) {
+                shouldBeOpen = GameMain.Instance.SelectedTool is TextureTool;
+                guiMethod();
+            }
+        }
+
         public TextureTool() {
             Usage = ToolUsage.View3D;
             /*_form = new TextureApplicationForm();
@@ -91,72 +112,75 @@ namespace CBRE.Editor.Tools.TextureTool {
 
         public override void UpdateGui() {
             if (ImGui.BeginChild("Texture Tool")) {
-                if (ImGui.BeginCombo("Left Click", _leftCombo.ToString())) {
-                    var e = Enum.GetValues<SelectBehaviour>();
-                    for (int i = 0; i < e.Length; i++) {
-                        if (ImGui.Selectable(e[i].ToString())) {
-                            _leftCombo = e[i];
-                        }
-                    }
-
-                    ImGui.EndCombo();
-                }
-
-                ImGui.NewLine();
-                if (ImGui.BeginCombo("Right Click", _rightCombo.ToString())) {
-                    var e = Enum.GetValues<SelectBehaviour>();
-                    for (int i = 0; i < e.Length; i++) {
-                        if (ImGui.Selectable(e[i].ToString())) {
-                            _rightCombo = e[i];
-                        }
-                    }
-
-                    ImGui.EndCombo();
-                }
-
-                ImGui.NewLine();
-                ImGui.Checkbox("Show Offset Preview", ref _showOffset);
-                if (ImGui.Button("Align World")) {
-                    TextureAligned(this, AlignMode.World);
-                }
-
-                if (ImGui.Button("Align Face")) {
-                    TextureAligned(this, AlignMode.Face);
-                }
-
-                ImGui.NewLine();
-                ImGui.InputDouble("X Scale", ref xscl);
-                ImGui.InputDouble("Y Scale", ref yscl);
-                ImGui.NewLine();
-                ImGui.InputDouble("X Offset", ref xoff);
-                ImGui.InputDouble("Y Offset", ref yoff);
-                ImGui.NewLine();
-                ImGui.InputDouble("Rotation", ref trot);
-                ImGui.NewLine();
-                if (_texture.AsyncTexture.ImGuiTexture != IntPtr.Zero) {
-                    if (_showOffset) {
-                        ImGui.Image(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f),
-                            // new Num.Vector2(0, 0), new Num.Vector2(1, 1));
-                            new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width - (float)xscl,
-                                (float)yscl * (float)yoff / _texture.AsyncTexture.Height - (float)yscl),
-                            new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width,
-                                (float)yscl * (float)yoff / _texture.AsyncTexture.Height));
-                    }
-
-                    if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
-                        GameMain.Instance.Popups.Add(new TexturePopupUI(t => {
-                            _texture = t;
-                            TextureChanged(this, t.Texture);
-                        }));
-                    }
-                }
-
-                if (ImGui.Button("Apply")) {
-                    TextureApplied(this, _texture.Texture, xscl, yscl, xoff, yoff, trot);
-                }
-
+                GuiElements();
             }
             ImGui.EndChild();
+        }
+
+        private void GuiElements() {
+            if (ImGui.BeginCombo("Left Click", _leftCombo.ToString())) {
+                var e = Enum.GetValues<SelectBehaviour>();
+                for (int i = 0; i < e.Length; i++) {
+                    if (ImGui.Selectable(e[i].ToString())) {
+                        _leftCombo = e[i];
+                    }
+                }
+
+                ImGui.EndCombo();
+            }
+
+            ImGui.NewLine();
+            if (ImGui.BeginCombo("Right Click", _rightCombo.ToString())) {
+                var e = Enum.GetValues<SelectBehaviour>();
+                for (int i = 0; i < e.Length; i++) {
+                    if (ImGui.Selectable(e[i].ToString())) {
+                        _rightCombo = e[i];
+                    }
+                }
+
+                ImGui.EndCombo();
+            }
+
+            ImGui.NewLine();
+            ImGui.Checkbox("Show Offset Preview", ref _showOffset);
+            if (ImGui.Button("Align World")) {
+                TextureAligned(this, AlignMode.World);
+            }
+
+            if (ImGui.Button("Align Face")) {
+                TextureAligned(this, AlignMode.Face);
+            }
+
+            ImGui.NewLine();
+            ImGui.InputDouble("X Scale", ref xscl);
+            ImGui.InputDouble("Y Scale", ref yscl);
+            ImGui.NewLine();
+            ImGui.InputDouble("X Offset", ref xoff);
+            ImGui.InputDouble("Y Offset", ref yoff);
+            ImGui.NewLine();
+            ImGui.InputDouble("Rotation", ref trot);
+            ImGui.NewLine();
+            if (_texture.AsyncTexture.ImGuiTexture != IntPtr.Zero) {
+                if (_showOffset) {
+                    ImGui.Image(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f),
+                        // new Num.Vector2(0, 0), new Num.Vector2(1, 1));
+                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width - (float)xscl,
+                            (float)yscl * (float)yoff / _texture.AsyncTexture.Height - (float)yscl),
+                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width,
+                            (float)yscl * (float)yoff / _texture.AsyncTexture.Height));
+                }
+
+                if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
+                    GameMain.Instance.Popups.Add(new TexturePopupUI(t => {
+                        _texture = t;
+                        TextureChanged(this, t.Texture);
+                    }));
+                }
+            }
+
+            if (ImGui.Button("Apply")) {
+                TextureApplied(this, _texture.Texture, xscl, yscl, xoff, yoff, trot);
+            }
         }
 
         public override void DocumentChanged() {
@@ -315,31 +339,10 @@ namespace CBRE.Editor.Tools.TextureTool {
             Mediator.Subscribe(EditorMediator.TextureSelected, this);
             Mediator.Subscribe(EditorMediator.DocumentTreeFacesChanged, this);
             Mediator.Subscribe(EditorMediator.SelectionChanged, this);
-            // throw new NotImplementedException();
-            /*_form.Show(Editor.Instance);
-            Editor.Instance.Focus();
 
-            if (!preventHistory) {
-                Document.History.AddHistoryItem(new HistoryAction("Switch selection mode", new ChangeToFaceSelectionMode(GetType(), Document.Selection.GetSelectedObjects())));
-                var currentSelection = Document.Selection.GetSelectedObjects();
-                Document.Selection.SwitchToFaceSelection();
-                var newSelection = Document.Selection.GetSelectedFaces().Select(x => x.Parent);
-                Document.RenderSelection(currentSelection.Union(newSelection));
+            if (!GameMain.Instance.Popups.Any(p => p is Popup)) {
+                GameMain.Instance.Popups.Add(new Popup(GuiElements));
             }
-
-            _form.SelectionChanged();
-
-            var selection = Document.Selection.GetSelectedFaces().OrderBy(x => x.Texture.Texture == null ? 1 : 0).FirstOrDefault();
-            if (selection != null) {
-                var itemToSelect = Document.TextureCollection.GetItem(selection.Texture.Name)
-                                   ?? new TextureItem(null, selection.Texture.Name, TextureFlags.Missing, 64, 64);
-                Mediator.Publish(EditorMediator.TextureSelected, itemToSelect);
-            }
-            _form.SelectTexture(Document.TextureCollection.SelectedTexture);
-
-            Mediator.Subscribe(EditorMediator.TextureSelected, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeFacesChanged, this);
-            Mediator.Subscribe(EditorMediator.SelectionChanged, this);*/
         }
 
         public override void ToolDeselected(bool preventHistory) {

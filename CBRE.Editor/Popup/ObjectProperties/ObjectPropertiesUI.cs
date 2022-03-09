@@ -31,6 +31,8 @@ namespace CBRE.Editor.Popup.ObjectProperties {
         private Dictionary<int, VisgroupAction> visgroupActions = new Dictionary<int, VisgroupAction>();
         private Dictionary<int, Color> visgroupColors = new Dictionary<int, Color>();
 
+        protected override bool hasOkButton => false;
+
         public ObjectPropertiesUI(Document document, MapObject mapobject) : base("Object Properties") {
             _document = document;
             _obj = mapobject;
