@@ -165,8 +165,10 @@ namespace CBRE.Editor.Tools
         public abstract void MouseWheel(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseMove(ViewportBase viewport, ViewportEvent e);
         public abstract void KeyPress(ViewportBase viewport, ViewportEvent e);
+        public virtual void KeyPressBackground(ViewportBase viewport, ViewportEvent e) { }
         public abstract void KeyDown(ViewportBase viewport, ViewportEvent e);
         public abstract void KeyUp(ViewportBase viewport, ViewportEvent e);
+        public virtual void KeyUpBackground(ViewportBase viewport, ViewportEvent e) { }
         public abstract void UpdateFrame(ViewportBase viewport, FrameInfo frame);
         public abstract void Render(ViewportBase viewport);
 

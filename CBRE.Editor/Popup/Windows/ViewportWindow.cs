@@ -188,7 +188,7 @@ namespace CBRE.Editor.Popup {
                     bool mouseOver = (focusedViewport == -1 && GetXnaRectangle(i).Contains(mousePos))
                                      || focusedViewport == i;
                     if (mouseOver) {
-                        if (!mouse1Down && !mouse3Down) {
+                        if (!mouse1Down && prevMouse1Down) {
                             GameMain.Instance.SelectedTool?.MouseUp(viewport, new ViewportEvent() {
                                 Handled = false,
                                 Button = MouseButtons.Left,
@@ -213,6 +213,12 @@ namespace CBRE.Editor.Popup {
                                 Handled = false,
                                 KeyCode = key
                             });
+                            foreach (var tool in GameMain.Instance.ToolBarItems.Select(tbi => tbi.Tool)) {
+                                tool.KeyPressBackground(viewport, new ViewportEvent() {
+                                    Handled = false,
+                                    KeyCode = key
+                                });
+                            }
                         }
 
                         foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
@@ -220,6 +226,12 @@ namespace CBRE.Editor.Popup {
                                 Handled = false,
                                 KeyCode = key
                             });
+                            foreach (var tool in GameMain.Instance.ToolBarItems.Select(tbi => tbi.Tool)) {
+                                tool.KeyUpBackground(viewport, new ViewportEvent() {
+                                    Handled = false,
+                                    KeyCode = key
+                                });
+                            }
                         }
 
                         if (viewport is Viewport3D vp3d) {

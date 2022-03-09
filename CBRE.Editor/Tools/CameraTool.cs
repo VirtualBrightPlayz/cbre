@@ -32,6 +32,7 @@ namespace CBRE.Editor.Tools
             Down = 0x8
         }
 
+        private BaseTool? capturedTool = null;
         private State _state;
         private Camera _stateCamera;
 
@@ -204,64 +205,86 @@ namespace CBRE.Editor.Tools
             //
         }
 
-        public override void MouseMove(ViewportBase viewport, ViewportEvent e)
-        {
-            if (viewport is Viewport2D vp) {
-                var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
-                var cursor = MouseCursor.Arrow;
+        public override void MouseMove(ViewportBase viewport, ViewportEvent e) {
+            switch (viewport)
+            {
+                case Viewport2D vp:
+                {
+                    var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
+                    var cursor = MouseCursor.Arrow;
 
-                switch (_state) {
-                    case State.None:
-                        var st = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
-                        if (st != State.None) cursor = MouseCursor.SizeAll;
-                        break;
-                    case State.MovingPosition:
-                        if (_stateCamera == null) break;
-                        var newEye = vp.GetUnusedCoordinate(_stateCamera.EyePosition) + p;
-                        if (ViewportManager.Ctrl) _stateCamera.LookPosition += (newEye - _stateCamera.EyePosition);
-                        _stateCamera.EyePosition = newEye;
-                        if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
-                        break;
-                    case State.MovingLook:
-                        if (_stateCamera == null) break;
-                        var newLook = vp.GetUnusedCoordinate(_stateCamera.LookPosition) + p;
-                        if (ViewportManager.Ctrl) _stateCamera.EyePosition += (newLook - _stateCamera.LookPosition);
-                        _stateCamera.LookPosition = newLook;
-                        if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
-                        break;
+                    switch (_state) {
+                        case State.None:
+                            var st = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
+                            if (st != State.None) cursor = MouseCursor.SizeAll;
+                            break;
+                        case State.MovingPosition:
+                            if (_stateCamera == null) break;
+                            var newEye = vp.GetUnusedCoordinate(_stateCamera.EyePosition) + p;
+                            if (ViewportManager.Ctrl) _stateCamera.LookPosition += (newEye - _stateCamera.EyePosition);
+                            _stateCamera.EyePosition = newEye;
+                            if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
+                            break;
+                        case State.MovingLook:
+                            if (_stateCamera == null) break;
+                            var newLook = vp.GetUnusedCoordinate(_stateCamera.LookPosition) + p;
+                            if (ViewportManager.Ctrl) _stateCamera.EyePosition += (newLook - _stateCamera.LookPosition);
+                            _stateCamera.LookPosition = newLook;
+                            if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
+                            break;
+                    }
+                    vp.Cursor = cursor;
+                    break;
                 }
-                vp.Cursor = cursor;
-            } else if (viewport is Viewport3D vp3d && _state == State.Moving3d) {
-                //if (!FreeLook) return;
+                case Viewport3D vp3d when _state == State.Moving3d:
+                {
+                    //if (!FreeLook) return;
 
-                var camera = GetCameras().FirstOrDefault();
+                    var camera = GetCameras().FirstOrDefault();
 
-                var left = e.Button.HasFlag(MouseButtons.Left);
-                var right = e.Button.HasFlag(MouseButtons.Right);
-                var updown = !left && right;
-                var forwardback = left && right;
+                    var left = e.Button.HasFlag(MouseButtons.Left);
+                    var right = e.Button.HasFlag(MouseButtons.Right);
+                    var updown = !left && right;
+                    var forwardback = left && right;
 
-                int dx = -e.DeltaX; int dy = e.DeltaY;
+                    int dx = -e.DeltaX; int dy = e.DeltaY;
 
-                if (CBRE.Settings.View.InvertX) dx = -dx;
-                if (CBRE.Settings.View.InvertY) dy = -dy;
+                    if (CBRE.Settings.View.InvertX) dx = -dx;
+                    if (CBRE.Settings.View.InvertY) dy = -dy;
 
-                if (updown) {
-                    camera.Strafe(-dx);
-                    camera.Ascend(-dy);
-                } else if (forwardback) {
-                    camera.Strafe(-dx);
-                    camera.Advance(-dy);
-                } else { // left mouse or z-toggle
-                    var fovdiv = (vp3d.Width / 60m) / 2.5m;
-                    camera.Pan(dx / fovdiv);
-                    camera.Tilt(dy / fovdiv);
-                }
+                    if (updown) {
+                        camera.Strafe(-dx);
+                        camera.Ascend(-dy);
+                    } else if (forwardback) {
+                        camera.Strafe(-dx);
+                        camera.Advance(-dy);
+                    } else { // left mouse or z-toggle
+                        var fovdiv = (vp3d.Width / 60m) / 2.5m;
+                        camera.Pan(dx / fovdiv);
+                        camera.Tilt(dy / fovdiv);
+                    }
                 
-                ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
-                SetViewportCamera(camera.EyePosition, camera.LookPosition, vp3d.Camera);
+                    ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
+                    SetViewportCamera(camera.EyePosition, camera.LookPosition, vp3d.Camera);
+                    break;
+                }
             }
+        }
 
+        public override void KeyPressBackground(ViewportBase viewport, ViewportEvent e) {
+            if (viewport is Viewport3D && e.KeyCode == Keys.Z) {
+                capturedTool = GameMain.Instance.SelectedTool;
+                GameMain.Instance.SelectedTool = this;
+                _state = State.Moving3d;
+            }
+        }
+        
+        public override void KeyUpBackground(ViewportBase viewport, ViewportEvent e) {
+            if (e.KeyCode == Keys.Z && capturedTool != null) {
+                GameMain.Instance.SelectedTool = capturedTool;
+                capturedTool = null;
+                _state = State.None;
+            }
         }
 
         public override void KeyPress(ViewportBase viewport, ViewportEvent e)
