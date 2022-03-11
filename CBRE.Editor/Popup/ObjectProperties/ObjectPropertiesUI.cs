@@ -121,10 +121,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                             int id = _document.Map.Visgroups[i].ID;
                             bool isInVis = obj.IsInVisgroup(id, false);
                             if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
-                                if (isInVis)
-                                    visgroupActions[id] = VisgroupAction.Add;
-                                else
-                                    visgroupActions[id] = VisgroupAction.Remove;
+                                visgroupActions[id] = isInVis ? VisgroupAction.Add : VisgroupAction.Remove;
                             }
                         }
                         /*ImGui.SameLine();

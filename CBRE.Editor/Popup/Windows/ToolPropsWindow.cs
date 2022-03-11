@@ -17,6 +17,7 @@ namespace CBRE.Editor.Popup {
             var window = GameMain.Instance.Window;
             ImGui.SetWindowPos(new Num.Vector2(ViewportManager.VPRect.Right, 47), ImGuiCond.FirstUseEver);
             ImGui.SetWindowSize(new Num.Vector2(window.ClientBounds.Width - ViewportManager.VPRect.Right, window.ClientBounds.Height - 47 - 60), ImGuiCond.FirstUseEver);
+            ImGui.SetNextItemOpen(is_open: true, ImGuiCond.FirstUseEver);
             if (ImGui.TreeNode("Tool")) {
                 GameMain.Instance.SelectedTool?.UpdateGui();
                 ImGui.TreePop();

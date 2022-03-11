@@ -23,6 +23,7 @@ namespace CBRE.Editor.Brushes {
                         .Invoke(Array.Empty<object>()) as IBrush);
             }
             Brushes = brushSet.ToImmutableHashSet();
+            CurrentBrush = Brushes.OfType<BlockBrush>().First();
         }
     }
 }
