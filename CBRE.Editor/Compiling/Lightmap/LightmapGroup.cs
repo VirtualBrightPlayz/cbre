@@ -4,6 +4,10 @@ using CBRE.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CBRE.Editor.Rendering;
+using CBRE.Graphics;
+using Microsoft.Xna.Framework;
+using Vector3 = CBRE.DataStructures.Geometric.Vector3;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     /// <summary>
@@ -130,6 +134,31 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
             }
             return null;
+        }
+
+        public IEnumerable<ObjectRenderer.BrushVertex> GenQuadVerts() {
+            Vector2 pointOnPlaneUv = new Vector2(
+                Plane.PointOnPlane.Dot(UAxis.Value),
+                Plane.PointOnPlane.Dot(VAxis.Value));
+            Vector3F minPosition = Plane.PointOnPlane
+                                   + (MinTotalU.Value - pointOnPlaneUv.X - LightmapConfig.DownscaleFactor) * UAxis.Value
+                                   + (MinTotalV.Value - pointOnPlaneUv.Y - LightmapConfig.DownscaleFactor) * VAxis.Value;
+            
+            ObjectRenderer.BrushVertex genVert(float u, float v)
+                => new ObjectRenderer.BrushVertex(
+                    position: (minPosition + UAxis.Value * u + VAxis.Value * v).ToXna(),
+                    normal: Plane.Normal.ToXna(),
+                    diffUv: Vector2.Zero,
+                    lmUv: new Vector2(
+                        MathF.Floor(u / LightmapConfig.DownscaleFactor + WriteU) / LightmapConfig.TextureDims,
+                        MathF.Floor(v / LightmapConfig.DownscaleFactor + WriteV) / LightmapConfig.TextureDims),
+                    color: Color.White,
+                    selected: false);
+
+            yield return genVert(0.0f, 0.0f);
+            yield return genVert(0.0f, Height);
+            yield return genVert(Width, 0.0f);
+            yield return genVert(Width, Height);
         }
     }
 }

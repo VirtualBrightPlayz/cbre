@@ -85,8 +85,11 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public class Atlas : IDisposable {
             public readonly ImmutableHashSet<LightmapGroup> Groups;
 
-            public VertexBuffer VertexBuffer { get; private set; }
-            public IndexBuffer IndexBuffer { get; private set; }
+            public VertexBuffer GroupVertices { get; private set; }
+            public IndexBuffer GroupIndices { get; private set; }
+            
+            public VertexBuffer GeomVertices { get; private set; }
+            public IndexBuffer GeomIndices { get; private set; }
 
             private readonly int indexCount;
 
@@ -114,39 +117,71 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
                 
                 var gd = GlobalGraphics.GraphicsDevice;
+
+                GroupVertices = new VertexBuffer(
+                    gd,
+                    ObjectRenderer.BrushVertex.VertexDeclaration,
+                    Groups.Count * 4,
+                    BufferUsage.None);
+                GroupIndices = new IndexBuffer(
+                    gd,
+                    IndexElementSize.SixteenBits,
+                    Groups.Count * 6,
+                    BufferUsage.None);
                 
-                VertexBuffer = new VertexBuffer(
+                GroupVertices.SetData(Groups
+                    .SelectMany(g => g.GenQuadVerts())
+                    .ToArray());
+                GroupIndices.SetData(Enumerable.Range(0, Groups.Count)
+                    .SelectMany(i => new[] {
+                        i*4+0, i*4+1, i*4+2,
+                        i*4+2, i*4+3, i*4+1
+                    })
+                    .Select(i => (ushort)i)
+                    .ToArray());
+                
+                GeomVertices = new VertexBuffer(
                     gd,
                     ObjectRenderer.BrushVertex.VertexDeclaration,
                     vertices.Length,
                     BufferUsage.None);
-                IndexBuffer = new IndexBuffer(
+                GeomIndices = new IndexBuffer(
                     gd,
                     IndexElementSize.SixteenBits,
                     indices.Count,
                     BufferUsage.None);
                 
-                VertexBuffer.SetData(vertices
+                GeomVertices.SetData(vertices
                     .Select(v => new ObjectRenderer.BrushVertex(v.OriginalVertex))
                     .ToArray());
-                IndexBuffer.SetData(indices.ToArray());
+                GeomIndices.SetData(indices.ToArray());
                 indexCount = indices.Count;
             }
 
-            public void Render() {
+            public void RenderGeom() {
                 var gd = GlobalGraphics.GraphicsDevice;
                 
-                gd.SetVertexBuffer(VertexBuffer);
-                gd.Indices = IndexBuffer;
+                gd.SetVertexBuffer(GeomVertices);
+                gd.Indices = GeomIndices;
                 gd.DrawIndexedPrimitives(
                     primitiveType: PrimitiveType.TriangleList,
                     0, 0, indexCount / 3);
             }
 
+            public void RenderGroups() {
+                var gd = GlobalGraphics.GraphicsDevice;
+
+                gd.SetVertexBuffer(GroupVertices);
+                gd.Indices = GroupIndices;
+                gd.DrawIndexedPrimitives(
+                    primitiveType: PrimitiveType.TriangleList,
+                    0, 0, Groups.Count * 2);
+            }
+
             public void Dispose()
             {
-                VertexBuffer?.Dispose(); VertexBuffer = null;
-                IndexBuffer?.Dispose(); IndexBuffer = null;
+                GeomVertices?.Dispose(); GeomVertices = null;
+                GeomIndices?.Dispose(); GeomIndices = null;
             }
 
             ~Atlas() {
@@ -282,7 +317,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
             void renderAllAtlases() {
                 foreach (var atlas in atlases) {
-                    atlas.Render();
+                    atlas.RenderGeom();
                 }
             }
 
@@ -341,7 +376,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     lmLightCalc.CurrentTechnique.Passes[0].Apply();
 
                     GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
-                    atlas.Render();
+                    atlas.RenderGroups();
                 }
                 
                 saveTexture($"atlas_{atlasIndex}.png", atlasTexture);
