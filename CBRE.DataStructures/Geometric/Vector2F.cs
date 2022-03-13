@@ -141,7 +141,7 @@ namespace CBRE.DataStructures.Geometric {
             return new Vector2F(X, Y);
         }
 
-        public static Vector2F Parse(string x, string y, string z) {
+        public static Vector2F Parse(string x, string y) {
             return new Vector2F(float.Parse(x), float.Parse(y));
         }
     }
