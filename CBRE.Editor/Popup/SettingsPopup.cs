@@ -1,12 +1,14 @@
 using System;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using CBRE.Settings;
 using ImGuiNET;
 using NativeFileDialog;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
-    public class SettingsPopup : PopupUI {
+    public sealed class SettingsPopup : PopupUI {
         protected override bool canBeDefocused => false;
 
         private int fixedHeight = 0;
@@ -15,8 +17,23 @@ namespace CBRE.Editor.Popup {
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
             shouldBeOpen = true;
-            TextureDirGui();
-            HotkeysGui();
+            ImGui.BeginTabBar("SettingsTabber");
+
+            if (ImGui.BeginTabItem("Camera")) {
+                CameraGui();
+                ImGui.EndTabItem();
+            }
+
+            if (ImGui.BeginTabItem("Directories")) {
+                TextureDirGui();
+                ImGui.EndTabItem();
+            }
+
+            if (ImGui.BeginTabItem("Hotkeys")) {
+                HotkeysGui();
+                ImGui.EndTabItem();
+            }
+
             if (fixedHeight <= 0) {
                 fixedHeight = (int)ImGui.GetCursorPosY();
             }
@@ -25,8 +42,16 @@ namespace CBRE.Editor.Popup {
         private const int minNonFixedHeight = 24;
         private int GetNonFixedHeight()
             => fixedHeight > 0 ? Math.Max((int)ImGui.GetWindowHeight() - fixedHeight, minNonFixedHeight) : minNonFixedHeight;
+
+        private void CameraGui() {
+            ImGui.Text("Camera Settings");
+            ImGui.Separator();
+            int fov = View.CameraFOV;
+            ImGui.SliderInt("FOV", ref fov, v_min: 60, v_max: 110, format: "%d°");
+            View.CameraFOV = fov;
+        }
         
-        protected virtual void TextureDirGui() {
+        private void TextureDirGui() {
             ImGui.Text("Texture Directories");
             ImGui.Separator();
             bool addNew = ImGui.Button("+");
@@ -69,8 +94,9 @@ namespace CBRE.Editor.Popup {
         public static string GetActionName(string action)
             => Hotkeys.GetHotkeyDefinition(action)?.Name ?? action;
 
-        protected virtual void HotkeysGui() {
+        private void HotkeysGui() {
             ImGui.Text("Hotkeys");
+            ImGui.Separator();
             bool addNew = ImGui.Button("+");
             ImGui.SameLine();
             addNew |= ImGui.Selectable("Click to add new bind");

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using CBRE.Common;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Graphics;
+using CBRE.Settings;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Rendering {
@@ -64,7 +66,9 @@ namespace CBRE.Editor.Rendering {
         public override Microsoft.Xna.Framework.Matrix GetViewportMatrix() {
             const float near = 0.1f;
             var ratio = Width / (float)Height;
-            if (ratio <= 0) ratio = 1;
+            if (ratio <= 0) { ratio = 1; }
+
+            Camera.FOV = View.CameraFOV;
             return Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), ratio, near, 10000.0f);
         }
 
