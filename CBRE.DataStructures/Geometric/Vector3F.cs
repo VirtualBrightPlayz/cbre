@@ -13,9 +13,9 @@ namespace CBRE.DataStructures.Geometric {
         public readonly static Vector3F UnitY = new Vector3F(0, 1, 0);
         public readonly static Vector3F UnitZ = new Vector3F(0, 0, 1);
 
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
+        public float X;
+        public float Y;
+        public float Z;
 
         public Vector3F(Vector3 c) {
             X = (float)c.X;
@@ -49,15 +49,12 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public bool Equals(Vector3F other) {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
             return EquivalentTo(other);
         }
 
         public override bool Equals(object obj) {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == typeof(Vector3F) && Equals((Vector3F)obj);
+            if (ReferenceEquals(null, obj)) { return false; }
+            return obj is Vector3F otherVec && Equals(otherVec);
         }
 
         public override int GetHashCode() {

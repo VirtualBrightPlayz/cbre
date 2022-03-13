@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Xml.Linq;
 using CBRE.Common;
@@ -24,23 +25,20 @@ namespace CBRE.DataStructures.GameData {
                 Bool
             }
 
-            public struct Entry {
-                public string Property;
-                public WriteType As;
-            }
-            private List<Entry> entries;
-            public IReadOnlyList<Entry> Entries => entries;
+            public readonly record struct Entry(
+                string Property,
+                WriteType As);
+            public readonly ImmutableArray<Entry> Entries;
 
             public struct Condition {
                 public string Property;
                 public string Equal;
             }
-            private List<Condition> conditions;
-            public IReadOnlyList<Condition> Conditions => conditions;
+            public readonly ImmutableArray<Condition> Conditions;
 
             public RMeshLayout(XElement elem) {
-                entries = new List<Entry>();
-                conditions = new List<Condition>();
+                var entries = new List<Entry>();
+                var conditions = new List<Condition>();
                 foreach (var subElement in elem.Elements()) {
                     switch (subElement.Name.LocalName.ToLowerInvariant()) {
                         case "write":
@@ -58,6 +56,9 @@ namespace CBRE.DataStructures.GameData {
                             break;
                     }
                 }
+
+                Entries = entries.ToImmutableArray();
+                Conditions = conditions.ToImmutableArray();
             }
         }
 
