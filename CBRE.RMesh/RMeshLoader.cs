@@ -16,20 +16,6 @@ public static class RMeshLoader {
         HasNoColl = 0x2
     }
 
-    private static bool IsHeaderValid(string header, out HeaderSuffix headerSuffixes) {
-        string[] split = header.Split('.');
-        headerSuffixes = HeaderSuffix.None;
-        var possibleSuffixes = Enum.GetValues<HeaderSuffix>()
-            .Where(s => s != HeaderSuffix.None)
-            .ToImmutableHashSet();
-        foreach (HeaderSuffix suffix in possibleSuffixes) {
-            if (split.Contains(suffix.ToString())) { headerSuffixes |= suffix; }
-        }
-
-        return split[0] == HeaderBase
-               && split.Skip(1).All(possibleSuffixes.Select(s => s.ToString()).Contains);
-    }
-
     public static RMesh FromFile(string filePath) {
         using BlitzReader reader = new BlitzReader(filePath);
 
@@ -48,6 +34,8 @@ public static class RMeshLoader {
         if (headerSuffixes.HasFlag(HeaderSuffix.HasTriggerBox)) {
             triggerBoxes = ReadTriggerBoxes(reader);
         }
+
+        ReadEntities(reader);
         
         return new RMesh(
             header,
@@ -57,6 +45,20 @@ public static class RMeshLoader {
             triggerBoxes);
     }
 
+    private static bool IsHeaderValid(string header, out HeaderSuffix headerSuffixes) {
+        string[] split = header.Split('.');
+        headerSuffixes = HeaderSuffix.None;
+        var possibleSuffixes = Enum.GetValues<HeaderSuffix>()
+            .Where(s => s != HeaderSuffix.None)
+            .ToImmutableHashSet();
+        foreach (HeaderSuffix suffix in possibleSuffixes) {
+            if (split.Contains(suffix.ToString())) { headerSuffixes |= suffix; }
+        }
+
+        return split[0] == HeaderBase
+               && split.Skip(1).All(possibleSuffixes.Select(s => s.ToString()).Contains);
+    }
+    
     private static ImmutableArray<RMesh.VisibleMesh> ReadVisibleMeshes(BlitzReader reader) {
         int meshCount = reader.ReadInt();
 
@@ -182,5 +184,10 @@ public static class RMeshLoader {
             triggerBoxes[triggerBoxIndex] = new RMesh.TriggerBox(name, submeshes);
         }
         return triggerBoxes.ToImmutableArray();
+    }
+
+    private static void ReadEntities(BlitzReader reader) {
+        int entityCount = reader.ReadInt();
+        //TODO: implement
     }
 }

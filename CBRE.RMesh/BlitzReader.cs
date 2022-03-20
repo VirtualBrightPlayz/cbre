@@ -43,8 +43,7 @@ public class BlitzReader : IDisposable {
         return Encoding.UTF8.GetString(bytes);
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         fileStream.Dispose();
         binaryReader.Dispose();
     }
