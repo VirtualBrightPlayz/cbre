@@ -181,17 +181,12 @@ Move the origin point around by *clicking and dragging* it.";
 
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
-        {
-
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             // Not used
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
 
         }
@@ -206,12 +201,7 @@ Move the origin point around by *clicking and dragging* it.";
 
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
-        {
-
-        }
-
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
             var nudge = GetNudgeValue(e.KeyCode) ?? Vector3.Zero;
             if (nudge != null && viewport is Viewport2D vp && _state == VMState.None)
@@ -221,7 +211,7 @@ Move the origin point around by *clicking and dragging* it.";
             }
         }
 
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
 
         }

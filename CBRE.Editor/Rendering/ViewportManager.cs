@@ -24,38 +24,38 @@ namespace CBRE.Editor.Rendering {
 
         // Key
         //public Keys Modifiers { get; set; }
-        public bool Control { get; set; }
-        public bool Shift { get; set; }
-        public bool Alt { get; set; }
+        public bool Control { get; init; }
+        public bool Shift { get; init; }
+        public bool Alt { get; init; }
         
-        public Keys KeyCode { get; set; }
-        public int KeyValue { get; set; }
-        public char KeyChar { get; set; }
+        public Keys KeyCode { get; init; }
+        public int KeyValue { get; init; }
+        public char KeyChar { get; init; }
 
         // Mouse
-        public MouseButtons Button { get; set; }
-        public int Clicks { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int Delta { get; set; }
+        public MouseButtons Button { get; init; }
+        public int Clicks { get; init; }
+        public int X { get; init; }
+        public int Y { get; init; }
+        public int Delta { get; init; }
 
         public Vector3 Location => new Vector3(X, Y, 0);
 
         // Mouse movement
-        public int LastX { get; set; }
-        public int LastY { get; set; }
+        public int LastX { get; init; }
+        public int LastY { get; init; }
 
         public int DeltaX => X - LastX;
         public int DeltaY => Y - LastY;
 
         // Click and drag
-        public bool Dragging { get; set; }
-        public int StartX { get; set; }
-        public int StartY { get; set; }
+        public bool Dragging { get; init; }
+        public int StartX { get; init; }
+        public int StartY { get; init; }
 
         // 2D Camera
-        public Vector3 CameraPosition { get; set; }
-        public decimal CameraZoom { get; set; }
+        public Vector3 CameraPosition { get; init; }
+        public decimal CameraZoom { get; init; }
     }
 
     #warning TODO: This class has cancer

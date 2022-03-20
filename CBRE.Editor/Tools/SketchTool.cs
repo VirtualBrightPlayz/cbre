@@ -96,7 +96,7 @@ namespace CBRE.Editor.Tools
             //
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             //
             switch (_state)
@@ -167,17 +167,12 @@ namespace CBRE.Editor.Tools
             return null;
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
-        {
-            //
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             //
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
             switch (_state)
             {
@@ -298,7 +293,7 @@ namespace CBRE.Editor.Tools
         }
 
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
             switch (_state)
             {
@@ -315,12 +310,7 @@ namespace CBRE.Editor.Tools
             }
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
-        {
-            //
-        }
-
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
             //
         }

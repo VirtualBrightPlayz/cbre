@@ -167,14 +167,14 @@ namespace CBRE.Editor.Popup {
                                       || keyboardState.IsKeyDown(Keys.RightAlt);
 
                 foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
-                    GameMain.Instance.SelectedTool?.KeyDown(new ViewportEvent() {
+                    GameMain.Instance.SelectedTool?.KeyHit(new ViewportEvent() {
                         Handled = false,
                         KeyCode = key
                     });
                 }
 
                 foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
-                    GameMain.Instance.SelectedTool?.KeyUp(new ViewportEvent() {
+                    GameMain.Instance.SelectedTool?.KeyLift(new ViewportEvent() {
                         Handled = false,
                         KeyCode = key
                     });
@@ -189,7 +189,7 @@ namespace CBRE.Editor.Popup {
                                      || focusedViewport == i;
                     if (mouseOver) {
                         if (!mouse1Down && prevMouse1Down) {
-                            GameMain.Instance.SelectedTool?.MouseUp(viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.MouseLifted(viewport, new ViewportEvent() {
                                 Handled = false,
                                 Button = MouseButtons.Left,
                                 X = mouseState.X - viewport.X,
@@ -205,16 +205,12 @@ namespace CBRE.Editor.Popup {
                             new FrameInfo(0)); //TODO: fix FrameInfo
 
                         foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
-                            GameMain.Instance.SelectedTool?.KeyDown(viewport, new ViewportEvent() {
-                                Handled = false,
-                                KeyCode = key
-                            });
-                            GameMain.Instance.SelectedTool?.KeyPress(viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.KeyHit(viewport, new ViewportEvent() {
                                 Handled = false,
                                 KeyCode = key
                             });
                             foreach (var tool in GameMain.Instance.ToolBarItems.Select(tbi => tbi.Tool)) {
-                                tool.KeyPressBackground(viewport, new ViewportEvent() {
+                                tool.KeyHitBackground(viewport, new ViewportEvent() {
                                     Handled = false,
                                     KeyCode = key
                                 });
@@ -222,7 +218,7 @@ namespace CBRE.Editor.Popup {
                         }
 
                         foreach (var key in prevKeysDown.Where(k => !keysDown.Contains(k))) {
-                            GameMain.Instance.SelectedTool?.KeyUp(viewport, new ViewportEvent() {
+                            GameMain.Instance.SelectedTool?.KeyLift(viewport, new ViewportEvent() {
                                 Handled = false,
                                 KeyCode = key
                             });
@@ -297,14 +293,18 @@ namespace CBRE.Editor.Popup {
                         int currMouseY = mouseState.Y - viewport.Y;
                         if (viewport.PrevMouseX != currMouseX ||
                             viewport.PrevMouseY != currMouseY) {
-                            GameMain.Instance.SelectedTool?.MouseMove(viewport, new ViewportEvent() {
+                            var ev = new ViewportEvent() {
                                 Handled = false,
                                 Button = MouseButtons.Left,
                                 X = currMouseX,
                                 Y = currMouseY,
                                 LastX = viewport.PrevMouseX,
                                 LastY = viewport.PrevMouseY,
-                            });
+                            };
+                            GameMain.Instance.SelectedTool?.MouseMove(viewport, ev);
+                            foreach (var tool in GameMain.Instance.ToolBarItems.Select(tbi => tbi.Tool)) {
+                                tool.MouseMoveBackground(viewport, ev);
+                            }
                             ViewportManager.MarkForRerender();
                         }
 
@@ -319,15 +319,6 @@ namespace CBRE.Editor.Popup {
                                 Clicks = 1
                             });
 
-                            GameMain.Instance.SelectedTool?.MouseDown(viewport, new ViewportEvent() {
-                                Handled = false,
-                                Button = MouseButtons.Left,
-                                X = currMouseX,
-                                Y = currMouseY,
-                                LastX = viewport.PrevMouseX,
-                                LastY = viewport.PrevMouseY,
-                            });
-
                             focusedViewport = i;
                         }
 
@@ -340,15 +331,6 @@ namespace CBRE.Editor.Popup {
                                 LastX = viewport.PrevMouseX,
                                 LastY = viewport.PrevMouseY,
                                 Clicks = 1
-                            });
-
-                            GameMain.Instance.SelectedTool?.MouseDown(viewport, new ViewportEvent() {
-                                Handled = false,
-                                Button = MouseButtons.Right,
-                                X = currMouseX,
-                                Y = currMouseY,
-                                LastX = viewport.PrevMouseX,
-                                LastY = viewport.PrevMouseY,
                             });
                         }
 

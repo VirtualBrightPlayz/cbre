@@ -105,9 +105,9 @@ namespace CBRE.Editor.Tools
             base.OnBoxChanged();
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e) {
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e) {
             if (BrushManager.CurrentBrush == null) { return; }
-            base.MouseDown(viewport, e);
+            base.MouseClick(viewport, e);
         }
 
         protected override void LeftMouseDownToDraw(Viewport2D viewport, ViewportEvent e)

@@ -509,7 +509,7 @@ namespace CBRE.Editor.Tools.VMTool
 
         private bool _clickSelectionDone = false;
 
-        private void MouseDown(Viewport3D vp, ViewportEvent e)
+        private void MouseClick3D(Viewport3D vp, ViewportEvent e)
         {
             if (!_currentTool.NoSelection())
             {
@@ -584,21 +584,21 @@ namespace CBRE.Editor.Tools.VMTool
                 }
             }
 
-            base.MouseDown(vp, e);
+            base.MouseClick(vp, e);
         }
 
-        public override void MouseDown(ViewportBase vp, ViewportEvent e)
+        public override void MouseClick(ViewportBase vp, ViewportEvent e)
         {
             _clickSelectionDone = false;
             if (_currentTool != null)
             {
                 // If the current tool handles the event, we're done
-                _currentTool.MouseDown(vp, e);
+                _currentTool.MouseClick(vp, e);
                 if (e.Handled) return;
             }
             if (vp is Viewport3D vp3d)
             {
-                MouseDown(vp3d, e);
+                MouseClick3D(vp3d, e);
                 return;
             }
 
@@ -647,7 +647,7 @@ namespace CBRE.Editor.Tools.VMTool
                     return;
                 }
 
-                base.MouseDown(vp, e);
+                base.MouseClick(vp, e);
                 return;
             }
 
@@ -674,14 +674,14 @@ namespace CBRE.Editor.Tools.VMTool
             _movingPoint = vtx;
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
+        /*public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             var vp = viewport as Viewport2D;
             if (vp == null || _clickSelectionDone) return;
 
             var vtxs = _currentTool.GetVerticesAtPoint(e.X, viewport.Height - e.Y, vp);
             DoSelection(vtxs, vp);
-        }
+        }*/
 
         private void DoSelection(List<VMPoint> vertices, Viewport2D vp)
         {
@@ -722,12 +722,12 @@ namespace CBRE.Editor.Tools.VMTool
             // Not used
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
-            base.MouseUp(viewport, e);
+            base.MouseLifted(viewport, e);
 
             if (_currentTool == null) return;
-            _currentTool.MouseUp(viewport, e);
+            _currentTool.MouseLifted(viewport, e);
 
             if (!(viewport is Viewport2D)) return;
             if (_currentTool.NoSelection()) return;
@@ -960,11 +960,11 @@ namespace CBRE.Editor.Tools.VMTool
             }
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
-            if (_currentTool != null) _currentTool.KeyDown(viewport, e);
+            if (_currentTool != null) _currentTool.KeyHit(viewport, e);
             if (e.Handled) return;
-            base.KeyDown(viewport, e);
+            base.KeyHit(viewport, e);
         }
 
         public override void Render(ViewportBase viewport)
@@ -994,18 +994,11 @@ namespace CBRE.Editor.Tools.VMTool
             base.MouseWheel(viewport, e);
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
-            if (_currentTool != null) _currentTool.KeyPress(viewport, e);
+            if (_currentTool != null) _currentTool.KeyLift(viewport, e);
             if (e.Handled) return;
-            base.KeyPress(viewport, e);
-        }
-
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
-        {
-            if (_currentTool != null) _currentTool.KeyUp(viewport, e);
-            if (e.Handled) return;
-            base.KeyUp(viewport, e);
+            base.KeyLift(viewport, e);
         }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)

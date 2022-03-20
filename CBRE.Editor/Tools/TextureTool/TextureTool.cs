@@ -380,7 +380,7 @@ namespace CBRE.Editor.Tools.TextureTool {
             /*_form.SelectionChanged();*/
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e) {
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e) {
             // throw new NotImplementedException();
             var vp = viewport as Viewport3D;
             if (vp == null || (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right)) return;
@@ -486,7 +486,7 @@ namespace CBRE.Editor.Tools.TextureTool {
             }
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e) {
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e) {
             //throw new NotImplementedException();
         }
 
@@ -566,15 +566,11 @@ namespace CBRE.Editor.Tools.TextureTool {
             //
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e) {
-            // Not used
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e) {
             // Not used
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e) {
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e) {
             //
         }
 
@@ -586,11 +582,7 @@ namespace CBRE.Editor.Tools.TextureTool {
             //
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e) {
-            //
-        }
-
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e) {
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e) {
             //
         }
 

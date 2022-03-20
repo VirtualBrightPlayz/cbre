@@ -128,7 +128,7 @@ namespace CBRE.Editor.Tools
             viewport.Cursor = MouseCursor.Arrow;
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             if (viewport is Viewport3D viewport3D)
             {
@@ -166,17 +166,12 @@ namespace CBRE.Editor.Tools
             _location = hit.Intersection.Value;
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
-        {
-            // Not used
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             // Not used
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
             if (e.Button != MouseButtons.Left) return;
             _state = EntityState.Drawn;
@@ -200,12 +195,7 @@ namespace CBRE.Editor.Tools
             _location = vp.GetUnusedCoordinate(_location) + vp.Expand(loc);
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
-        {
-            // Nothing
-        }
-
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
             switch (e.KeyCode)
             {
@@ -270,7 +260,7 @@ namespace CBRE.Editor.Tools
             }
         }
 
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
             //
         }

@@ -158,25 +158,24 @@ namespace CBRE.Editor.Tools
 
         public abstract void MouseEnter(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseLeave(ViewportBase viewport, ViewportEvent e);
-        public abstract void MouseDown(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseClick(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseDoubleClick(ViewportBase viewport, ViewportEvent e);
-        public abstract void MouseUp(ViewportBase viewport, ViewportEvent e);
+        public abstract void MouseLifted(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseWheel(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseMove(ViewportBase viewport, ViewportEvent e);
-        public abstract void KeyPress(ViewportBase viewport, ViewportEvent e);
-        public virtual void KeyPressBackground(ViewportBase viewport, ViewportEvent e) { }
-        public abstract void KeyDown(ViewportBase viewport, ViewportEvent e);
-        public abstract void KeyUp(ViewportBase viewport, ViewportEvent e);
+        public virtual void MouseMoveBackground(ViewportBase viewport, ViewportEvent e) { }
+        public virtual void KeyHitBackground(ViewportBase viewport, ViewportEvent e) { }
+        public abstract void KeyHit(ViewportBase viewport, ViewportEvent e);
+        public abstract void KeyLift(ViewportBase viewport, ViewportEvent e);
         public virtual void KeyUpBackground(ViewportBase viewport, ViewportEvent e) { }
         public abstract void UpdateFrame(ViewportBase viewport, FrameInfo frame);
         public abstract void Render(ViewportBase viewport);
 
-        public virtual void KeyDown(ViewportEvent e) {
+        public virtual void KeyHit(ViewportEvent e) {
             return;
         }
 
-        public virtual void KeyUp(ViewportEvent e) {
+        public virtual void KeyLift(ViewportEvent e) {
             return;
         }
 

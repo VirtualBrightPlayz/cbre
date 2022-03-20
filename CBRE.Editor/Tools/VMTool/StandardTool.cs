@@ -321,12 +321,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
 
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
-        {
-
-        }
-
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
 
         }
@@ -341,12 +336,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
 
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
-        {
-
-        }
-
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
             var nudge = GetNudgeValue(e.KeyCode) ?? Vector3.Zero;
             var sel = MainTool.GetSelectedPoints();
@@ -361,7 +351,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
             }
         }
 
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
 
         }

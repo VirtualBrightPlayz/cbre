@@ -255,16 +255,10 @@ namespace CBRE.Editor.Tools.SelectTool
             base.MouseMove(viewport, e);
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
-            if (WidgetAction((w, vp, ev) => w.MouseDown(vp, ev), viewport, e)) return;
-            base.MouseDown(viewport, e);
-        }
-
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
-        {
-            if (WidgetAction((w, vp, ev) => w.MouseUp(vp, ev), viewport, e)) return;
-            base.MouseUp(viewport, e);
+            if (WidgetAction((w, vp, ev) => w.MouseLifted(vp, ev), viewport, e)) return;
+            base.MouseLifted(viewport, e);
         }
 
         public override void MouseClick(ViewportBase viewport, ViewportEvent e)
@@ -717,7 +711,7 @@ namespace CBRE.Editor.Tools.SelectTool
             }
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
             var nudge = GetNudgeValue(e.KeyCode) ?? Vector3.Zero;
             if (viewport is Viewport2D vp && (State.Action == BoxAction.ReadyToResize || State.Action == BoxAction.Drawn) && !Document.Selection.IsEmpty())
@@ -727,7 +721,7 @@ namespace CBRE.Editor.Tools.SelectTool
                 ExecuteTransform("Nudge", CreateMatrixMultTransformation(transformation), ViewportManager.Shift);
                 SelectionChanged();
             }
-            base.KeyDown(viewport, e);
+            base.KeyHit(viewport, e);
         }
 
         #endregion

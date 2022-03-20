@@ -296,31 +296,34 @@ namespace CBRE.Editor.Tools.Widgets
             }
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent ve)
-        {
-            if (viewport is Viewport2D)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent ve) {
+            switch (viewport)
             {
-                var vp2 = (Viewport2D)viewport;
-                if (ve.Button == MouseButtons.Left && MouseOverPivot(vp2, ve))
+                case Viewport2D vp2d:
                 {
-                    _movingPivot = true;
-                    ve.Handled = true;
+                    if (ve.Button == MouseButtons.Left && MouseOverPivot(vp2d, ve))
+                    {
+                        _movingPivot = true;
+                        ve.Handled = true;
+                    }
+                    return;
                 }
-                return;
+                case Viewport3D vp3d:
+                    if (vp3d != _activeViewport
+                        || ve.Button != MouseButtons.Left
+                        || _mouseOver == CircleType.None) {
+                        return;
+                    }
+                    _mouseDown = _mouseOver;
+                    _mouseDownPoint = new Vector3(ve.X, vp3d.Height - ve.Y, 0);
+                    _mouseMovePoint = null;
+                    ve.Handled = true;
+                    vp3d.AquireInputLock(this);
+                    break;
             }
-
-            var vp = viewport as Viewport3D;
-            if (vp == null || vp != _activeViewport) return;
-
-            if (ve.Button != MouseButtons.Left || _mouseOver == CircleType.None) return;
-            _mouseDown = _mouseOver;
-            _mouseDownPoint = new Vector3(ve.X, vp.Height - ve.Y, 0);
-            _mouseMovePoint = null;
-            ve.Handled = true;
-            vp.AquireInputLock(this);
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent ve)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent ve)
         {
             if (viewport is Viewport2D)
             {

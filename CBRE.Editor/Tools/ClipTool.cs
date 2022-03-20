@@ -88,7 +88,7 @@ namespace CBRE.Editor.Tools
             return ClipState.None;
         }
 
-        public override void MouseDown(ViewportBase vp, ViewportEvent e)
+        public override void MouseClick(ViewportBase vp, ViewportEvent e)
         {
             if (!(vp is Viewport2D)) return;
             var viewport = (Viewport2D)vp;
@@ -107,17 +107,12 @@ namespace CBRE.Editor.Tools
             }
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
-        {
-            // Not used
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             // Not used
         }
 
-        public override void MouseUp(ViewportBase vp, ViewportEvent e)
+        public override void MouseLifted(ViewportBase vp, ViewportEvent e)
         {
             if (!(vp is Viewport2D)) return;
             var viewport = (Viewport2D)vp;
@@ -199,7 +194,7 @@ namespace CBRE.Editor.Tools
             }
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e) {
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e) {
             if (_clipPlanePoint1 is not { } clipPlanePoint1
                 || _clipPlanePoint2 is not { } clipPlanePoint2
                 || _clipPlanePoint3 is not { } clipPlanePoint3) { return; }
@@ -388,12 +383,7 @@ namespace CBRE.Editor.Tools
             //
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
-        {
-            //
-        }
-
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
             //
         }

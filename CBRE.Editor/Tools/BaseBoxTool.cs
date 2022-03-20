@@ -184,7 +184,7 @@ namespace CBRE.Editor.Tools
         }
 
         // Mouse Down
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             if (viewport is Viewport3D) MouseDown3D((Viewport3D)viewport, e);
             if (e.Button != MouseButtons.Left) return;
@@ -227,18 +227,13 @@ namespace CBRE.Editor.Tools
             State.PreTransformBoxEnd = State.BoxEnd;
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
-        {
-            // Not used
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             // Not used
         }
 
         // Mouse Up
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
             if (viewport is Viewport3D) MouseUp3D((Viewport3D)viewport, e);
             //Editor.Instance.CaptureAltPresses = false;
@@ -508,12 +503,7 @@ namespace CBRE.Editor.Tools
             return (cstart, cend);
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
-        {
-
-        }
-
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
             if (State.Action == BoxAction.ReadyToDraw || State.Action == BoxAction.DownToDraw) return;
             switch (e.KeyCode)
@@ -542,7 +532,7 @@ namespace CBRE.Editor.Tools
             State.ActiveViewport = null;
         }
 
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
             // Probably not needed
         }
