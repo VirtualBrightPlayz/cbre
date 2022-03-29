@@ -53,7 +53,7 @@ namespace CBRE.Editor.Clipboard {
             return str.StartsWith("clipboard");
         }
 
-        public static IEnumerable<MapObject> CloneFlatHeirarchy(Document document, IEnumerable<MapObject> objects) {
+        public static IEnumerable<MapObject> CloneFlatHierarchy(Document document, IEnumerable<MapObject> objects) {
             return ExtractCopyStream(document, CreateCopyStream(objects));
         }
 

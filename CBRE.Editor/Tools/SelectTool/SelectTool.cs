@@ -910,7 +910,7 @@ namespace CBRE.Editor.Tools.SelectTool
             if (clone)
             {
                 // Copy the selection, transform it, and reselect
-                var copies = ClipboardManager.CloneFlatHeirarchy(Document, Document.Selection.GetSelectedObjects()).ToList();
+                var copies = ClipboardManager.CloneFlatHierarchy(Document, Document.Selection.GetSelectedObjects()).ToList();
                 foreach (var mo in copies)
                 {
                     mo.Transform(transform, Document.Map.GetTransformFlags());
