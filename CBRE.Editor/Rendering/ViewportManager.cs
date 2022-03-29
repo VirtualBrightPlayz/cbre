@@ -49,6 +49,7 @@ namespace CBRE.Editor.Rendering {
         public int DeltaY => Y - LastY;
 
         // Click and drag
+        public bool MouseOver { get; init; }
         public bool Dragging { get; init; }
         public int StartX { get; init; }
         public int StartY { get; init; }

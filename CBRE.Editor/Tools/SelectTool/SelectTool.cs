@@ -711,12 +711,12 @@ namespace CBRE.Editor.Tools.SelectTool
             }
         }
 
-        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
-        {
-            var nudge = GetNudgeValue(e.KeyCode) ?? Vector3.Zero;
-            if (viewport is Viewport2D vp && (State.Action == BoxAction.ReadyToResize || State.Action == BoxAction.Drawn) && !Document.Selection.IsEmpty())
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e) {
+            if (!e.MouseOver) { return; }
+            var nudge = GetNudgeValue(e.KeyCode);
+            if (nudge.HasValue && viewport is Viewport2D vp && (State.Action == BoxAction.ReadyToResize || State.Action == BoxAction.Drawn) && !Document.Selection.IsEmpty())
             {
-                var translate = vp.Expand(nudge);
+                var translate = vp.Expand(nudge.Value);
                 var transformation = Matrix.Translation(translate);
                 ExecuteTransform("Nudge", CreateMatrixMultTransformation(transformation), ViewportManager.Shift);
                 SelectionChanged();

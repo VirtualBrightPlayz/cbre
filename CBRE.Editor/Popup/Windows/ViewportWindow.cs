@@ -207,12 +207,14 @@ namespace CBRE.Editor.Popup {
                         foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
                             GameMain.Instance.SelectedTool?.KeyHit(viewport, new ViewportEvent() {
                                 Handled = false,
-                                KeyCode = key
+                                KeyCode = key,
+                                MouseOver = mouseOver
                             });
                             foreach (var tool in GameMain.Instance.ToolBarItems.Select(tbi => tbi.Tool)) {
                                 tool.KeyHitBackground(viewport, new ViewportEvent() {
                                     Handled = false,
-                                    KeyCode = key
+                                    KeyCode = key,
+                                    MouseOver = mouseOver
                                 });
                             }
                         }
