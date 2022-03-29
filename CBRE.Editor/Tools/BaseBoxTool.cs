@@ -722,7 +722,19 @@ namespace CBRE.Editor.Tools
             boxStart = viewport.WorldToScreen(boxStart);
             boxEnd = viewport.WorldToScreen(boxEnd);
 
-            #warning TODO: reimplement
+            var widthTextPos = new Num.Vector2(
+                ((float)boxStart.X + (float)boxEnd.X - ImGui.CalcTextSize(widthText).X) * 0.5f,
+                (float)boxStart.Y);
+            var heightTextPos = new Num.Vector2(
+                (float)boxEnd.X,
+                ((float)boxStart.Y + (float)boxEnd.Y + ImGui.CalcTextSize(heightText).Y) * 0.5f);
+
+            var drawList = ImGui.GetForegroundDrawList();
+            drawList.PushClipRect(new Num.Vector2(viewport.X, viewport.Y),
+                new Num.Vector2(viewport.X + viewport.Width, viewport.Y + viewport.Height));
+            drawList.AddText(new Num.Vector2(viewport.X + widthTextPos.X, viewport.Y + viewport.Height - widthTextPos.Y), 0xff00ffff, widthText);
+            drawList.AddText(new Num.Vector2(viewport.X + heightTextPos.X, viewport.Y + viewport.Height - heightTextPos.Y), 0xff00ffff, heightText);
+            drawList.PopClipRect();
         }
 
         protected virtual void Render2D(Viewport2D viewport)
@@ -742,9 +754,16 @@ namespace CBRE.Editor.Tools
             {
                 RenderResizeBox(viewport, start, end);
             }
-            if (ShouldDrawBoxText(viewport))
+        }
+
+        public override void ViewportUi(ViewportBase viewport) {
+            if (State.Action == BoxAction.ReadyToDraw || State.Action == BoxAction.DownToDraw
+                || viewport is not Viewport2D vp2d) return;
+            var start = vp2d.Flatten(State.BoxStart ?? Vector3.Zero);
+            var end = vp2d.Flatten(State.BoxEnd ?? Vector3.Zero);
+            if (ShouldDrawBoxText(vp2d))
             {
-                RenderBoxText(viewport, start, end);
+                RenderBoxText(vp2d, start, end);
             }
         }
 

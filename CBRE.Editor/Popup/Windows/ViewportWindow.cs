@@ -462,6 +462,9 @@ namespace CBRE.Editor.Popup {
                             ImGui.EndPopup();
                         }
                     }
+                    
+                    GameMain.Instance.SelectedTool?.ViewportUi(Viewports[i]);
+                    
                     ImGui.PopClipRect();
                 }
 

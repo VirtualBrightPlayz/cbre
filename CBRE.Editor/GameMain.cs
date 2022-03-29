@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using CBRE.Editor.Actions.MapObjects.Operations;
 using Num = System.Numerics;
 
 namespace CBRE.Editor {
@@ -69,33 +70,37 @@ namespace CBRE.Editor {
 
         private DocumentTabs documentTabs;
 
+        public void CreateImGuiRenderer(out ImGuiRenderer renderer, out ImGuiStylePtr style) {
+            renderer = new ImGuiRenderer(this);
+            renderer.RebuildFontAtlas();
+
+            style = ImGui.GetStyle();
+            style.TabMinWidthForCloseButton = 50f;
+            style.ChildRounding = 0;
+            style.FrameRounding = 0;
+            style.GrabRounding = 0;
+            style.PopupRounding = 0;
+            style.ScrollbarRounding = 0;
+            style.TabRounding = 0;
+            style.WindowRounding = 0;
+            style.FrameBorderSize = 0;
+            style.DisplayWindowPadding = Num.Vector2.Zero;
+            style.WindowPadding = Num.Vector2.Zero;
+            style.IndentSpacing = 0;
+            var colors = style.Colors;
+            colors[(int)ImGuiCol.FrameBg] = new Num.Vector4(0.05f, 0.05f, 0.07f, 1.0f);
+        }
+        
         protected override void Initialize()
         {
             SettingsManager.Read();
             ToolManager.Init();
 
-            imGuiRenderer = new ImGuiRenderer(this);
-            imGuiRenderer.RebuildFontAtlas();
-
-            GlobalGraphics.Set(GraphicsDevice, Window, imGuiRenderer);
-
-            imGuiStyle = ImGui.GetStyle();
-            imGuiStyle.TabMinWidthForCloseButton = 50f;
-            imGuiStyle.ChildRounding = 0;
-            imGuiStyle.FrameRounding = 0;
-            imGuiStyle.GrabRounding = 0;
-            imGuiStyle.PopupRounding = 0;
-            imGuiStyle.ScrollbarRounding = 0;
-            imGuiStyle.TabRounding = 0;
-            imGuiStyle.WindowRounding = 0;
-            imGuiStyle.FrameBorderSize = 0;
-            imGuiStyle.DisplayWindowPadding = Num.Vector2.Zero;
-            imGuiStyle.WindowPadding = Num.Vector2.Zero;
-            imGuiStyle.IndentSpacing = 0;
-            var colors = imGuiStyle.Colors;
-            colors[(int)ImGuiCol.FrameBg] = new Num.Vector4(0.05f, 0.05f, 0.07f, 1.0f);
+            CreateImGuiRenderer(out imGuiRenderer, out imGuiStyle);
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+
+            GlobalGraphics.Set(GraphicsDevice, Window, imGuiRenderer);
 
             MenuTextures = new Dictionary<string, AsyncTexture>();
             string[] files = Directory.GetFiles("Resources");
