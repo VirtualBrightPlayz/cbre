@@ -1,5 +1,4 @@
 ﻿using CBRE.Common.Mediator;
-using CBRE.DataStructures.Geometric;
 using CBRE.Graphics;
 using CBRE.Settings;
 using CBRE.Editor.Rendering;
@@ -7,9 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using ImGuiNET;
 using Camera = CBRE.DataStructures.MapObjects.Camera;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
+using Vector3 = CBRE.DataStructures.Geometric.Vector3;
+using Num = System.Numerics;
 
 namespace CBRE.Editor.Tools
 {
@@ -273,7 +275,7 @@ namespace CBRE.Editor.Tools
         }
         
         public override void KeyHitBackground(ViewportBase viewport, ViewportEvent e) {
-            if (viewport is Viewport3D vp3d && e.KeyCode == Keys.Z) {
+            if (viewport is Viewport3D vp3d && e.KeyCode == Keys.Z && !e.AnyModifiers) {
                 zShortcut = !zShortcut;
                 if (zShortcut) {
                     ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
@@ -310,11 +312,10 @@ namespace CBRE.Editor.Tools
 
         public override void Render(ViewportBase viewport)
         {
-            var vp = viewport as Viewport2D;
-            if (vp == null) return;
+            if (viewport is not Viewport2D vp) { return; }
 
             var cams = GetCameras().ToList();
-            if (!cams.Any()) return;
+            if (!cams.Any()) { return; }
 
             var z = (double)vp.Zoom;
 
@@ -395,6 +396,35 @@ namespace CBRE.Editor.Tools
             PrimitiveDrawing.End();
 
             //GL.Disable(EnableCap.LineSmooth);
+        }
+
+        public override void ViewportUi(ViewportBase viewport) {
+            if (!zShortcut && (_state != State.Moving3d || GameMain.Instance.SelectedTool != this)) {
+                GameMain.Instance.IsMouseVisible = true;
+                return;
+            }
+            GameMain.Instance.IsMouseVisible = false;
+            
+            if (viewport is not Viewport3D vp3d) { return; }
+
+            var center = new Num.Vector2(viewport.X + viewport.Width / 2, viewport.Y + viewport.Height / 2);
+            var drawList = ImGui.GetForegroundDrawList();
+            drawList.AddRectFilled(
+                center - Num.Vector2.UnitX * 2 + Num.Vector2.UnitY * 6,
+                center + Num.Vector2.UnitX * 2 - Num.Vector2.UnitY * 6,
+                0xff000000);
+            drawList.AddRectFilled(
+                center - Num.Vector2.UnitX * 6 + Num.Vector2.UnitY * 2,
+                center + Num.Vector2.UnitX * 6 - Num.Vector2.UnitY * 2,
+                0xff000000);
+            drawList.AddRectFilled(
+                center - Num.Vector2.UnitX * 1 + Num.Vector2.UnitY * 5,
+                center + Num.Vector2.UnitX * 1 - Num.Vector2.UnitY * 5,
+                0xffaaaaaa);
+            drawList.AddRectFilled(
+                center - Num.Vector2.UnitX * 5 + Num.Vector2.UnitY * 1,
+                center + Num.Vector2.UnitX * 5 - Num.Vector2.UnitY * 1,
+                0xffaaaaaa);
         }
 
         protected static void Coord(Vector3 c)

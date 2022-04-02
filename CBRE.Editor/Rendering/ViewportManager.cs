@@ -27,6 +27,8 @@ namespace CBRE.Editor.Rendering {
         public bool Control { get; init; }
         public bool Shift { get; init; }
         public bool Alt { get; init; }
+
+        public bool AnyModifiers => Control || Shift || Alt;
         
         public Keys KeyCode { get; init; }
         public int KeyValue { get; init; }
@@ -66,6 +68,8 @@ namespace CBRE.Editor.Rendering {
         public static bool Ctrl { get; set; }
         public static bool Shift { get; set; }
         public static bool Alt { get; set; }
+
+        public static bool AnyModifiers => Ctrl || Shift || Alt;
 
 
         public static Rectangle VPRect { get; set; } = new Rectangle(0, 0, 640, 480);

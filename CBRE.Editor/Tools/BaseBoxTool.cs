@@ -714,7 +714,7 @@ namespace CBRE.Editor.Tools
         }
 
         protected void RenderBoxText(Viewport2D viewport, Vector3 boxStart, Vector3 boxEnd) {
-            if (!CBRE.Settings.View.DrawBoxText) return;
+            if (!CBRE.Settings.View.DrawBoxText) { return; }
 
             var widthText = (Math.Round(boxEnd.X - boxStart.X, 1)).ToString("#.##");
             var heightText = (Math.Round(boxEnd.Y - boxStart.Y, 1)).ToString("#.##");
@@ -757,6 +757,7 @@ namespace CBRE.Editor.Tools
         }
 
         public override void ViewportUi(ViewportBase viewport) {
+            if (GameMain.Instance.SelectedTool != this) { return; }
             if (State.Action == BoxAction.ReadyToDraw || State.Action == BoxAction.DownToDraw
                 || viewport is not Viewport2D vp2d) return;
             var start = vp2d.Flatten(State.BoxStart ?? Vector3.Zero);

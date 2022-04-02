@@ -859,10 +859,6 @@ namespace CBRE.Editor.Tools.SelectTool
             {
                 RenderTransformBox(viewport);
             }
-            else if (ShouldDrawBox(viewport))
-            {
-                RenderBoxText(viewport, start, end);
-            }
         }
 
         private void RenderTransformBox(Viewport2D viewport)
