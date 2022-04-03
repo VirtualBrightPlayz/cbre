@@ -19,37 +19,6 @@ namespace CBRE.Providers.GameData {
             RegisteredProviders.Remove(provider);
         }
 
-        public static DataStructures.GameData.GameData GetGameDataFromFiles(IEnumerable<string> files) {
-            var gd = new DataStructures.GameData.GameData();
-            foreach (var d in files.Select(GetGameDataFromFile)) {
-                gd.MapSizeHigh = d.MapSizeHigh;
-                gd.MapSizeLow = d.MapSizeLow;
-                gd.Classes.AddRange(d.Classes);
-                gd.MaterialExclusions.AddRange(d.MaterialExclusions);
-            }
-            gd.CreateDependencies();
-            gd.RemoveDuplicates();
-            return gd;
-        }
-
-        public static DataStructures.GameData.GameData GetGameDataFromFile(string fileName) {
-            var provider = RegisteredProviders.FirstOrDefault(p => p.IsValidForFile(fileName));
-            if (provider != null) {
-                var gd = provider.GetFromFile(fileName);
-                return gd;
-            }
-            throw new ProviderNotFoundException("No GameData provider was found for this file.");
-        }
-
-        public static DataStructures.GameData.GameData GetGameDataFromString(string contents) {
-            var provider = RegisteredProviders.FirstOrDefault(p => p.IsValidForString(contents));
-            if (provider != null) {
-                var gd = provider.GetFromString(contents);
-                return gd;
-            }
-            throw new ProviderNotFoundException("No GameData provider was found for this string.");
-        }
-
         public static DataStructures.GameData.GameData GetGameDataFromStream(Stream stream) {
             var provider = RegisteredProviders.FirstOrDefault(p => p.IsValidForStream(stream));
             if (provider != null) {
