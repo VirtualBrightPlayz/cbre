@@ -16,7 +16,7 @@ using ImGuiNET;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup.ObjectProperties {
-    public class ObjectPropertiesUI : PopupUI {
+    public sealed class ObjectPropertiesUI : PopupUI {
         public enum VisgroupAction {
             NoChange,
             Add,
@@ -39,7 +39,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             Setup();
         }
 
-        protected virtual void Setup() {
+        private void Setup() {
             _className = _obj.ClassName;
             visgroupActions = new Dictionary<int, VisgroupAction>();
             foreach (var group in _document.Map.Visgroups) {
@@ -87,7 +87,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             shouldBeOpen = ImGuiButtons();
         }
 
-        protected virtual void VisgroupGui(MapObject obj) {
+        private void VisgroupGui(MapObject obj) {
             if (ImGui.TreeNode("Visgroups")) {
                 for (int i = 0; i < _document.Map.Visgroups.Count; i++) {
                     if (_document.Map.Visgroups[i] is DataStructures.MapObjects.AutoVisgroup) {
@@ -136,7 +136,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             }
         }
 
-        protected virtual void EntityGui(MapObject obj) {
+        private void EntityGui(MapObject obj) {
             if (ImGui.BeginCombo("Entity type", selectedEntity?.Name ?? "<No Change>")) {
                 var entityTypes = _document.GameData.Classes.Where(c => c.ClassType == ClassType.Point);
                 foreach (var entityType in entityTypes) {
@@ -249,7 +249,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             }*/
         }
 
-        protected virtual bool ImGuiButtons() {
+        private bool ImGuiButtons() {
             if (ImGui.Button("Cancel")) {
                 return false;
             }
@@ -260,7 +260,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             return true;
         }
 
-        protected virtual bool EntityApply() {
+        private bool EntityApply() {
             string actionText = null;
             var ac = new ActionCollection();
             var editAction = GetEditEntityDataAction();

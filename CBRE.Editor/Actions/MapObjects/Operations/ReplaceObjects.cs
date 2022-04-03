@@ -48,9 +48,9 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
         }
 
         private void SwapObjects(Document document, MapObject prev, MapObject newObj) {
-            document.ObjectRenderer.RemoveFaces(prev);
+            document.ObjectRenderer.RemoveMapObject(prev);
             prev.Unclone(newObj);
-            document.ObjectRenderer.AddFaces(prev);
+            document.ObjectRenderer.AddMapObject(prev);
         }
 
         public void Perform(Document document) {

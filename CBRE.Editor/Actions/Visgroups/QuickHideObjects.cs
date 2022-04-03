@@ -30,7 +30,7 @@ namespace CBRE.Editor.Actions.Visgroups {
                 if (_selection.Contains(o)) {
                     document.Selection.Select(o);
                 }
-                document.ObjectRenderer.AddFaces(o);
+                document.ObjectRenderer.AddMapObject(o);
             }
             _selection = null;
             Mediator.Publish(EditorMediator.DocumentTreeStructureChanged);
@@ -53,7 +53,7 @@ namespace CBRE.Editor.Actions.Visgroups {
                     _selection.Add(o);
                     document.Selection.Deselect(o);
                 }
-                document.ObjectRenderer.RemoveFaces(o);
+                document.ObjectRenderer.RemoveMapObject(o);
             }
 
             Mediator.Publish(EditorMediator.DocumentTreeStructureChanged);

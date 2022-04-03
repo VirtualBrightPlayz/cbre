@@ -28,7 +28,7 @@ namespace CBRE.Editor.Actions.Visgroups {
                     o.Visgroups.Add(_removed);
                 }
                 o.IsVisgroupHidden = true;
-                document.ObjectRenderer.RemoveFaces(o);
+                document.ObjectRenderer.RemoveMapObject(o);
             }
             Mediator.Publish(EditorMediator.DocumentTreeStructureChanged);
             Mediator.Publish(EditorMediator.VisgroupsChanged);
@@ -42,7 +42,7 @@ namespace CBRE.Editor.Actions.Visgroups {
                 o.AutoVisgroups.Remove(_removed);
                 o.Visgroups.Remove(_removed);
                 o.IsVisgroupHidden = false;
-                document.ObjectRenderer.AddFaces(o);
+                document.ObjectRenderer.AddMapObject(o);
             }
             Mediator.Publish(EditorMediator.DocumentTreeStructureChanged);
             Mediator.Publish(EditorMediator.VisgroupsChanged);
