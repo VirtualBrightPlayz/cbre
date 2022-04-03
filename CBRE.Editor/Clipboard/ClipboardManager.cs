@@ -1,4 +1,5 @@
-﻿using CBRE.Common.Mediator;
+﻿using System;
+using CBRE.Common.Mediator;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Providers;
@@ -6,6 +7,7 @@ using CBRE.Providers.Map;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CBRE.DataStructures.GameData;
 
 namespace CBRE.Editor.Clipboard {
     public static class ClipboardManager {
@@ -66,7 +68,12 @@ namespace CBRE.Editor.Clipboard {
             using (var tr = new StringReader(str)) {
                 try {
                     var gs = GenericStructure.Parse(tr);
-                    return VmfProvider.ExtractCopyStream(gs.FirstOrDefault(), document.Map.IDGenerator);
+                    var mapObjects = VmfProvider.ExtractCopyStream(gs.FirstOrDefault(), document.Map.IDGenerator);
+                    foreach (var entity in mapObjects.OfType<Entity>()) {
+                        entity.GameData = document.GameData.Classes.FirstOrDefault(c
+                            => c.Name.Equals(entity.ClassName, StringComparison.OrdinalIgnoreCase) && c.ClassType != ClassType.Base);
+                    }
+                    return mapObjects;
                 } catch {
                     return null;
                 }
