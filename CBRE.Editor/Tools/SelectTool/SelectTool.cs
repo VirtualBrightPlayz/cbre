@@ -881,7 +881,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
             PrimitiveDrawing.End();
 
-            RenderBoxText(viewport, s, e);
+            //RenderBoxText(viewport, s, e);
         }
 
         #endregion

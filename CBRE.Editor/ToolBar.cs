@@ -49,9 +49,9 @@ namespace CBRE.Editor {
         }
 
         public class ToolBarItem {
-            public string ToolTip;
-            public AsyncTexture Texture;
-            public BaseTool Tool;
+            public readonly string ToolTip;
+            public readonly AsyncTexture Texture;
+            public readonly BaseTool Tool;
 
             public ToolBarItem(BaseTool tool) {
                 ToolTip = tool.GetName();
@@ -61,13 +61,7 @@ namespace CBRE.Editor {
 
             public virtual void Draw() {
                 bool isSelected = GameMain.Instance.SelectedTool == Tool;
-                using (new AggregateDisposable(
-                           new ColorPush(ImGuiCol.Button,
-                               isSelected ? GlobalGraphics.SelectedColors.Button : null),
-                           new ColorPush(ImGuiCol.ButtonActive,
-                               isSelected ? GlobalGraphics.SelectedColors.ButtonActive : null),
-                           new ColorPush(ImGuiCol.ButtonHovered,
-                               isSelected ? GlobalGraphics.SelectedColors.ButtonHovered : null)))
+                using (isSelected ? ColorPush.SelectedButton() : ColorPush.Nil())
                 {
                     bool pressed;
                     if (Texture.ImGuiTexture != IntPtr.Zero) {

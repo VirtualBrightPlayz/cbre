@@ -1,15 +1,25 @@
 ﻿using System;
+using CBRE.Graphics;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Num = System.Numerics;
 
 namespace CBRE.Editor {
     readonly struct ColorPush : IDisposable {
-        public static AggregateDisposable RedButton()
+        public static IDisposable RedButton()
             => new AggregateDisposable(
                 new ColorPush(ImGuiCol.Button, Color.DarkRed),
                 new ColorPush(ImGuiCol.ButtonActive, Color.DarkRed),
                 new ColorPush(ImGuiCol.ButtonHovered, Color.Red));
+
+        public static IDisposable SelectedButton()
+            => new AggregateDisposable(
+                new ColorPush(ImGuiCol.Button, GlobalGraphics.SelectedColors.Button),
+                new ColorPush(ImGuiCol.ButtonActive, GlobalGraphics.SelectedColors.ButtonActive),
+                new ColorPush(ImGuiCol.ButtonHovered, GlobalGraphics.SelectedColors.ButtonHovered));
+
+        public static IDisposable Nil()
+            => new ColorPush(ImGuiCol.Button, (Num.Vector4?)null);
         
         private readonly bool pushed;
         

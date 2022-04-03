@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -45,11 +46,15 @@ namespace CBRE.Editor {
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_SmallerGrid"], HotkeysMediator.GridDecrease.ToString()));
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_LargerGrid"], HotkeysMediator.GridIncrease.ToString()));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_IgnoreGrouping"], HotkeysMediator.ToggleIgnoreGrouping.ToString(), isToggle: true));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_IgnoreGrouping"], HotkeysMediator.ToggleIgnoreGrouping.ToString(),
+                isSelected: () => DocumentManager.CurrentDocument?.Map?.IgnoreGrouping is true));
             TopBarItems.Add(new TopBarSeparator());
-            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_TextureLock"], HotkeysMediator.ToggleTextureLock.ToString(), isToggle: true));
-            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_TextureScalingLock"], HotkeysMediator.ToggleTextureScalingLock.ToString(), isToggle: true));
-            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_HideNullTextures"], HotkeysMediator.ToggleHideNullTextures.ToString(), isToggle: true));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_TextureLock"], HotkeysMediator.ToggleTextureLock.ToString(),
+                isSelected: () => DocumentManager.CurrentDocument?.Map?.TextureLock is true));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_TextureScalingLock"], HotkeysMediator.ToggleTextureScalingLock.ToString(),
+                isSelected: () => DocumentManager.CurrentDocument?.Map?.TextureScalingLock is true));
+            TopBarItems.Add(new TopBarItem(MenuTextures["Menu_HideNullTextures"], HotkeysMediator.ToggleHideNullTextures.ToString(),
+                isSelected: () => DocumentManager.CurrentDocument?.Map?.HideNullTextures is true));
             TopBarItems.Add(new TopBarSeparator());
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_HideSelected"], HotkeysMediator.QuickHideSelected.ToString()));
             TopBarItems.Add(new TopBarItem(MenuTextures["Menu_HideUnselected"], HotkeysMediator.QuickHideUnselected.ToString()));
@@ -82,57 +87,59 @@ namespace CBRE.Editor {
         }
 
         public class TopBarItem {
-            public string ToolTip;
-            public AsyncTexture Texture;
-            public Action Action;
-            public bool IsToggle;
-            public bool Toggled;
+            public readonly string ToolTip;
+            public readonly AsyncTexture? Texture;
+            public readonly Action? Action;
+            public readonly Func<bool> IsSelected;
 
-            public TopBarItem(string toolTip, AsyncTexture texture, bool isToggle=false, Action action=null) {
+            private static bool FalseFunc() => false;
+            
+            public TopBarItem(string toolTip, AsyncTexture? texture, Action? action=null, Func<bool>? isSelected=null) {
                 ToolTip = toolTip;
                 Texture = texture;
                 Action = action;
-                IsToggle = isToggle;
+                IsSelected = isSelected ?? FalseFunc;
             }
 
-            public TopBarItem(AsyncTexture texture, string hotkey, bool isToggle = false) {
-                var h = Hotkeys.GetHotkeyDefinitions().FirstOrDefault(p => p.ID == hotkey);
-                IsToggle = isToggle;
+            public TopBarItem(AsyncTexture texture, string hotkey, Func<bool>? isSelected=null) {
+                var h = Hotkeys.GetHotkeyDefinition(hotkey);
                 Texture = texture;
-                if (h == null) {
-                    ToolTip = hotkey;
-                    return;
-                }
+                ToolTip = h is null ? hotkey : h.Name;
+                IsSelected = isSelected ?? FalseFunc;
                 Action = () => {
+                    if (h is null) { return; }
                     Mediator.Publish(h.Action, h.Parameter);
                 };
             }
 
             public virtual void Draw() {
-                using (new AggregateDisposable(
-                           new ColorPush(ImGuiCol.Button, Toggled ? GlobalGraphics.SelectedColors.Button : null),
-                           new ColorPush(ImGuiCol.ButtonActive,
-                               Toggled ? GlobalGraphics.SelectedColors.ButtonActive : null),
-                           new ColorPush(ImGuiCol.ButtonHovered,
-                               Toggled ? GlobalGraphics.SelectedColors.ButtonHovered : null))) {
-                    bool pressed;
-                    if (Texture.ImGuiTexture != IntPtr.Zero) {
+                bool pressed = false;
+                using (IsSelected() ? ColorPush.SelectedButton() : ColorPush.Nil()) {
+                    if (Texture!.ImGuiTexture != IntPtr.Zero) {
                         pressed = ImGui.ImageButton(Texture.ImGuiTexture, new Num.Vector2(16, 16));
                     } else {
                         pressed = ImGui.Button($"##{Texture.Name}", new Num.Vector2(24, 22));
                     }
-                    ImGui.SameLine();
+                }
+                
+                if (ImGui.IsItemHovered()) {
+                    ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.One * 4);
+                    ImGui.BeginTooltip();
+                    ImGui.SetTooltip(ToolTip);
+                    ImGui.EndTooltip();
+                    ImGui.PopStyleVar();
+                }
+                
+                ImGui.SameLine();
 
-                    if (pressed) {
-                        if (IsToggle) { Toggled = !Toggled; }
-                        Action?.Invoke();
-                    }
+                if (pressed) {
+                    Action?.Invoke();
                 }
             }
         }
 
         public class TopBarSeparator : TopBarItem {
-            public TopBarSeparator() : base("", null, false, null) { }
+            public TopBarSeparator() : base("", null) { }
 
             public override void Draw() {
                 var drawList = ImGui.GetWindowDrawList();
