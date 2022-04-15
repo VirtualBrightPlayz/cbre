@@ -185,17 +185,15 @@ namespace CBRE.Editor {
                 Num.Vector2 pos = ImGui.GetCursorPos() + ImGui.GetWindowPos();
                 if (ImGui.BeginMenu(GetDrawnText(topLevel))) {
                     Items.ForEach(it => it.Draw(false));
-                    if (ItemsToRemove.Any()) {
-                        Items.RemoveAll(x => ItemsToRemove.Contains(x));
-                        ItemsToRemove.Clear();
-                    }
+                    PostponedActions.ForEach(x => x.Invoke());
+                    PostponedActions.Clear();
 
                     ImGui.EndMenu();
                 }
                 RenderIcon(pos);
             }
             public List<MenuItem> Items;
-            protected HashSet<MenuItem> ItemsToRemove = new();
+            protected List<Action> PostponedActions = new();
         }
 
         public class MenuSeparator : MenuItem {

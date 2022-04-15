@@ -41,10 +41,6 @@ namespace CBRE.Editor.Documents {
         }
 
         public static void SwitchTo(Document doc) {
-            if (doc == null) {
-                doc = new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map());
-            }
-
             if (CurrentDocument != null) {
                 CurrentDocument.SetInactive();
                 Mediator.Publish(EditorMediator.DocumentDeactivated, CurrentDocument);
