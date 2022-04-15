@@ -5,17 +5,13 @@ using System.Collections.Generic;
 
 namespace CBRE.Editor.Documents {
     public static class DocumentManager {
-        public static List<Document> Documents { get; private set; }
+        public static List<Document> Documents { get; } = new();
         public static Document CurrentDocument { get; private set; }
 
         private static int _untitledCount = 1;
 
         public static string GetUntitledDocumentName() {
             return "Untitled " + _untitledCount++;
-        }
-
-        static DocumentManager() {
-            Documents = new List<Document>();
         }
 
         public static void Add(Document doc) {
