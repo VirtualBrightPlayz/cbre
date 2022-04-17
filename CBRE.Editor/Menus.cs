@@ -20,7 +20,7 @@ namespace CBRE.Editor {
             Menus.Add(new Menu("File",
                 new MenuItem(HotkeysMediator.FileNew.ToString(), MenuTextures["Menu_New"]),
                 new MenuItem(HotkeysMediator.FileOpen.ToString(), MenuTextures["Menu_Open"]),
-                new RecentMenu(),
+                RecentMenu.Instance,
                 new MenuItem(HotkeysMediator.FileClose.ToString(), MenuTextures["Menu_Close"]),
                 new MenuItem(HotkeysMediator.FileSave.ToString(), MenuTextures["Menu_Save"]),
                 new MenuItem(HotkeysMediator.FileSaveAs.ToString(), MenuTextures["Menu_SaveAs"]),

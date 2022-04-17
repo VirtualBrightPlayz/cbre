@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using CBRE.Common.Mediator;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Providers.Map;
 using CBRE.Common.Extensions;
+using CBRE.Settings;
 using static CBRE.Editor.GameMain;
 
 namespace CBRE.Editor;
@@ -12,7 +15,25 @@ namespace CBRE.Editor;
 class RecentMenu : Menu, IMediatorListener {
     private const int MAX_COUNT = 10;
 
-    public RecentMenu() : base("Recent files") {
+    public static readonly RecentMenu Instance = new();
+
+    private static IEnumerable<string> History {
+        get => Instance.Items.Skip(1).Select(i => i.Name);
+        set {
+            Instance.Items.Remove(1..);
+            Instance.Items.AddRange(value.Select(s => Instance.ItemFromString(s)));
+        }
+    }
+
+    static RecentMenu() {
+        History = Recent.RecentFiles;
+        Recent.RecentFilesAccessors = new(
+            () => History.ToList(),
+            files => History = files
+        );
+    }
+
+    private RecentMenu() : base("Recent files") {
         Mediator.Subscribe(EditorMediator.DocumentOpened, this);
         Mediator.Subscribe(EditorMediator.DocumentSaved, this);
         Items.Add(new MenuItem("Clear recent", "", null, () => {
@@ -39,22 +60,22 @@ class RecentMenu : Menu, IMediatorListener {
             return;
         }
 
-        MenuItem newItem = new(doc.MapFile, "");
+        Items.Insert(1, ItemFromString(doc.MapFile));
+        Items.Remove((MAX_COUNT + 1)..);
+    }
+
+    internal MenuItem ItemFromString(string str) {
+        MenuItem newItem = new(str, "");
         newItem.Action = () => {
-            if (!File.Exists(doc.MapFile)) {
+            if (!File.Exists(str)) {
                 PostponedActions.Add(() => {
                     Items.Remove(newItem);
                 });
                 return;
             }
-            Map _map = MapProvider.GetMapFromFile(doc.MapFile);
-            DocumentManager.AddAndSwitch(new Document(doc.MapFile, _map));
+            Map _map = MapProvider.GetMapFromFile(str);
+            DocumentManager.AddAndSwitch(new Document(str, _map));
         };
-        Items.Insert(1, newItem);
-        Items.Remove((MAX_COUNT + 1)..);
-    }
-
-    private void Remove(MenuItem recent) {
-        Items.Remove(recent);
+        return newItem;
     }
 }

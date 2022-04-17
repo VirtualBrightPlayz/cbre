@@ -9,7 +9,6 @@ using System.Reflection;
 
 namespace CBRE.Settings {
     public static class SettingsManager {
-        public static List<RecentFile> RecentFiles { get; set; }
         public static List<Setting> Settings { get; set; }
         public static List<Hotkey> Hotkeys { get; set; }
         private static readonly Dictionary<string, GenericStructure> AdditionalSettings;
@@ -18,7 +17,6 @@ namespace CBRE.Settings {
         public static string SettingsFile { get; set; }
 
         static SettingsManager() {
-            RecentFiles = new List<RecentFile>();
             Settings = new List<Setting>();
             Hotkeys = new List<Hotkey>();
             SpecialTextureOpacities = new Dictionary<string, float>
@@ -68,7 +66,6 @@ namespace CBRE.Settings {
         }
 
         public static void Read() {
-            RecentFiles.Clear();
             Settings.Clear();
             Hotkeys.Clear();
             AdditionalSettings.Clear();
@@ -82,15 +79,6 @@ namespace CBRE.Settings {
             if (settings != null) {
                 foreach (var key in settings.GetPropertyKeys()) {
                     Settings.Add(new Setting { Key = key, Value = settings[key] });
-                }
-            }
-            var recents = root.Children.FirstOrDefault(x => x.Name == "RecentFiles");
-            if (recents != null) {
-                foreach (var key in recents.GetPropertyKeys()) {
-                    int i;
-                    if (int.TryParse(key, out i)) {
-                        RecentFiles.Add(new RecentFile { Location = recents[key], Order = i });
-                    }
                 }
             }
             var hotkeys = root.Children.FirstOrDefault(x => x.Name == "Hotkeys");
@@ -151,15 +139,6 @@ namespace CBRE.Settings {
                 settings.AddProperty(setting.Key, setting.Value);
             }
             root.Children.Add(settings);
-
-            // Recent Files
-            var recents = new GenericStructure("RecentFiles");
-            var i = 1;
-            foreach (var file in RecentFiles.OrderBy(x => x.Order).Select(x => x.Location).Where(File.Exists)) {
-                recents.AddProperty(i.ToString(), file);
-                i++;
-            }
-            root.Children.Add(recents);
 
             // Hotkeys
             Hotkeys = CBRE.Settings.Hotkeys.GetHotkeys().ToList();
