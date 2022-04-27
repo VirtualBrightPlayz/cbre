@@ -33,7 +33,7 @@ class DiscordManager : IMediatorListener, IDisposable {
     public void Dispose() {
         if (client != null) {
             Mediator.UnsubscribeAll(this);
-            client.SetPresence(null);
+            client.ClearPresence();
             client.Dispose();
             client = null;
         }
