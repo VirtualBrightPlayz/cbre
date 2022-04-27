@@ -8,7 +8,10 @@ using System.Reflection;
 namespace CBRE.Settings {
     public static class Serialise {
         private static IEnumerable<PropertyInfo> GetProperties() {
-            var list = new[] { typeof(Grid), typeof(Select), typeof(Steam), typeof(View), typeof(Directories), typeof(LightmapConfig), typeof(Layout), typeof(Recent) };
+            var list = new[] { typeof(Grid), typeof(Select), typeof(Steam), typeof(View),
+                typeof(Directories), typeof(LightmapConfig), typeof(Layout), typeof(Recent),
+                typeof(Misc)
+            };
             return list
                 .SelectMany(x => x.GetProperties(BindingFlags.Static | BindingFlags.Public))
                 .Where(x => x.GetCustomAttribute(typeof(NonSerializedAttribute)) == null);

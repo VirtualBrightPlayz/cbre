@@ -1,6 +1,5 @@
 ﻿using CBRE.Common;
 using CBRE.Common.Mediator;
-using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Popup;
 using CBRE.Editor.Rendering;
@@ -16,16 +15,16 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using CBRE.Editor.Actions.MapObjects.Operations;
 using Num = System.Numerics;
 
 namespace CBRE.Editor {
     partial class GameMain : Game
     {
         public static GameMain Instance { get; private set; }
+
+        private DiscordManager discord;
 
         private GraphicsDeviceManager graphics;
         private ImGuiRenderer imGuiRenderer;
@@ -90,7 +89,18 @@ namespace CBRE.Editor {
             var colors = style.Colors;
             colors[(int)ImGuiCol.FrameBg] = new Num.Vector4(0.05f, 0.05f, 0.07f, 1.0f);
         }
-        
+
+        public void SetDiscord(bool enabled) {
+            if (enabled) {
+                if (discord == null) {
+                    discord = new();
+                }
+            } else if (discord != null) {
+                discord.Dispose();
+                discord = null;
+            }
+        }
+
         protected override void Initialize()
         {
             SettingsManager.Read();
@@ -127,6 +137,8 @@ namespace CBRE.Editor {
 
             ViewportManager.Init();
             DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
+
+            SetDiscord(Misc.DiscordIntegration);
 
             documentTabs = new DocumentTabs();
             

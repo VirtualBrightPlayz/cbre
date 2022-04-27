@@ -89,7 +89,7 @@ namespace CBRE.Editor.Logging {
             RuntimeVersion = System.Environment.Version.ToString();
             Date = DateTime.Now;
             InformationMessage = info;
-            ApplicationVersion = FileVersionInfo.GetVersionInfo(typeof(Logger).Assembly.Location).FileVersion;
+            ApplicationVersion = VersionUtil.Version;
             OperatingSystem = FriendlyOSName();
 
             var list = new List<Exception>();
