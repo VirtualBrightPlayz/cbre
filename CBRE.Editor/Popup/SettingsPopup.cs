@@ -34,6 +34,11 @@ namespace CBRE.Editor.Popup {
                 ImGui.EndTabItem();
             }
 
+            if (ImGui.BeginTabItem("Misc")) {
+                MiscGui();
+                ImGui.EndTabItem();
+            }
+
             if (fixedHeight <= 0) {
                 fixedHeight = (int)ImGui.GetCursorPosY();
             }
@@ -124,6 +129,17 @@ namespace CBRE.Editor.Popup {
                 }
             }
             ImGui.EndChild();
+        }
+
+        private void MiscGui() {
+            ImGui.Text("Misc");
+            ImGui.Separator();
+            bool dc = Misc.DiscordIntegration;
+            ImGui.Checkbox("Enable Discord integration", ref dc);
+            if (dc != Misc.DiscordIntegration) {
+                Misc.DiscordIntegration = dc;
+                GameMain.Instance.SetDiscord(dc);
+            }
         }
 
         public override void Dispose() {

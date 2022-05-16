@@ -213,7 +213,7 @@ namespace CBRE.Providers.Model {
             }
 
             foreach (MapObject mapObject in map.WorldSpawn.GetSelfAndAllChildren()) {
-                DataStructures.GameData.GameDataObject data = gameData.Classes.Find(p => p.Name == mapObject.ClassName);
+                DataStructures.GameData.GameDataObject data = gameData.Classes.FirstOrDefault(p => p.Name == mapObject.ClassName);
                 if (data == null) {
                     continue;
                 }

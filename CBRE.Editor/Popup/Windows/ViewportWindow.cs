@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
+using CBRE.Editor.Tools;
 using CBRE.Graphics;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -220,13 +221,19 @@ namespace CBRE.Editor.Popup {
                             GameMain.Instance.SelectedTool?.KeyHit(viewport, new ViewportEvent() {
                                 Handled = false,
                                 KeyCode = key,
-                                MouseOver = mouseOver
+                                MouseOver = mouseOver,
+                                Control = ViewportManager.Ctrl,
+                                Alt = ViewportManager.Alt,
+                                Shift = ViewportManager.Shift
                             });
                             foreach (var tool in GameMain.Instance.ToolBarItems.Select(tbi => tbi.Tool)) {
                                 tool.KeyHitBackground(viewport, new ViewportEvent() {
                                     Handled = false,
                                     KeyCode = key,
-                                    MouseOver = mouseOver
+                                    MouseOver = mouseOver,
+                                    Control = ViewportManager.Ctrl,
+                                    Alt = ViewportManager.Alt,
+                                    Shift = ViewportManager.Shift
                                 });
                             }
                         }
@@ -244,7 +251,7 @@ namespace CBRE.Editor.Popup {
                             }
                         }
 
-                        if (viewport is Viewport3D vp3d) {
+                        if (viewport is Viewport3D vp3d && !ViewportManager.AnyModifiers) {
                             bool shiftDown = mouse2Down;
                             bool mustRerender = false;
                             // WASD
@@ -475,7 +482,10 @@ namespace CBRE.Editor.Popup {
                         }
                     }
                     
-                    GameMain.Instance.SelectedTool?.ViewportUi(Viewports[i]);
+                    foreach (var tool in ToolManager.Tools)
+                    {
+                        tool.ViewportUi(Viewports[i]);
+                    }
                     
                     ImGui.PopClipRect();
                 }

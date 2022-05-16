@@ -6,12 +6,6 @@ using System.Runtime.InteropServices;
 namespace CBRE.Editor.Popup {
     public class AboutPopup : PopupUI
     {
-        private const string virtualRepo = "https://github.com/VirtualBrightPlayz/cbre";
-        private const string cbrePages = "https://juanjp600.github.io/cbre/";
-        private const string juanRepo = "https://github.com/juanjp600/cbre";
-        private const string gplV2 = "https://www.gnu.org/licenses/gpl-2.0.html";
-        private const string logicAndTrickWebsite = "https://logic-and-trick.com/";
-
         public AboutPopup() : base("About") { }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,62 +30,49 @@ namespace CBRE.Editor.Popup {
         }
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
 
-            ImGui.Text("Source:");
+            ImGui.Text("CBRE:");
             ImGui.SameLine();
 
-            if (ImGui.Button("Github")) {
-                try {
-                    Process.Start(virtualRepo);
-                } catch {
-                    OpenUrl(virtualRepo);
+            void Button(string name, string url) {
+                if (ImGui.Button(name)) {
+                    try {
+                        Process.Start(url);
+                    } catch {
+                        OpenUrl(url);
+                    }
                 }
             }
 
-            ImGui.Text("juanjp600:");
+            Button("Guide", "https://SCP-CBN.github.io/cbre/");
             ImGui.SameLine();
-            if (ImGui.Button("GitHub Pages CBRE")) {
-                try {
-                    Process.Start(cbrePages);
-                } catch {
-                    OpenUrl(cbrePages);
-                }
-            }
-            ImGui.SameLine();
-            if (ImGui.Button("CBRE GitHub")) {
-                try {
-                    Process.Start(juanRepo);
-                } catch {
-                    OpenUrl(juanRepo);
-                }
-            }
+            Button("Source", "https://github.com/SCP-CBN/cbre");
 
             ImGui.Text("License:");
             ImGui.SameLine();
 
-            if (ImGui.Button("GPLv2")) {
-                try {
-                    Process.Start(gplV2);
-                } catch {
-                    OpenUrl(gplV2);
-                }
-            }
+            Button("GPLv2", "https://www.gnu.org/licenses/gpl-2.0.html");
 
             ImGui.Text("LogicAndTrick:");
             ImGui.SameLine();
 
-            if (ImGui.Button("L&T")) {
-                try {
-                    Process.Start(logicAndTrickWebsite);
-                } catch {
-                    OpenUrl(logicAndTrickWebsite);
-                }
-            }
+            Button("L&T", "https://logic-and-trick.com/");
 
-            shouldBeOpen = true;
-            if (ImGui.Button("Close")) {
-                shouldBeOpen = false;
-            }
+            ImGui.Text("Made by:");
+            ImGui.SameLine();
+            Button("juanjp600", "https://github.com/juanjp600");
+            ImGui.SameLine();
+            Button("VirtualBrightPlayz", "https://github.com/VirtualBrightPlayz");
+            ImGui.SameLine();
+            Button("Salvage", "https://github.com/Saalvage");
+            Button("TheMoogle", "https://github.com/TheMoogle");
+            ImGui.SameLine();
+            Button("AestheticalZ", "https://github.com/AestheticalZ");
+            ImGui.SameLine();
+            Button("ced777ric", "https://github.com/ced777ric");
+            ImGui.SameLine();
+            Button("Bananaman043", "https://github.com/Bananaman043");
         }
     }
 }

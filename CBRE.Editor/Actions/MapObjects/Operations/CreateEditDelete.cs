@@ -70,14 +70,14 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
                 var deselect = obj.GetSelfAndAllChildren().Where(x => x.IsSelected).SelectMany(GetSelfAndChildren).ToList();
                 document.Selection.Deselect(deselect);
 
-                document.ObjectRenderer.RemoveFaces(obj);
+                document.ObjectRenderer.RemoveMapObject(obj);
                 obj.Unclone(Before);
 
                 var select = obj.GetSelfAndAllChildren().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);
 
                 document.Map.UpdateAutoVisgroups(obj, true);
-                document.ObjectRenderer.AddFaces(obj);
+                document.ObjectRenderer.AddMapObject(obj);
             }
         }
 
@@ -156,7 +156,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             // Create
             _objectsToCreate = document.Map.WorldSpawn.Find(x => _createdIds.Contains(x.ID)).Select(x => new CreateReference(x.Parent.ID, x)).ToList();
             
-            _objectsToCreate.ForEach(p => document.ObjectRenderer.RemoveFaces(p.MapObject));
+            _objectsToCreate.ForEach(p => document.ObjectRenderer.RemoveMapObject(p.MapObject));
             if (_objectsToCreate.Any(x => x.MapObject.IsSelected)) {
                 document.Selection.Deselect(_objectsToCreate.Where(x => x.MapObject.IsSelected).SelectMany(GetSelfAndChildren));
             }
@@ -165,7 +165,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             
             // Delete
             _idsToDelete = _deletedObjects.Select(x => x.Object.ID).ToList();
-            _deletedObjects.ForEach(p => document.ObjectRenderer.AddFaces(p.Object));
+            _deletedObjects.ForEach(p => document.ObjectRenderer.AddMapObject(p.Object));
             foreach (var dr in _deletedObjects.Where(x => x.TopMost)) {
                 dr.Object.SetParent(document.Map.WorldSpawn.FindByID(dr.ParentID));
                 RecalculatePastedFaces(document, dr.Object);
@@ -197,7 +197,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             _objectsToCreate.ForEach(x => {
                 x.MapObject.SetParent(document.Map.WorldSpawn.FindByID(x.ParentID));
                 RecalculatePastedFaces(document, x.MapObject);
-                document.ObjectRenderer.AddFaces(x.MapObject);
+                document.ObjectRenderer.AddMapObject(x.MapObject);
             });
 
             // Select objects if IsSelected is true
@@ -227,7 +227,7 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             foreach (var dr in _deletedObjects.Where(x => x.TopMost)) {
                 dr.Object.SetParent(null);
             }
-            _deletedObjects.ForEach(x => document.ObjectRenderer.RemoveFaces(x.Object));
+            _deletedObjects.ForEach(x => document.ObjectRenderer.RemoveMapObject(x.Object));
 
             _idsToDelete = null;
 

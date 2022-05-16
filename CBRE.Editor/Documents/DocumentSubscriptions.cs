@@ -338,11 +338,13 @@ namespace CBRE.Editor.Documents {
         }
 
         public void ObjectProperties() {
-            GameMain.Instance.Popups.Add(new ObjectPropertiesUI(_document, _document.Selection.GetSelectedParents().FirstOrDefault()));
+            var mapObject = _document.Selection.GetSelectedParents().FirstOrDefault();
+            if (mapObject is null) { return; }
+            GameMain.Instance.Popups.Add(new ObjectPropertiesUI(_document, mapObject));
         }
 
         public void SwitchTool(HotkeyTool tool) {
-            if (ToolManager.ActiveTool != null && ToolManager.ActiveTool.GetHotkeyToolType() == tool) tool = HotkeyTool.Selection;
+            if (ToolManager.ActiveTool != null && ToolManager.ActiveTool.GetHotkeyToolType() == tool) { tool = HotkeyTool.Selection; }
             ToolManager.Activate(tool);
             GameMain.Instance.SelectedTool = ToolManager.Tools.FirstOrDefault(p => p.GetHotkeyToolType() == tool);
         }

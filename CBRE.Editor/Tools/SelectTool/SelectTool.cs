@@ -859,10 +859,6 @@ namespace CBRE.Editor.Tools.SelectTool
             {
                 RenderTransformBox(viewport);
             }
-            else if (ShouldDrawBox(viewport))
-            {
-                RenderBoxText(viewport, start, end);
-            }
         }
 
         private void RenderTransformBox(Viewport2D viewport)
@@ -885,7 +881,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
             PrimitiveDrawing.End();
 
-            RenderBoxText(viewport, s, e);
+            //RenderBoxText(viewport, s, e);
         }
 
         #endregion

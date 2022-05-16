@@ -80,7 +80,10 @@ namespace CBRE.Editor.Rendering {
             private int indexWireframeCount = 0;
 
             public void UpdateBuffers() {
-                var entities = document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData?.ClassType == DataStructures.GameData.ClassType.Point && !e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
+                var entities = document.Map.WorldSpawn
+                    .Find(x => x is Entity { GameData.ClassType: DataStructures.GameData.ClassType.Point } e
+                               && e.GameData.Behaviours.All(p => p.Name != "sprite"))
+                    .OfType<Entity>().ToList();
                 vertexCount = entities.Count * 24;
                 indexSolidCount = entities.Count * 36;
                 indexWireframeCount = entities.Count * 24;
@@ -487,26 +490,26 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        public void AddFaces(MapObject mapObject) {
+        public void AddMapObject(MapObject mapObject) {
             switch (mapObject)
             {
                 case Solid s:
                     foreach (var f in s.Faces) { AddFace(f); }
                     break;
                 case Group g:
-                    foreach (var child in g.GetChildren()) { AddFaces(child); }
+                    foreach (var child in g.GetChildren()) { AddMapObject(child); }
                     break;
             }
         }
         
-        public void RemoveFaces(MapObject mapObject) {
+        public void RemoveMapObject(MapObject mapObject) {
             switch (mapObject)
             {
                 case Solid s:
                     foreach (var f in s.Faces) { RemoveFace(f); }
                     break;
                 case Group g:
-                    foreach (var child in g.GetChildren()) { RemoveFaces(child); }
+                    foreach (var child in g.GetChildren()) { RemoveMapObject(child); }
                     break;
             }
         }
@@ -529,14 +532,14 @@ namespace CBRE.Editor.Rendering {
             solid.Faces.ForEach(AddFace);
         }
 
-        public void MarkDirty(MapObject mapObject) {
+        public void MarkMapObjectDirty(MapObject mapObject) {
             switch (mapObject)
             {
                 case Solid s:
                     foreach (var t in s.Faces.Select(f => f.Texture.Name).Distinct()) { MarkDirty(t); }
                     break;
                 case Group g:
-                    foreach (var child in g.GetChildren()) { MarkDirty(child); }
+                    foreach (var child in g.GetChildren()) { MarkMapObjectDirty(child); }
                     break;
             }
         }
@@ -648,19 +651,19 @@ namespace CBRE.Editor.Rendering {
 
         public void RenderSprites(Viewport3D vp) {
             Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
-            var sprites = Document.Map.WorldSpawn.Find(x => x is Entity e && e.GameData != null && e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
+            var sprites = Document.Map.WorldSpawn.Find(x => x is Entity { GameData: { } } e && e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
             foreach (var sprite in sprites) {
-                string key = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "sprite").Values.FirstOrDefault();
-                string color = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "spritecolor").Values.FirstOrDefault();
+                string key = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "sprite")?.Values.FirstOrDefault();
+                string color = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "spritecolor")?.Values.FirstOrDefault();
                 Property prop = sprite.EntityData.Properties.FirstOrDefault(p => p.Key == color);
                 if (string.IsNullOrWhiteSpace(key)) {
                     continue;
                 }
                 TextureItem tex = TextureProvider.GetItem(key);
-                if (tex != null && tex.Texture is AsyncTexture t) {
+                if (tex is { Texture: AsyncTexture t }) {
                     PrimitiveDrawing.Begin(PrimitiveType.QuadList);
                     var c = sprite.Origin;
-                    var fcolor = prop == null ? Vector3.One * 255f : prop.GetVector3(Vector3.One * 255f);
+                    var fcolor = prop?.GetVector3(Vector3.One * 255f) ?? (Vector3.One * 255f);
                     t.Bind();
                     double amount = 25.0;
                     var up = vp.Camera.GetUp().Normalise() * amount;

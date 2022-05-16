@@ -33,8 +33,7 @@ namespace CBRE.Editor {
         }
 
         public void FileNew() {
-            string name = DocumentManager.GetUntitledDocumentName();
-            Document doc = new Document(name, new DataStructures.MapObjects.Map());
+            Document doc = new(null, new DataStructures.MapObjects.Map());
             DocumentManager.AddAndSwitch(doc);
         }
 

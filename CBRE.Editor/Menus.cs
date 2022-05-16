@@ -20,6 +20,7 @@ namespace CBRE.Editor {
             Menus.Add(new Menu("File",
                 new MenuItem(HotkeysMediator.FileNew.ToString(), MenuTextures["Menu_New"]),
                 new MenuItem(HotkeysMediator.FileOpen.ToString(), MenuTextures["Menu_Open"]),
+                RecentMenu.Instance,
                 new MenuItem(HotkeysMediator.FileClose.ToString(), MenuTextures["Menu_Close"]),
                 new MenuItem(HotkeysMediator.FileSave.ToString(), MenuTextures["Menu_Save"]),
                 new MenuItem(HotkeysMediator.FileSaveAs.ToString(), MenuTextures["Menu_SaveAs"]),
@@ -184,11 +185,15 @@ namespace CBRE.Editor {
                 Num.Vector2 pos = ImGui.GetCursorPos() + ImGui.GetWindowPos();
                 if (ImGui.BeginMenu(GetDrawnText(topLevel))) {
                     Items.ForEach(it => it.Draw(false));
+                    PostponedActions.ForEach(x => x.Invoke());
+                    PostponedActions.Clear();
+
                     ImGui.EndMenu();
                 }
                 RenderIcon(pos);
             }
             public List<MenuItem> Items;
+            protected List<Action> PostponedActions = new();
         }
 
         public class MenuSeparator : MenuItem {

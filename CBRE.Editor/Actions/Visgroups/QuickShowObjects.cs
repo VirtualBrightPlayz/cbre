@@ -13,7 +13,7 @@ namespace CBRE.Editor.Actions.Visgroups {
         private int _removed;
 
         public QuickShowObjects(IEnumerable<MapObject> objects) {
-            _objects = objects.Where(x => x.IsVisgroupHidden).ToList();
+            _objects = objects.SelectMany(x => x.GetSelfAndAllChildren()).Distinct().Where(x => x.IsVisgroupHidden).ToList();
         }
 
         public void Dispose() {
@@ -28,6 +28,7 @@ namespace CBRE.Editor.Actions.Visgroups {
                     o.Visgroups.Add(_removed);
                 }
                 o.IsVisgroupHidden = true;
+                document.ObjectRenderer.RemoveMapObject(o);
             }
             Mediator.Publish(EditorMediator.DocumentTreeStructureChanged);
             Mediator.Publish(EditorMediator.VisgroupsChanged);
@@ -41,6 +42,7 @@ namespace CBRE.Editor.Actions.Visgroups {
                 o.AutoVisgroups.Remove(_removed);
                 o.Visgroups.Remove(_removed);
                 o.IsVisgroupHidden = false;
+                document.ObjectRenderer.AddMapObject(o);
             }
             Mediator.Publish(EditorMediator.DocumentTreeStructureChanged);
             Mediator.Publish(EditorMediator.VisgroupsChanged);
