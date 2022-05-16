@@ -13,29 +13,17 @@ namespace CBRE.Editor.Rendering {
 
         public static void Register(DataStructures.Models.Model model) {
             var transforms = model.GetTransforms();
-
             List<VertexPositionColorTexture> vertexList = new List<VertexPositionColorTexture>();
-
             vertexBuffers.Add(model, new Dictionary<Common.ITexture, VertexBuffer>());
 
             foreach (var group in model.GetActiveMeshes().GroupBy(x => x.SkinRef)) {
                 var texture = model.Textures[group.Key].TextureObject;
                 foreach (var mesh in group) {
-                    // PrimitiveDrawing.Begin(PrimitiveType.TriangleList);
-                    // PrimitiveDrawing.SetColor(Color.White);
-                    // if (texture != null) ((AsyncTexture)texture).Bind();
                     foreach (var v in mesh.Vertices) {
                         var transform = transforms[v.BoneWeightings.First().Bone.BoneIndex];
                         Vector3 c = new Vector3(v.Location * transform);
                         vertexList.Add(new VertexPositionColorTexture(c.ToXna(), Microsoft.Xna.Framework.Color.White, new Microsoft.Xna.Framework.Vector2(v.TextureU, v.TextureV)));
-                        // PrimitiveDrawing.Vertex3(c, v.TextureU, v.TextureV);
                     }
-                    // effect.Texture = PrimitiveDrawing.Texture;
-                    // effect.TextureEnabled = true;
-                    // effect.VertexColorEnabled = false;
-                    // effect.CurrentTechnique.Passes[0].Apply();
-                    // PrimitiveDrawing.End();
-                    // if (texture != null) ((AsyncTexture)texture).Unbind();
                     VertexBuffer buffer = new VertexBuffer(GlobalGraphics.GraphicsDevice, typeof(VertexPositionColorTexture), vertexList.Count, BufferUsage.WriteOnly);
                     buffer.SetData(vertexList.ToArray(), 0, vertexList.Count);
                     vertexBuffers[model].Add(texture, buffer);
