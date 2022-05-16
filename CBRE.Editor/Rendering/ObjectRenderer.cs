@@ -709,6 +709,7 @@ namespace CBRE.Editor.Rendering {
                 } else if (ModelProvider.CanLoad(file)) {
                     ModelReference mref = ModelProvider.CreateModelReference(file);
                     this.models.Add(path, mref);
+                    ModelRenderer.Register(this.models[path].Model);
                 }
             }
         }

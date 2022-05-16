@@ -201,6 +201,18 @@ namespace CBRE.Editor.Popup {
                             ViewportManager.MarkForRerender();
                             focusedViewport = -1;
                         }
+                        if (!mouse2Down && prevMouse2Down) {
+                            GameMain.Instance.SelectedTool?.MouseLifted(viewport, new ViewportEvent() {
+                                Handled = false,
+                                Button = MouseButtons.Right,
+                                X = mouseState.X - viewport.X,
+                                Y = mouseState.Y - viewport.Y,
+                                LastX = viewport.PrevMouseX,
+                                LastY = viewport.PrevMouseY,
+                            });
+                            ViewportManager.MarkForRerender();
+                            focusedViewport = -1;
+                        }
 
                         GameMain.Instance.SelectedTool?.UpdateFrame(viewport,
                             new FrameInfo(0)); //TODO: fix FrameInfo
