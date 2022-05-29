@@ -729,7 +729,7 @@ namespace CBRE.Editor.Tools
                 (float)boxEnd.X,
                 ((float)boxStart.Y + (float)boxEnd.Y + ImGui.CalcTextSize(heightText).Y) * 0.5f);
 
-            var drawList = ImGui.GetForegroundDrawList();
+            var drawList = ImGui.GetWindowDrawList();
             drawList.PushClipRect(new Num.Vector2(viewport.X, viewport.Y),
                 new Num.Vector2(viewport.X + viewport.Width, viewport.Y + viewport.Height));
             drawList.AddText(new Num.Vector2(viewport.X + widthTextPos.X, viewport.Y + viewport.Height - widthTextPos.Y), 0xff00ffff, widthText);

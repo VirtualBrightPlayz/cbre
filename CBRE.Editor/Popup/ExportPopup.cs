@@ -76,7 +76,8 @@ namespace CBRE.Editor.Popup {
                 LightmapConfig.AmbientColorR = ambientLightColor.R;
                 LightmapConfig.AmbientColorG = ambientLightColor.G;
                 LightmapConfig.AmbientColorB = ambientLightColor.B;
-                lightmapper.RenderShadowMapped();
+                //lightmapper.RenderShadowMapped();
+                lightmapper.RenderRayTest();
             }
             ImGui.PopItemWidth();
         }

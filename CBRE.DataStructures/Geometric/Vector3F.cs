@@ -109,11 +109,11 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public static bool operator ==(Vector3F c1, Vector3F c2) {
-            return Equals(c1, null) ? Equals(c2, null) : c1.Equals(c2);
+            return c1.Equals(c2);
         }
 
         public static bool operator !=(Vector3F c1, Vector3F c2) {
-            return Equals(c1, null) ? !Equals(c2, null) : !c1.Equals(c2);
+            return !c1.Equals(c2);
         }
 
         public static Vector3F operator +(Vector3F c1, Vector3F c2) {
@@ -155,12 +155,19 @@ namespace CBRE.DataStructures.Geometric {
             return "(" + X.ToString("0.0000") + " " + Y.ToString("0.0000") + " " + Z.ToString("0.0000") + ")";
         }
 
+        [Obsolete("Redundant because Vector3F is a value type")]
         public Vector3F Clone() {
-            return new Vector3F(X, Y, Z);
+            return this;
         }
 
         public static Vector3F Parse(string x, string y, string z) {
             return new Vector3F(float.Parse(x), float.Parse(y), float.Parse(z));
         }
+
+        public float DistanceFrom(Vector3F other)
+            => (this - other).VectorMagnitude();
+        
+        public static Vector3F Lerp(Vector3F from, Vector3F to, float amount)
+            => from * (1.0f - amount) + to * amount;
     }
 }

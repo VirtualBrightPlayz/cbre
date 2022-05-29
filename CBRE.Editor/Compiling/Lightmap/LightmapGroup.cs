@@ -82,10 +82,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
         }
         public UvBounds ProjectedBounds;
 
-        public Vector3F GetWorldPosForUv(float u, float v)
-            => GetWorldPosForUv(new UvPairFloat { U = u, V = v });
+        public Vector3F GetWorldPosForProjectedUv(float u, float v)
+            => GetWorldPosForProjectedUv(new UvPairFloat { U = u, V = v });
         
-        public Vector3F GetWorldPosForUv(UvPairFloat uv) {
+        public Vector3F GetWorldPosForProjectedUv(UvPairFloat uv) {
             var uAxis = UvProjectionAxes.UAxis;
             var vAxis = UvProjectionAxes.VAxis;
             Vector2 pointOnPlaneUv = new Vector2(
@@ -97,10 +97,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
             return worldPosition;
         }
 
-        public Vector3F TopLeftWorldPos => GetWorldPosForUv(ProjectedBounds.Min.U, ProjectedBounds.Min.V);
-        public Vector3F TopRightWorldPos => GetWorldPosForUv(ProjectedBounds.Max.U, ProjectedBounds.Min.V);
-        public Vector3F BottomLeftWorldPos => GetWorldPosForUv(ProjectedBounds.Min.U, ProjectedBounds.Max.V);
-        public Vector3F BottomRightWorldPos => GetWorldPosForUv(ProjectedBounds.Max.U, ProjectedBounds.Max.V);
+        public Vector3F TopLeftWorldPos => GetWorldPosForProjectedUv(ProjectedBounds.Min.U, ProjectedBounds.Min.V);
+        public Vector3F TopRightWorldPos => GetWorldPosForProjectedUv(ProjectedBounds.Max.U, ProjectedBounds.Min.V);
+        public Vector3F BottomLeftWorldPos => GetWorldPosForProjectedUv(ProjectedBounds.Min.U, ProjectedBounds.Max.V);
+        public Vector3F BottomRightWorldPos => GetWorldPosForProjectedUv(ProjectedBounds.Max.U, ProjectedBounds.Max.V);
 
         public struct UvPairFloat {
             public float U;
