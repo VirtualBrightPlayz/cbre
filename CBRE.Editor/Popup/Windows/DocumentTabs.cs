@@ -50,7 +50,7 @@ namespace CBRE.Editor.Popup {
                             if (doc != currDoc) {
                                 DocumentManager.SwitchTo(currDoc);
                             } else {
-                                DocumentManager.SwitchTo(DocumentManager.Documents.FirstOrDefault() ?? new Document("", new Map()));
+                                DocumentManager.SwitchTo(DocumentManager.Documents.FirstOrDefault());
                             }
                         }
                     }
