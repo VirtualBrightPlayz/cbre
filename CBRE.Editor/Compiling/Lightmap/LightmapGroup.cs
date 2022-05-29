@@ -23,14 +23,100 @@ namespace CBRE.Editor.Compiling.Lightmap {
         private readonly List<LMFace> faces;
         public IReadOnlyList<LMFace> Faces => faces;
 
-        public Vector3F? UAxis;
-        public Vector3F? VAxis;
-        public float? MinTotalU;
-        public float? MinTotalV;
-        public float? MaxTotalU;
-        public float? MaxTotalV;
-        public int WriteU;
-        public int WriteV;
+        public struct UvAxes {
+            public bool Initialized;
+            public Vector3F UAxis;
+            public Vector3F VAxis;
+
+            public UvAxes(Vector3F uAxis, Vector3F vAxis) {
+                Initialized = true;
+                UAxis = uAxis;
+                VAxis = vAxis;
+            }
+        }
+        public UvAxes UvProjectionAxes;
+
+        public struct UvBounds {
+            public bool Initialized { get; private set; }
+            public UvPairFloat Min;
+            public UvPairFloat Max;
+
+            public float USpan => Max.U - Min.U;
+            public float VSpan => Max.V - Min.V;
+
+            public void AddUv(float u, float v) {
+                if (!Initialized) {
+                    Initialized = true;
+                    Min.U = u;
+                    Min.V = v;
+                    Max.U = u;
+                    Max.V = v;
+                } else {
+                    void updateMin(ref float field, float value)
+                        => field = Math.Min(field, value);
+                    void updateMax(ref float field, float value)
+                        => field = Math.Max(field, value);
+                    updateMin(ref Min.U, u);
+                    updateMin(ref Min.V, v);
+                    updateMax(ref Max.U, u);
+                    updateMax(ref Max.V, v);
+                }
+            }
+
+            public void Inflate(float amount) {
+                Min.U -= amount;
+                Min.V -= amount;
+                Max.U += amount;
+                Max.V += amount;
+            }
+
+            public void Round(float gridSize) {
+                void roundValue(ref float v)
+                    => v = (float)Math.Ceiling(v / gridSize) * gridSize;
+            
+                roundValue(ref Min.U);
+                roundValue(ref Min.V);
+                roundValue(ref Max.U);
+                roundValue(ref Max.V);
+            }
+        }
+        public UvBounds ProjectedBounds;
+
+        public Vector3F GetWorldPosForUv(float u, float v)
+            => GetWorldPosForUv(new UvPairFloat { U = u, V = v });
+        
+        public Vector3F GetWorldPosForUv(UvPairFloat uv) {
+            var uAxis = UvProjectionAxes.UAxis;
+            var vAxis = UvProjectionAxes.VAxis;
+            Vector2 pointOnPlaneUv = new Vector2(
+                Plane.PointOnPlane.Dot(uAxis),
+                Plane.PointOnPlane.Dot(vAxis));
+            Vector3F worldPosition = Plane.PointOnPlane
+                                   + (uv.U - pointOnPlaneUv.X - LightmapConfig.DownscaleFactor) * uAxis
+                                   + (uv.V - pointOnPlaneUv.Y - LightmapConfig.DownscaleFactor) * vAxis;
+            return worldPosition;
+        }
+
+        public Vector3F TopLeftWorldPos => GetWorldPosForUv(ProjectedBounds.Min.U, ProjectedBounds.Min.V);
+        public Vector3F TopRightWorldPos => GetWorldPosForUv(ProjectedBounds.Max.U, ProjectedBounds.Min.V);
+        public Vector3F BottomLeftWorldPos => GetWorldPosForUv(ProjectedBounds.Min.U, ProjectedBounds.Max.V);
+        public Vector3F BottomRightWorldPos => GetWorldPosForUv(ProjectedBounds.Max.U, ProjectedBounds.Max.V);
+
+        public struct UvPairFloat {
+            public float U;
+            public float V;
+        }
+        
+        public struct UvPairInt {
+            public int U;
+            public int V;
+        }
+        
+        public UvPairInt StartWriteUV;
+        public UvPairInt EndWriteUV => new LightmapGroup.UvPairInt {
+            U = StartWriteUV.U + (int)MathF.Ceiling(UvSpaceWidth),
+            V = StartWriteUV.V + (int)MathF.Ceiling(UvSpaceHeight)
+        };
 
         public LightmapGroup() {
             faces = new List<LMFace>();
@@ -39,89 +125,83 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public void AddFace(LMFace face) {
             faces.Add(face);
             BoxF faceBox = face.PaddedBoundingBox();
-            BoundingBox ??= faceBox;
-            BoundingBox = new BoxF(new[] {faceBox, BoundingBox});
-            var newPlane = new PlaneF(face.Normal, face.Vertices[0].Location);
-            Plane ??= newPlane;
-            var otherPointOnPlane = Plane.Project(newPlane.PointOnPlane);
-            Plane = new PlaneF(Plane.Normal, (otherPointOnPlane + Plane.PointOnPlane) / 2.0f);
+            BoundingBox = BoundingBox is null ? faceBox : new BoxF(new[] {faceBox, BoundingBox});
+            var newPlane = new PlaneF(
+                face.Normal,
+                face.Vertices.Select(v => v.Location).Aggregate((v1,v2) => v1+v2)/face.Vertices.Length);
+            if (Plane is null) {
+                Plane = newPlane;
+            } else {
+                var otherPointOnPlane = Plane.Project(newPlane.PointOnPlane);
+                Plane = new PlaneF(Plane.Normal, (otherPointOnPlane + Plane.PointOnPlane) / 2.0f);
+            }
         }
 
         private void CalculateInitialUv() {
-            if (UAxis != null
-                && VAxis != null
-                && MinTotalU != null
-                && MinTotalV != null
-                && MaxTotalU != null
-                && MaxTotalV != null) {
+            if (UvProjectionAxes.Initialized && ProjectedBounds.Initialized) {
                 return;
             }
             
             var direction = Plane.GetClosestAxisToNormal();
             var tempV = direction == Vector3F.UnitZ ? -Vector3F.UnitY : -Vector3F.UnitZ;
-            UAxis = Plane.Normal.Cross(tempV).Normalise();
-            VAxis = UAxis.Value.Cross(Plane.Normal).Normalise();
+            var uAxis = Plane.Normal.Cross(tempV).Normalise();
+            var vAxis = uAxis.Cross(Plane.Normal).Normalise();
+            UvProjectionAxes = new UvAxes(uAxis, vAxis);
 
-            if (Plane.OnPlane(Plane.PointOnPlane + UAxis.Value * 1000f) != 0) {
-                throw new Exception("uAxis is misaligned");
+            void validateAxisAlignment(Vector3F axis, string name) {
+                if (Plane.OnPlane(Plane.PointOnPlane + axis * 1000f) != 0) {
+                    throw new Exception($"{name} is misaligned");
+                }
             }
-            if (Plane.OnPlane(Plane.PointOnPlane + VAxis.Value * 1000f) != 0) {
-                throw new Exception("vAxis is misaligned");
-            }
+            
+            validateAxisAlignment(uAxis, nameof(uAxis));
+            validateAxisAlignment(vAxis, nameof(vAxis));
 
             foreach (LMFace face in Faces) {
                 foreach (Vector3F coord in face.Vertices.Select(x => x.Location)) {
-                    float u = coord.Dot(UAxis.Value);
-                    float v = coord.Dot(VAxis.Value);
+                    float u = coord.Dot(uAxis);
+                    float v = coord.Dot(vAxis);
 
-                    if (MinTotalU == null || u < MinTotalU) { MinTotalU = u; }
-                    if (MinTotalV == null || v < MinTotalV) { MinTotalV = v; }
-                    if (MaxTotalU == null || u > MaxTotalU) { MaxTotalU = u; }
-                    if (MaxTotalV == null || v > MaxTotalV) { MaxTotalV = v; }
+                    ProjectedBounds.AddUv(u, v);
                 }
             }
 
-            if (MinTotalU == null || MinTotalV == null || MaxTotalU == null || MaxTotalV == null) {
+            if (!ProjectedBounds.Initialized) {
                 throw new Exception("Could not determine face minimum and maximum UVs");
             }
 
-            MinTotalU -= LightmapConfig.DownscaleFactor; MinTotalV -= LightmapConfig.DownscaleFactor;
-            MaxTotalU += LightmapConfig.DownscaleFactor; MaxTotalV += LightmapConfig.DownscaleFactor;
+            ProjectedBounds.Inflate(LightmapConfig.DownscaleFactor);
+            ProjectedBounds.Round(LightmapConfig.DownscaleFactor);
 
-            void roundValue(ref float? v)
-                => v = (float)Math.Ceiling(v.Value / LightmapConfig.DownscaleFactor) * LightmapConfig.DownscaleFactor;
-            
-            roundValue(ref MinTotalU);
-            roundValue(ref MinTotalV);
-            roundValue(ref MaxTotalU);
-            roundValue(ref MaxTotalV);
-
-            if ((MaxTotalU - MinTotalU) < (MaxTotalV - MinTotalV)) {
+            if (ProjectedBounds.USpan < ProjectedBounds.VSpan) {
                 SwapUv();
             }
         }
 
-        public float Width {
+        public float WorldSpaceWidth {
             get {
                 CalculateInitialUv();
-                return (MaxTotalU - MinTotalU).Value;
+                return ProjectedBounds.USpan;
             }
         }
 
-        public float Height {
+        public float WorldSpaceHeight {
             get {
                 CalculateInitialUv();
-                return (MaxTotalV - MinTotalV).Value;
+                return ProjectedBounds.VSpan;
             }
         }
+
+        public float UvSpaceWidth => WorldSpaceWidth / LightmapConfig.DownscaleFactor;
+        public float UvSpaceHeight => WorldSpaceHeight / LightmapConfig.DownscaleFactor;
 
         public void SwapUv() {
             void swap<T>(ref T a, ref T b)
                 => (a, b) = (b, a);
             
-            swap(ref MaxTotalU, ref MaxTotalV);
-            swap(ref MinTotalU, ref MinTotalV);
-            swap(ref UAxis, ref VAxis);
+            swap(ref ProjectedBounds.Max.U, ref ProjectedBounds.Max.V);
+            swap(ref ProjectedBounds.Min.U, ref ProjectedBounds.Min.V);
+            swap(ref UvProjectionAxes.UAxis, ref UvProjectionAxes.VAxis);
         }
 
         public static LightmapGroup? FindCoplanar(IReadOnlyList<LightmapGroup> lmGroups, LMFace otherFace) {
@@ -137,28 +217,26 @@ namespace CBRE.Editor.Compiling.Lightmap {
         }
 
         public IEnumerable<ObjectRenderer.BrushVertex> GenQuadVerts() {
-            Vector2 pointOnPlaneUv = new Vector2(
-                Plane.PointOnPlane.Dot(UAxis.Value),
-                Plane.PointOnPlane.Dot(VAxis.Value));
-            Vector3F minPosition = Plane.PointOnPlane
-                                   + (MinTotalU.Value - pointOnPlaneUv.X - LightmapConfig.DownscaleFactor) * UAxis.Value
-                                   + (MinTotalV.Value - pointOnPlaneUv.Y - LightmapConfig.DownscaleFactor) * VAxis.Value;
+            var uAxis = UvProjectionAxes.UAxis;
+            var vAxis = UvProjectionAxes.VAxis;
+
+            var minPosition = TopLeftWorldPos;
             
             ObjectRenderer.BrushVertex genVert(float u, float v)
                 => new ObjectRenderer.BrushVertex(
-                    position: (minPosition + UAxis.Value * u + VAxis.Value * v).ToXna(),
+                    position: (minPosition + uAxis * u + vAxis * v).ToXna(),
                     normal: Plane.Normal.ToXna(),
                     diffUv: Vector2.Zero,
                     lmUv: new Vector2(
-                        MathF.Floor(u / LightmapConfig.DownscaleFactor + WriteU) / LightmapConfig.TextureDims,
-                        MathF.Floor(v / LightmapConfig.DownscaleFactor + WriteV) / LightmapConfig.TextureDims),
+                        MathF.Floor(u / LightmapConfig.DownscaleFactor + StartWriteUV.U) / LightmapConfig.TextureDims,
+                        MathF.Floor(v / LightmapConfig.DownscaleFactor + StartWriteUV.V) / LightmapConfig.TextureDims),
                     color: Color.White,
                     selected: false);
 
             yield return genVert(0.0f, 0.0f);
-            yield return genVert(0.0f, Height);
-            yield return genVert(Width, 0.0f);
-            yield return genVert(Width, Height);
+            yield return genVert(0.0f, WorldSpaceHeight);
+            yield return genVert(WorldSpaceWidth, 0.0f);
+            yield return genVert(WorldSpaceWidth, WorldSpaceHeight);
         }
     }
 }

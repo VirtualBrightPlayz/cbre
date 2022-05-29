@@ -81,28 +81,22 @@ namespace CBRE.Editor.Compiling.Lightmap {
             Vector3F v2 = Vertices[i2].Location;
             Vector3F v3 = Vertices[i3].Location;
 
-            float w1x = Vertices[i1].DiffU; float w1y = Vertices[i1].DiffV;
-            float w2x = Vertices[i2].DiffU; float w2y = Vertices[i2].DiffV;
-            float w3x = Vertices[i3].DiffU; float w3y = Vertices[i3].DiffV;
+            Vector2F uv1 = new(Vertices[i1].DiffU, Vertices[i1].DiffV);
+            Vector2F uv2 = new(Vertices[i2].DiffU, Vertices[i2].DiffV);
+            Vector2F uv3 = new(Vertices[i3].DiffU, Vertices[i3].DiffV);
 
-            float x1 = v2.X - v1.X;
-            float x2 = v3.X - v1.X;
-            float y1 = v2.Y - v1.Y;
-            float y2 = v3.Y - v1.Y;
-            float z1 = v2.Z - v1.Z;
-            float z2 = v3.Z - v1.Z;
+            Vector3F d21 = v2 - v1;
+            Vector3F d31 = v3 - v1;
 
-            float s1 = w2x - w1x;
-            float s2 = w3x - w1x;
-            float t1 = w2y - w1y;
-            float t2 = w3y - w1y;
+            Vector2F st21 = uv2 - uv1;
+            Vector2F st31 = uv3 - uv1;
 
-            float r = 1.0f / (s1 * t2 - s2 * t1);
-            Vector3F sdir = new Vector3F((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
-            Vector3F tdir = new Vector3F((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+            float r = 1.0f / (st21.X * st31.Y - st31.X * st21.Y);
+            Vector3F sDir = (d21 * st31.Y - d31 * st21.Y) * r;
+            Vector3F tDir = (d31 * st21.X - d21 * st31.X) * r;
 
-            Tangent = (sdir - Normal * Normal.Dot(sdir)).Normalise();
-            Bitangent = (tdir - Normal * Normal.Dot(tdir)).Normalise();
+            Tangent = (sDir - Normal * Normal.Dot(sDir)).Normalise();
+            Bitangent = (tDir - Normal * Normal.Dot(tDir)).Normalise();
 
             float sqrt2 = MathF.Sqrt(2.0f);
             float sqrt3 = MathF.Sqrt(3.0f);
@@ -123,10 +117,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public void UpdateLmUv(LightmapGroup group, int lmIndex) {
             LmIndex = lmIndex;
             foreach (var vertex in Vertices) {
-                var u = vertex.Location.Dot(group.UAxis.Value);
-                var v = vertex.Location.Dot(group.VAxis.Value);
-                vertex.LMU = (group.WriteU + (u - group.MinTotalU.Value) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
-                vertex.LMV = (group.WriteV + (v - group.MinTotalV.Value) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
+                var u = vertex.Location.Dot(group.UvProjectionAxes.UAxis);
+                var v = vertex.Location.Dot(group.UvProjectionAxes.VAxis);
+                vertex.LMU = (group.StartWriteUV.U + (u - group.ProjectedBounds.Min.U) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
+                vertex.LMV = (group.StartWriteUV.V + (v - group.ProjectedBounds.Min.V) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
             }
         }
 
