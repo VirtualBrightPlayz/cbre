@@ -48,15 +48,18 @@ public static class RMeshLoader {
     private static bool IsHeaderValid(string header, out HeaderSuffix headerSuffixes) {
         string[] split = header.Split('.');
         headerSuffixes = HeaderSuffix.None;
-        var possibleSuffixes = Enum.GetValues<HeaderSuffix>()
-            .Where(s => s != HeaderSuffix.None)
-            .ToImmutableHashSet();
-        foreach (HeaderSuffix suffix in possibleSuffixes) {
-            if (split.Contains(suffix.ToString())) { headerSuffixes |= suffix; }
+
+        if (split[0] != HeaderBase) { return false; }
+
+        foreach (string part in split.Skip(1)) {
+            if (!Enum.TryParse<HeaderSuffix>(part, out var val)) {
+                headerSuffixes = HeaderSuffix.None;
+                return false;
+            }
+            headerSuffixes |= val;
         }
 
-        return split[0] == HeaderBase
-               && split.Skip(1).All(possibleSuffixes.Select(s => s.ToString()).Contains);
+        return true;
     }
     
     private static ImmutableArray<RMesh.VisibleMesh> ReadVisibleMeshes(BlitzReader reader) {
