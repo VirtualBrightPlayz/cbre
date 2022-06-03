@@ -125,7 +125,7 @@ sealed partial class Lightmapper {
             foreach (var uv in Raster(startUv, endUv)) {
                 float intensity
                     = 1.0f - ((getWorldPosFromUv(uv).DistanceFrom(light.Location.ToCbreF())) / light.Range);
-                intensity = MathF.Max(0.0f, intensity);
+                if (intensity <= 0.0f) { continue; }
                 atlasBuffers[groupToAtlas[group]][uv] += new RenderBuffer.Color {
                     R = intensity * light.Color.X,
                     G = intensity * light.Color.Y,

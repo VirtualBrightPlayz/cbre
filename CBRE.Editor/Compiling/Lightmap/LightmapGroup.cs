@@ -110,6 +110,14 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public struct UvPairInt {
             public int U;
             public int V;
+
+            public static implicit operator UvPairInt((int X, int Y) tuple)
+                => new UvPairInt { U = tuple.X, V = tuple.Y };
+
+            public void Deconstruct(out int u, out int v) {
+                u = U;
+                v = V;
+            }
         }
         
         public UvPairInt StartWriteUV;
