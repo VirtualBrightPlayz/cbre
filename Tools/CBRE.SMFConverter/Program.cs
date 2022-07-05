@@ -27,7 +27,7 @@ namespace CBRE.SMFConverter {
         }
     }
     
-    class Program {
+    static class Program {
         static void Main(string[] args) {
             if (!args.Any()) {
                 Log("No input files defined! Just drag and drop files onto CBRE.SMFConverter.exe", ConsoleColor.Red);

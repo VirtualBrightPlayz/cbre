@@ -5,7 +5,7 @@ using CBRE.DataStructures.Geometric;
 
 namespace CBRE.RMesh;
 
-public record RMesh(
+public partial record RMesh(
     string Header,
     ImmutableArray<RMesh.VisibleMesh> VisibleMeshes,
     ImmutableArray<RMesh.InvisibleCollisionMesh> InvisibleCollisionMeshes,
@@ -45,4 +45,11 @@ public record RMesh(
     public record TriggerBox(
         string Name,
         ImmutableArray<InvisibleCollisionMesh> SubMeshes);
+
+    public HeaderUtils.HeaderSuffix HeaderSuffixes
+        => (VisibleNoCollisionMeshes.HasValue ? HeaderUtils.HeaderSuffix.HasNoColl : HeaderUtils.HeaderSuffix.None)
+           | (TriggerBoxes.HasValue ? HeaderUtils.HeaderSuffix.HasTriggerBox : HeaderUtils.HeaderSuffix.None);
+
+    public string HeaderString
+        => HeaderUtils.EnumToString(HeaderSuffixes);
 }

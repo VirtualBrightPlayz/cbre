@@ -120,6 +120,7 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public bool IsConvex(decimal epsilon = 0.001m) {
+            if (Vertices.Count <= 3) { return true; }
             for (var i = 0; i < Vertices.Count; i++) {
                 var v1 = Vertices[i];
                 var v2 = Vertices[(i + 1) % Vertices.Count];
@@ -127,7 +128,7 @@ namespace CBRE.DataStructures.Geometric {
                 var l1 = (v1 - v2).Normalise();
                 var l2 = (v3 - v2).Normalise();
                 var cross = l1.Cross(l2);
-                if (Plane.OnPlane(v2 + cross, epsilon) < 0.0001m) return false;
+                if (Plane.OnPlane(v2 + cross, epsilon) < 0.0001m) { return false; }
             }
             return true;
         }

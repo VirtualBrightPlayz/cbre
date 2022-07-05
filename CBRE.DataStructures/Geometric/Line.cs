@@ -48,6 +48,9 @@ namespace CBRE.DataStructures.Geometric {
             return Start + u * delta;
         }
 
+        public decimal DistanceFrom(Vector3 point)
+            => (point - ClosestPoint(point)).VectorMagnitude();
+
         /// <summary>
         /// Determines if this line is behind, in front, or spanning a plane.
         /// </summary>
