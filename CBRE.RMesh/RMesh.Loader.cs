@@ -31,7 +31,6 @@ public partial record RMesh {
             ReadEntities(reader);
 
             return new RMesh(
-                header,
                 visibleMeshes,
                 invisibleCollisionMeshes,
                 visibleNoCollMeshes,

@@ -6,7 +6,6 @@ using CBRE.DataStructures.Geometric;
 namespace CBRE.RMesh;
 
 public partial record RMesh(
-    string Header,
     ImmutableArray<RMesh.VisibleMesh> VisibleMeshes,
     ImmutableArray<RMesh.InvisibleCollisionMesh> InvisibleCollisionMeshes,
     ImmutableArray<RMesh.VisibleMesh>? VisibleNoCollisionMeshes,

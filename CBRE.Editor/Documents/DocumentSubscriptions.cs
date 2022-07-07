@@ -31,9 +31,10 @@ using Quaternion = CBRE.DataStructures.Geometric.Quaternion;
 using CBRE.Editor.Popup;
 using CBRE.Editor.Popup.ObjectProperties;
 using CBRE.Providers;
-using CBRE.Providers.Map;
+using CBRE.RMesh;
 using ImGuiNET;
 using NativeFileDialog;
+using RMeshDecomp;
 using Path = CBRE.DataStructures.MapObjects.Path;
 
 namespace CBRE.Editor.Documents {
@@ -232,6 +233,68 @@ namespace CBRE.Editor.Documents {
         }
 
         public void FileSave() {
+            var visibleMeshes = new List<RMesh.RMesh.VisibleMesh>();
+            var invisibleCollisionMeshes = new List<RMesh.RMesh.InvisibleCollisionMesh>();
+
+            var vertices = new List<RMesh.RMesh.VisibleMesh.Vertex>();
+            var triangles = new List<RMesh.RMesh.Triangle>();
+            int indexOffset = 0;
+            foreach (var solid in _document.Map.WorldSpawn.GetSelfAndAllChildren().OfType<Solid>()) {
+                foreach (var face in solid.Faces) {
+                    vertices.AddRange(face.Vertices.Select(fv => new RMesh.RMesh.VisibleMesh.Vertex(
+                        new Vector3F(fv.Location),
+                        new Vector2F((float)fv.TextureU, (float)fv.TextureV),
+                        Vector2F.Zero, Color.White)));
+                    triangles.AddRange(face.GetTriangleIndices().Chunk(3).Select(c => new RMesh.RMesh.Triangle(
+                        (ushort)(c[0] + indexOffset), (ushort)(c[1] + indexOffset), (ushort)(c[2] + indexOffset))));
+                    indexOffset += face.Vertices.Count;
+                }
+            }
+            
+            var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), "", "", RMesh.RMesh.VisibleMesh.BlendMode.Opaque);
+            visibleMeshes.Add(mesh);
+            
+            RMesh.RMesh rmesh = new RMesh.RMesh(
+                visibleMeshes.ToImmutableArray(),
+                invisibleCollisionMeshes.ToImmutableArray(),
+                null, null);
+
+            RMesh.RMesh.Saver.ToFile(rmesh, DocumentManager.CurrentDocument.MapFile+".rmesh");
+            
+            rmesh = RMesh.RMesh.Loader.FromFile("/home/juanjp/Desktop/room020.rmesh");
+
+            var idGenerator = _document.Map.IDGenerator;
+
+            var rng = new Random();
+            foreach (var subMesh in rmesh.VisibleMeshes) {
+                if (subMesh.TextureBlendMode != RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped) { continue; }
+                
+                var newFaces = new HashSet<Face>();
+                ExtractFaces.Invoke(subMesh, newFaces);
+
+                if (!newFaces.Any()) { continue; }
+                
+                var newSolid = new Solid(idGenerator.GetNextObjectID());
+                newSolid.Colour = Color.Chartreuse;
+                //newSolid.Faces.AddRange(newFaces);
+                foreach (var newFace in newFaces) {
+                    newSolid.Faces.Add(newFace);
+                    newFace.Parent = newSolid;
+                    newFace.Colour = Color.FromArgb(255,
+                        rng.Next()%256,
+                        newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 255 : 0,
+                        newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 0 : 255);
+                }
+
+                if (newSolid.Faces.Any()) {
+                    newSolid.SetParent(_document.Map.WorldSpawn);
+                    _document.ObjectRenderer.AddMapObject(newSolid);
+                }
+            }
+            
+            _document.ObjectRenderer.MarkDirty();
+            
+            return;
             _document.SaveFile();
         }
 

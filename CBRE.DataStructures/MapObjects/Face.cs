@@ -157,6 +157,10 @@ namespace CBRE.DataStructures.MapObjects {
             return new Polygon(Vertices.Select(x => x.Location)).IsConvex(epsilon);
         }
 
+        public bool HasColinearEdges(decimal epsilon = 0.001m) {
+            return new Polygon(Vertices.Select(x => x.Location)).HasColinearEdges(epsilon);
+        }
+
         #region Textures
 
         public enum BoxAlignMode {

@@ -133,6 +133,19 @@ namespace CBRE.DataStructures.Geometric {
             return true;
         }
 
+        public bool HasColinearEdges(decimal epsilon = 0.001m) {
+            var edges = Enumerable.Range(0, Vertices.Count)
+                .Select(i => new Line(Vertices[i], Vertices[(i+1) % Vertices.Count]))
+                .ToArray();
+            for (int i = 0; i < edges.Length; i++) {
+                var edge1 = edges[i];
+                var edge2 = edges[(i + 1) % edges.Length];
+
+                if (Math.Abs(edge1.Direction().Dot(edge2.Direction())) > (1m - epsilon)) { return true; }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Expands this plane's points outwards from the origin by a radius value.
         /// </summary>

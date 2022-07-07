@@ -23,9 +23,11 @@
     <ProjectReference Include="..\CBRE.FileSystem\CBRE.FileSystem.csproj" />
     <ProjectReference Include="..\CBRE.Graphics\CBRE.Graphics.csproj" />
     <ProjectReference Include="..\CBRE.Providers\CBRE.Providers.csproj" />
+    <ProjectReference Include="..\CBRE.RMesh\CBRE.RMesh.csproj" />
     <ProjectReference Include="..\CBRE.Settings\CBRE.Settings.csproj" />
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
     <ProjectReference Include="..\NativeFileDialog.NET\dotnet\NativeFileDialog.csproj" />
+    <ProjectReference Include="..\Tools\RMeshDecomp\RMeshDecomp.csproj" />
   </ItemGroup>
 
   <!-- TODO: detect target operating system? -->

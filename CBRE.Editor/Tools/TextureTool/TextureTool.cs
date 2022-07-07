@@ -118,6 +118,34 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         private void GuiElements() {
+            if (Document?.Selection is not null) {
+                var face1 = Document.Selection.GetSelectedFaces().FirstOrDefault();
+                var face2 = Document.Selection.GetSelectedFaces().Skip(1).FirstOrDefault();
+                if (face1 != null) {
+                    ImGui.Text(face1.IsConvex() ? "Convex" : "Not convex");
+                    ImGui.Text(face1.HasColinearEdges() ? "Has colinear edges" : "No colinear edges");
+                }
+                if (face1 != null && face2 != null) {
+                    var edges1 = face1.GetEdges();
+                    var edges2 = face2.GetEdges();
+
+                    if (Math.Abs(face2.Plane.DistanceFromOrigin - face1.Plane.DistanceFromOrigin) < 1m && face1.Plane.Normal.EquivalentTo(face2.Plane.Normal, 0.1m)) {
+                        var sharedEdge = edges1.FirstOrDefault(e1 => edges2.Any(e2 => e1.EquivalentTo(e2, 0.1m)));
+
+                        if (sharedEdge != null) {
+                            ImGui.Text($"{sharedEdge.Start} {sharedEdge.End} {face1.Plane.DistanceFromOrigin} {face2.Plane.DistanceFromOrigin}");
+                        } else {
+                            ImGui.Text($"Edges do not coincide");
+                        }
+                    } else {
+                        ImGui.Text($"Planes don't coincide: {face2.Plane.DistanceFromOrigin - face1.Plane.DistanceFromOrigin} {face1.Plane.Normal - face2.Plane.Normal}");
+                    }
+
+                    //ImGui.Text($"N: {face.Plane.Normal.X} {face.Plane.Normal.Y} {face.Plane.Normal.Z}");
+                    //ImGui.Text($"D: {face.Plane.DistanceFromOrigin}");
+                }
+            }
+            
             if (ImGui.BeginCombo("Left Click", _leftCombo.ToString())) {
                 var e = Enum.GetValues<SelectBehaviour>();
                 for (int i = 0; i < e.Length; i++) {
@@ -491,7 +519,8 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         public override void Render(ViewportBase viewport) {
-            if (Document.Map.HideFaceMask) return;
+            if (Document?.Map is null) { return; }
+            if (Document.Map.HideFaceMask) { return; }
 
             foreach (var face in Document.Selection.GetSelectedFaces()) {
                 var lineStart = face.BoundingBox.Center + face.Plane.Normal * 0.5m;
