@@ -39,7 +39,8 @@ namespace CBRE.Editor.Rendering {
 
         public Camera Camera { get; set; }
         public ViewType Type { get; set; }
-        public bool ShouldRenderModels { get; set; }
+        public bool ShouldRenderModels { get; set; } = false;
+        public bool ScreenshotRender { get; set; } = false;
 
         public Viewport3D(ViewType type) {
             Type = type;
@@ -170,7 +171,7 @@ namespace CBRE.Editor.Rendering {
 
                 switch (Type) {
                     case ViewType.Lightmapped:
-                        objectRenderer.RenderLightmapped();
+                        objectRenderer.RenderLightmapped(ScreenshotRender);
                         break;
                     case ViewType.Wireframe:
                         objectRenderer.RenderWireframe();
@@ -182,14 +183,15 @@ namespace CBRE.Editor.Rendering {
                         objectRenderer.RenderFlatUntextured();
                         break;
                     default:
-                        objectRenderer.RenderTextured();
+                        objectRenderer.RenderTextured(ScreenshotRender);
                         break;
                 }
 
                 if (ShouldRenderModels)
                     objectRenderer.RenderModels();
 
-                objectRenderer.RenderSprites(this);
+                if (!ScreenshotRender)
+                    objectRenderer.RenderSprites(this);
 
                 GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
             }

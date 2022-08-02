@@ -14,6 +14,9 @@ class DiscordManager : IMediatorListener, IDisposable {
         client.Logger = new ConsoleLogger(LogLevel.Warning);
         client.Initialize();
 
+        Mediator.Subscribe(EditorMediator.CompileStarted, this);
+        Mediator.Subscribe(EditorMediator.CompileFinished, this);
+        Mediator.Subscribe(EditorMediator.CompileFailed, this);
         Mediator.Subscribe(EditorMediator.DocumentActivated, this);
         Mediator.Subscribe(EditorMediator.DocumentAllClosed, this);
         client.SetPresence(_basicPresence);
@@ -59,9 +62,19 @@ class DiscordManager : IMediatorListener, IDisposable {
 
     public void Notify(Enum message, object data) {
         switch (message) {
+            case EditorMediator.CompileStarted:
+                {
+                    var doc = data as Document;
+                    client.UpdateDetails($"Compiling \"{doc!.MapFileName}\"");
+                }
+                break;
+            case EditorMediator.CompileFinished:
+            case EditorMediator.CompileFailed:
             case EditorMediator.DocumentActivated:
-                var doc = data as Document;
-                client.UpdateDetails($"Editing \"{doc!.MapFileName}\"");
+                {
+                    var doc = data as Document;
+                    client.UpdateDetails($"Editing \"{doc!.MapFileName}\"");
+                }
                 break;
             case EditorMediator.DocumentAllClosed:
                 client.UpdateDetails("Contemplating life choices");

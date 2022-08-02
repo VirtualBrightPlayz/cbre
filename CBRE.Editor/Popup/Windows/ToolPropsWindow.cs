@@ -44,6 +44,10 @@ namespace CBRE.Editor.Popup {
                         if (ImGui.Checkbox("Should Render 3D Models", ref b)) {
                             viewport3D.ShouldRenderModels = b;
                         }
+                        b = viewport3D.ScreenshotRender;
+                        if (ImGui.Checkbox("Screenshot mode", ref b)) {
+                            viewport3D.ScreenshotRender = b;
+                        }
                     }
                 }
                 ImGui.TreePop();

@@ -53,12 +53,12 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
 float4 PixelShaderF(VertexShaderOutput input) : COLOR0
 {
     float4 lighting;
-    if ((input.LmCoord.x > 1.0 || input.LmCoord.x < 0.0) && (input.LmCoord.y > 1.0 || input.LmCoord.y < 0.0)) {
+    /*if ((input.LmCoord.x > 1.0 || input.LmCoord.x < 0.0) && (input.LmCoord.y > 1.0 || input.LmCoord.y < 0.0)) {
         float lighting1 = dot(input.Normal, float3(0.2672,0.8017,0.5345)) * 0.25 + 0.75;
         lighting = float4(lighting1, lighting1, lighting1, 1.0);
-    } else {
+    } else {*/
         lighting = tex2D(lmSampler, input.LmCoord);
-    }
+    // }
 
     float4 c = (tex2D(diffSampler, input.TexCoord) * lighting) * float4(1.0, 1.0 - input.Selected, 1.0 - input.Selected, 1.0);
 

@@ -63,12 +63,20 @@ sealed partial class Lightmapper {
         var pointLights = ExtractPointLights();
         var atlases = PrepareAtlases();
 
+        if (Document.MGLightmaps is not null) {
+            foreach (var lm in Document.MGLightmaps) {
+                lm.Dispose();
+            }
+            Document.MGLightmaps = null;
+        }
+
         var groupToAtlas = new Dictionary<LightmapGroup, Atlas>();
         foreach (var atlas in atlases) {
             foreach (var group in atlas.Groups) {
                 groupToAtlas.Add(group, atlas);
             }
         }
+        Document.MGLightmaps ??= new List<Texture2D>();
 
         var atlasBuffers = new Dictionary<Atlas, RenderBuffer>();
         foreach (var atlas in atlases) {
@@ -88,6 +96,7 @@ sealed partial class Lightmapper {
                 mipmap: false,
                 SurfaceFormat.Color);
             texture.SetData(atlasBuffers[atlas].SelectMany(p => p.ToRgba32Bytes()).ToArray());
+            Document.MGLightmaps.Add(texture);
             using var fileStream = File.Open($"atlas{i}.png", FileMode.Create);
             texture.SaveAsPng(fileStream, texture.Width, texture.Height);
         }

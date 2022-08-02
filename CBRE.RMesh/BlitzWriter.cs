@@ -18,11 +18,19 @@ public class BlitzWriter : IDisposable {
     
     //Little-endian 32-bit signed integer
     public void WriteInt(Int32 i) {
-        UInt32 value = unchecked((UInt32)i);
-        WriteByte((byte)((value >> 0) & 0xff));
-        WriteByte((byte)((value >> 8) & 0xff));
-        WriteByte((byte)((value >> 16) & 0xff));
-        WriteByte((byte)((value >> 24) & 0xff));
+        byte[] bytes = BitConverter.GetBytes(i);
+        if (!BitConverter.IsLittleEndian) {
+            Array.Reverse(bytes);
+        }
+        WriteByte(bytes[0]);
+        WriteByte(bytes[1]);
+        WriteByte(bytes[2]);
+        WriteByte(bytes[3]);
+        // UInt32 value = unchecked((UInt32)i);
+        // WriteByte((byte)((value >> 0) & 0xff));
+        // WriteByte((byte)((value >> 8) & 0xff));
+        // WriteByte((byte)((value >> 16) & 0xff));
+        // WriteByte((byte)((value >> 24) & 0xff));
     }
     
     //32-bit (single precision) floating point number
@@ -32,7 +40,7 @@ public class BlitzWriter : IDisposable {
     
     //Int32 length of string + however many bytes that length says
     public void WriteString(string s) {
-        byte[] bytes = Encoding.UTF8.GetBytes(s);
+        byte[] bytes = Encoding.ASCII.GetBytes(s);
         WriteInt(bytes.Length);
         foreach (byte b in bytes) {
             WriteByte(b);

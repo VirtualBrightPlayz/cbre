@@ -14,6 +14,8 @@ namespace CBRE.Editor.Rendering {
         public static void Register(DataStructures.Models.Model model) {
             var transforms = model.GetTransforms();
             List<VertexPositionColorTexture> vertexList = new List<VertexPositionColorTexture>();
+            if (vertexBuffers.ContainsKey(model))
+                return;
             vertexBuffers.Add(model, new Dictionary<Common.ITexture, VertexBuffer>());
 
             foreach (var group in model.GetActiveMeshes().GroupBy(x => x.SkinRef)) {
@@ -26,7 +28,8 @@ namespace CBRE.Editor.Rendering {
                     }
                     VertexBuffer buffer = new VertexBuffer(GlobalGraphics.GraphicsDevice, typeof(VertexPositionColorTexture), vertexList.Count, BufferUsage.WriteOnly);
                     buffer.SetData(vertexList.ToArray(), 0, vertexList.Count);
-                    vertexBuffers[model].Add(texture, buffer);
+                    if (!vertexBuffers[model].ContainsKey(texture))
+                        vertexBuffers[model].Add(texture, buffer);
                     vertexList.Clear();
                 }
             }

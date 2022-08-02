@@ -618,9 +618,14 @@ namespace CBRE.Editor.Rendering {
 
         private Dictionary<string, ModelReference> models = new Dictionary<string, ModelReference>();
 
-        public void RenderTextured() {
+        public void RenderTextured(bool screenshotMode) {
             translucentGeom.Clear();
             foreach (var kvp in brushGeom) {
+                if (screenshotMode) {
+                    if (kvp.Key.ToLowerInvariant() == "tooltextures/invisible_collision") continue;
+                    if (kvp.Key.ToLowerInvariant() == "tooltextures/remove_face") continue;
+                    if (kvp.Key.ToLowerInvariant() == "tooltextures/block_light") continue;
+                }
                 TextureItem item = TextureProvider.GetItem(kvp.Key);
                 if (item is {Texture: AsyncTexture {MonoGameTexture: { }} asyncTexture}) {
                     if (asyncTexture.HasTransparency()) {
@@ -637,7 +642,8 @@ namespace CBRE.Editor.Rendering {
             }
             
             Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
-            pointEntityGeometry.RenderSolid();
+            if (!screenshotMode)
+                pointEntityGeometry.RenderSolid();
 
             var prevDepthStencilState = GlobalGraphics.GraphicsDevice.DepthStencilState;
             GlobalGraphics.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true, DepthBufferWriteEnable = false };
@@ -679,6 +685,7 @@ namespace CBRE.Editor.Rendering {
                     Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
                     PrimitiveDrawing.End();
                     t.Unbind();
+                    Effects.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
                 }
             }
             Effects.BasicEffect.TextureEnabled = false;
@@ -714,13 +721,18 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        public void RenderLightmapped() {
+        public void RenderLightmapped(bool screenshotMode) {
             if (Document.MGLightmaps is not {Count: > 0}) {
-                RenderTextured();
+                RenderTextured(screenshotMode);
                 return;
             }
 
             foreach (var kvp in brushGeom) {
+                if (screenshotMode) {
+                    if (kvp.Key.ToLowerInvariant() == "tooltextures/invisible_collision") continue;
+                    if (kvp.Key.ToLowerInvariant() == "tooltextures/remove_face") continue;
+                    if (kvp.Key.ToLowerInvariant() == "tooltextures/block_light") continue;
+                }
                 for (int i = 0; i < Document.MGLightmaps.Count; i++) {
                     TextureItem item = TextureProvider.GetItem(kvp.Key);
                     
@@ -734,7 +746,8 @@ namespace CBRE.Editor.Rendering {
                 }
             }
             Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
-            pointEntityGeometry.RenderSolid();
+            if (!screenshotMode)
+                pointEntityGeometry.RenderSolid();
 
         }
 

@@ -48,7 +48,7 @@ namespace CBRE.Editor {
                     DocumentManager.AddAndSwitch(new Document(outPath, _map));
                 }
                 catch (ProviderException e) {
-                    GameMain.Instance.Popups.Add(new MessagePopup("Error", e.Message, new ImColor() { Value = new Num.Vector4(1f, 0f, 0f, 1f) }));
+                    GameMain.Instance.Popups.Add(new MessagePopup("Error", e.Message, new ImColor() { Value = new Num.Vector4(1f, 0f, 0f, 1f) }, true));
                 }
             }
         }

@@ -229,11 +229,12 @@ public static class ExtractFaces {
                             && triVerts.Any(v => v.Position.EquivalentTo(new Vector3F(e.Edge.End), (float)precision)));
                 var newFaceVertex = new Vertex(vPosDecimal, face) {
                     TextureU = (decimal)vertexToAdd.DiffuseUv.X,
-                    TextureV = (decimal)vertexToAdd.DiffuseUv.Y
+                    TextureV = (decimal)vertexToAdd.DiffuseUv.Y,
                 };
                 finalVertices.Insert(edgeToSplit.Index + 1, newFaceVertex);
 
                 face.Vertices = finalVertices;
+                face.AlignTextureToFace();
 
                 return true;
             }

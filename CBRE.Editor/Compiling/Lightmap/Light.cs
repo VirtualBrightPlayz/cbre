@@ -87,7 +87,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
                     var m = new UnitMatrixMult(yaw * roll * pitch);
 
-                    light.Direction = new Vector3F(m.Transform(Vector3.UnitY));
+                    light.Direction = new Vector3F(m.Transform(Vector3.UnitY)).Normalise();
                     //TODO: make sure this matches 3dws
 
                     return light;

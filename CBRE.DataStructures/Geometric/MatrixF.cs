@@ -43,6 +43,10 @@ namespace CBRE.DataStructures.Geometric {
                          };
         }
 
+        public MatrixF(Matrix matrix) {
+            Values = matrix.Values.Select(x => (float)x).ToArray();
+        }
+
         protected MatrixF(SerializationInfo info, StreamingContext context) {
             Values = (float[])info.GetValue("Values", typeof(float[]));
         }

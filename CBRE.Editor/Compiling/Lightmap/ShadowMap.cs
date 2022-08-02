@@ -153,7 +153,7 @@ sealed partial class Lightmapper {
                     shadowMap.Prepare(j);
                     GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
                     renderAllAtlases();
-                    //saveTexture($"shadowMap_{i}_{j}.png", shadowMap.RenderTargets[j]);
+                    saveTexture($"shadowMap_{i}_{j}.png", shadowMap.RenderTargets[j]);
                 }
                 
                 gd.SetRenderTarget(atlasTexture);

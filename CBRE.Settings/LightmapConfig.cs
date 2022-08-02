@@ -13,6 +13,9 @@
         public static float AmbientNormalY { get; set; }
         public static float AmbientNormalZ { get; set; }
 
+        public static bool BakeModels { get; set; }
+        public static bool ComputeShadows { get; set; }
+
         static LightmapConfig() {
             DownscaleFactor = 15;
             PlaneMargin = 1;
@@ -26,6 +29,9 @@
             AmbientNormalX = 1.0f;
             AmbientNormalY = 2.0f;
             AmbientNormalZ = 3.0f;
+
+            BakeModels = false;
+            ComputeShadows = true;
         }
     }
 }

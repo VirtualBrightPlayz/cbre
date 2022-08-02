@@ -36,6 +36,7 @@ using ImGuiNET;
 using NativeFileDialog;
 using RMeshDecomp;
 using Path = CBRE.DataStructures.MapObjects.Path;
+using CBRE.Graphics;
 
 namespace CBRE.Editor.Documents {
     /// <summary>
@@ -217,7 +218,7 @@ namespace CBRE.Editor.Documents {
                                     DocumentManager.Remove(_document);
                                 } catch (ProviderNotFoundException e) {
                                     GameMain.Instance.Popups.Add(
-                                        new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) }));
+                                        new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) }, true));
                                 }
                             }
                         }),
@@ -259,42 +260,53 @@ namespace CBRE.Editor.Documents {
                 invisibleCollisionMeshes.ToImmutableArray(),
                 null, null);
 
+            #if FALSE
             RMesh.RMesh.Saver.ToFile(rmesh, DocumentManager.CurrentDocument.MapFile+".rmesh");
-            
-            rmesh = RMesh.RMesh.Loader.FromFile("/home/juanjp/Desktop/room020.rmesh");
+            var result = NativeFileDialog.OpenDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string outPath);
+            if (result == Result.Okay) {
+                rmesh = RMesh.RMesh.Loader.FromFile(outPath);
 
-            var idGenerator = _document.Map.IDGenerator;
+                var idGenerator = _document.Map.IDGenerator;
 
-            var rng = new Random();
-            foreach (var subMesh in rmesh.VisibleMeshes) {
-                if (subMesh.TextureBlendMode != RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped) { continue; }
-                
-                var newFaces = new HashSet<Face>();
-                ExtractFaces.Invoke(subMesh, newFaces);
+                var rng = new Random();
+                foreach (var subMesh in rmesh.VisibleMeshes) {
+                    if (subMesh.TextureBlendMode != RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped) { continue; }
+                    
+                    var newFaces = new HashSet<Face>();
+                    ExtractFaces.Invoke(subMesh, newFaces);
 
-                if (!newFaces.Any()) { continue; }
-                
-                var newSolid = new Solid(idGenerator.GetNextObjectID());
-                newSolid.Colour = Color.Chartreuse;
-                //newSolid.Faces.AddRange(newFaces);
-                foreach (var newFace in newFaces) {
-                    newSolid.Faces.Add(newFace);
-                    newFace.Parent = newSolid;
-                    newFace.Colour = Color.FromArgb(255,
-                        rng.Next()%256,
-                        newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 255 : 0,
-                        newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 0 : 255);
-                }
+                    if (!newFaces.Any()) { continue; }
+                    
+                    var newSolid = new Solid(idGenerator.GetNextObjectID());
+                    newSolid.Colour = Color.Chartreuse;
+                    //newSolid.Faces.AddRange(newFaces);
+                    foreach (var newFace in newFaces) {
+                        newSolid.Faces.Add(newFace);
+                        newFace.Parent = newSolid;
+                        newFace.Texture = new TextureReference();
+                        string tex = subMesh.DiffuseTexture.Replace(".jpg", "").Replace(".jpeg", "").Replace(".png", "");
+                        TextureItem item = TextureProvider.GetItem(tex);
+                        newFace.Texture.Name = item?.Name;
+                        newFace.Texture.Texture = item?.Texture as AsyncTexture;
+                        newFace.Colour = Color.FromArgb(255,
+                            rng.Next()%256,
+                            newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 255 : 0,
+                            newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 0 : 255);
+                        // newFace.AlignTextureToWorld();
+                        // newFace.CalculateTextureCoordinates(false);
+                    }
 
-                if (newSolid.Faces.Any()) {
-                    newSolid.SetParent(_document.Map.WorldSpawn);
-                    _document.ObjectRenderer.AddMapObject(newSolid);
+                    if (newSolid.Faces.Any()) {
+                        newSolid.SetParent(_document.Map.WorldSpawn);
+                        _document.ObjectRenderer.AddMapObject(newSolid);
+                    }
                 }
             }
             
             _document.ObjectRenderer.MarkDirty();
             
             return;
+            #endif
             _document.SaveFile();
         }
 
@@ -308,7 +320,7 @@ namespace CBRE.Editor.Documents {
                     _document.SaveFile(outPath);
                 }
                 catch (ProviderNotFoundException e) {
-                    new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) });
+                    new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) }, true);
                 }
             }
         }
