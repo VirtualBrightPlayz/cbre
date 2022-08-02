@@ -193,6 +193,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
         public static void FindFacesAndGroups(Map map, out List<LMFace> faces, out List<LightmapGroup> lmGroups, ref List<LMFace> exclusiveBlockers, bool renderModels) {
             faces = new List<LMFace>();
             lmGroups = new List<LightmapGroup>();
+            LegacyLightmapper.lastBakeFaces = new List<LMFace>();
             // exclusiveBlockers = new List<LMFace>();
 
             foreach (Solid solid in map.WorldSpawn.Find(x => x is Solid).OfType<Solid>()) {
@@ -247,13 +248,17 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                     foreach (var meshGroup in modelsRefs[path].Model.GetActiveMeshes().GroupBy(x => x.SkinRef)) {
                         var tex = modelsRefs[path].Model.Textures[meshGroup.Key];
                         foreach (var mesh in meshGroup) {
+                            LightmapGroup group = null;
                             Face tFace = new Face(0);
                             tFace.Texture.Name = tex.Name;
                             tFace.Texture.Texture = tex.TextureObject;
-                            tFace.Plane = new Plane(Vector3.UnitZ, (decimal)1.0);
+                            tFace.Plane = new Plane(Vector3.UnitY, (decimal)1.0);
                             tFace.BoundingBox = Box.Empty;
                             Face mFace = tFace.Clone();
-                            var verts = mesh.Vertices.Select(x => new DataStructures.MapObjects.Vertex(new Vector3(x.Location * transforms[x.BoneWeightings.First().Bone.BoneIndex]) * modelMat, mFace));
+                            var verts = mesh.Vertices.Select(x => new DataStructures.MapObjects.Vertex(new Vector3(x.Location * transforms[x.BoneWeightings.First().Bone.BoneIndex]) * modelMat, mFace) {
+                                TextureU = (decimal)(x.TextureU),
+                                TextureV = (decimal)(x.TextureV)
+                            });
                             for (int i = 0; i < mesh.Vertices.Count; i+=3) {
                                 tFace.Vertices.Clear();
                                 tFace.Vertices.Add(verts.ElementAt(i));
@@ -267,15 +272,17 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                                 // LightmapGroup group = LightmapGroup.FindCoplanar(lmGroups, face);
                                 BoxF faceBox = new BoxF(face.BoundingBox.Start - new Vector3F(3.0f, 3.0f, 3.0f), face.BoundingBox.End + new Vector3F(3.0f, 3.0f, 3.0f));
                                 face.UpdateBoundingBox();
-                                /*if (group == null) {
-                                    group = new LightmapGroup();
-                                    group.BoundingBox = faceBox;
-                                    group.Faces = new List<LMFace>();
-                                    group.Plane = new PlaneF(face.Plane.Normal, face.Vertices[0].Location);
-                                    // lmGroups.Add(group);
-                                }*/
+                                // if (group == null) {
+                                //     group = new LightmapGroup();
+                                //     group.BoundingBox = faceBox;
+                                //     group.Faces = new List<LMFace>();
+                                //     group.Plane = new PlaneF(face.Plane.Normal, face.Vertices[0].Location);
+                                //     lmGroups.Add(group);
+                                // }
                                 // group.Faces.Add(face);
+                                // faces.Add(face);
                                 exclusiveBlockers.Add(face);
+                                LegacyLightmapper.lastBakeFaces.Add(face);
                                 // group.Plane = new PlaneF(group.Plane.Normal, (face.Vertices[0].Location + group.Plane.PointOnPlane) / 2);
                                 // group.BoundingBox = new BoxF(new BoxF[] { group.BoundingBox, faceBox });
                             }

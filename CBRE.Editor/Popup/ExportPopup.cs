@@ -143,7 +143,7 @@ namespace CBRE.Editor.Popup {
                 if (ImGui.Button("Export .rmesh")) {
                     var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
                     if (result == NativeFileDialog.Result.Okay) {
-                        RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray());
+                        RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray(), LegacyLightmapper.lastBakeFaces.Select(x => x.OriginalFace).ToArray());
                     }
                 }
             }

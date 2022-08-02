@@ -48,6 +48,8 @@ namespace CBRE.DataStructures.MapObjects {
 
         public Vector3 Location { get; set; }
 
+        public Vector3F Color { get; set; } = Vector3F.One;
+
         public Face Parent { get; set; }
 
         public Vertex(Vector3 location, Face parent) {

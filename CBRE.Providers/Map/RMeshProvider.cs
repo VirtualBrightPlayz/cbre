@@ -16,7 +16,7 @@ using static CBRE.Common.PrimitiveConversion;
 
 namespace CBRE.Providers.Map {
     public class RMeshProvider {
-        public static void SaveToFile(string path, DataStructures.MapObjects.Map map, Texture2D[] lightmaps) {
+        public static void SaveToFile(string path, DataStructures.MapObjects.Map map, Texture2D[] lightmaps, Face[] modelFaces) {
             var visibleMeshes = new List<RMesh.RMesh.VisibleMesh>();
             var invisibleCollisionMeshes = new List<RMesh.RMesh.InvisibleCollisionMesh>();
             var entities = new List<Entity>();
@@ -58,9 +58,47 @@ namespace CBRE.Providers.Map {
                     }
                 }
             }
+
+            if (modelFaces.Any()) {
+                foreach (var face in modelFaces) {
+                    vertices.Clear();
+                    triangles.Clear();
+                    indexOffset = 0;
+
+                    if (face.Texture?.Texture == null) continue;
+                    if (face.Texture.Name.ToLowerInvariant() == "tooltextures/remove_face") continue;
+                    if (face.Texture.Name.ToLowerInvariant() == "tooltextures/block_light") continue;
+
+                    // face.CalculateTextureCoordinates(true);
+
+                    vertices.AddRange(face.Vertices.Select(fv => new RMesh.RMesh.VisibleMesh.Vertex(
+                        new Vector3F(fv.Location.XZY()),
+                        new Vector2F((float)fv.TextureU, (float)fv.TextureV),
+                        new Vector2F((float)fv.LMU, (float)fv.LMV), Color.FromArgb(0xff, (byte)(fv.Color.X * 255f), (byte)(fv.Color.Y * 255f), (byte)(fv.Color.Z * 255f)))));
+                    triangles.AddRange(face.GetTriangleIndices().Chunk(3).Select(c => new RMesh.RMesh.Triangle(
+                        (ushort)(c[0] + indexOffset), (ushort)(c[1] + indexOffset), (ushort)(c[2] + indexOffset))));
+                    indexOffset += face.Vertices.Count;
+
+                    if (face.Texture.Name.ToLowerInvariant() == "tooltextures/invisible_collision") {
+                        var mesh = new RMesh.RMesh.InvisibleCollisionMesh(vertices.ToImmutableArray().Select(x => new RMesh.RMesh.InvisibleCollisionMesh.Vertex(x.Position)).ToImmutableArray(), triangles.ToImmutableArray());
+                        invisibleCollisionMeshes.Add(mesh);
+                    }
+                    else {
+                        var diff = System.IO.Path.GetFileName((face.Texture.Texture as AsyncTexture).Filename);
+                        // var diff = System.IO.Path.GetRelativePath(System.IO.Path.GetDirectoryName(path), (face.Texture.Texture as AsyncTexture).Filename);
+                        // var diff = System.IO.Path.GetFileName((face.Texture.Texture as AsyncTexture).Filename);
+                        // diff = string.Empty;
+                        var lm = System.IO.Path.GetFileName(path)+"_lm.png";
+                        lm = string.Empty;
+                        var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), diff, lm, RMesh.RMesh.VisibleMesh.BlendMode.Opaque);
+                        visibleMeshes.Add(mesh);
+                    }
+                }
+            }
             
             foreach (var entity in map.WorldSpawn.GetSelfAndAllChildren().OfType<Entity>()) {
                 if (entity.GameData.RMeshDef == null) continue;
+                if (modelFaces.Any() && entity.ClassName.ToLowerInvariant() == "model") continue;
                 var cond = entity.GameData.RMeshDef?.Conditions.FirstOrDefault();
                 if (cond == null || !entity.GameData.RMeshDef.Conditions.Any() || entity.EntityData.GetPropertyValue(cond?.Property)?.ToLowerInvariant() == cond?.Equal.ToLowerInvariant()) {
                     var rmEntity = new RMesh.RMesh.Entity(entity.ClassName, entity.GameData.RMeshDef.Entries.ToImmutableArray());
