@@ -26,6 +26,7 @@ namespace CBRE.Editor.Popup {
 
             if (ImGui.BeginTabItem("Directories")) {
                 TextureDirGui();
+                ModelDirGui();
                 ImGui.EndTabItem();
             }
 
@@ -87,6 +88,46 @@ namespace CBRE.Editor.Popup {
                             PickFolderDialog.Open(Directory.GetCurrentDirectory(), out string path);
                         if (result == Result.Okay) {
                             Directories.TextureDirs[i] = path.Replace('\\', '/');
+                        }
+                        break;
+                    }
+                }
+            }
+            ImGui.EndChild();
+            ImGui.Separator();
+        }
+        
+        private void ModelDirGui() {
+            ImGui.Text("Model Directories");
+            ImGui.Separator();
+            bool addNew = ImGui.Button("+");
+            ImGui.SameLine();
+            addNew |= ImGui.Selectable("Click to add a new model directory", false);
+            if (addNew) {
+                var result =
+                    PickFolderDialog.Open(Directory.GetCurrentDirectory(), out string path);
+                if (result == Result.Okay) {
+                    Directories.ModelDirs.Add(path.Replace('\\', '/'));
+                }
+            }
+            if (ImGui.BeginChild("ModelDirs", new Num.Vector2(0, GetNonFixedHeight() * 0.5f))) {
+                for (int i = 0; i < Directories.ModelDirs.Count; i++) {
+                    var dir = Directories.ModelDirs[i];
+
+                    using (ColorPush.RedButton()) {
+                        if (ImGui.Button($"X##modelDirs{i}")) {
+                            Directories.ModelDirs.RemoveAt(i);
+                            break;
+                        }
+                    }
+                    
+                    ImGui.SameLine();
+
+                    if (ImGui.Selectable(dir, false)) {
+                        var result =
+                            PickFolderDialog.Open(Directory.GetCurrentDirectory(), out string path);
+                        if (result == Result.Okay) {
+                            Directories.ModelDirs[i] = path.Replace('\\', '/');
                         }
                         break;
                     }
