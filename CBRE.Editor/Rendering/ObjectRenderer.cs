@@ -721,7 +721,7 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        public void RenderLightmapped(bool screenshotMode) {
+        public void RenderLightmapped(bool screenshotMode, float gamma) {
             if (Document.MGLightmaps is not {Count: > 0}) {
                 RenderTextured(screenshotMode);
                 return;
@@ -737,6 +737,7 @@ namespace CBRE.Editor.Rendering {
                     TextureItem item = TextureProvider.GetItem(kvp.Key);
                     
                     Effects.TexturedLightmapped.Parameters["lmTexture"].SetValue(Document.MGLightmaps[i]);
+                    Effects.TexturedLightmapped.Parameters["lmGamma"].SetValue(gamma);
 
                     if (item is {Texture: AsyncTexture {MonoGameTexture: { }} asyncTexture}) {
                         Effects.TexturedLightmapped.Parameters["diffTexture"].SetValue(asyncTexture.MonoGameTexture);

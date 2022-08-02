@@ -41,6 +41,7 @@ namespace CBRE.Editor.Rendering {
         public ViewType Type { get; set; }
         public bool ShouldRenderModels { get; set; } = false;
         public bool ScreenshotRender { get; set; } = false;
+        public float Gamma { get; set; } = 1.0f;
 
         public Viewport3D(ViewType type) {
             Type = type;
@@ -171,7 +172,7 @@ namespace CBRE.Editor.Rendering {
 
                 switch (Type) {
                     case ViewType.Lightmapped:
-                        objectRenderer.RenderLightmapped(ScreenshotRender);
+                        objectRenderer.RenderLightmapped(ScreenshotRender, Gamma);
                         break;
                     case ViewType.Wireframe:
                         objectRenderer.RenderWireframe();

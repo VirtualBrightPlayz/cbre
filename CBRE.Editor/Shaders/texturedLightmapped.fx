@@ -8,6 +8,8 @@ Texture2D lmTexture;
 sampler diffSampler : register (s0) = sampler_state { Texture = <diffTexture>; };
 sampler lmSampler : register (s1) = sampler_state { Texture = <lmTexture>; };
 
+float lmGamma;
+
 struct VertexShaderInput
 {
     float4 Position : SV_POSITION;
@@ -57,7 +59,7 @@ float4 PixelShaderF(VertexShaderOutput input) : COLOR0
         float lighting1 = dot(input.Normal, float3(0.2672,0.8017,0.5345)) * 0.25 + 0.75;
         lighting = float4(lighting1, lighting1, lighting1, 1.0);
     } else {*/
-        lighting = tex2D(lmSampler, input.LmCoord);
+        lighting = tex2D(lmSampler, input.LmCoord) * lmGamma;
     // }
 
     float4 c = (tex2D(diffSampler, input.TexCoord) * lighting) * float4(1.0, 1.0 - input.Selected, 1.0 - input.Selected, 1.0);

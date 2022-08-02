@@ -34,7 +34,8 @@ public partial record RMesh {
                 visibleMeshes,
                 invisibleCollisionMeshes,
                 visibleNoCollMeshes,
-                triggerBoxes);
+                triggerBoxes,
+                null);
         }
 
         private static ImmutableArray<VisibleMesh> ReadVisibleMeshes(BlitzReader reader) {

@@ -48,6 +48,10 @@ namespace CBRE.Editor.Popup {
                         if (ImGui.Checkbox("Screenshot mode", ref b)) {
                             viewport3D.ScreenshotRender = b;
                         }
+                        float f = viewport3D.Gamma;
+                        if (ImGui.InputFloat("Gamma", ref f)) {
+                            viewport3D.Gamma = f;
+                        }
                     }
                 }
                 ImGui.TreePop();

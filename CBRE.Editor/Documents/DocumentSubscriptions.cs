@@ -254,13 +254,13 @@ namespace CBRE.Editor.Documents {
             
             var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), "", "", RMesh.RMesh.VisibleMesh.BlendMode.Opaque);
             visibleMeshes.Add(mesh);
-            
+
+            #if FALSE
             RMesh.RMesh rmesh = new RMesh.RMesh(
                 visibleMeshes.ToImmutableArray(),
                 invisibleCollisionMeshes.ToImmutableArray(),
-                null, null);
+                null, null, null);
 
-            #if FALSE
             RMesh.RMesh.Saver.ToFile(rmesh, DocumentManager.CurrentDocument.MapFile+".rmesh");
             var result = NativeFileDialog.OpenDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string outPath);
             if (result == Result.Okay) {

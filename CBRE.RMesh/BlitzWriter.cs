@@ -35,7 +35,15 @@ public class BlitzWriter : IDisposable {
     
     //32-bit (single precision) floating point number
     public void WriteFloat(Single f) {
-        WriteInt(BitConverter.SingleToInt32Bits(f));
+        byte[] bytes = BitConverter.GetBytes(f);
+        if (!BitConverter.IsLittleEndian) {
+            Array.Reverse(bytes);
+        }
+        WriteByte(bytes[0]);
+        WriteByte(bytes[1]);
+        WriteByte(bytes[2]);
+        WriteByte(bytes[3]);
+        // WriteInt(BitConverter.SingleToInt32Bits(f));
     }
     
     //Int32 length of string + however many bytes that length says

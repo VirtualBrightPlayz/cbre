@@ -360,7 +360,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                 byte[] byteBuffer = new byte[buffers[k].Length];
                 // Color[] pixels = new Color[buffers[k].Length / 4];
                 for (int i = 0; i < buffers[k].Length; i++) {
-                    byteBuffer[i] = (byte)Math.Max(Math.Min(buffers[k][i] * 255.0f, 255.0f), 0.0f);
+                    byteBuffer[i] = (byte)Math.Max(Math.Min(buffers[k][i] * LightmapConfig.BakeGamma * 255.0f, 255.0f), 0.0f);
                     if (i + 3 < buffers[k].Length) {
                         // pixels[i/4] = Color.FromArgb(byteBuffer[i+0], byteBuffer[i+1], byteBuffer[i+2], byteBuffer[i+3]);
                     }
@@ -620,7 +620,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                                 }
                             }
 
-                            brightness = MathF.Min(1f, MathF.Max(0f, brightness));
+                            // brightness = MathF.Min(1f, MathF.Max(0f, brightness));
 
                             float brightness0 = dotToLight0 * brightness * brightness;
                             float brightness1 = dotToLight1 * brightness * brightness;
@@ -667,21 +667,23 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                                 bitmaps[3][offset + 1] += lightColor.Y * brightnessNorm;
                                 bitmaps[3][offset + 2] += lightColor.Z * brightnessNorm;
 
-                                bitmaps[0][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 0]));
-                                bitmaps[0][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 1]));
-                                bitmaps[0][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 2]));
+                                float div = 2f;
 
-                                bitmaps[1][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[1][offset + 0]));
-                                bitmaps[1][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[1][offset + 1]));
-                                bitmaps[1][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[1][offset + 2]));
+                                bitmaps[0][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 0] / div));
+                                bitmaps[0][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 1] / div));
+                                bitmaps[0][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 2] / div));
 
-                                bitmaps[2][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[2][offset + 0]));
-                                bitmaps[2][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[2][offset + 1]));
-                                bitmaps[2][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[2][offset + 2]));
+                                bitmaps[1][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[1][offset + 0] / div));
+                                bitmaps[1][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[1][offset + 1] / div));
+                                bitmaps[1][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[1][offset + 2] / div));
 
-                                bitmaps[3][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 0]));
-                                bitmaps[3][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 1]));
-                                bitmaps[3][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 2]));
+                                bitmaps[2][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[2][offset + 0] / div));
+                                bitmaps[2][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[2][offset + 1] / div));
+                                bitmaps[2][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[2][offset + 2] / div));
+
+                                bitmaps[3][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 0] / div));
+                                bitmaps[3][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 1] / div));
+                                bitmaps[3][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 2] / div));
                             }
 
                             continue;

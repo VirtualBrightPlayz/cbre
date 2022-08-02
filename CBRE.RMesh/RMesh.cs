@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Drawing;
+using CBRE.DataStructures.GameData;
 using CBRE.DataStructures.Geometric;
+using CBRE.DataStructures.MapObjects;
 
 namespace CBRE.RMesh;
 
@@ -9,7 +11,7 @@ public partial record RMesh(
     ImmutableArray<RMesh.VisibleMesh> VisibleMeshes,
     ImmutableArray<RMesh.InvisibleCollisionMesh> InvisibleCollisionMeshes,
     ImmutableArray<RMesh.VisibleMesh>? VisibleNoCollisionMeshes,
-    ImmutableArray<RMesh.TriggerBox>? TriggerBoxes) { //TODO: move point entity handling code here
+    ImmutableArray<RMesh.TriggerBox>? TriggerBoxes, ImmutableArray<Entity>? Entities) {
     public readonly record struct Triangle(
         UInt16 Index0,
         UInt16 Index1,
@@ -44,6 +46,9 @@ public partial record RMesh(
     public record TriggerBox(
         string Name,
         ImmutableArray<InvisibleCollisionMesh> SubMeshes);
+
+    public record Entity(
+        string ClassName, ImmutableArray<GameDataObject.RMeshLayout.Entry> GameData);
 
     public HeaderUtils.HeaderSuffix HeaderSuffixes
         => (VisibleNoCollisionMeshes.HasValue ? HeaderUtils.HeaderSuffix.HasNoColl : HeaderUtils.HeaderSuffix.None)

@@ -19,8 +19,13 @@ public partial record RMesh {
             if (rmesh.TriggerBoxes.HasValue) {
                 WriteTriggerBoxes(writer, rmesh.TriggerBoxes.Value);
             }
-            
-            WriteEntities(writer);
+
+            if (rmesh.Entities.HasValue) {
+                WriteEntities(writer, rmesh.Entities.Value);
+            }
+            else {
+                writer.WriteInt(0);
+            }
         }
 
         private static void WriteVisibleMeshes(BlitzWriter writer, in ImmutableArray<VisibleMesh> visibleMeshes) {
@@ -96,9 +101,47 @@ public partial record RMesh {
             }
         }
 
-        private static void WriteEntities(BlitzWriter writer) {
-            writer.WriteInt(0);
-            //TODO: implement
+        private static void WriteEntities(BlitzWriter writer, ImmutableArray<DataStructures.MapObjects.Entity> entities) {
+            writer.WriteInt(entities.Length);
+
+            foreach (var entity in entities) {
+                writer.WriteString(entity.GameData.RMeshDef.ClassName);
+                foreach (var rmEntry in entity.GameData.RMeshDef.Entries) {
+                    switch (rmEntry.As) {
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.String:
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.B3DString:
+                            {
+                                string s = entity.EntityData.GetPropertyValue(rmEntry.Property);
+                                writer.WriteString(s);
+                            }
+                            break;
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Integer:
+                            {
+                                int i = 0;
+                                int.TryParse(entity.EntityData.GetPropertyValue(rmEntry.Property), out i);
+                                writer.WriteInt(i);
+                            }
+                            break;
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Float:
+                            {
+                                float i = 0;
+                                float.TryParse(entity.EntityData.GetPropertyValue(rmEntry.Property), out i);
+                                writer.WriteFloat(i);
+                            }
+                            break;
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector:
+                            {
+                                var v3 = entity.EntityData.GetPropertyVector3(rmEntry.Property);
+                                writer.WriteFloat((float)v3.X);
+                                writer.WriteFloat((float)v3.Y);
+                                writer.WriteFloat((float)v3.Z);
+                            }
+                            break;
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Bool:
+                            throw new NotImplementedException(); // TODO
+                    }
+                }
+            }
         }
     }
 }

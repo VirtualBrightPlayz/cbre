@@ -36,9 +36,12 @@ namespace CBRE.DataStructures.GameData {
             }
             public readonly ImmutableArray<Condition> Conditions;
 
-            public RMeshLayout(XElement elem) {
+            public readonly string ClassName;
+
+            public RMeshLayout(string name, XElement elem) {
                 var entries = new List<Entry>();
                 var conditions = new List<Condition>();
+                ClassName = elem.GetAttributeString("name", name);
                 foreach (var subElement in elem.Elements()) {
                     switch (subElement.Name.LocalName.ToLowerInvariant()) {
                         case "write":
@@ -104,7 +107,7 @@ namespace CBRE.DataStructures.GameData {
                         ParseProperties(subElement);
                         break;
                     case "rmesh":
-                        RMeshDef = new RMeshLayout(subElement);
+                        RMeshDef = new RMeshLayout(Name, subElement);
                         break;
                     case "sprite":
                         Behaviours.Add(new Behaviour("sprite", subElement.GetAttributeString("name", null)));
