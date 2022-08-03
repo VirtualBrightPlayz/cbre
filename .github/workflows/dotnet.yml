@@ -17,8 +17,8 @@ jobs:
       uses: microsoft/setup-msbuild@v1.1
 
     - name: Build nfd.dll
-      working-directory: ${{github.workspace}}
-      run: msbuild 'NativeFileDialog.NET/dynamicLib/VS2019/nfd_dll.sln' -p:Configuration='Debug' -p:Platform='x64'
+      working-directory: ${{github.workspace}}/NativeFileDialog.NET/dynamicLib/VS2019/
+      run: msbuild './nfd_dll.sln' -p:Configuration='Debug' -p:Platform='x64'
       
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
