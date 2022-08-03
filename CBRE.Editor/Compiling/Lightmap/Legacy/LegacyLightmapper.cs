@@ -273,20 +273,45 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                     }
                 }
 
-                if (threadExceptions.Count > 0) {
+                if (threadExceptions.Count > 0 || (progressPopup != null && progressPopup.closed)) {
                     for (int i = 0; i < FaceRenderThreads.Count; i++) {
                         if (FaceRenderThreads[i].IsAlive) {
-                            // FaceRenderThreads[i].Abort();
-                            FaceRenderThreads[i].Interrupt();
+                            FaceRenderThreads[i].Join(1000);
                         }
                     }
-                    throw new Exception(threadExceptions[0].Message + "\n" + threadExceptions[0].StackTrace);
+                    if (threadExceptions.Count > 0) {
+                        throw new Exception(threadExceptions[0].Message + "\n" + threadExceptions[0].StackTrace);
+                    }
+                    else {
+                        FaceRenderThreads.Clear();
+                        UpdateProgress("Render aborted.", 1f);
+                        return;
+                    }
                 }
                 Thread.Yield();
             }
 
+            UpdateProgress("Processing lightmap...", 0.95f);
+            for (int k = 0; k < 4; k++) {
+                continue;
+                for (int y = 0; y < totalTextureDims; y++) {
+                    // if (y < 0 || y >= totalTextureDims) continue;
+                    for (int x = 0; x < totalTextureDims; x++) {
+                        // if (x < 0 || x >= totalTextureDims) continue;
+                        int offset = (x + y * totalTextureDims) * 4;
+                        float mul = 1f / buffers[k][offset + 3];
+                        buffers[k][offset + 0] *= mul;
+                        buffers[k][offset + 1] *= mul;
+                        buffers[k][offset + 2] *= mul;
+                        buffers[k][offset + 3] = 1f;
+                        // buffers[k][offset + 0] ;
+                        // buffers[k][offset + 1] *= mul;
+                        // buffers[k][offset + 2] *= mul;
+                    }
+                }
+            }
+
             //blur the lightmap so it doesn't look too pixellated
-            UpdateProgress("Blurring lightmap...", 0.95f);
             float[] blurBuffer = new float[buffers[0].Length];
             for (int k = 0; k < 4; k++) {
                 foreach (LightmapGroup group in lmGroups) {
@@ -368,7 +393,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
             }
 
             UpdateProgress("Copying bitmap data...", 0.99f);
-            for (int k = 0; k < 4; k++) {
+            for (int k = 3; k < 4; k++) {
                 byte[] byteBuffer = new byte[buffers[k].Length];
                 // Color[] pixels = new Color[buffers[k].Length / 4];
                 for (int i = 0; i < buffers[k].Length; i++) {
@@ -465,7 +490,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                                     for (int i = 0; i < applicableBlockerFaces.Count; i++) {
                                         LMFace otherFace = applicableBlockerFaces[i];
                                         Vector3F? hit = otherFace.GetIntersectionPoint(lineTester);
-                                        if (hit != null && ((hit.Value - leewayPoint).Dot(new Vector3F(vert.OriginalVertex.Parent.Plane.Normal)) > 0.0f || (hit.Value - new Vector3F(vert.OriginalVertex.Location)).LengthSquared() > LightmapConfig.DownscaleFactor * 2f)) {
+                                        if (hit != null && ((hit.Value - leewayPoint).Dot(new Vector3F(vert.OriginalVertex.Parent.Plane.Normal)) > 0.0f || (hit.Value - new Vector3F(vert.OriginalVertex.Location)).LengthSquared() > LightmapConfig.DownscaleFactor * LightmapConfig.DownscaleFactor)) {
                                             applicableBlockerFaces.RemoveAt(i);
                                             applicableBlockerFaces.Insert(0, otherFace);
                                             illuminated = false;
@@ -702,7 +727,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                                 for (int i = 0; i < applicableBlockerFaces.Count; i++) {
                                     LMFace otherFace = applicableBlockerFaces[i];
                                     Vector3F? hit = otherFace.GetIntersectionPoint(lineTester);
-                                    if (hit != null && ((hit.Value - leewayPoint).Dot(group.Plane.Normal) > 0.0f || (hit.Value - pointOnPlane).LengthSquared() > LightmapConfig.DownscaleFactor * 2f)) {
+                                    if (hit != null && ((hit.Value - leewayPoint).Dot(group.Plane.Normal) > 0.0f || (hit.Value - pointOnPlane).LengthSquared() > LightmapConfig.DownscaleFactor * LightmapConfig.DownscaleFactor)) {
                                         applicableBlockerFaces.RemoveAt(i);
                                         applicableBlockerFaces.Insert(0, otherFace);
                                         illuminated[x, y] = false;
@@ -718,49 +743,88 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
 
                         // if (illuminated[x, y]) {
 
+                            Vector3F color0 = RenderLightOntoVertex(rand, light, pointOnPlane, targetFace.LightBasis0, out _);
+                            Vector3F color1 = RenderLightOntoVertex(rand, light, pointOnPlane, targetFace.LightBasis1, out _);
+                            Vector3F color2 = RenderLightOntoVertex(rand, light, pointOnPlane, targetFace.LightBasis2, out _);
                             Vector3F color = RenderLightOntoVertex(rand, light, pointOnPlane, targetFace.Normal, out float brightnessValue);
 
+                            color0 *= (illuminated[x, y] ? 1f : 0f);
+                            color1 *= (illuminated[x, y] ? 1f : 0f);
+                            color2 *= (illuminated[x, y] ? 1f : 0f);
                             color *= (illuminated[x, y] ? 1f : 0f);
                             brightnessValue *= (illuminated[x, y] ? 1f : 0f);
 
-                            r[0][x, y] += color.X;
-                            g[0][x, y] += color.Y;
-                            b[0][x, y] += color.Z;
+                            r[0][x, y] += color0.X;
+                            g[0][x, y] += color0.Y;
+                            b[0][x, y] += color0.Z;
 
-                            r[1][x, y] += color.X;
-                            g[1][x, y] += color.Y;
-                            b[1][x, y] += color.Z;
+                            r[1][x, y] += color1.X;
+                            g[1][x, y] += color1.Y;
+                            b[1][x, y] += color1.Z;
 
-                            r[2][x, y] += color.X;
-                            g[2][x, y] += color.Y;
-                            b[2][x, y] += color.Z;
+                            r[2][x, y] += color2.X;
+                            g[2][x, y] += color2.Y;
+                            b[2][x, y] += color2.Z;
 
                             r[3][x, y] += color.X;
                             g[3][x, y] += color.Y;
                             b[3][x, y] += color.Z;
 
+                            luxelColor0 = new Vector3F(r[0][x, y], g[0][x, y], b[0][x, y]);
+                            luxelColor1 = new Vector3F(r[1][x, y], g[1][x, y], b[1][x, y]);
+                            luxelColor2 = new Vector3F(r[2][x, y], g[2][x, y], b[2][x, y]);
+                            luxelColorNorm = new Vector3F(r[3][x, y], g[3][x, y], b[3][x, y]);
 
                             if (tX >= 0 && tY >= 0 && tX < textureDims && tY < textureDims) {
                                 int offset = ((tX) + (tY) * textureDims) * 4;
-                                bitmaps[0][offset + 0] += color.X;
-                                bitmaps[0][offset + 1] += color.Y;
-                                bitmaps[0][offset + 2] += color.Z;
+
+                                if (luxelColor0.X + luxelColor0.Y + luxelColor0.Z > bitmaps[0][offset + 2] + bitmaps[0][offset + 1] + bitmaps[0][offset + 0]) {
+                                    bitmaps[0][offset + 0] = luxelColor0.X;
+                                    bitmaps[0][offset + 1] = luxelColor0.Y;
+                                    bitmaps[0][offset + 2] = luxelColor0.Z;
+                                    bitmaps[0][offset + 3] += brightnessValue;
+                                }
+
+                                if (luxelColor1.X + luxelColor1.Y + luxelColor1.Z > bitmaps[1][offset + 2] + bitmaps[1][offset + 1] + bitmaps[1][offset + 0]) {
+                                    bitmaps[1][offset + 0] = luxelColor1.X;
+                                    bitmaps[1][offset + 1] = luxelColor1.Y;
+                                    bitmaps[1][offset + 2] = luxelColor1.Z;
+                                    bitmaps[1][offset + 3] += brightnessValue;
+                                }
+
+                                if (luxelColor2.X + luxelColor2.Y + luxelColor2.Z > bitmaps[2][offset + 2] + bitmaps[2][offset + 1] + bitmaps[2][offset + 0]) {
+                                    bitmaps[2][offset + 0] = luxelColor2.X;
+                                    bitmaps[2][offset + 1] = luxelColor2.Y;
+                                    bitmaps[2][offset + 2] = luxelColor2.Z;
+                                    bitmaps[2][offset + 3] += brightnessValue;
+                                }
+
+                                if (luxelColorNorm.X + luxelColorNorm.Y + luxelColorNorm.Z > bitmaps[3][offset + 2] + bitmaps[3][offset + 1] + bitmaps[3][offset + 0]) {
+                                    bitmaps[3][offset + 0] = luxelColorNorm.X;
+                                    bitmaps[3][offset + 1] = luxelColorNorm.Y;
+                                    bitmaps[3][offset + 2] = luxelColorNorm.Z;
+                                    bitmaps[3][offset + 3] += brightnessValue;
+                                }
+
+                                /*bitmaps[0][offset + 0] += color0.X;
+                                bitmaps[0][offset + 1] += color0.Y;
+                                bitmaps[0][offset + 2] += color0.Z;
                                 bitmaps[0][offset + 3] += brightnessValue;
 
-                                bitmaps[1][offset + 0] += color.X;
-                                bitmaps[1][offset + 1] += color.Y;
-                                bitmaps[1][offset + 2] += color.Z;
+                                bitmaps[1][offset + 0] += color1.X;
+                                bitmaps[1][offset + 1] += color1.Y;
+                                bitmaps[1][offset + 2] += color1.Z;
                                 bitmaps[1][offset + 3] += brightnessValue;
 
-                                bitmaps[2][offset + 0] += color.X;
-                                bitmaps[2][offset + 1] += color.Y;
-                                bitmaps[2][offset + 2] += color.Z;
+                                bitmaps[2][offset + 0] += color2.X;
+                                bitmaps[2][offset + 1] += color2.Y;
+                                bitmaps[2][offset + 2] += color2.Z;
                                 bitmaps[2][offset + 3] += brightnessValue;
 
                                 bitmaps[3][offset + 0] += color.X;
                                 bitmaps[3][offset + 1] += color.Y;
                                 bitmaps[3][offset + 2] += color.Z;
-                                bitmaps[3][offset + 3] += brightnessValue;
+                                bitmaps[3][offset + 3] += brightnessValue;*/
 
                                 // float div = 1f;
 
@@ -784,7 +848,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                     }
                 }
             }
-#if true
+#if false
             for (int y = 0; y < iterY; y++) {
                 for (int x = 0; x < iterX; x++) {
                     int tX = (int)(writeX + x + (int)(minX - group.minTotalX) / LightmapConfig.DownscaleFactor);

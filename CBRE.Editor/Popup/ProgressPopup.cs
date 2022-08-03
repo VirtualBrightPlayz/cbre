@@ -9,8 +9,10 @@ using Num = System.Numerics;
 namespace CBRE.Editor.Popup {
     public class ProgressPopup : PopupUI {
         protected override bool canBeDefocused => false;
+        protected override bool hasOkButton => false;
         public float progress;
         public string message;
+        public bool closed => popupIndex == -1;
 
         public ProgressPopup(string title) : base(title) {
         }
