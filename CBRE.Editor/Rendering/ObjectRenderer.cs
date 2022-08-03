@@ -710,7 +710,7 @@ namespace CBRE.Editor.Rendering {
                     Matrix modelMat = Matrix.Translation(model.Origin)
                                       * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
                                       * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
-                                      * Matrix.RotationZ(DMath.DegreesToRadians(euler.Y))
+                                      * Matrix.RotationZ(DMath.DegreesToRadians(-euler.Y))
                                       * Matrix.Scale(scale);
                     ModelRenderer.Render(this.models[path].Model, modelMat, Effects.BasicEffect);
                 } else if (ModelProvider.CanLoad(file)) {
