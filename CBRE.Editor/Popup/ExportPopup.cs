@@ -30,6 +30,7 @@ namespace CBRE.Editor.Popup {
         private Num.Vector3 ambientLightNormal;
         public int planeMargin;
         public bool bakeModels;
+        public bool bakeModelLightmaps;
         public bool computeShadows;
         public float bakeGamma;
 
@@ -46,6 +47,7 @@ namespace CBRE.Editor.Popup {
             blurRadius = LightmapConfig.BlurRadius;
             planeMargin = LightmapConfig.PlaneMargin;
             bakeModels = LightmapConfig.BakeModels;
+            bakeModelLightmaps = LightmapConfig.BakeModelLightmaps;
             computeShadows = LightmapConfig.ComputeShadows;
             bakeGamma = LightmapConfig.BakeGamma;
             lightmapper = new Lightmapper(document);
@@ -85,6 +87,10 @@ namespace CBRE.Editor.Popup {
             ImGui.SameLine();
             ImGui.Checkbox("##bakeModels", ref bakeModels);
 
+            ImGui.Text("Bake models with lightmaps");
+            ImGui.SameLine();
+            ImGui.Checkbox("##bakeModelLightmaps", ref bakeModelLightmaps);
+
             ImGui.Text("Compute shadows");
             ImGui.SameLine();
             ImGui.Checkbox("##computeShadows", ref computeShadows);
@@ -123,6 +129,7 @@ namespace CBRE.Editor.Popup {
                     LightmapConfig.AmbientNormalZ = ambientLightNormal.Z;
                     LightmapConfig.PlaneMargin = planeMargin;
                     LightmapConfig.BakeModels = bakeModels;
+                    LightmapConfig.BakeModelLightmaps = bakeModelLightmaps;
                     LightmapConfig.ComputeShadows = computeShadows;
                     LightmapConfig.BakeGamma = bakeGamma;
                     // lightmapper.RenderShadowMapped();
@@ -143,7 +150,7 @@ namespace CBRE.Editor.Popup {
                 if (ImGui.Button("Export .rmesh")) {
                     var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
                     if (result == NativeFileDialog.Result.Okay) {
-                        RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray(), LegacyLightmapper.lastBakeFaces.Select(x => x.OriginalFace).ToArray());
+                        RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray(), LegacyLightmapper.lastBakeFaces.Select(x => x.OriginalFace).ToArray(), LegacyLightmapper.lastBakeLightmapFaces);
                     }
                 }
             }

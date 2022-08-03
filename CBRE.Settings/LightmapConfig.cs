@@ -14,6 +14,7 @@
         public static float AmbientNormalZ { get; set; }
 
         public static bool BakeModels { get; set; }
+        public static bool BakeModelLightmaps { get; set; }
         public static bool ComputeShadows { get; set; }
         public static float BakeGamma { get; set; }
 
@@ -32,6 +33,7 @@
             AmbientNormalZ = 3.0f;
 
             BakeModels = false;
+            BakeModelLightmaps = false;
             ComputeShadows = true;
             BakeGamma = 1.0f;
         }

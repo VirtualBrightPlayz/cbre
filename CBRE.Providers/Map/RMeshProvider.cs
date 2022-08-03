@@ -16,7 +16,7 @@ using static CBRE.Common.PrimitiveConversion;
 
 namespace CBRE.Providers.Map {
     public class RMeshProvider {
-        public static void SaveToFile(string path, DataStructures.MapObjects.Map map, Texture2D[] lightmaps, Face[] modelFaces) {
+        public static void SaveToFile(string path, DataStructures.MapObjects.Map map, Texture2D[] lightmaps, Face[] modelFaces, bool modelLightmaps) {
             var visibleMeshes = new List<RMesh.RMesh.VisibleMesh>();
             var invisibleCollisionMeshes = new List<RMesh.RMesh.InvisibleCollisionMesh>();
             var entities = new List<Entity>();
@@ -49,8 +49,8 @@ namespace CBRE.Providers.Map {
                         invisibleCollisionMeshes.Add(mesh);
                     }
                     else {
-                        // var diff = System.IO.Path.GetFileName((face.Texture.Texture as AsyncTexture).Filename);
-                        var diff = face.Texture.Name+System.IO.Path.GetExtension((face.Texture.Texture as AsyncTexture).Filename);
+                        var diff = System.IO.Path.GetFileName((face.Texture.Texture as AsyncTexture).Filename);
+                        // var diff = face.Texture.Name+System.IO.Path.GetExtension((face.Texture.Texture as AsyncTexture).Filename);
                         // diff = string.Empty;
                         var lm = System.IO.Path.GetFileName(path)+"_lm.png";
                         var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), diff, lm, face.Texture.Texture.Flags.HasFlag(Common.TextureFlags.Transparent) ? RMesh.RMesh.VisibleMesh.BlendMode.Translucent : RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped);
@@ -85,13 +85,12 @@ namespace CBRE.Providers.Map {
                     }
                     else {
                         var diff = System.IO.Path.GetFileName((face.Texture.Texture as AsyncTexture).Filename);
-                        Console.WriteLine(diff);
                         // var diff = System.IO.Path.GetRelativePath(System.IO.Path.GetDirectoryName(path), (face.Texture.Texture as AsyncTexture).Filename).Replace('\\', '/');
-                        // var diff = System.IO.Path.GetFileName((face.Texture.Texture as AsyncTexture).Filename);
+                        // var diff = face.Texture.Name+System.IO.Path.GetExtension((face.Texture.Texture as AsyncTexture).Filename);
                         // diff = string.Empty;
                         var lm = System.IO.Path.GetFileName(path)+"_lm.png";
-                        lm = string.Empty;
-                        var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), diff, lm, RMesh.RMesh.VisibleMesh.BlendMode.Opaque);
+                        // lm = string.Empty;
+                        var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), diff, lm, modelLightmaps ? RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped : RMesh.RMesh.VisibleMesh.BlendMode.Opaque);
                         visibleMeshes.Add(mesh);
                     }
                 }

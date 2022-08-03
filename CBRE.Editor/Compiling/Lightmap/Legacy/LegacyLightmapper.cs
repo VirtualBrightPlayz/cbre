@@ -37,6 +37,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
         private static List<LMThreadException> threadExceptions;
         private static ProgressPopup progressPopup = null;
         public static List<LMFace> lastBakeFaces = null;
+        public static bool lastBakeLightmapFaces = false;
 
         private static void UpdateProgress(string msg, float progress) {
             GameMain.Instance.PostDrawActions.Enqueue(() => {
@@ -154,6 +155,8 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                 // document.MGLightmaps.Add(null);
             // }
 
+            lastBakeLightmapFaces = LightmapConfig.BakeModelLightmaps;
+
             var map = document.Map;
 
             faces = new List<LMFace>();
@@ -247,10 +250,12 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                 }
             }
 
-            foreach (LMFace face in lastBakeFaces) {
-                faceCount++;
-                Thread newThread = CreateLightmapRenderThread(document, null, lightEntities, null, face, allBlockers);
-                FaceRenderThreads.Add(newThread);
+            if (!LightmapConfig.BakeModelLightmaps) {
+                foreach (LMFace face in lastBakeFaces) {
+                    faceCount++;
+                    Thread newThread = CreateLightmapRenderThread(document, null, lightEntities, null, face, allBlockers);
+                    FaceRenderThreads.Add(newThread);
+                }
             }
 
             int faceNum = 0;
