@@ -229,6 +229,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
             foreach (var model in models) {
                 Vector3 euler = model.EntityData.GetPropertyVector3("angles", Vector3.Zero);
                 Vector3 scale = model.EntityData.GetPropertyVector3("scale", Vector3.One);
+                bool shouldBake = model.EntityData.GetPropertyValue("bake")?.ToLowerInvariant() == "true";
                 Matrix modelMat = Matrix.Translation(model.Origin)
                                     * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
                                     * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
@@ -282,7 +283,8 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                                 // group.Faces.Add(face);
                                 // faces.Add(face);
                                 exclusiveBlockers.Add(face);
-                                LegacyLightmapper.lastBakeFaces.Add(face);
+                                if (shouldBake)
+                                    LegacyLightmapper.lastBakeFaces.Add(face);
                                 // group.Plane = new PlaneF(group.Plane.Normal, (face.Vertices[0].Location + group.Plane.PointOnPlane) / 2);
                                 // group.BoundingBox = new BoxF(new BoxF[] { group.BoundingBox, faceBox });
                             }

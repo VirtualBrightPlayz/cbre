@@ -85,7 +85,8 @@ namespace CBRE.Providers.Map {
                     }
                     else {
                         var diff = System.IO.Path.GetFileName((face.Texture.Texture as AsyncTexture).Filename);
-                        // var diff = System.IO.Path.GetRelativePath(System.IO.Path.GetDirectoryName(path), (face.Texture.Texture as AsyncTexture).Filename);
+                        Console.WriteLine(diff);
+                        // var diff = System.IO.Path.GetRelativePath(System.IO.Path.GetDirectoryName(path), (face.Texture.Texture as AsyncTexture).Filename).Replace('\\', '/');
                         // var diff = System.IO.Path.GetFileName((face.Texture.Texture as AsyncTexture).Filename);
                         // diff = string.Empty;
                         var lm = System.IO.Path.GetFileName(path)+"_lm.png";
@@ -98,7 +99,8 @@ namespace CBRE.Providers.Map {
             
             foreach (var entity in map.WorldSpawn.GetSelfAndAllChildren().OfType<Entity>()) {
                 if (entity.GameData.RMeshDef == null) continue;
-                if (modelFaces.Any() && entity.ClassName.ToLowerInvariant() == "model") continue;
+                bool shouldBake = entity.EntityData.GetPropertyValue("bake")?.ToLowerInvariant() == "true";
+                if (modelFaces.Any() && entity.ClassName.ToLowerInvariant() == "model" && shouldBake) continue;
                 var cond = entity.GameData.RMeshDef?.Conditions.FirstOrDefault();
                 if (cond == null || !entity.GameData.RMeshDef.Conditions.Any() || entity.EntityData.GetPropertyValue(cond?.Property)?.ToLowerInvariant() == cond?.Equal.ToLowerInvariant()) {
                     var rmEntity = new RMesh.RMesh.Entity(entity.ClassName, entity.GameData.RMeshDef.Entries.ToImmutableArray());

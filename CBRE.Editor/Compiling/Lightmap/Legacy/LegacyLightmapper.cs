@@ -249,7 +249,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
 
             foreach (LMFace face in lastBakeFaces) {
                 faceCount++;
-                Thread newThread = CreateLightmapRenderThread(document, buffers, lightEntities, null, face, allBlockers);
+                Thread newThread = CreateLightmapRenderThread(document, null, lightEntities, null, face, allBlockers);
                 FaceRenderThreads.Add(newThread);
             }
 
@@ -441,7 +441,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
     private static Thread CreateLightmapRenderThread(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces) {
         return new Thread(() => {
             try {
-                if (group == null) {
+                if (group == null || bitmaps == null) {
                     Random rand = new Random();
                     foreach (LMFace.Vertex vert in targetFace.Vertices) {
                         vert.OriginalVertex.Color = Vector3F.Zero;
@@ -470,7 +470,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                                 }
                             }
                             if (illuminated) {
-                                vert.OriginalVertex.Color += RenderLightOntoVertex(rand, light, vert.Location, Vector3F.Zero);
+                                vert.OriginalVertex.Color += RenderLightOntoVertex(rand, light, vert.Location, null);
                                 vert.OriginalVertex.Color /= 2f;
                             }
                         }
@@ -487,12 +487,13 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
         }) { CurrentCulture = CultureInfo.InvariantCulture };
     }
 
-    private static Vector3F RenderLightOntoVertex(Random rand, Light light, Vector3F pointOnPlane, Vector3F Normal) {
+    private static Vector3F RenderLightOntoVertex(Random rand, Light light, Vector3F pointOnPlane, Vector3F? Normal) {
         float lightRange = light.Range;
         Vector3F lightPos = light.Origin;
         Vector3F lightColor = light.Color * (1.0f / 255.0f) * light.Intensity;
-        float dotToLightNorm = Math.Max((lightPos - pointOnPlane).Normalise().Dot(Normal), 0.0f);
-        if (Normal == Vector3F.Zero) { dotToLightNorm = 1f; }
+        float dotToLightNorm = 1f;
+        if (Normal.HasValue)
+            dotToLightNorm = Math.Max((lightPos - pointOnPlane).Normalise().Dot(Normal.Value), 0.0f);
         float brightness = (lightRange - (pointOnPlane - lightPos).VectorMagnitude()) / lightRange;
         // float brightness = ((pointOnPlane - lightPos).VectorMagnitude()) / lightRange;
 
@@ -507,6 +508,8 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                 }
             }
         }
+
+        brightness = MathF.Max(0f, brightness);
 
         float brightnessNorm = dotToLightNorm * brightness;// * brightness;
         brightnessNorm += ((float)rand.NextDouble() - 0.5f) * 0.005f;
