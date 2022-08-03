@@ -6,18 +6,27 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+        msbuild-architecture: x64
+        vs-version: '[16.4,16.5)'
+
+    - name: Build nfd.dll
+      run: msbuild 'NativeFileDialog.NET/dynamicLib/VS2019/nfd_dll.sln' -p:Configuration='Debug' -p:Platform='x64'
+      
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build CBRE.Editor
+      run: dotnet build CBRE.Editor -p:Platform="x64" -c Debug
     - uses: actions/upload-artifact@v2
       with:
         name: CBRE.Editor Build
