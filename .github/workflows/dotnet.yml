@@ -29,7 +29,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore CBRE.Editor
     - name: Build
       run: dotnet build CBRE.Editor -p:Platform="x64" -c Debug
     - uses: actions/upload-artifact@v2
