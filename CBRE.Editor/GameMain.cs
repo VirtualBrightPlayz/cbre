@@ -132,6 +132,7 @@ namespace CBRE.Editor {
             MapProvider.Register(new RmfProvider());
             MapProvider.Register(new MapFormatProvider());
             MapProvider.Register(new L3DWProvider());
+            MapProvider.Register(new RMeshProvider());
 
             ModelProvider.Register(new AssimpProvider());
 

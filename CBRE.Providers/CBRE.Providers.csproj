@@ -10,6 +10,8 @@
     <ProjectReference Include="..\CBRE.FileSystem\CBRE.FileSystem.csproj" />
     <ProjectReference Include="..\CBRE.Graphics\CBRE.Graphics.csproj" />
     <ProjectReference Include="..\CBRE.RMesh\CBRE.RMesh.csproj" />
+    <ProjectReference Include="..\Tools\RMeshDecomp\RMeshDecomp.csproj" />
+    <ProjectReference Include="..\NativeFileDialog.NET\dotnet\NativeFileDialog.csproj" />
   </ItemGroup>
 
   <ItemGroup>

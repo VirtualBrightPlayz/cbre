@@ -6,8 +6,11 @@ namespace CBRE.RMesh;
 
 public partial record RMesh {
     public static class Loader {
-        public static RMesh FromFile(string filePath) {
-            using BlitzReader reader = new BlitzReader(filePath);
+        public static RMesh FromFile(string filePath) =>
+            FromStream(new FileStream(filePath, FileMode.Open));
+
+        public static RMesh FromStream(Stream stream) {
+            using BlitzReader reader = new BlitzReader(stream);
 
             string header = reader.ReadString();
             if (!HeaderUtils.IsHeaderValid(header, out HeaderUtils.HeaderSuffix headerSuffixes)) {

@@ -2,7 +2,10 @@ using CBRE.Common;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Graphics;
+using CBRE.Providers.Texture;
 using Microsoft.Xna.Framework.Graphics;
+using NativeFileDialog;
+using RMeshDecomp;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -15,7 +18,7 @@ using System.Linq;
 using static CBRE.Common.PrimitiveConversion;
 
 namespace CBRE.Providers.Map {
-    public class RMeshProvider {
+    public class RMeshProvider : MapProvider {
         public static void SaveToFile(string path, DataStructures.MapObjects.Map map, Texture2D[] lightmaps, Face[] modelFaces, bool modelLightmaps) {
             var visibleMeshes = new List<RMesh.RMesh.VisibleMesh>();
             var invisibleCollisionMeshes = new List<RMesh.RMesh.InvisibleCollisionMesh>();
@@ -120,6 +123,155 @@ namespace CBRE.Providers.Map {
                 null, null, entities.ToImmutableArray());
 
             RMesh.RMesh.Saver.ToFile(rmesh, path);
+        }
+
+        protected override IEnumerable<MapFeature> GetFormatFeatures() {
+            return new[]
+            {
+                MapFeature.Worldspawn,
+                MapFeature.Solids,
+                MapFeature.Entities,
+                MapFeature.Groups,
+
+                // MapFeature.Displacements,
+                // MapFeature.Instances,
+
+                // MapFeature.Colours,
+                // MapFeature.SingleVisgroups,
+                // MapFeature.MultipleVisgroups,
+                // MapFeature.Cameras,
+                // MapFeature.CordonBounds,
+                // MapFeature.ViewSettings
+            };
+        }
+
+        protected override DataStructures.MapObjects.Map GetFromStream(Stream stream) {
+            var map = new DataStructures.MapObjects.Map();
+
+            var visibleMeshes = new List<RMesh.RMesh.VisibleMesh>();
+            var invisibleCollisionMeshes = new List<RMesh.RMesh.InvisibleCollisionMesh>();
+
+            var vertices = new List<RMesh.RMesh.VisibleMesh.Vertex>();
+            var triangles = new List<RMesh.RMesh.Triangle>();
+            int indexOffset = 0;
+            foreach (var solid in map.WorldSpawn.GetSelfAndAllChildren().OfType<Solid>()) {
+                foreach (var face in solid.Faces) {
+                    vertices.AddRange(face.Vertices.Select(fv => new RMesh.RMesh.VisibleMesh.Vertex(
+                        new Vector3F(fv.Location),
+                        new Vector2F((float)fv.TextureU, (float)fv.TextureV),
+                        Vector2F.Zero, Color.White)));
+                    triangles.AddRange(face.GetTriangleIndices().Chunk(3).Select(c => new RMesh.RMesh.Triangle(
+                        (ushort)(c[0] + indexOffset), (ushort)(c[1] + indexOffset), (ushort)(c[2] + indexOffset))));
+                    indexOffset += face.Vertices.Count;
+                }
+            }
+            
+            var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), "", "", RMesh.RMesh.VisibleMesh.BlendMode.Opaque);
+            visibleMeshes.Add(mesh);
+
+            RMesh.RMesh rmesh = new RMesh.RMesh(
+                visibleMeshes.ToImmutableArray(),
+                invisibleCollisionMeshes.ToImmutableArray(),
+                null, null, null);
+
+            // var result = NativeFileDialog.OpenDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string outPath);
+            // if (result == Result.Okay) {
+                rmesh = RMesh.RMesh.Loader.FromStream(stream);
+
+                var idGenerator = map.IDGenerator;
+
+                var rng = new Random();
+                foreach (var subMesh in rmesh.VisibleMeshes) {
+                    if (subMesh.TextureBlendMode != RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped) { continue; }
+                    
+                    var newFaces = new HashSet<Face>();
+                    ExtractFaces.Invoke(subMesh, newFaces);
+
+                    if (!newFaces.Any()) { continue; }
+                    
+                    var newSolid = new Solid(idGenerator.GetNextObjectID());
+                    newSolid.Colour = Color.Chartreuse;
+                    //newSolid.Faces.AddRange(newFaces);
+                    foreach (var newFace in newFaces) {
+                        newSolid.Faces.Add(newFace);
+                        newFace.Parent = newSolid;
+                        newFace.Texture = new TextureReference();
+                        string tex = subMesh.DiffuseTexture.Replace(".jpg", "").Replace(".jpeg", "").Replace(".png", "");
+                        TextureItem item = TextureProvider.GetItem(tex);
+                        newFace.Texture.Name = item?.Name;
+                        newFace.Texture.Texture = item?.Texture as AsyncTexture;
+                        newFace.Colour = Color.FromArgb(255,
+                            rng.Next()%256,
+                            newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 255 : 0,
+                            newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 0 : 255);
+                        newFace.AlignTextureToFace();
+                        newFace.CalculateTextureCoordinates(true);
+                    }
+
+                    if (newSolid.Faces.Any()) {
+                        // TODO: textures
+#if false
+                        foreach (var newFace in newSolid.Faces.GroupBy(x => x.Texture, x => x).ToDictionary(x => x.Key, x => x.ToList())) {
+                            var axis = newFace.Value.SelectMany(x => x.Vertices).OrderByDescending(x => x.TextureU + x.TextureV);
+                            var uaxis = newFace.Value.SelectMany(x => x.Vertices).OrderByDescending(x => x.TextureU);
+                            var vaxis = newFace.Value.SelectMany(x => x.Vertices).OrderByDescending(x => x.TextureV);
+                            // int i = 0;
+                            var item = newFace.Key;
+                            if (item != null) {
+                                foreach (var f in newFace.Value) {
+                                    var us = f.Vertices.Select(x => x.TextureU);
+                                    var vs = f.Vertices.Select(x => x.TextureV);
+                                    int tileX = 1, tileY = 1;
+                                    decimal minU = us.Min();
+                                    decimal minV = vs.Min();
+                                    decimal maxU = us.Max();
+                                    decimal maxV = vs.Max();
+                                    var XScale = (maxU - minU) / (item.Texture.Width * tileX);
+                                    var YScale = (maxV - minV) / (item.Texture.Height * tileY);
+                                    // var XShift = -minU / XScale;
+                                    // var YShift = -minV / YScale;
+                                    var XShift = -minU / ((item.Texture.Width * tileX));
+                                    var YShift = -minV / ((item.Texture.Height * tileY));
+                                    f.Texture.XScale = XScale * item.Texture.Width;
+                                    f.Texture.YScale = YScale * item.Texture.Height;
+                                    f.Texture.XShift = XShift * item.Texture.Width;
+                                    f.Texture.YShift = YShift * item.Texture.Height;
+                                    f.AlignTextureToFace();
+                                }
+
+                                // var XScale = (uaxis.First().TextureU - uaxis.Last().TextureU);
+                                // var YScale = (vaxis.First().TextureV - vaxis.Last().TextureV);
+                                // var XShift = (axis.Last().TextureU) * item.Texture.Width;// 2 - item.Texture.Width / 2;// * newFace.Texture.XScale;
+                                // var YShift = (axis.Last().TextureV) * item.Texture.Height;// 2 - item.Texture.Height / 2;// * newFace.Texture.YScale;
+                                var locs = newFace.Value.SelectMany(x => x.Vertices).Select(x => x.Location);//.Take(3);
+                                var cloud = new Cloud(locs);
+                                // newFace.Value.ForEach(x => x.Texture.XScale = XScale);
+                                // newFace.Value.ForEach(x => x.Texture.YScale = YScale);
+                                // newFace.Value.ForEach(x => x.Texture.XShift = XShift);
+                                // newFace.Value.ForEach(x => x.Texture.YShift = YShift);
+                                // newFace.Value.ForEach(x => x.AlignTextureWithFace(x));
+                                // newFace.Value.ForEach(x => x.FitTextureToPointCloud(new Cloud(x.Vertices.Select(y => y.Location)), 0, 0));
+                                // newFace.Value.ForEach(x => x.AlignTextureWithPointCloud(new Cloud(x.Vertices.Select(y => y.Location)), Face.BoxAlignMode.Center));
+                                // newFace.Value.ForEach(x => x.FitTextureToPointCloud(cloud, 0, 0));
+                                // newFace.Value.ForEach(x => x.AlignTextureWithPointCloud(cloud, Face.BoxAlignMode.Center));
+                            }
+                        }
+#endif
+                        newSolid.SetParent(map.WorldSpawn);
+                        // _document.ObjectRenderer.AddMapObject(newSolid);
+                    }
+                }
+            // }
+
+            return map;
+        }
+
+        protected override bool IsValidForFileName(string filename) {
+            return filename.EndsWith(".rmesh", StringComparison.OrdinalIgnoreCase);
+        }
+
+        protected override void SaveToStream(Stream stream, DataStructures.MapObjects.Map map) {
+            throw new NotImplementedException();
         }
     }
 }

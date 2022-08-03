@@ -153,7 +153,10 @@ public static class ExtractFaces {
             var extraVertex = triangle.Vertices.First(v
                 => !vertexEquals(v, matchingEdge.Start) && !vertexEquals(v, matchingEdge.End));
             
-            face.Vertices.Insert(Array.IndexOf(edges, matchingEdge)+1, new Vertex(new Vector3(extraVertex.Position), face));
+            face.Vertices.Insert(Array.IndexOf(edges, matchingEdge)+1, new Vertex(new Vector3(extraVertex.Position), face) {
+                TextureU = (decimal)extraVertex.DiffuseUv.X,
+                TextureV = (decimal)extraVertex.DiffuseUv.Y,
+            });
 
             return true;
         }
@@ -170,7 +173,10 @@ public static class ExtractFaces {
 
             foreach (var triangles in subgroupings) {
                 var newFace = createNewFace();
-                newFace.Vertices = triangles[0].Vertices.Select(v => new Vertex(new Vector3(v.Position), newFace))
+                newFace.Vertices = triangles[0].Vertices.Select(v => new Vertex(new Vector3(v.Position), newFace) {
+                    TextureU = (decimal)v.DiffuseUv.X,
+                    TextureV = (decimal)v.DiffuseUv.Y,
+                })
                     .ToList();
                 triangles.RemoveAt(0);
                 while (triangles.Count > 0) {
@@ -246,7 +252,10 @@ public static class ExtractFaces {
                 var newFace = createNewFace();
                 newFace.Vertices = new List<Vertex>();
                 var triangle = pendingTriangles[0]; pendingTriangles.RemoveAt(0);
-                newFace.Vertices.AddRange(triangle.Vertices.Select(v => new Vertex(new Vector3(v.Position), newFace)));
+                newFace.Vertices.AddRange(triangle.Vertices.Select(v => new Vertex(new Vector3(v.Position), newFace) {
+                    TextureU = (decimal)v.DiffuseUv.X,
+                    TextureV = (decimal)v.DiffuseUv.Y,
+                }));
                 newFace.Plane = new Plane(newFace.Vertices[0].Location, newFace.Vertices[1].Location, newFace.Vertices[2].Location);
 
                 var planeKey = new PlaneKey(newFace.Plane);
