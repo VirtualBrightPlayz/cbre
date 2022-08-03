@@ -793,7 +793,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                     if (tX >= 0 && tY >= 0 && tX < textureDims && tY < textureDims) {
                         int offset = (tX + tY * textureDims) * 4;
                         float mul = 1f / 2f;
-                        mul = 1f;
+                        // mul = 1f;
 
                         // mul = 1f / bitmaps[0][offset + 3];
                         bitmaps[0][offset + 0] *= mul;
