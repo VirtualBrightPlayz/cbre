@@ -408,248 +408,281 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
 
         }
 
-    public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
-        // lock (Lightmaps) {
-            GameMain.Instance.PostDrawActions.Enqueue(() => {
-                for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
-                    string iPath = path + (threeBasisModel ? i.ToString() : "");
-                    var texture = document.MGLightmaps[i];
-                    if (lmCount == 1) {
-                        FileStream fs = File.OpenWrite(iPath + ".png");
-                        texture.SaveAsPng(fs, texture.Width, texture.Height);
-                        fs.Close();
-                    } else {
-                        for (int j = 0; j < lmCount; j++) {
-                            
-                            FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
+        public static void SaveLightmaps(Document document, int lmCount, string path, bool threeBasisModel) {
+            // lock (Lightmaps) {
+                GameMain.Instance.PostDrawActions.Enqueue(() => {
+                    for (int i = (threeBasisModel ? 0 : 3); i < (threeBasisModel ? 3 : 4); i++) {
+                        string iPath = path + (threeBasisModel ? i.ToString() : "");
+                        var texture = document.MGLightmaps[i];
+                        if (lmCount == 1) {
+                            FileStream fs = File.OpenWrite(iPath + ".png");
                             texture.SaveAsPng(fs, texture.Width, texture.Height);
                             fs.Close();
-                            /*int x = ((j % 2) * LightmapConfig.TextureDims);
-                            int y = ((j / 2) * LightmapConfig.TextureDims);
+                        } else {
+                            for (int j = 0; j < lmCount; j++) {
+                                
+                                FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
+                                texture.SaveAsPng(fs, texture.Width, texture.Height);
+                                fs.Close();
+                                /*int x = ((j % 2) * LightmapConfig.TextureDims);
+                                int y = ((j / 2) * LightmapConfig.TextureDims);
 
-                            byte[] clone = new byte[texture.Width * texture.Height];
-                            texture.GetData(clone);
-                            Texture2D texture2 = new Texture2D(texture.GraphicsDevice, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
-                            byte[] tmp = new byte[LightmapConfig.TextureDims * LightmapConfig.TextureDims];
-                            Array.Copy(clone, x + y * LightmapConfig.TextureDims, tmp, 0, tmp.Length);
-                            texture2.SetData(tmp);
-                            FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
-                            texture2.SaveAsPng(fs, texture2.Width, texture2.Height);
-                            fs.Close();*/
+                                byte[] clone = new byte[texture.Width * texture.Height];
+                                texture.GetData(clone);
+                                Texture2D texture2 = new Texture2D(texture.GraphicsDevice, LightmapConfig.TextureDims, LightmapConfig.TextureDims);
+                                byte[] tmp = new byte[LightmapConfig.TextureDims * LightmapConfig.TextureDims];
+                                Array.Copy(clone, x + y * LightmapConfig.TextureDims, tmp, 0, tmp.Length);
+                                texture2.SetData(tmp);
+                                FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
+                                texture2.SaveAsPng(fs, texture2.Width, texture2.Height);
+                                fs.Close();*/
+                            }
                         }
                     }
-                }
-            });
-        // }
-    }
+                });
+            // }
+        }
 
-    private static Thread CreateLightmapRenderThread(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces) {
-        return new Thread(() => {
-            try {
-                if (group == null || bitmaps == null) {
-                    Random rand = new Random();
-                    foreach (LMFace.Vertex vert in targetFace.Vertices) {
-                        vert.OriginalVertex.Color = Vector3F.Zero;
-                        foreach (Light light in lights) {
-                            BoxF lightBox = new BoxF(new BoxF[] { targetFace.BoundingBox, new BoxF(light.Origin - new Vector3F(30.0f, 30.0f, 30.0f), light.Origin + new Vector3F(30.0f, 30.0f, 30.0f)) });
-                            List<LMFace> applicableBlockerFaces = blockerFaces/*.Where(x => {
-                                if (x == targetFace) return false;
-                                //return true;
-                                if (lightBox.IntersectsWith(x.BoundingBox)) return true;
-                                return false;
-                            })*/.ToList();
-                            bool illuminated = true;
-                            if (LightmapConfig.ComputeShadows) {
-                                Vector3F leewayPoint = new Vector3F(vert.OriginalVertex.Parent.Plane.PointOnPlane) + (new Vector3F(vert.OriginalVertex.Parent.Plane.Normal) * Math.Max(LightmapConfig.DownscaleFactor * 0.25f, 1.5f));
-                                LineF lineTester = new LineF(light.Origin, new Vector3F(vert.OriginalVertex.Location));
-                                for (int i = 0; i < applicableBlockerFaces.Count; i++) {
-                                    LMFace otherFace = applicableBlockerFaces[i];
-                                    Vector3F? hit = otherFace.GetIntersectionPoint(lineTester);
-                                    if (hit != null && ((hit.Value - leewayPoint).Dot(new Vector3F(vert.OriginalVertex.Parent.Plane.Normal)) > 0.0f || (hit.Value - new Vector3F(vert.OriginalVertex.Location)).LengthSquared() > LightmapConfig.DownscaleFactor * 2f)) {
-                                        applicableBlockerFaces.RemoveAt(i);
-                                        applicableBlockerFaces.Insert(0, otherFace);
-                                        illuminated = false;
-                                        i++;
-                                        break;
+        private static Thread CreateLightmapRenderThread(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces) {
+            return new Thread(() => {
+                try {
+                    if (group == null || bitmaps == null) {
+                        Random rand = new Random();
+                        foreach (LMFace.Vertex vert in targetFace.Vertices) {
+                            vert.OriginalVertex.Color = Vector3F.Zero;
+                            foreach (Light light in lights) {
+                                BoxF lightBox = new BoxF(new BoxF[] { targetFace.BoundingBox, new BoxF(light.Origin - new Vector3F(30.0f, 30.0f, 30.0f), light.Origin + new Vector3F(30.0f, 30.0f, 30.0f)) });
+                                List<LMFace> applicableBlockerFaces = blockerFaces/*.Where(x => {
+                                    if (x == targetFace) return false;
+                                    //return true;
+                                    if (lightBox.IntersectsWith(x.BoundingBox)) return true;
+                                    return false;
+                                })*/.ToList();
+                                bool illuminated = true;
+                                if (LightmapConfig.ComputeShadows) {
+                                    Vector3F leewayPoint = new Vector3F(vert.OriginalVertex.Parent.Plane.PointOnPlane) + (new Vector3F(vert.OriginalVertex.Parent.Plane.Normal) * Math.Max(LightmapConfig.DownscaleFactor * 0.25f, 1.5f));
+                                    LineF lineTester = new LineF(light.Origin, new Vector3F(vert.OriginalVertex.Location));
+                                    for (int i = 0; i < applicableBlockerFaces.Count; i++) {
+                                        LMFace otherFace = applicableBlockerFaces[i];
+                                        Vector3F? hit = otherFace.GetIntersectionPoint(lineTester);
+                                        if (hit != null && ((hit.Value - leewayPoint).Dot(new Vector3F(vert.OriginalVertex.Parent.Plane.Normal)) > 0.0f || (hit.Value - new Vector3F(vert.OriginalVertex.Location)).LengthSquared() > LightmapConfig.DownscaleFactor * 2f)) {
+                                            applicableBlockerFaces.RemoveAt(i);
+                                            applicableBlockerFaces.Insert(0, otherFace);
+                                            illuminated = false;
+                                            i++;
+                                            break;
+                                        }
                                     }
                                 }
+                                if (illuminated) {
+                                    vert.OriginalVertex.Color += RenderLightOntoVertex(rand, light, vert.Location, null, out _);
+                                    vert.OriginalVertex.Color /= 2f;
+                                }
                             }
-                            if (illuminated) {
-                                vert.OriginalVertex.Color += RenderLightOntoVertex(rand, light, vert.Location, null);
-                                vert.OriginalVertex.Color /= 2f;
-                            }
+                            vert.OriginalVertex.Color *= LightmapConfig.BakeGamma;
                         }
-                        vert.OriginalVertex.Color *= LightmapConfig.BakeGamma;
+                    } else {
+                        RenderLightOntoFace(doc, bitmaps, lights, group, targetFace, blockerFaces);
                     }
-                } else {
-                    RenderLightOntoFace(doc, bitmaps, lights, group, targetFace, blockerFaces);
+                } catch (ThreadAbortException) {
+                    //do nothing
+                } catch (Exception e) {
+                    threadExceptions.Add(new LMThreadException(e));
                 }
-            } catch (ThreadAbortException) {
-                //do nothing
-            } catch (Exception e) {
-                threadExceptions.Add(new LMThreadException(e));
-            }
-        }) { CurrentCulture = CultureInfo.InvariantCulture };
-    }
-
-    private static Vector3F RenderLightOntoVertex(Random rand, Light light, Vector3F pointOnPlane, Vector3F? Normal) {
-        float lightRange = light.Range;
-        Vector3F lightPos = light.Origin;
-        Vector3F lightColor = light.Color * (1.0f / 255.0f) * light.Intensity;
-        float dotToLightNorm = 1f;
-        if (Normal.HasValue)
-            dotToLightNorm = Math.Max((lightPos - pointOnPlane).Normalise().Dot(Normal.Value), 0.0f);
-        float brightness = (lightRange - (pointOnPlane - lightPos).VectorMagnitude()) / lightRange;
-        // float brightness = ((pointOnPlane - lightPos).VectorMagnitude()) / lightRange;
-
-        if (light.Direction != null) {
-            float directionDot = light.Direction.Value.Dot((pointOnPlane - lightPos).Normalise());
-
-            if (directionDot < light.innerCos) {
-                if (directionDot < light.outerCos) {
-                    brightness = 0.0f;
-                } else {
-                    brightness *= (directionDot - light.outerCos.Value) / (light.innerCos.Value - light.outerCos.Value);
-                }
-            }
+            }) { CurrentCulture = CultureInfo.InvariantCulture };
         }
 
-        brightness = MathF.Max(0f, brightness);
-
-        float brightnessNorm = dotToLightNorm * brightness;// * brightness;
-        brightnessNorm += ((float)rand.NextDouble() - 0.5f) * 0.005f;
-        return new Vector3F(lightColor.X * brightnessNorm, lightColor.Y * brightnessNorm, lightColor.Z * brightnessNorm);
-    }
-
-    private static void RenderLightOntoFace(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces) {
-        Random rand = new Random();
-
-        int writeX = group.writeX;
-        int writeY = group.writeY;
-
-        int textureDims;
-        lock (Lightmaps) {
-            textureDims = Lightmaps[0].Width;
-        }
-
-        lights = lights.FindAll(x => {
-            float range = x.Range;
-            BoxF lightBox = new BoxF(x.Origin - new Vector3F(range, range, range), x.Origin + new Vector3F(range, range, range));
-            return lightBox.IntersectsWith(targetFace.BoundingBox);
-        });
-
-        float? minX = null; float? maxX = null;
-        float? minY = null; float? maxY = null;
-
-        foreach (Vector3F coord in targetFace.Vertices.Select(x => x.Location)) {
-            float x = coord.Dot(group.uAxis.Value);
-            float y = coord.Dot(group.vAxis.Value);
-
-            if (minX == null || x < minX) minX = x;
-            if (minY == null || y < minY) minY = y;
-            if (maxX == null || x > maxX) maxX = x;
-            if (maxY == null || y > maxY) maxY = y;
-        }
-
-        Vector3F leewayPoint = group.Plane.PointOnPlane + (group.Plane.Normal * Math.Max(LightmapConfig.DownscaleFactor * 0.25f, 1.5f));
-
-        minX -= LightmapConfig.DownscaleFactor; minY -= LightmapConfig.DownscaleFactor;
-        maxX += LightmapConfig.DownscaleFactor; maxY += LightmapConfig.DownscaleFactor;
-
-        minX /= LightmapConfig.DownscaleFactor; minX = (float)Math.Ceiling(minX.Value); minX *= LightmapConfig.DownscaleFactor;
-        minY /= LightmapConfig.DownscaleFactor; minY = (float)Math.Ceiling(minY.Value); minY *= LightmapConfig.DownscaleFactor;
-        maxX /= LightmapConfig.DownscaleFactor; maxX = (float)Math.Ceiling(maxX.Value); maxX *= LightmapConfig.DownscaleFactor;
-        maxY /= LightmapConfig.DownscaleFactor; maxY = (float)Math.Ceiling(maxY.Value); maxY *= LightmapConfig.DownscaleFactor;
-
-        foreach (LMFace.Vertex vert in targetFace.Vertices) {
-            float x = vert.Location.Dot(group.uAxis.Value);
-            float y = vert.Location.Dot(group.vAxis.Value);
-
-            float u = (writeX + 0.5f + (x - group.minTotalX.Value) / LightmapConfig.DownscaleFactor);
-            float v = (writeY + 0.5f + (y - group.minTotalY.Value) / LightmapConfig.DownscaleFactor);
-
-            targetFace.LmIndex = (u >= LightmapConfig.TextureDims ? 1 : 0) + (v >= LightmapConfig.TextureDims ? 2 : 0);
-
-            u /= (float)textureDims;
-            v /= (float)textureDims;
-
-            vert.LMU = u; vert.LMV = v;
-            vert.OriginalVertex.LMU = u; vert.OriginalVertex.LMV = v;
-            vert.OriginalVertex.Color = Vector3F.One;
-        }
-
-        float centerX = (maxX.Value + minX.Value) / 2;
-        float centerY = (maxY.Value + minY.Value) / 2;
-
-        int iterX = (int)Math.Ceiling((maxX.Value - minX.Value) / LightmapConfig.DownscaleFactor);
-        int iterY = (int)Math.Ceiling((maxY.Value - minY.Value) / LightmapConfig.DownscaleFactor);
-
-        float[][,] r = new float[4][,];
-        r[0] = new float[iterX, iterY];
-        r[1] = new float[iterX, iterY];
-        r[2] = new float[iterX, iterY];
-        r[3] = new float[iterX, iterY];
-        float[][,] g = new float[4][,];
-        g[0] = new float[iterX, iterY];
-        g[1] = new float[iterX, iterY];
-        g[2] = new float[iterX, iterY];
-        g[3] = new float[iterX, iterY];
-        float[][,] b = new float[4][,];
-        b[0] = new float[iterX, iterY];
-        b[1] = new float[iterX, iterY];
-        b[2] = new float[iterX, iterY];
-        b[3] = new float[iterX, iterY];
-
-        foreach (Light light in lights) {
-            Vector3F lightPos = light.Origin;
+        private static Vector3F RenderLightOntoVertex(Random rand, Light light, Vector3F pointOnPlane, Vector3F? Normal, out float brightnessValue) {
             float lightRange = light.Range;
+            Vector3F lightPos = light.Origin;
             Vector3F lightColor = light.Color * (1.0f / 255.0f) * light.Intensity;
+            float dotToLightNorm = 1f;
+            if (Normal.HasValue)
+                dotToLightNorm = Math.Max((lightPos - pointOnPlane).Normalise().Dot(Normal.Value), 0.0f);
+            float brightness = (lightRange - (pointOnPlane - lightPos).VectorMagnitude()) / lightRange;
+            // float brightness = ((pointOnPlane - lightPos).VectorMagnitude()) / lightRange;
 
-            BoxF lightBox = new BoxF(new BoxF[] { targetFace.BoundingBox, new BoxF(light.Origin - new Vector3F(30.0f, 30.0f, 30.0f), light.Origin + new Vector3F(30.0f, 30.0f, 30.0f)) });
-            List<LMFace> applicableBlockerFaces = blockerFaces.Where(x => {
-                if (x == targetFace) return false;
-                if (group.Faces.Contains(x)) return false;
-                //return true;
-                if (lightBox.IntersectsWith(x.BoundingBox)) return true;
-                return false;
-            }).ToList();
+            if (light.Direction != null) {
+                float directionDot = light.Direction.Value.Dot((pointOnPlane - lightPos).Normalise());
 
-            bool[,] illuminated = new bool[iterX, iterY];
-
-            for (int y = 0; y < iterY; y++) {
-                for (int x = 0; x < iterX; x++) {
-                    illuminated[x, y] = true;
-                }
-            }
-
-            for (int y = 0; y < iterY; y++) {
-                for (int x = 0; x < iterX; x++) {
-                    int tX = (int)(writeX + x + (int)(minX - group.minTotalX) / LightmapConfig.DownscaleFactor);
-                    int tY = (int)(writeY + y + (int)(minY - group.minTotalY) / LightmapConfig.DownscaleFactor);
-
-                    if (tX >= 0 && tY >= 0 && tX < textureDims && tY < textureDims) {
-                        int offset = (tX + tY * textureDims) * 4;
-                        bitmaps[0][offset + 3] = 1.0f;
-                        bitmaps[1][offset + 3] = 1.0f;
-                        bitmaps[2][offset + 3] = 1.0f;
-                        bitmaps[3][offset + 3] = 1.0f;
+                if (directionDot < light.innerCos) {
+                    if (directionDot < light.outerCos) {
+                        brightness = 0.0f;
+                    } else {
+                        brightness *= (directionDot - light.outerCos.Value) / (light.innerCos.Value - light.outerCos.Value);
                     }
                 }
             }
 
-            for (int y = 0; y < iterY; y++) {
-                for (int x = 0; x < iterX; x++) {
-                    float ttX = minX.Value + (x * LightmapConfig.DownscaleFactor);
-                    float ttY = minY.Value + (y * LightmapConfig.DownscaleFactor);
-                    Vector3F pointOnPlane = (ttX - centerX) * group.uAxis.Value + (ttY - centerY) * group.vAxis.Value + targetFace.BoundingBox.Center;
+            brightness = MathF.Max(0f, brightness);
 
-                    /*Entity entity = new Entity(map.IDGenerator.GetNextObjectID());
-                    entity.Colour = Color.Pink;
-                    entity.Origin = new Coordinate(pointOnPlane);
-                    entity.UpdateBoundingBox();
-                    entity.SetParent(map.WorldSpawn);*/
+            float brightnessNorm = dotToLightNorm * brightness;// * brightness;
+            brightnessNorm += ((float)rand.NextDouble() - 0.5f) * 0.005f;
+            brightnessValue = brightnessNorm;
+            return new Vector3F(lightColor.X * brightnessNorm, lightColor.Y * brightnessNorm, lightColor.Z * brightnessNorm);
+        }
 
-                int tX = (int)(writeX + x + (int)(minX - group.minTotalX) / LightmapConfig.DownscaleFactor);
+        private static void RenderLightOntoFace(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces) {
+            Random rand = new Random();
+
+            int writeX = group.writeX;
+            int writeY = group.writeY;
+
+            int textureDims;
+            lock (Lightmaps) {
+                textureDims = Lightmaps[0].Width;
+            }
+
+            lights = lights.FindAll(x => {
+                float range = x.Range;
+                BoxF lightBox = new BoxF(x.Origin - new Vector3F(range, range, range), x.Origin + new Vector3F(range, range, range));
+                return lightBox.IntersectsWith(targetFace.BoundingBox);
+            });
+
+            float? minX = null; float? maxX = null;
+            float? minY = null; float? maxY = null;
+
+            foreach (Vector3F coord in targetFace.Vertices.Select(x => x.Location)) {
+                float x = coord.Dot(group.uAxis.Value);
+                float y = coord.Dot(group.vAxis.Value);
+
+                if (minX == null || x < minX) minX = x;
+                if (minY == null || y < minY) minY = y;
+                if (maxX == null || x > maxX) maxX = x;
+                if (maxY == null || y > maxY) maxY = y;
+            }
+
+            Vector3F leewayPoint = group.Plane.PointOnPlane + (group.Plane.Normal * Math.Max(LightmapConfig.DownscaleFactor * 0.25f, 1.5f));
+
+#if true
+            minX -= LightmapConfig.DownscaleFactor; minY -= LightmapConfig.DownscaleFactor;
+            maxX += LightmapConfig.DownscaleFactor; maxY += LightmapConfig.DownscaleFactor;
+
+            minX /= LightmapConfig.DownscaleFactor; minX = (float)Math.Ceiling(minX.Value); minX *= LightmapConfig.DownscaleFactor;
+            minY /= LightmapConfig.DownscaleFactor; minY = (float)Math.Ceiling(minY.Value); minY *= LightmapConfig.DownscaleFactor;
+            maxX /= LightmapConfig.DownscaleFactor; maxX = (float)Math.Ceiling(maxX.Value); maxX *= LightmapConfig.DownscaleFactor;
+            maxY /= LightmapConfig.DownscaleFactor; maxY = (float)Math.Ceiling(maxY.Value); maxY *= LightmapConfig.DownscaleFactor;
+#endif
+
+            foreach (LMFace.Vertex vert in targetFace.Vertices) {
+                float x = vert.Location.Dot(group.uAxis.Value);
+                float y = vert.Location.Dot(group.vAxis.Value);
+
+                float u = (writeX + 0.5f + (x - group.minTotalX.Value) / LightmapConfig.DownscaleFactor);
+                float v = (writeY + 0.5f + (y - group.minTotalY.Value) / LightmapConfig.DownscaleFactor);
+
+                targetFace.LmIndex = (u >= LightmapConfig.TextureDims ? 1 : 0) + (v >= LightmapConfig.TextureDims ? 2 : 0);
+
+                u /= (float)textureDims;
+                v /= (float)textureDims;
+
+                vert.LMU = u; vert.LMV = v;
+                vert.OriginalVertex.LMU = u; vert.OriginalVertex.LMV = v;
+                vert.OriginalVertex.Color = Vector3F.One;
+            }
+
+            float centerX = (maxX.Value + minX.Value) / 2;
+            float centerY = (maxY.Value + minY.Value) / 2;
+
+            int iterX = (int)Math.Ceiling((maxX.Value - minX.Value) / LightmapConfig.DownscaleFactor);
+            int iterY = (int)Math.Ceiling((maxY.Value - minY.Value) / LightmapConfig.DownscaleFactor);
+
+            float[][,] r = new float[4][,];
+            r[0] = new float[iterX, iterY];
+            r[1] = new float[iterX, iterY];
+            r[2] = new float[iterX, iterY];
+            r[3] = new float[iterX, iterY];
+            float[][,] g = new float[4][,];
+            g[0] = new float[iterX, iterY];
+            g[1] = new float[iterX, iterY];
+            g[2] = new float[iterX, iterY];
+            g[3] = new float[iterX, iterY];
+            float[][,] b = new float[4][,];
+            b[0] = new float[iterX, iterY];
+            b[1] = new float[iterX, iterY];
+            b[2] = new float[iterX, iterY];
+            b[3] = new float[iterX, iterY];
+
+            foreach (Light light in lights) {
+                Vector3F lightPos = light.Origin;
+                float lightRange = light.Range;
+                Vector3F lightColor = light.Color * (1.0f / 255.0f) * light.Intensity;
+
+                BoxF lightBox = new BoxF(new BoxF[] { targetFace.BoundingBox, new BoxF(light.Origin - new Vector3F(30.0f, 30.0f, 30.0f), light.Origin + new Vector3F(30.0f, 30.0f, 30.0f)) });
+                List<LMFace> applicableBlockerFaces = blockerFaces.Where(x => {
+                    if (x == targetFace) return false;
+                    if (group.Faces.Contains(x)) return false;
+                    //return true;
+                    if (lightBox.IntersectsWith(x.BoundingBox)) return true;
+                    return false;
+                }).ToList();
+
+                bool[,] illuminated = new bool[iterX, iterY];
+
+                for (int y = 0; y < iterY; y++) {
+                    for (int x = 0; x < iterX; x++) {
+                        illuminated[x, y] = true;
+                    }
+                }
+
+                for (int y = 0; y < iterY; y++) {
+                    for (int x = 0; x < iterX; x++) {
+                        int tX = (int)(writeX + x + (int)(minX - group.minTotalX) / LightmapConfig.DownscaleFactor);
+                        int tY = (int)(writeY + y + (int)(minY - group.minTotalY) / LightmapConfig.DownscaleFactor);
+
+                        if (tX >= 0 && tY >= 0 && tX < textureDims && tY < textureDims) {
+                            int offset = (tX + tY * textureDims) * 4;
+                            bitmaps[0][offset + 3] = 1.0f;
+                            bitmaps[1][offset + 3] = 1.0f;
+                            bitmaps[2][offset + 3] = 1.0f;
+                            bitmaps[3][offset + 3] = 1.0f;
+                        }
+                    }
+                }
+
+#if false
+                for (int y = 0; y < iterY; y++) {
+                    for (int x = 0; x < iterX; x++) {
+                        int tX = (int)(writeX + x + (int)(minX - group.minTotalX) / LightmapConfig.DownscaleFactor);
+                        int tY = (int)(writeY + y + (int)(minY - group.minTotalY) / LightmapConfig.DownscaleFactor);
+
+                        if (tX >= 0 && tY >= 0 && tX < textureDims && tY < textureDims) {
+                            int offset = (tX + tY * textureDims) * 4;
+                            float mul = 1f / 2f;
+
+                            bitmaps[0][offset + 0] *= mul;
+                            bitmaps[0][offset + 1] *= mul;
+                            bitmaps[0][offset + 2] *= mul;
+                            
+                            bitmaps[1][offset + 0] *= mul;
+                            bitmaps[1][offset + 1] *= mul;
+                            bitmaps[1][offset + 2] *= mul;
+
+                            bitmaps[2][offset + 0] *= mul;
+                            bitmaps[2][offset + 1] *= mul;
+                            bitmaps[2][offset + 2] *= mul;
+                            
+                            bitmaps[3][offset + 0] *= mul;
+                            bitmaps[3][offset + 1] *= mul;
+                            bitmaps[3][offset + 2] *= mul;
+                        }
+                    }
+                }
+#endif
+
+                for (int y = 0; y < iterY; y++) {
+                    for (int x = 0; x < iterX; x++) {
+                        float ttX = minX.Value + (x * LightmapConfig.DownscaleFactor);
+                        float ttY = minY.Value + (y * LightmapConfig.DownscaleFactor);
+                        Vector3F pointOnPlane = (ttX - centerX) * group.uAxis.Value + (ttY - centerY) * group.vAxis.Value + targetFace.BoundingBox.Center;
+
+                        /*Entity entity = new Entity(map.IDGenerator.GetNextObjectID());
+                        entity.Colour = Color.Pink;
+                        entity.Origin = new Coordinate(pointOnPlane);
+                        entity.UpdateBoundingBox();
+                        entity.SetParent(map.WorldSpawn);*/
+
+                        int tX = (int)(writeX + x + (int)(minX - group.minTotalX) / LightmapConfig.DownscaleFactor);
                         int tY = (int)(writeY + y + (int)(minY - group.minTotalY) / LightmapConfig.DownscaleFactor);
 
                         Vector3F luxelColor0 = new Vector3F(r[0][x, y], g[0][x, y], b[0][x, y]);
@@ -663,7 +696,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                         float dotToLightNorm = Math.Max((lightPos - pointOnPlane).Normalise().Dot(targetFace.Normal), 0.0f);
 
                         if (illuminated[x, y] && (pointOnPlane - lightPos).LengthSquared() < lightRange * lightRange) {
-#if TRUE
+#if true
                             if (LightmapConfig.ComputeShadows) {
                                 LineF lineTester = new LineF(lightPos, pointOnPlane);
                                 for (int i = 0; i < applicableBlockerFaces.Count; i++) {
@@ -683,9 +716,12 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                             illuminated[x, y] = false;
                         }
 
-                        if (illuminated[x, y]) {
+                        // if (illuminated[x, y]) {
 
-                            Vector3F color = RenderLightOntoVertex(rand, light, pointOnPlane, targetFace.Normal);
+                            Vector3F color = RenderLightOntoVertex(rand, light, pointOnPlane, targetFace.Normal, out float brightnessValue);
+
+                            color *= (illuminated[x, y] ? 1f : 0f);
+                            brightnessValue *= (illuminated[x, y] ? 1f : 0f);
 
                             r[0][x, y] += color.X;
                             g[0][x, y] += color.Y;
@@ -709,22 +745,26 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                                 bitmaps[0][offset + 0] += color.X;
                                 bitmaps[0][offset + 1] += color.Y;
                                 bitmaps[0][offset + 2] += color.Z;
+                                bitmaps[0][offset + 3] += brightnessValue;
 
                                 bitmaps[1][offset + 0] += color.X;
                                 bitmaps[1][offset + 1] += color.Y;
                                 bitmaps[1][offset + 2] += color.Z;
+                                bitmaps[1][offset + 3] += brightnessValue;
 
                                 bitmaps[2][offset + 0] += color.X;
                                 bitmaps[2][offset + 1] += color.Y;
                                 bitmaps[2][offset + 2] += color.Z;
-                                
+                                bitmaps[2][offset + 3] += brightnessValue;
+
                                 bitmaps[3][offset + 0] += color.X;
                                 bitmaps[3][offset + 1] += color.Y;
                                 bitmaps[3][offset + 2] += color.Z;
+                                bitmaps[3][offset + 3] += brightnessValue;
 
-                                float div = 2f;
+                                // float div = 1f;
 
-                                bitmaps[0][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 0] / div));
+                                /*bitmaps[0][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 0] / div));
                                 bitmaps[0][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 1] / div));
                                 bitmaps[0][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 2] / div));
 
@@ -738,12 +778,66 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
 
                                 bitmaps[3][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 0] / div));
                                 bitmaps[3][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 1] / div));
-                                bitmaps[3][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 2] / div));
+                                bitmaps[3][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 2] / div));*/
                             }
-                        }
+                        // }
                     }
                 }
             }
+#if true
+            for (int y = 0; y < iterY; y++) {
+                for (int x = 0; x < iterX; x++) {
+                    int tX = (int)(writeX + x + (int)(minX - group.minTotalX) / LightmapConfig.DownscaleFactor);
+                    int tY = (int)(writeY + y + (int)(minY - group.minTotalY) / LightmapConfig.DownscaleFactor);
+
+                    if (tX >= 0 && tY >= 0 && tX < textureDims && tY < textureDims) {
+                        int offset = (tX + tY * textureDims) * 4;
+                        float mul = 1f / 2f;
+                        mul = 1f;
+
+                        // mul = 1f / bitmaps[0][offset + 3];
+                        bitmaps[0][offset + 0] *= mul;
+                        bitmaps[0][offset + 1] *= mul;
+                        bitmaps[0][offset + 2] *= mul;
+                        
+                        // mul = 1f / bitmaps[1][offset + 3];
+                        bitmaps[1][offset + 0] *= mul;
+                        bitmaps[1][offset + 1] *= mul;
+                        bitmaps[1][offset + 2] *= mul;
+
+                        // mul = 1f / bitmaps[2][offset + 3];
+                        bitmaps[2][offset + 0] *= mul;
+                        bitmaps[2][offset + 1] *= mul;
+                        bitmaps[2][offset + 2] *= mul;
+                        
+                        // mul = 1f / bitmaps[3][offset + 3];
+                        bitmaps[3][offset + 0] *= mul;
+                        bitmaps[3][offset + 1] *= mul;
+                        bitmaps[3][offset + 2] *= mul;
+
+                        bitmaps[0][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 0]));
+                        bitmaps[0][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 1]));
+                        bitmaps[0][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[0][offset + 2]));
+                        bitmaps[0][offset + 3] = 1f;
+
+                        bitmaps[1][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[1][offset + 0]));
+                        bitmaps[1][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[1][offset + 1]));
+                        bitmaps[1][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[1][offset + 2]));
+                        bitmaps[1][offset + 3] = 1f;
+
+                        bitmaps[2][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[2][offset + 0]));
+                        bitmaps[2][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[2][offset + 1]));
+                        bitmaps[2][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[2][offset + 2]));
+                        bitmaps[2][offset + 3] = 1f;
+
+                        bitmaps[3][offset + 0] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 0]));
+                        bitmaps[3][offset + 1] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 1]));
+                        bitmaps[3][offset + 2] = MathF.Min(1f, MathF.Max(0f, bitmaps[3][offset + 2]));
+                        bitmaps[3][offset + 3] = 1f;
+                    }
+                }
+            }
+#endif
         }
     }
 }
