@@ -10,9 +10,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Init Git Submodules
-      working-directory: ${{github.workspace}}
-      run: git submodule update --init --recursive
+      with:
+        submodules: true
     
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v1.1
