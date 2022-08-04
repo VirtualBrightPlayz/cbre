@@ -393,7 +393,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
             }
 
             UpdateProgress("Copying bitmap data...", 0.99f);
-            for (int k = 3; k < 4; k++) {
+            for (int k = 0; k < 4; k++) {
                 byte[] byteBuffer = new byte[buffers[k].Length];
                 // Color[] pixels = new Color[buffers[k].Length / 4];
                 for (int i = 0; i < buffers[k].Length; i++) {
@@ -402,21 +402,22 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                         // pixels[i/4] = Color.FromArgb(byteBuffer[i+0], byteBuffer[i+1], byteBuffer[i+2], byteBuffer[i+3]);
                     }
                 }
-                lock (Lightmaps) {
-                    int j = k;
-                    GameMain.Instance.PostDrawActions.Enqueue(() => {
+                int j = k;
+                GameMain.Instance.PostDrawActions.Enqueue(() => {
+                    lock (Lightmaps) {
                         Texture2D tex = new Texture2D(GameMain.Instance.GraphicsDevice, totalTextureDims, totalTextureDims);
                         tex.SetData(byteBuffer);
                         string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"lm_{j}.png");
                         tex.Name = $"lm_{j}";
-                        document.MGLightmaps.Add(tex);
+                        if (j == 3)
+                            document.MGLightmaps.Add(tex);
                         // document.MGLightmaps[j] = tex;
                         FileStream fs = File.OpenWrite(fname);
                         tex.SaveAsPng(fs, totalTextureDims, totalTextureDims);
                         fs.Close();
                         // document.Lightmaps[j] = new AsyncTexture(fname);
-                    });
-                }
+                    }
+                });
             }
 
             faces.Clear();
@@ -539,9 +540,9 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                 }
             }
 
-            brightness = MathF.Max(0f, brightness);
+            // brightness = MathF.Max(0f, brightness);
 
-            float brightnessNorm = dotToLightNorm * brightness;// * brightness;
+            float brightnessNorm = dotToLightNorm * brightness * brightness;
             brightnessNorm += ((float)rand.NextDouble() - 0.5f) * 0.005f;
             brightnessValue = brightnessNorm;
             return new Vector3F(lightColor.X * brightnessNorm, lightColor.Y * brightnessNorm, lightColor.Z * brightnessNorm);

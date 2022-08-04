@@ -734,6 +734,7 @@ namespace CBRE.Editor.Rendering {
                     if (kvp.Key.ToLowerInvariant() == "tooltextures/block_light") continue;
                 }
                 for (int i = 0; i < Document.MGLightmaps.Count; i++) {
+                    // int i = Document.MGLightmaps.Count - 1;
                     TextureItem item = TextureProvider.GetItem(kvp.Key);
                     
                     Effects.TexturedLightmapped.Parameters["lmTexture"].SetValue(Document.MGLightmaps[i]);

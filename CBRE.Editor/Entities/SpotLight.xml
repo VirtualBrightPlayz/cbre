@@ -17,8 +17,8 @@
         <property name="range" type="Float" default="100.0" />
         <property name="intensity" type="Float" default="1.0" />
         <property name="hassprite" type="Boolean" default="true" />
-        <property name="innerconeangle" type="Float" default="0.5" />
-        <property name="outerconeangle" type="Float" default="0.75" />
+        <property name="innerconeangle" type="Float" default="50.0" />
+        <property name="outerconeangle" type="Float" default="75.0" />
     </properties>
 
     <sprite name="Sprites/lightbulb" color="color" />
