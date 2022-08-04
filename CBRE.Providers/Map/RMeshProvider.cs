@@ -101,7 +101,7 @@ namespace CBRE.Providers.Map {
             }
             
             foreach (var entity in map.WorldSpawn.GetSelfAndAllChildren().OfType<Entity>()) {
-                if (entity?.GameData?.RMeshDef == null) continue;
+                if (entity.GameData?.RMeshDef == null || string.IsNullOrWhiteSpace(entity.ClassName)) continue;
                 bool shouldBake = entity.EntityData.GetPropertyValue("bake")?.ToLowerInvariant() == "true";
                 if (modelFaces.Any() && entity.ClassName.ToLowerInvariant() == "model" && shouldBake) continue;
                 var cond = entity.GameData.RMeshDef?.Conditions.FirstOrDefault();
