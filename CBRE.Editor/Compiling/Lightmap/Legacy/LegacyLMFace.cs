@@ -229,7 +229,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
             foreach (var model in models) {
                 Vector3 euler = model.EntityData.GetPropertyVector3("angles", Vector3.Zero);
                 Vector3 scale = model.EntityData.GetPropertyVector3("scale", Vector3.One);
-                bool shouldBake = model.EntityData.GetPropertyValue("bake")?.ToLowerInvariant() == "true";
+                bool shouldBake = model.EntityData.GetPropertyValue("bake")?.ToLowerInvariant() != "false";
                 Matrix modelMat = Matrix.Translation(model.Origin)
                                     * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
                                     * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))

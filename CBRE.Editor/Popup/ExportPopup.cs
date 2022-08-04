@@ -150,7 +150,19 @@ namespace CBRE.Editor.Popup {
                 if (ImGui.Button("Export .rmesh")) {
                     var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
                     if (result == NativeFileDialog.Result.Okay) {
-                        RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray(), LegacyLightmapper.lastBakeFaces.Select(x => x.OriginalFace).ToArray(), LegacyLightmapper.lastBakeLightmapFaces);
+                        if (document.MGLightmaps == null || document.MGLightmaps.Count == 0) {
+                            // using (ColorPush.RedButton()) {
+                                GameMain.Instance.Popups.Add(new ConfirmPopup("Un-rendered map", "There is no lightmap detected, exporting will be done without lightmaps", new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) }) {
+                                    Buttons = new [] {
+                                        new ConfirmPopup.Button("Export anyways", () => RMeshProvider.SaveToFile(path, document.Map, null, null, false)),
+                                        new ConfirmPopup.Button("Don't export", () => { }),
+                                    }.ToImmutableArray(),
+                                });
+                            // }
+                        }
+                        else {
+                            RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray(), LegacyLightmapper.lastBakeFaces.Select(x => x.OriginalFace).ToArray(), LegacyLightmapper.lastBakeLightmapFaces);
+                        }
                     }
                 }
             }

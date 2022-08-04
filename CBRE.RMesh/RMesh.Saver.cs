@@ -8,16 +8,18 @@ public partial record RMesh {
             using BlitzWriter writer = new BlitzWriter(filePath);
             
             writer.WriteString(rmesh.HeaderString);
+            int vertexCount = 0;
+            int triangleCount = 0;
 
-            WriteVisibleMeshes(writer, rmesh.VisibleMeshes);
-            WriteInvisibleCollisionMeshes(writer, rmesh.InvisibleCollisionMeshes);
+            WriteVisibleMeshes(writer, rmesh.VisibleMeshes, ref vertexCount, ref triangleCount);
+            WriteInvisibleCollisionMeshes(writer, rmesh.InvisibleCollisionMeshes, ref vertexCount, ref triangleCount);
 
             if (rmesh.VisibleNoCollisionMeshes.HasValue) {
-                WriteVisibleMeshes(writer, rmesh.VisibleNoCollisionMeshes.Value);
+                WriteVisibleMeshes(writer, rmesh.VisibleNoCollisionMeshes.Value, ref vertexCount, ref triangleCount);
             }
 
             if (rmesh.TriggerBoxes.HasValue) {
-                WriteTriggerBoxes(writer, rmesh.TriggerBoxes.Value);
+                WriteTriggerBoxes(writer, rmesh.TriggerBoxes.Value, ref vertexCount, ref triangleCount);
             }
 
             if (rmesh.Entities.HasValue) {
@@ -28,10 +30,7 @@ public partial record RMesh {
             }
         }
 
-        private static void WriteVisibleMeshes(BlitzWriter writer, in ImmutableArray<VisibleMesh> visibleMeshes) {
-            int vertexCount = 0;
-            int triangleCount = 0;
-
+        private static void WriteVisibleMeshes(BlitzWriter writer, in ImmutableArray<VisibleMesh> visibleMeshes, ref int vertexCount, ref int triangleCount) {
             writer.WriteInt(visibleMeshes.Length);
 
             foreach (var mesh in visibleMeshes) {
@@ -44,8 +43,8 @@ public partial record RMesh {
                     writeTextureInfo(2, mesh.LightmapTexture ?? throw new Exception("Blend mode is lightmapped but lightmap texture is null"));
                     writeTextureInfo(1, mesh.DiffuseTexture);
                 } else {
-                    writeTextureInfo((byte)(mesh.TextureBlendMode == VisibleMesh.BlendMode.Opaque ? 2 : 3), mesh.DiffuseTexture);
                     writeTextureInfo(0, "");
+                    writeTextureInfo((byte)(mesh.TextureBlendMode == VisibleMesh.BlendMode.Opaque ? 2 : 3), mesh.DiffuseTexture);
                 }
                 
                 writer.WriteInt(mesh.Vertices.Length);
@@ -77,11 +76,13 @@ public partial record RMesh {
             }
         }
 
-        private static void WriteInvisibleCollisionMeshes(BlitzWriter writer, in ImmutableArray<InvisibleCollisionMesh> invisibleCollisionMeshes) {
+        private static void WriteInvisibleCollisionMeshes(BlitzWriter writer, in ImmutableArray<InvisibleCollisionMesh> invisibleCollisionMeshes, ref int vertexCount, ref int triangleCount) {
             writer.WriteInt(invisibleCollisionMeshes.Length);
 
             foreach (var mesh in invisibleCollisionMeshes) {
                 writer.WriteInt(mesh.Vertices.Length);
+                vertexCount += mesh.Vertices.Length;
+                if (vertexCount > UInt16.MaxValue) throw new Exception("Vertex overflow: Invisible Collision Meshes");
                 foreach (var vertex in mesh.Vertices) {
                     writer.WriteFloat(vertex.Position.X);
                     writer.WriteFloat(vertex.Position.Y);
@@ -89,6 +90,8 @@ public partial record RMesh {
                 }
                 
                 writer.WriteInt(mesh.Triangles.Length);
+                triangleCount += mesh.Triangles.Length;
+                if (triangleCount > UInt16.MaxValue) throw new Exception("Vertex overflow: Invisible Collision Meshes");
                 foreach (var triangle in mesh.Triangles) {
                     writer.WriteInt(triangle.Index0);
                     writer.WriteInt(triangle.Index1);
@@ -97,11 +100,11 @@ public partial record RMesh {
             }
         }
 
-        private static void WriteTriggerBoxes(BlitzWriter writer, in ImmutableArray<TriggerBox> triggerBoxes) {
+        private static void WriteTriggerBoxes(BlitzWriter writer, in ImmutableArray<TriggerBox> triggerBoxes, ref int vertexCount, ref int triangleCount) {
             writer.WriteInt(triggerBoxes.Length);
 
             foreach (var triggerBox in triggerBoxes) {
-                WriteInvisibleCollisionMeshes(writer, triggerBox.SubMeshes);
+                WriteInvisibleCollisionMeshes(writer, triggerBox.SubMeshes, ref vertexCount, ref triangleCount);
                 writer.WriteString(triggerBox.Name);
             }
         }

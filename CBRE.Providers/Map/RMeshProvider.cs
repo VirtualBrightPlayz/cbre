@@ -22,6 +22,8 @@ using static CBRE.Common.PrimitiveConversion;
 namespace CBRE.Providers.Map {
     public class RMeshProvider : MapProvider {
         public static void SaveToFile(string path, DataStructures.MapObjects.Map map, Texture2D[] lightmaps, Face[] modelFaces, bool modelLightmaps) {
+            bool hasLightmaps = lightmaps != null && lightmaps.Length > 0;
+
             var visibleMeshes = new List<RMesh.RMesh.VisibleMesh>();
             var invisibleCollisionMeshes = new List<RMesh.RMesh.InvisibleCollisionMesh>();
             var entities = new List<Entity>();
@@ -44,7 +46,7 @@ namespace CBRE.Providers.Map {
                     vertices.AddRange(face.Vertices.Select(fv => new RMesh.RMesh.VisibleMesh.Vertex(
                         new Vector3F(fv.Location.XZY()),
                         new Vector2F((float)fv.TextureU, (float)fv.TextureV),
-                        face.Texture.Texture.Flags.HasFlag(Common.TextureFlags.Transparent) ? Vector2F.Zero : new Vector2F((float)fv.LMU, (float)fv.LMV), face.Texture.Texture.Flags.HasFlag(Common.TextureFlags.Transparent) ? System.Drawing.Color.Transparent : System.Drawing.Color.White)));
+                        new Vector2F((float)fv.LMU, (float)fv.LMV), System.Drawing.Color.White)));
                     triangles.AddRange(face.GetTriangleIndices().Chunk(3).Select(c => new RMesh.RMesh.Triangle(
                         (ushort)(c[0] + indexOffset), (ushort)(c[1] + indexOffset), (ushort)(c[2] + indexOffset))));
                     indexOffset += face.Vertices.Count;
@@ -58,13 +60,21 @@ namespace CBRE.Providers.Map {
                         // var diff = face.Texture.Name+System.IO.Path.GetExtension((face.Texture.Texture as AsyncTexture).Filename);
                         // diff = string.Empty;
                         var lm = System.IO.Path.GetFileName(path)+"_lm.png";
-                        var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), diff, lm, face.Texture.Texture.Flags.HasFlag(Common.TextureFlags.Transparent) ? RMesh.RMesh.VisibleMesh.BlendMode.Translucent : RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped);
+                        var blendMode = RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped;
+                        if (face.Texture.Texture.HasTransparency()) {
+                            blendMode = RMesh.RMesh.VisibleMesh.BlendMode.Translucent;
+                            lm = string.Empty;
+                        } else if (!hasLightmaps) {
+                            blendMode = RMesh.RMesh.VisibleMesh.BlendMode.Opaque;
+                            lm = string.Empty;
+                        }
+                        var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), diff, lm, blendMode);
                         visibleMeshes.Add(mesh);
                     }
                 }
             }
 
-            if (modelFaces.Any()) {
+            if (modelFaces != null && modelFaces.Any()) {
                 foreach (var face in modelFaces) {
                     vertices.Clear();
                     triangles.Clear();
@@ -103,8 +113,8 @@ namespace CBRE.Providers.Map {
             
             foreach (var entity in map.WorldSpawn.GetSelfAndAllChildren().OfType<Entity>()) {
                 if (entity.GameData?.RMeshDef == null || string.IsNullOrWhiteSpace(entity.ClassName) || string.IsNullOrWhiteSpace(entity.GameData?.RMeshDef?.ClassName)) continue;
-                bool shouldBake = entity.EntityData.GetPropertyValue("bake")?.ToLowerInvariant() == "true";
-                if (modelFaces.Any() && entity.ClassName.ToLowerInvariant() == "model" && shouldBake) continue;
+                bool shouldBake = entity.EntityData.GetPropertyValue("bake")?.ToLowerInvariant() != "false";
+                if (modelFaces != null && modelFaces.Any() && entity.ClassName.ToLowerInvariant() == "model" && shouldBake) continue;
                 var cond = entity.GameData.RMeshDef?.Conditions.FirstOrDefault();
                 if (cond == null || !entity.GameData.RMeshDef.Conditions.Any() || entity.EntityData.GetPropertyValue(cond?.Property)?.ToLowerInvariant() == cond?.Equal.ToLowerInvariant()) {
                     // var rmEntity = new RMesh.RMesh.Entity(entity.ClassName, entity.GameData.RMeshDef.Entries.ToImmutableArray());
@@ -112,10 +122,12 @@ namespace CBRE.Providers.Map {
                 }
             }
             // LegacyLightmapper.SaveLightmaps(document, 1, path, false);
-            var texture = lightmaps[0];
-            FileStream fs = File.OpenWrite(path+"_lm.png");
-            texture.SaveAsPng(fs, texture.Width, texture.Height);
-            fs.Close();
+            if (hasLightmaps) {
+                var texture = lightmaps[0];
+                FileStream fs = File.OpenWrite(path+"_lm.png");
+                texture.SaveAsPng(fs, texture.Width, texture.Height);
+                fs.Close();
+            }
             // var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), "", DocumentManager.CurrentDocument.MapFileName+"_lm0.png", RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped);
             // visibleMeshes.Add(mesh);
             
