@@ -1,6 +1,7 @@
 using CBRE.Common;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
+using CBRE.Extensions;
 using CBRE.Graphics;
 using CBRE.Providers.Texture;
 using Microsoft.Xna.Framework.Graphics;
@@ -204,8 +205,8 @@ namespace CBRE.Providers.Map {
                             rng.Next()%256,
                             newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 255 : 0,
                             newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 0 : 255);
-                        newFace.AlignTextureToFace();
-                        newFace.CalculateTextureCoordinates(true);
+                        // newFace.AlignTextureToFace();
+                        // newFace.CalculateTextureCoordinates(true);
                     }
 
                     if (newSolid.Faces.Any()) {
@@ -219,41 +220,61 @@ namespace CBRE.Providers.Map {
                             var item = newFace.Key;
                             if (item != null) {
                                 foreach (var f in newFace.Value) {
+                                    // if (item.Name.ToLowerInvariant().StartsWith("slh_miscsigns"))
+                                    //     Debugger.Break();
+                                    var v3s = f.Vertices.Select(x => x.Location);
                                     var us = f.Vertices.Select(x => x.TextureU);
                                     var vs = f.Vertices.Select(x => x.TextureV);
-                                    int tileX = 1, tileY = 1;
-                                    decimal minU = us.Min();
-                                    decimal minV = vs.Min();
-                                    decimal maxU = us.Max();
-                                    decimal maxV = vs.Max();
-                                    var XScale = (maxU - minU) / (item.Texture.Width * tileX);
-                                    var YScale = (maxV - minV) / (item.Texture.Height * tileY);
-                                    // var XShift = -minU / XScale;
-                                    // var YShift = -minV / YScale;
-                                    var XShift = -minU / ((item.Texture.Width * tileX));
-                                    var YShift = -minV / ((item.Texture.Height * tileY));
-                                    f.Texture.XScale = XScale * item.Texture.Width;
-                                    f.Texture.YScale = YScale * item.Texture.Height;
-                                    f.Texture.XShift = XShift * item.Texture.Width;
-                                    f.Texture.YShift = YShift * item.Texture.Height;
-                                    f.AlignTextureToFace();
-                                }
+                                    // int tileX = 1, tileY = 1;
+                                    f.Plane = new Plane(f.Vertices[0].Location, f.Vertices[1].Location, f.Vertices[2].Location);
+                                    f.UpdateBoundingBox();
+                                    // f.AlignTextureToFace();
+                                    // continue;
+                                    // var m2 = Microsoft.Xna.Framework.Matrix.CreateLookAt(f.BoundingBox.Center.ToXna(), (f.BoundingBox.Center + f.Plane.Normal).ToXna(), f.Texture.UAxis.ToXna());
+                                    var m2 = Microsoft.Xna.Framework.Matrix.CreateLookAt(Vector3.Zero.ToXna(), (f.Plane.Normal).ToXna(), f.Texture.UAxis.ToXna());
+                                    // m2 = Microsoft.Xna.Framework.Matrix.Invert(m2);
+                                    // var m = m2.ToCbre();
+                                    // Matrix m = Matrix.Translation(f.BoundingBox.Center) * Matrix.Rotation(f.Plane.Normal, 0);// * Matrix.Scale(f.BoundingBox.Dimensions * 2);
+                                    var sclMin = v3s.ElementAt(0);
+                                    var sclMax = v3s.ElementAt(2);
+                                    decimal minU = us.ElementAt(0);
+                                    decimal minV = vs.ElementAt(0);
+                                    decimal maxU = us.ElementAt(2);
+                                    decimal maxV = vs.ElementAt(2);
 
-                                // var XScale = (uaxis.First().TextureU - uaxis.Last().TextureU);
-                                // var YScale = (vaxis.First().TextureV - vaxis.Last().TextureV);
-                                // var XShift = (axis.Last().TextureU) * item.Texture.Width;// 2 - item.Texture.Width / 2;// * newFace.Texture.XScale;
-                                // var YShift = (axis.Last().TextureV) * item.Texture.Height;// 2 - item.Texture.Height / 2;// * newFace.Texture.YScale;
-                                var locs = newFace.Value.SelectMany(x => x.Vertices).Select(x => x.Location);//.Take(3);
-                                var cloud = new Cloud(locs);
-                                // newFace.Value.ForEach(x => x.Texture.XScale = XScale);
-                                // newFace.Value.ForEach(x => x.Texture.YScale = YScale);
-                                // newFace.Value.ForEach(x => x.Texture.XShift = XShift);
-                                // newFace.Value.ForEach(x => x.Texture.YShift = YShift);
-                                // newFace.Value.ForEach(x => x.AlignTextureWithFace(x));
-                                // newFace.Value.ForEach(x => x.FitTextureToPointCloud(new Cloud(x.Vertices.Select(y => y.Location)), 0, 0));
-                                // newFace.Value.ForEach(x => x.AlignTextureWithPointCloud(new Cloud(x.Vertices.Select(y => y.Location)), Face.BoxAlignMode.Center));
-                                // newFace.Value.ForEach(x => x.FitTextureToPointCloud(cloud, 0, 0));
-                                // newFace.Value.ForEach(x => x.AlignTextureWithPointCloud(cloud, Face.BoxAlignMode.Center));
+                                    // var item0 = minU * item.Texture.Width;
+
+                                    // var item2 = (sclMin.X / f.Texture.UAxis.X) - (sclMin.Y / f.Texture.UAxis.Y) - (sclMin.Z / f.Texture.UAxis.Z);
+
+                                    // decimal minU = us.Min();
+                                    // decimal minV = vs.Min();
+                                    // decimal maxU = us.Max();
+                                    // decimal maxV = vs.Max();
+                                    // var XScale = (decimal)Math.Sqrt((double)Math.Abs(maxU - minU));
+                                    // var YScale = (decimal)Math.Sqrt((double)Math.Abs(maxV - minV));
+                                    var XShift = minU * (item.Texture.Width);// - item.Texture.Width / 2;
+                                    var YShift = minV * (item.Texture.Height);// + item.Texture.Height / 2;
+
+                                    // f.AlignTextureToFace();
+
+                                    // var vdiv = Texture.Texture.Height * Texture.YScale;
+                                    // var vadd = Texture.YShift / Texture.Texture.Height;
+                                    // v.TextureV = (v.Location.Dot(Texture.VAxis) / vdiv) + vadd;
+                                    var XScale = (maxU - minU);// * XShift / item.Texture.Width;
+                                    var YScale = (maxV - minV);// * YShift / item.Texture.Height;
+                                    // var XScale = (minU - XShift / item.Texture.Width) * item.Texture.Width; // Math.Max(sclMin.Dot(f.Texture.UAxis), (decimal)0.0001) / item.Texture.Width;
+                                    // var YScale = (minV - YShift / item.Texture.Height) * item.Texture.Height; // Math.Max(sclMin.Dot(f.Texture.VAxis), (decimal)0.0001) / item.Texture.Height;
+                                    f.Texture.XScale = XScale;
+                                    f.Texture.YScale = YScale;
+                                    // f.Texture.XShift = (XScale * XShift);
+                                    // f.Texture.YShift = (YScale * YShift);
+                                    f.Texture.XShift = XShift;
+                                    f.Texture.YShift = YShift;
+                                    // f.AlignTextureToWorld();
+                                    f.AlignTextureToFace();
+                                    // if (item.Name.ToLowerInvariant().StartsWith("slh_miscsigns"))
+                                        // Debugger.Break();
+                                }
                             }
                         }
 #endif

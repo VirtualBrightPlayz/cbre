@@ -68,17 +68,6 @@ namespace CBRE.Editor.Compiling.Lightmap {
                         outerCos = (float)Math.Cos(outerCos * (float)Math.PI / 180.0f);
                     }
 
-                    Light light = new Light() {
-                        Origin = new Vector3F(x.Origin),
-                        Range = range,
-                        Color = new Vector3F(x.EntityData.GetPropertyVector3("color")),
-                        Intensity = intensity,
-                        HasSprite = hasSprite,
-                        Direction = null,
-                        innerCos = innerCos,
-                        outerCos = outerCos
-                    };
-
                     Vector3 angles = x.EntityData.GetPropertyVector3("angles");
 
                     Matrix pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
@@ -87,8 +76,17 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
                     var m = new UnitMatrixMult(yaw * roll * pitch);
 
-                    light.Direction = new Vector3F(m.Transform(Vector3.UnitY)).Normalise();
-                    //TODO: make sure this matches 3dws
+                    Light light = new Light() {
+                        Origin = new Vector3F(x.Origin),
+                        Range = range,
+                        Color = new Vector3F(x.EntityData.GetPropertyVector3("color")),
+                        Intensity = intensity,
+                        HasSprite = hasSprite,
+                        //TODO: make sure this matches 3dws
+                        Direction = new Vector3F(m.Transform(Vector3.UnitY)).Normalise(),
+                        innerCos = innerCos,
+                        outerCos = outerCos
+                    };
 
                     return light;
                 }));

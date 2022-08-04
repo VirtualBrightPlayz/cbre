@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CBRE.Common\CBRE.Common.csproj" />
     <ProjectReference Include="..\CBRE.DataStructures\CBRE.DataStructures.csproj" />
     <ProjectReference Include="..\CBRE.FileSystem\CBRE.FileSystem.csproj" />
     <ProjectReference Include="..\CBRE.Graphics\CBRE.Graphics.csproj" />
