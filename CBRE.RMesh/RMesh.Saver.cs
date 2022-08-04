@@ -29,6 +29,9 @@ public partial record RMesh {
         }
 
         private static void WriteVisibleMeshes(BlitzWriter writer, in ImmutableArray<VisibleMesh> visibleMeshes) {
+            int vertexCount = 0;
+            int triangleCount = 0;
+
             writer.WriteInt(visibleMeshes.Length);
 
             foreach (var mesh in visibleMeshes) {
@@ -46,7 +49,8 @@ public partial record RMesh {
                 }
                 
                 writer.WriteInt(mesh.Vertices.Length);
-                if (mesh.Vertices.Length > UInt16.MaxValue) throw new Exception("Vertex overflow: " + mesh.DiffuseTexture);
+                vertexCount += mesh.Vertices.Length;
+                if (vertexCount > UInt16.MaxValue) throw new Exception("Vertex overflow: " + mesh.DiffuseTexture);
                 foreach (var vertex in mesh.Vertices) {
                     writer.WriteFloat(vertex.Position.X);
                     writer.WriteFloat(vertex.Position.Y);
@@ -63,7 +67,8 @@ public partial record RMesh {
                 }
                 
                 writer.WriteInt(mesh.Triangles.Length);
-                if (mesh.Triangles.Length > UInt16.MaxValue) throw new Exception("Vertex overflow: " + mesh.DiffuseTexture);
+                triangleCount += mesh.Triangles.Length;
+                if (triangleCount > UInt16.MaxValue) throw new Exception("Vertex overflow: " + mesh.DiffuseTexture);
                 foreach (var triangle in mesh.Triangles) {
                     writer.WriteInt(triangle.Index0);
                     writer.WriteInt(triangle.Index1);

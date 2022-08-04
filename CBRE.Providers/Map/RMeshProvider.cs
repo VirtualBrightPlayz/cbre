@@ -107,7 +107,7 @@ namespace CBRE.Providers.Map {
                 if (modelFaces.Any() && entity.ClassName.ToLowerInvariant() == "model" && shouldBake) continue;
                 var cond = entity.GameData.RMeshDef?.Conditions.FirstOrDefault();
                 if (cond == null || !entity.GameData.RMeshDef.Conditions.Any() || entity.EntityData.GetPropertyValue(cond?.Property)?.ToLowerInvariant() == cond?.Equal.ToLowerInvariant()) {
-                    var rmEntity = new RMesh.RMesh.Entity(entity.ClassName, entity.GameData.RMeshDef.Entries.ToImmutableArray());
+                    // var rmEntity = new RMesh.RMesh.Entity(entity.ClassName, entity.GameData.RMeshDef.Entries.ToImmutableArray());
                     entities.Add(entity);
                 }
             }
@@ -178,9 +178,14 @@ namespace CBRE.Providers.Map {
 
             // var result = NativeFileDialog.OpenDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string outPath);
             // if (result == Result.Okay) {
-                rmesh = RMesh.RMesh.Loader.FromStream(stream);
+                rmesh = RMesh.RMesh.Loader.FromStream(stream, new DataStructures.GameData.GameData());
 
                 var idGenerator = map.IDGenerator;
+
+                foreach (var ent in rmesh.Entities) {
+                    ent.ID = idGenerator.GetNextObjectID();
+                    ent.SetParent(map.WorldSpawn);
+                }
 
                 var rng = new Random();
                 foreach (var subMesh in rmesh.VisibleMeshes) {

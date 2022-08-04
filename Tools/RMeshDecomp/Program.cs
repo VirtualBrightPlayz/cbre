@@ -21,8 +21,6 @@ static class Program {
     }
 
     static void DecompileRMesh(string filePath) {
-        RMesh rmesh = RMesh.Loader.FromFile(filePath);
-        
-        
+        RMesh rmesh = RMesh.Loader.FromFile(filePath, null);
     }
 }

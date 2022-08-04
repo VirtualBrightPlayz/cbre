@@ -47,8 +47,8 @@ public partial record RMesh(
         string Name,
         ImmutableArray<InvisibleCollisionMesh> SubMeshes);
 
-    public record Entity(
-        string ClassName, ImmutableArray<GameDataObject.RMeshLayout.Entry> GameData);
+    // public record Entity(
+        // string ClassName, ImmutableArray<GameDataObject.RMeshLayout.Entry> GameData);
 
     public HeaderUtils.HeaderSuffix HeaderSuffixes
         => (VisibleNoCollisionMeshes.HasValue ? HeaderUtils.HeaderSuffix.HasNoColl : HeaderUtils.HeaderSuffix.None)

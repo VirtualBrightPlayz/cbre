@@ -1,15 +1,17 @@
 ﻿using System.Collections.Immutable;
 using System.Drawing;
+using CBRE.DataStructures.GameData;
 using CBRE.DataStructures.Geometric;
+using CBRE.DataStructures.MapObjects;
 
 namespace CBRE.RMesh;
 
 public partial record RMesh {
     public static class Loader {
-        public static RMesh FromFile(string filePath) =>
-            FromStream(new FileStream(filePath, FileMode.Open));
+        public static RMesh FromFile(string filePath, GameData gameData) =>
+            FromStream(new FileStream(filePath, FileMode.Open), gameData);
 
-        public static RMesh FromStream(Stream stream) {
+        public static RMesh FromStream(Stream stream, GameData gameData) {
             using BlitzReader reader = new BlitzReader(stream);
 
             string header = reader.ReadString();
@@ -31,14 +33,14 @@ public partial record RMesh {
                 triggerBoxes = ReadTriggerBoxes(reader);
             }
 
-            ReadEntities(reader);
+            ImmutableArray<Entity> entities = ReadEntities(reader, gameData);
 
             return new RMesh(
                 visibleMeshes,
                 invisibleCollisionMeshes,
                 visibleNoCollMeshes,
                 triggerBoxes,
-                null);
+                entities);
         }
 
         private static ImmutableArray<VisibleMesh> ReadVisibleMeshes(BlitzReader reader) {
@@ -170,9 +172,51 @@ public partial record RMesh {
             return triggerBoxes.ToImmutableArray();
         }
 
-        private static void ReadEntities(BlitzReader reader) {
+        private static ImmutableArray<Entity> ReadEntities(BlitzReader reader, GameData gameData) {
             int entityCount = reader.ReadInt();
-            //TODO: implement
+
+            Entity[] entities = new Entity[entityCount];
+
+            for (int i = 0; i < entityCount; i++) {
+                string name = reader.ReadString();
+                var gameClass = gameData.Classes.First(x => x.RMeshDef.ClassName == name.ToLowerInvariant());
+                Entity entity = new Entity(0) {
+                    EntityData = new EntityData(gameClass),
+                    GameData = gameClass,
+                    ClassName = gameClass.Name,
+                };
+                entities[i] = entity;
+                foreach (var rmEntry in gameClass.RMeshDef.Entries) {
+                    switch (rmEntry.As) {
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.String:
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.B3DString:
+                            {
+                                entity.EntityData.SetPropertyValue(rmEntry.Property, reader.ReadString());
+                            }
+                            break;
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Integer:
+                            {
+                                entity.EntityData.SetPropertyValue(rmEntry.Property, reader.ReadInt().ToString());
+                            }
+                            break;
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Float:
+                            {
+                                entity.EntityData.SetPropertyValue(rmEntry.Property, reader.ReadFloat().ToString());
+                            }
+                            break;
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector:
+                            {
+                                var v3 = new Vector3((decimal)reader.ReadFloat(), (decimal)reader.ReadFloat(), (decimal)reader.ReadFloat());
+                                entity.EntityData.SetPropertyValue(rmEntry.Property, v3.ToDataString());
+                            }
+                            break;
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Bool:
+                            throw new NotImplementedException(); // TODO
+                    }
+                }
+            }
+
+            return entities.ToImmutableArray();
         }
     }
 }
