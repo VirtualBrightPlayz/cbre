@@ -33,7 +33,7 @@ namespace CBRE.Editor.Problems.RMesh {
                     var newData = ent.EntityData.Clone();
                     string key = ent.GameData.Behaviours.FirstOrDefault(p => p.Name == "model").Values.FirstOrDefault();
                     string val = ent.EntityData.GetPropertyValue(key);
-                    string path = Directories.GetModelPath(val);
+                    string path = System.IO.Path.GetFileName(Directories.GetModelPath(val));
                     newData.SetPropertyValue(key, path);
                     e.AddEntity(ent, newData);
                 }
