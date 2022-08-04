@@ -32,6 +32,11 @@ jobs:
       run: dotnet restore CBRE.Editor
     - name: Build
       run: dotnet build CBRE.Editor -p:Platform="x64" -c Debug
+
+    - name: Output Git Info to file
+      working-directory: ${{github.workspace}}/CBRE.Editor/bin/x64/Debug/net6.0/
+      run: git log -1 --format=%h > gitinfo.txt
+
     - uses: actions/upload-artifact@v2
       with:
         name: CBRE.Editor Build
