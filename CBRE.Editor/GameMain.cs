@@ -2,6 +2,8 @@
 using CBRE.Common.Mediator;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Popup;
+using CBRE.Editor.Problems;
+using CBRE.Editor.Problems.RMesh;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.Tools;
 using CBRE.Graphics;
@@ -125,6 +127,8 @@ namespace CBRE.Editor {
             InitTopBar();
             InitToolBar();
             Subscribe();
+            ProblemChecker.AddCheck(new RMeshModelMissing());
+            ProblemChecker.AddCheck(new RMeshModelInvalid());
 
             TextureProvider.CreatePackages(Directories.GetTextureCategories());
 

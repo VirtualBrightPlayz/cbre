@@ -1,6 +1,7 @@
 using CBRE.Common;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
+using CBRE.DataStructures.Transformations;
 using CBRE.Extensions;
 using CBRE.Graphics;
 using CBRE.Providers.Texture;
@@ -220,8 +221,8 @@ namespace CBRE.Providers.Map {
                             var item = newFace.Key;
                             if (item != null) {
                                 foreach (var f in newFace.Value) {
-                                    // if (item.Name.ToLowerInvariant().StartsWith("slh_miscsigns"))
-                                    //     Debugger.Break();
+                                    if (item.Name.ToLowerInvariant().StartsWith("slh_miscsigns"))
+                                        Debugger.Break();
                                     var v3s = f.Vertices.Select(x => x.Location);
                                     var us = f.Vertices.Select(x => x.TextureU);
                                     var vs = f.Vertices.Select(x => x.TextureV);
@@ -252,16 +253,21 @@ namespace CBRE.Providers.Map {
                                     // decimal maxV = vs.Max();
                                     // var XScale = (decimal)Math.Sqrt((double)Math.Abs(maxU - minU));
                                     // var YScale = (decimal)Math.Sqrt((double)Math.Abs(maxV - minV));
-                                    var XShift = minU * (item.Texture.Width);// - item.Texture.Width / 2;
-                                    var YShift = minV * (item.Texture.Height);// + item.Texture.Height / 2;
+
+                                    f.AlignTextureToFace();
+
+                                    var XShift = minU * (item.Texture.Width);
+                                    var YShift = minV * (item.Texture.Height);
 
                                     // f.AlignTextureToFace();
 
                                     // var vdiv = Texture.Texture.Height * Texture.YScale;
                                     // var vadd = Texture.YShift / Texture.Texture.Height;
                                     // v.TextureV = (v.Location.Dot(Texture.VAxis) / vdiv) + vadd;
-                                    var XScale = (maxU - minU);// * XShift / item.Texture.Width;
-                                    var YScale = (maxV - minV);// * YShift / item.Texture.Height;
+
+                                    var transform = new UnitRotate(0, new Line(Vector3.Zero, f.Plane.Normal));
+                                    var XScale = (maxU - minU) * transform.Transform(f.Texture.UAxis).Dot(Vector3.UnitX);
+                                    var YScale = (maxV - minV) * transform.Transform(f.Texture.VAxis).Dot(Vector3.UnitZ);
                                     // var XScale = (minU - XShift / item.Texture.Width) * item.Texture.Width; // Math.Max(sclMin.Dot(f.Texture.UAxis), (decimal)0.0001) / item.Texture.Width;
                                     // var YScale = (minV - YShift / item.Texture.Height) * item.Texture.Height; // Math.Max(sclMin.Dot(f.Texture.VAxis), (decimal)0.0001) / item.Texture.Height;
                                     f.Texture.XScale = XScale;
@@ -272,7 +278,8 @@ namespace CBRE.Providers.Map {
                                     f.Texture.YShift = YShift;
                                     // f.AlignTextureToWorld();
                                     f.AlignTextureToFace();
-                                    // if (item.Name.ToLowerInvariant().StartsWith("slh_miscsigns"))
+                                    if (item.Name.ToLowerInvariant().StartsWith("slh_miscsigns"))
+                                        f.SetTextureRotation(90);
                                         // Debugger.Break();
                                 }
                             }

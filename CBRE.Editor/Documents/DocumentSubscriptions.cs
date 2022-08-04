@@ -937,7 +937,9 @@ namespace CBRE.Editor.Documents {
         }
 
         public void CheckForProblems() {
-            throw new NotImplementedException();
+            CheckForProblemsPopup form = new CheckForProblemsPopup(_document);
+            GameMain.Instance.Popups.Add(form);
+            // throw new NotImplementedException();
             /*using (var cfpd = new CheckForProblemsDialog(_document)) {
                 cfpd.ShowDialog(Editor.Instance);
             }*/
