@@ -150,9 +150,9 @@ public partial record RMesh {
                         case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector3D:
                             {
                                 var v3 = entity.EntityData.GetPropertyVector3(rmEntry.Property);
-                                writer.WriteFloat((float)v3.X);
-                                writer.WriteFloat((float)v3.Z);
+                                writer.WriteFloat(-(float)v3.X);
                                 writer.WriteFloat((float)v3.Y);
+                                writer.WriteFloat((float)v3.Z);
                             }
                             break;
                     }

@@ -213,11 +213,7 @@ public partial record RMesh {
                         case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Bool:
                             throw new NotImplementedException(); // TODO
                         case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector3D:
-                            {
-                                var v3 = new Vector3((decimal)reader.ReadFloat(), (decimal)reader.ReadFloat(), (decimal)reader.ReadFloat()).XZY();
-                                entity.EntityData.SetPropertyValue(rmEntry.Property, v3.ToDataString());
-                            }
-                            break;
+                            throw new NotImplementedException(); // TODO
                     }
                 }
             }
