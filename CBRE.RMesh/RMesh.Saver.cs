@@ -48,7 +48,7 @@ public partial record RMesh {
                 }
                 
                 writer.WriteInt(mesh.Vertices.Length);
-                vertexCount += mesh.Vertices.Length;
+                vertexCount = mesh.Vertices.Length;
                 if (vertexCount > UInt16.MaxValue) throw new Exception("Vertex overflow: " + mesh.DiffuseTexture);
                 foreach (var vertex in mesh.Vertices) {
                     writer.WriteFloat(vertex.Position.X);
@@ -66,7 +66,7 @@ public partial record RMesh {
                 }
                 
                 writer.WriteInt(mesh.Triangles.Length);
-                triangleCount += mesh.Triangles.Length;
+                triangleCount = mesh.Triangles.Length;
                 if (triangleCount > UInt16.MaxValue) throw new Exception("Vertex overflow: " + mesh.DiffuseTexture);
                 foreach (var triangle in mesh.Triangles) {
                     writer.WriteInt(triangle.Index0);
@@ -81,7 +81,7 @@ public partial record RMesh {
 
             foreach (var mesh in invisibleCollisionMeshes) {
                 writer.WriteInt(mesh.Vertices.Length);
-                vertexCount += mesh.Vertices.Length;
+                vertexCount = mesh.Vertices.Length;
                 if (vertexCount > UInt16.MaxValue) throw new Exception("Vertex overflow: Invisible Collision Meshes");
                 foreach (var vertex in mesh.Vertices) {
                     writer.WriteFloat(vertex.Position.X);
@@ -90,7 +90,7 @@ public partial record RMesh {
                 }
                 
                 writer.WriteInt(mesh.Triangles.Length);
-                triangleCount += mesh.Triangles.Length;
+                triangleCount = mesh.Triangles.Length;
                 if (triangleCount > UInt16.MaxValue) throw new Exception("Vertex overflow: Invisible Collision Meshes");
                 foreach (var triangle in mesh.Triangles) {
                     writer.WriteInt(triangle.Index0);
