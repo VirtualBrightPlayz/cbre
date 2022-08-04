@@ -127,8 +127,6 @@ namespace CBRE.Editor {
             InitTopBar();
             InitToolBar();
             Subscribe();
-            ProblemChecker.AddCheck(new RMeshModelMissing());
-            ProblemChecker.AddCheck(new RMeshModelInvalid());
 
             TextureProvider.CreatePackages(Directories.GetTextureCategories());
 
