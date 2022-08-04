@@ -176,13 +176,13 @@ namespace CBRE.DataStructures.MapObjects {
             Vertices.ForEach(c => c.TextureU = c.TextureV = 0);
 
             if (Texture.Texture == null) return;
-            if (Texture.Texture.Width == 0 || Texture.Texture.Height == 0) return;
+            if (Texture.Texture.UWidth == 0 || Texture.Texture.UHeight == 0) return;
             if (Texture.XScale == 0 || Texture.YScale == 0) return;
 
-            var udiv = Texture.Texture.Width * Texture.XScale;
-            var uadd = Texture.XShift / Texture.Texture.Width;
-            var vdiv = Texture.Texture.Height * Texture.YScale;
-            var vadd = Texture.YShift / Texture.Texture.Height;
+            var udiv = Texture.Texture.UWidth * Texture.XScale;
+            var uadd = Texture.XShift / Texture.Texture.UWidth;
+            var vdiv = Texture.Texture.UHeight * Texture.YScale;
+            var vadd = Texture.YShift / Texture.Texture.UHeight;
 
             foreach (var v in Vertices) {
                 v.TextureU = (v.Location.Dot(Texture.UAxis) / udiv) + uadd;
@@ -295,12 +295,12 @@ namespace CBRE.DataStructures.MapObjects {
 
         private void MinimiseTextureShiftValues() {
             if (Texture.Texture == null) { return; }
-            if (Texture.Texture.Width <= 0 || Texture.Texture.Height <= 0) { return; }
+            if (Texture.Texture.UWidth <= 0 || Texture.Texture.UHeight <= 0) { return; }
             // Keep the shift values to a minimum
-            Texture.XShift = Texture.XShift % Texture.Texture.Width;
-            Texture.YShift = Texture.YShift % Texture.Texture.Height;
-            if (Texture.XShift < -Texture.Texture.Width / 2m) Texture.XShift += Texture.Texture.Width;
-            if (Texture.YShift < -Texture.Texture.Height / 2m) Texture.YShift += Texture.Texture.Height;
+            Texture.XShift = Texture.XShift % Texture.Texture.UWidth;
+            Texture.YShift = Texture.YShift % Texture.Texture.UHeight;
+            if (Texture.XShift < -Texture.Texture.UWidth / 2m) Texture.XShift += Texture.Texture.UWidth;
+            if (Texture.YShift < -Texture.Texture.UHeight / 2m) Texture.YShift += Texture.Texture.UHeight;
         }
 
         public void FitTextureToPointCloud(Cloud cloud, int tileX, int tileY) {
@@ -317,8 +317,8 @@ namespace CBRE.DataStructures.MapObjects {
             var maxU = xvals.Max();
             var maxV = yvals.Max();
 
-            Texture.XScale = (maxU - minU) / (Texture.Texture.Width * tileX);
-            Texture.YScale = (maxV - minV) / (Texture.Texture.Height * tileY);
+            Texture.XScale = (maxU - minU) / (Texture.Texture.UWidth * tileX);
+            Texture.YScale = (maxV - minV) / (Texture.Texture.UHeight * tileY);
             Texture.XShift = -minU / Texture.XScale;
             Texture.YShift = -minV / Texture.YScale;
 
@@ -341,19 +341,19 @@ namespace CBRE.DataStructures.MapObjects {
                     Texture.XShift = -minU;
                     break;
                 case BoxAlignMode.Right:
-                    Texture.XShift = -maxU + Texture.Texture.Width;
+                    Texture.XShift = -maxU + Texture.Texture.UWidth;
                     break;
                 case BoxAlignMode.Center:
                     var avgU = (minU + maxU) / 2;
                     var avgV = (minV + maxV) / 2;
-                    Texture.XShift = -avgU + Texture.Texture.Width / 2m;
-                    Texture.YShift = -avgV + Texture.Texture.Height / 2m;
+                    Texture.XShift = -avgU + Texture.Texture.UWidth / 2m;
+                    Texture.YShift = -avgV + Texture.Texture.UHeight / 2m;
                     break;
                 case BoxAlignMode.Top:
                     Texture.YShift = -minV;
                     break;
                 case BoxAlignMode.Bottom:
-                    Texture.YShift = -maxV + Texture.Texture.Height;
+                    Texture.YShift = -maxV + Texture.Texture.UHeight;
                     break;
             }
             CalculateTextureCoordinates(true);
@@ -421,8 +421,8 @@ namespace CBRE.DataStructures.MapObjects {
                     if (DMath.Abs(scaled - original) <= 0.01m) {
                         // Calculate the new shift values based on the UV values of the vertices
                         var vtx = Vertices[0];
-                        Texture.XShift = Texture.Texture.Width * vtx.TextureU - (vtx.Location.Dot(Texture.UAxis)) / Texture.XScale;
-                        Texture.YShift = Texture.Texture.Height * vtx.TextureV - (vtx.Location.Dot(Texture.VAxis)) / Texture.YScale;
+                        Texture.XShift = Texture.Texture.UWidth * vtx.TextureU - (vtx.Location.Dot(Texture.UAxis)) / Texture.XScale;
+                        Texture.YShift = Texture.Texture.UHeight * vtx.TextureV - (vtx.Location.Dot(Texture.VAxis)) / Texture.YScale;
                     }
                 }
             }

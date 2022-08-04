@@ -3,25 +3,39 @@ using System.Collections.Generic;
 using System.Text;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Vector3 = Microsoft.Xna.Framework.Vector3;
 using CBREVector3 = CBRE.DataStructures.Geometric.Vector3;
 using CBREMatrix = CBRE.DataStructures.Geometric.Matrix;
+using Veldrid;
+using System.Numerics;
+using Num = System.Numerics;
+using Veldrid.SPIRV;
+using System.IO;
 
 namespace CBRE.Graphics {
+
+    public enum PrimitiveType : byte {
+        TriangleList = 0,
+        TriangleStrip = 1,
+        LineList = 2,
+        LineStrip = 3,
+        PointList = 4,
+        QuadList,
+    }
+
     public static class PrimitiveDrawing {
         public static bool IsLineType(this PrimitiveType type)
-            => type is PrimitiveType.LineList or PrimitiveType.LineLoop or PrimitiveType.LineStrip;
+            => type is PrimitiveType.LineList or PrimitiveType.LineStrip;
 
         public static bool IsTriangleType(this PrimitiveType type)
-            => type is PrimitiveType.TriangleFan or PrimitiveType.TriangleList or PrimitiveType.TriangleStrip;
+            => type is PrimitiveType.TriangleList or PrimitiveType.TriangleStrip;
         
         private static PrimitiveType? currentPrimitiveType = null;
+        private static DeviceBuffer vertexBuffer = null;
+        private static Shader[] shaders = null;
 
-        private static Color color = Color.White;
+        private static Vector4 color = Vector4.One;
         private static List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
-        public static Texture2D Texture = null;
+        public static Texture Texture = null;
 
         public static void Begin(PrimitiveType primType) {
             if (currentPrimitiveType != null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Begin because a draw operation is already in progress"); }
@@ -31,32 +45,32 @@ namespace CBRE.Graphics {
 
         public static void SetColor(System.Drawing.Color clr) {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Color4 because a draw operation isn't in progress"); }
-            color.R = clr.R;
-            color.G = clr.G;
-            color.B = clr.B;
-            color.A = clr.A;
+            color.X = clr.R;
+            color.Y = clr.G;
+            color.Z = clr.B;
+            color.W = clr.A;
         }
 
         public static void Vertex2(double x, double y, float u = 0f, float v = 0f) {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Vertex3 because a draw operation isn't in progress"); }
             vertices.Add(new VertexPositionColorTexture() {
-                Position = new Vector3((float)x, (float)y, 0.0f),
-                Color = color,
+                Position = new Num.Vector3((float)x, (float)y, 0.0f),
+                Color = new RgbaFloat(color),
                 TextureCoordinate = new Vector2(u, v)
             });
         }
 
-        public static void Vertex3(Vector3 position, float u = 0f, float v = 0f) {
+        public static void Vertex3(Num.Vector3 position, float u = 0f, float v = 0f) {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Vertex3 because a draw operation isn't in progress"); }
             vertices.Add(new VertexPositionColorTexture() {
                 Position = position,
-                Color = color,
+                Color = new RgbaFloat(color),
                 TextureCoordinate = new Vector2(u, v)
             });
         }
 
         public static void Vertex3(double x, double y, double z, float u = 0f, float v = 0f) {
-            Vertex3(new Vector3((float)x, (float)y, (float)z), u, v);
+            Vertex3(new Num.Vector3((float)x, (float)y, (float)z), u, v);
         }
 
         public static void Vertex3(CBRE.DataStructures.Geometric.Vector3 position, float u = 0f, float v = 0f) {
@@ -135,7 +149,7 @@ namespace CBRE.Graphics {
                     }
                 }
             } else {
-                throw new NotImplementedException($"{nameof(Line)} not implemented for {nameof(PrimitiveType)}.{currentPrimitiveType}");
+                throw new NotImplementedException($"{nameof(Line)} not implemented for {nameof(PrimitiveTopology)}.{currentPrimitiveType}");
             }
         }
 
@@ -167,39 +181,124 @@ namespace CBRE.Graphics {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.End because a draw operation isn't in progress"); }
 
             int primCount = 0;
+            PrimitiveTopology topology = PrimitiveTopology.PointList;
+
             switch (currentPrimitiveType) {
                 case PrimitiveType.PointList:
+                    topology = PrimitiveTopology.PointList;
                     primCount = vertices.Count;
                     break;
                 case PrimitiveType.LineList:
+                    topology = PrimitiveTopology.LineList;
                     primCount = vertices.Count / 2;
                     break;
-                case PrimitiveType.LineLoop:
+                /*case CustomPrimitiveTopology.LineLoop:
                     primCount = vertices.Count;
-                    break;
+                    break;*/
                 case PrimitiveType.LineStrip:
+                    topology = PrimitiveTopology.LineStrip;
                     primCount = vertices.Count - 1;
                     break;
                 case PrimitiveType.TriangleList:
+                    topology = PrimitiveTopology.TriangleList;
                     primCount = vertices.Count / 3;
                     break;
                 case PrimitiveType.TriangleStrip:
+                    topology = PrimitiveTopology.TriangleStrip;
                     primCount = vertices.Count - 2;
                     break;
-                case PrimitiveType.TriangleFan:
+                /*case CustomPrimitiveTopology.TriangleFan:
                     primCount = vertices.Count - 2;
-                    break;
+                    break;*/
                 case PrimitiveType.QuadList:
-                    primCount = vertices.Count / 4;
+                    var temp = new List<VertexPositionColorTexture>();
+                    for (int i = 0; i < vertices.Count; i+=4) {
+                        var v0 = vertices[i + 0];
+                        var v1 = vertices[i + 1];
+                        var v2 = vertices[i + 2];
+                        var v3 = vertices[i + 3];
+                        temp.Add(v0);
+                        temp.Add(v1);
+                        temp.Add(v2);
+
+                        temp.Add(v0);
+                        temp.Add(v2);
+                        temp.Add(v3);
+                    }
+
+                    vertices.Clear();
+                    vertices.AddRange(temp);
+
+                    topology = PrimitiveTopology.TriangleList;
+                    primCount = vertices.Count / 3;
                     break;
             }
 
             if (vertices.Count > 0) {
-                GlobalGraphics.GraphicsDevice.DrawUserPrimitives(
-                    currentPrimitiveType.Value,
-                    vertices.ToArray(),
-                    0,
-                    primCount);
+                if (vertexBuffer == null) {
+                    vertexBuffer = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(4 * VertexPositionColorTexture.SizeInBytes, BufferUsage.VertexBuffer));
+                }
+                GlobalGraphics.GraphicsDevice.UpdateBuffer(vertexBuffer, 0, vertices.ToArray());
+                GlobalGraphics.CommandList.SetVertexBuffer(0, vertexBuffer);
+
+                VertexLayoutDescription vertexLayout = new VertexLayoutDescription(
+                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
+                    new VertexElementDescription("TextureCoordinate", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
+                    new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float4)
+                );
+
+                using (ResourceLayout textureLayout = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateResourceLayout(new ResourceLayoutDescription(
+                    new ResourceLayoutElementDescription("MainTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
+                    new ResourceLayoutElementDescription("MainSampler", ResourceKind.Sampler, ShaderStages.Fragment)
+                ))) {
+                    using (var textureSet = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
+                        textureLayout, Texture
+                    ))) {
+                        if (shaders == null) {
+
+                            string vertexCode = File.ReadAllText("Shaders/texturedSolid.vert");
+                            string fragmentCode = File.ReadAllText("Shaders/texturedSolid.frag");
+
+                            ShaderDescription vertexShaderDesc = new ShaderDescription(
+                                ShaderStages.Vertex,
+                                Encoding.UTF8.GetBytes(vertexCode),
+                                "main");
+                            ShaderDescription fragmentShaderDesc = new ShaderDescription(
+                                ShaderStages.Fragment,
+                                Encoding.UTF8.GetBytes(fragmentCode),
+                                "main");
+
+                            shaders = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateFromSpirv(vertexShaderDesc, fragmentShaderDesc);
+                        }
+
+                        GraphicsPipelineDescription pipeDesc = new GraphicsPipelineDescription();
+                        pipeDesc.BlendState = BlendStateDescription.SingleOverrideBlend;
+                        pipeDesc.DepthStencilState = new DepthStencilStateDescription(
+                            depthTestEnabled: true,
+                            depthWriteEnabled: true,
+                            comparisonKind: ComparisonKind.LessEqual
+                        );
+                        pipeDesc.RasterizerState = new RasterizerStateDescription(
+                            cullMode: FaceCullMode.Back,
+                            fillMode: PolygonFillMode.Solid,
+                            frontFace: FrontFace.Clockwise,
+                            depthClipEnabled: true,
+                            scissorTestEnabled: false
+                        );
+                        pipeDesc.PrimitiveTopology = topology;
+                        // pipeDesc.ResourceLayouts = Array.Empty<ResourceLayout>(); // TODO: textures
+                        pipeDesc.ResourceLayouts = new [] { textureLayout };
+                        pipeDesc.ShaderSet = new ShaderSetDescription(
+                            vertexLayouts: new VertexLayoutDescription[] { vertexLayout },
+                            shaders: shaders
+                        );
+                        pipeDesc.Outputs = GlobalGraphics.GraphicsDevice.SwapchainFramebuffer.OutputDescription;
+                        using (var pipeline = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateGraphicsPipeline(pipeDesc)) {
+                            // GlobalGraphics.CommandList.UpdateBuffer();
+                        }
+                    }
+                }
+                GlobalGraphics.CommandList.Draw((uint)primCount);
             }
             currentPrimitiveType = null;
             Texture = null;

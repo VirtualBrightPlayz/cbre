@@ -627,12 +627,12 @@ namespace CBRE.Editor.Rendering {
                     if (kvp.Key.ToLowerInvariant() == "tooltextures/block_light") continue;
                 }
                 TextureItem item = TextureProvider.GetItem(kvp.Key);
-                if (item is {Texture: AsyncTexture {MonoGameTexture: { }} asyncTexture}) {
+                if (item is {Texture: AsyncTexture {VeldridTexture: { }} asyncTexture}) {
                     if (asyncTexture.HasTransparency()) {
                         translucentGeom.Add((asyncTexture, kvp.Value));
                         continue;
                     } else {
-                        Effects.TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.MonoGameTexture);
+                        Effects.TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.VeldridTexture);
                         Effects.TexturedShaded.CurrentTechnique.Passes[0].Apply();
                     }
                 } else {
@@ -648,7 +648,7 @@ namespace CBRE.Editor.Rendering {
             var prevDepthStencilState = GlobalGraphics.GraphicsDevice.DepthStencilState;
             GlobalGraphics.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true, DepthBufferWriteEnable = false };
             foreach (var (texture, geometry) in translucentGeom) {
-                Effects.TexturedShaded.Parameters["xTexture"].SetValue(texture.MonoGameTexture);
+                Effects.TexturedShaded.Parameters["xTexture"].SetValue(texture.VeldridTexture);
                 Effects.TexturedShaded.CurrentTechnique.Passes[0].Apply();
                 geometry.RenderSolid();
             }
@@ -740,8 +740,8 @@ namespace CBRE.Editor.Rendering {
                     Effects.TexturedLightmapped.Parameters["lmTexture"].SetValue(Document.MGLightmaps[i]);
                     Effects.TexturedLightmapped.Parameters["lmGamma"].SetValue(gamma);
 
-                    if (item is {Texture: AsyncTexture {MonoGameTexture: { }} asyncTexture}) {
-                        Effects.TexturedLightmapped.Parameters["diffTexture"].SetValue(asyncTexture.MonoGameTexture);
+                    if (item is {Texture: AsyncTexture {VeldridTexture: { }} asyncTexture}) {
+                        Effects.TexturedLightmapped.Parameters["diffTexture"].SetValue(asyncTexture.VeldridTexture);
                     }
                     Effects.TexturedLightmapped.CurrentTechnique.Passes[0].Apply();
                     kvp.Value.RenderSolid(i);

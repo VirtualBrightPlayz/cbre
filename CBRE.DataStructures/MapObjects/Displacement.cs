@@ -253,10 +253,10 @@ namespace CBRE.DataStructures.MapObjects {
 
             if (Texture.Texture == null) return;
 
-            var udiv = Texture.Texture.Width * Texture.XScale;
-            var uadd = Texture.XShift / Texture.Texture.Width;
-            var vdiv = Texture.Texture.Height * Texture.YScale;
-            var vadd = Texture.YShift / Texture.Texture.Height;
+            var udiv = Texture.Texture.UWidth * Texture.XScale;
+            var uadd = Texture.XShift / Texture.Texture.UWidth;
+            var vdiv = Texture.Texture.UHeight * Texture.YScale;
+            var vadd = Texture.YShift / Texture.Texture.UHeight;
 
             foreach (var v in Vertices) {
                 v.TextureU = (v.Location.Dot(Texture.UAxis) / udiv) + uadd;

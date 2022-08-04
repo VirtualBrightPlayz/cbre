@@ -4,8 +4,8 @@ namespace CBRE.Common {
     public interface ITexture : IDisposable {
         TextureFlags Flags { get; }
         string Name { get; }
-        int Width { get; }
-        int Height { get; }
+        uint UWidth { get; }
+        uint UHeight { get; }
     }
 
     public static class TextureExtensions {

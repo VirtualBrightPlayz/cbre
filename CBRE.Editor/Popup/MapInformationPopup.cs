@@ -24,7 +24,7 @@ namespace CBRE.Editor.Popup {
             var textureMemory = faces.Select(x => x.Texture.Texture)
                 .Where(x => x != null)
                 .Distinct()
-                .Sum(x => x.Width * x.Height * 3); // 3 bytes per pixel
+                .Sum(x => x.UWidth * x.UHeight * 3); // 3 bytes per pixel
             var textureMemoryMb = textureMemory / (1024m * 1024m);
 
             ImGui.Text($"Solids Count: {numSolids}");

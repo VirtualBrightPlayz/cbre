@@ -192,10 +192,10 @@ namespace CBRE.Editor.Tools.TextureTool {
                 if (_showOffset) {
                     ImGui.Image(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f),
                         // new Num.Vector2(0, 0), new Num.Vector2(1, 1));
-                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width - (float)xscl,
-                            (float)yscl * (float)yoff / _texture.AsyncTexture.Height - (float)yscl),
-                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width,
-                            (float)yscl * (float)yoff / _texture.AsyncTexture.Height));
+                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.UWidth - (float)xscl,
+                            (float)yscl * (float)yoff / _texture.AsyncTexture.UHeight - (float)yscl),
+                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.UWidth,
+                            (float)yscl * (float)yoff / _texture.AsyncTexture.UHeight));
                 }
 
                 if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {

@@ -27,7 +27,16 @@
     <ProjectReference Include="..\CBRE.DataStructures\CBRE.DataStructures.csproj" />
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
     <ProjectReference Include="..\metadata-extractor-dotnet\MetadataExtractor\MetadataExtractor.csproj" />
-    <ProjectReference Include="..\MonoGame\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" />
+    <!-- <ProjectReference Include="..\MonoGame\MonoGame.Framework\MonoGame.Framework.Windows.NetStandard.csproj" /> -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
+    <PackageReference Include="Veldrid" Version="4.8.0" />
+    <PackageReference Include="Veldrid.SDL2" Version="4.8.0" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.8.0" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.13" />
+    <PackageReference Include="Veldrid.ImageSharp" Version="4.8.0" />
   </ItemGroup>
 
 </Project>

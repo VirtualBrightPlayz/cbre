@@ -121,7 +121,7 @@ namespace CBRE.Providers.Model {
             if (tex == null) {
                 AsyncTexture _tex = new AsyncTexture("___", Task.Run(() => {
                     return new AsyncTexture.Data {
-                        Bytes = Enumerable.Repeat(0xff777777, 64 * 64).SelectMany(i => BitConverter.GetBytes(i)).ToArray(),
+                        Image = Enumerable.Repeat(0xff777777, 64 * 64).SelectMany(i => BitConverter.GetBytes(i)).ToArray(),
                         Width = 64,
                         Height = 64,
                         Compressed = false

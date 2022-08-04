@@ -36,8 +36,8 @@ namespace CBRE.Editor {
         public MouseCursor RotateCursor {
             get {
                 if (rotateCursor != null) { return rotateCursor; }
-                if (rotateCursorTexture?.MonoGameTexture != null) {
-                    rotateCursor = MouseCursor.FromTexture2D(rotateCursorTexture.MonoGameTexture, 8, 8);
+                if (rotateCursorTexture?.VeldridTexture != null) {
+                    rotateCursor = MouseCursor.FromTexture2D(rotateCursorTexture.VeldridTexture, 8, 8);
                     return rotateCursor;
                 }
                 return MouseCursor.Arrow;

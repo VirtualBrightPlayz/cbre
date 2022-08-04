@@ -18,6 +18,9 @@
 
   <ItemGroup>
     <!-- <ProjectReference Include="..\AssimpNet\AssimpNet\AssimpNet.csproj" /> -->
+    <PackageReference Include="Veldrid" Version="4.8.0" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.8.0" />
+    <PackageReference Include="Veldrid.SPIRV" Version="1.0.13" />
     <ProjectReference Include="..\CBRE.Common\CBRE.Common.csproj" />
     <ProjectReference Include="..\CBRE.DataStructures\CBRE.DataStructures.csproj" />
     <ProjectReference Include="..\CBRE.FileSystem\CBRE.FileSystem.csproj" />
