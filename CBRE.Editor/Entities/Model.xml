@@ -2,7 +2,7 @@
     <rmesh>
         <write property="file" as="B3DString" />
         <write property="position" as="Vector" />
-        <write property="angles" as="Vector" />
+        <write property="angles" as="Vector3D" />
         <write property="scale" as="Vector" />
     </rmesh>
 

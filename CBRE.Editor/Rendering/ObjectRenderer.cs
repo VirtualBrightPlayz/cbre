@@ -711,7 +711,7 @@ namespace CBRE.Editor.Rendering {
                                       * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
                                       * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
                                       * Matrix.RotationZ(DMath.DegreesToRadians(-euler.Y))
-                                      * Matrix.Scale(scale);
+                                      * Matrix.Scale(scale.XZY());
                     ModelRenderer.Render(this.models[path].Model, modelMat, Effects.BasicEffect);
                 } else if (ModelProvider.CanLoad(file)) {
                     ModelReference mref = ModelProvider.CreateModelReference(file);

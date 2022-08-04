@@ -22,7 +22,8 @@ namespace CBRE.DataStructures.GameData {
                 Integer,
                 Float,
                 Vector,
-                Bool
+                Bool,
+                Vector3D
             }
 
             public readonly record struct Entry(
