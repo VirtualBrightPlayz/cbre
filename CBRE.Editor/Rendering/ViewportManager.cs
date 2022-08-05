@@ -109,7 +109,9 @@ namespace CBRE.Editor.Rendering {
                 = GameMain.Instance.Dockables.Where(d => d is ViewportWindow).Cast<ViewportWindow>();
             foreach (var viewportWindow in vpWindows)
             {
-                viewportWindow.ResetRenderTarget();
+                for (int i = 0; i < viewportWindow.RenderTargetImGuiPtr.Length; i++) {
+                    viewportWindow.ResetRenderTarget(i);
+                }
             }
         }
     }

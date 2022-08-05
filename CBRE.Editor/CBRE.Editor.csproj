@@ -26,6 +26,7 @@
     <ProjectReference Include="..\CBRE.RMesh\CBRE.RMesh.csproj" />
     <ProjectReference Include="..\CBRE.Settings\CBRE.Settings.csproj" />
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
+    <ProjectReference Include="..\ImGuizmo.NET\ImGuizmo.NET.csproj" />
     <ProjectReference Include="..\NativeFileDialog.NET\dotnet\NativeFileDialog.csproj" />
     <ProjectReference Include="..\Tools\RMeshDecomp\RMeshDecomp.csproj" />
   </ItemGroup>
@@ -45,6 +46,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\ImGui.NET\cimgui\linux-x64\cimgui.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+
+    <None Include="..\ImGui.NET\cimgui\win-x64\cimguizmo.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\ImGui.NET\cimgui\linux-x64\cimguizmo.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
