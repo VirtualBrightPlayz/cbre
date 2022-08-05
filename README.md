@@ -16,6 +16,7 @@ You can find the original source code at https://github.com/SCP-CBN/cbre
 
 - `.rmesh` file exporting
 - Lightmapping
+- (WIP) GPU Lightmapping
 - Screenshot mode
 - Discord RPC
 
