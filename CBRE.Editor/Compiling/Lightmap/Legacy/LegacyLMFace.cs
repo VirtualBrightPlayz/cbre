@@ -233,7 +233,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                 Matrix modelMat = Matrix.Translation(model.Origin)
                                     * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
                                     * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
-                                    * Matrix.RotationZ(DMath.DegreesToRadians(euler.Y))
+                                    * Matrix.RotationZ(DMath.DegreesToRadians(-euler.Y))
                                     * Matrix.Scale(scale.XZY());
                 string key = model.GameData.Behaviours.FirstOrDefault(p => p.Name == "model").Values.FirstOrDefault();
                 string path = Directories.GetModelPath(model.EntityData.GetPropertyValue(key));
