@@ -88,6 +88,17 @@ sealed partial class Lightmapper {
             }
         }
 
+        public void SetLight(in SpotLight light) {
+            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathF.Tau / 4.0f, 1.0f, 1.0f, light.Range);
+            lightRange = light.Range;
+
+            Vector3 lightXzy = light.Location.ToCbre().XYZ().ToXna();
+            var translation = Matrix.CreateTranslation(-lightXzy);
+            for (int i = 0; i < 6; i++) {
+                ProjectionViewMatrices[i] = (translation * baseViewMatrices[i]) * projectionMatrix;
+            }
+        }
+
         public void Dispose() {
             for (int i = 0; i < 6; i++) {
                 RenderTargets[i].Dispose();
@@ -95,19 +106,19 @@ sealed partial class Lightmapper {
         }
     }
 
-    private async Task WaitForRender(Action? action, CancellationToken token) {
+    private async Task WaitForRender(string name, Action? action, CancellationToken token) {
         bool signal = false;
-        TaskPool.Add("ShadowMap WaitForRender", Task.Delay(100) /*Task.Run(async () => {
-            await Task.Delay(100);
-        })*/, (t) => {
+        TaskPool.Add(name, Task.Delay(100), (t) => {
             try {
                 action?.Invoke();
             }
             catch (Exception e) {
                 Mediator.Publish(EditorMediator.CompileFailed, Document);
                 Logging.Logger.ShowException(e);
+                GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
             }
             signal = true;
+            Console.WriteLine(name);
         });
         while (!signal) {
             await Task.Yield();
@@ -118,17 +129,17 @@ sealed partial class Lightmapper {
     public async Task RenderShadowMapped() {
         CancellationToken token = new CancellationToken();
 
-        await WaitForRender(null, token);
+        await WaitForRender("ShadowMap Init", null, token);
         UpdateProgress("Determining UV coordinates...", 0);
 
-
         var pointLights = ExtractPointLights();
+        var spotLights = ExtractSpotLights();
 
         Effect? lmLightCalc = null;
         ImmutableArray<Atlas> atlases = new ImmutableArray<Atlas>();
         var gd = GlobalGraphics.GraphicsDevice;
 
-        await WaitForRender(() => {
+        await WaitForRender("ShadowMap UV coords", () => {
             lmLightCalc = GlobalGraphics.LoadEffect("Shaders/lmLightCalc.mgfx");
 
 
@@ -144,6 +155,8 @@ sealed partial class Lightmapper {
             {
                 atlas.InitGpuBuffers();
             }
+
+            gd.SetRenderTarget(null);
         }, token);
 
         void renderAllAtlases() {
@@ -159,20 +172,20 @@ sealed partial class Lightmapper {
         }
 
         async Task saveTextureAsync(string filePath, Texture2D texture) {
-            await WaitForRender(() => {
+            await WaitForRender("ShadowMap save texture", () => {
                 saveTexture(filePath, texture);
             }, token);
         }
         
         UpdateProgress("Started calculating brightness levels...", 0.05f);
         int progressCount = 0;
-        int progressMax = atlases.Length * pointLights.Length;
+        int progressMax = atlases.Length * (pointLights.Length + spotLights.Length);
         for (int atlasIndex = 0; atlasIndex < atlases.Length; atlasIndex++) {
             var atlas = atlases[atlasIndex];
 
             RenderTarget2D atlasTexture = null;
             ShadowMap shadowMap = null;
-            await WaitForRender(() => {
+            await WaitForRender("ShadowMap prepare atlasTexture", () => {
                 atlasTexture = new RenderTarget2D(
                     gd,
                     LightmapConfig.TextureDims,
@@ -190,11 +203,13 @@ sealed partial class Lightmapper {
                 gd.SetRenderTarget(null);
                 
                 shadowMap = new ShadowMap(LightmapConfig.TextureDims);
+                gd.SetRenderTarget(null);
             }, token);
 
+            bool hasRun = true;
 
             for (int i = 0; i < pointLights.Length; i++) {
-                await WaitForRender(() => {
+                await WaitForRender($"Render point light {i}", () => {
                     var pointLight = pointLights[i];
 
                     shadowMap.SetLight(pointLight);
@@ -205,16 +220,64 @@ sealed partial class Lightmapper {
                         shadowMap.Prepare(j);
                         GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
                         renderAllAtlases();
-                        saveTexture($"shadowMap_{i}_{j}.png", shadowMap.RenderTargets[j]);
+                        saveTexture($"shadowMap_0_{i}_{j}.png", shadowMap.RenderTargets[j]);
                     }
                     
                     gd.SetRenderTarget(atlasTexture);
 
-                    gd.BlendState = i == 0 ? BlendState.NonPremultiplied : BlendState.Additive;
+                    gd.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
+                    hasRun = false;
 
+                    lmLightCalc.Parameters["lightType"].SetValue(0);
                     lmLightCalc.Parameters["lightPos"].SetValue(pointLight.Location);
                     lmLightCalc.Parameters["lightRange"].SetValue(pointLight.Range);
                     lmLightCalc.Parameters["lightColor"].SetValue(new Vector4(pointLight.Color, 1.0f));
+                    lmLightCalc.Parameters["lightDirection"].SetValue(Vector3.Zero);
+                    lmLightCalc.Parameters["lightConeAngles"].SetValue(Vector2.Zero);
+                    lmLightCalc.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
+                    for (int j = 0; j < 6; j++) {
+                        lmLightCalc.Parameters[$"lightProjView{j}"].SetValue(shadowMap.ProjectionViewMatrices[j]);
+                        lmLightCalc.Parameters[$"lightShadowMap{j}"].SetValue(shadowMap.RenderTargets[j]);
+                    }
+
+                    lmLightCalc.CurrentTechnique.Passes[0].Apply();
+
+                    GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                    atlas.RenderGroups();
+
+                    gd.SetRenderTarget(null);
+                    gd.BlendState = BlendState.NonPremultiplied;
+                }, token);
+                progressCount++;
+                UpdateProgress(progressCount.ToString() + "/" + progressMax.ToString() + " complete", 0.05f + ((float)progressCount / (float)progressMax) * 0.85f);
+            }
+            
+            for (int i = 0; i < spotLights.Length; i++) {
+                await WaitForRender($"Render spot light {i}", () => {
+                    var spotLight = spotLights[i];
+
+                    shadowMap.SetLight(spotLight);
+                    GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
+                    GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
+                    GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                    for (int j = 0; j < 6; j++) {
+                        shadowMap.Prepare(j);
+                        GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                        renderAllAtlases();
+                        saveTexture($"shadowMap_1_{i}_{j}.png", shadowMap.RenderTargets[j]);
+                    }
+                    
+                    gd.SetRenderTarget(atlasTexture);
+
+                    gd.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
+                    hasRun = false;
+
+                    lmLightCalc.Parameters["lightType"].SetValue(1);
+                    lmLightCalc.Parameters["lightPos"].SetValue(spotLight.Location);
+                    lmLightCalc.Parameters["lightRange"].SetValue(spotLight.Range);
+                    lmLightCalc.Parameters["lightColor"].SetValue(new Vector4(spotLight.Color, 1.0f));
+                    lmLightCalc.Parameters["lightDirection"].SetValue(spotLight.Direction);
+                    lmLightCalc.Parameters["lightConeAngles"].SetValue(new Vector2(spotLight.InnerConeAngle, spotLight.OuterConeAngle));
                     lmLightCalc.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
                     for (int j = 0; j < 6; j++) {
                         lmLightCalc.Parameters[$"lightProjView{j}"].SetValue(shadowMap.ProjectionViewMatrices[j]);
@@ -235,7 +298,7 @@ sealed partial class Lightmapper {
 
             await saveTextureAsync($"atlas_{atlasIndex}.png", atlasTexture);
 
-            await WaitForRender(() => {
+            await WaitForRender("Cleanup", () => {
                 gd.SetRenderTarget(null);
                 gd.BlendState = BlendState.NonPremultiplied;
             }, token);

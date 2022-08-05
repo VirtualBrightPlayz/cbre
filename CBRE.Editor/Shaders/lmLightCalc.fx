@@ -1,3 +1,6 @@
+int lightType;
+float3 lightDirection;
+float2 lightConeAngles;
 float lightRange;
 float3 lightPos;
 float4 lightColor;
@@ -100,13 +103,31 @@ float4 PixelShaderF(VertexShaderOutput input) : COLOR0 {
     c *= c;
     c *= saturate(dot(normalize(lightPos - input.WorldPosition.xyz), input.Normal));
     c *= lightColor;
-    c.xyz *= min(1.0,
-             shadowMapBlocked(lightShadowMapSampler0, input.ShadowMapPos0)
+    if (lightType == 0) {
+        c.xyz *= min(1.0,
+            shadowMapBlocked(lightShadowMapSampler0, input.ShadowMapPos0)
             +shadowMapBlocked(lightShadowMapSampler1, input.ShadowMapPos1)
             +shadowMapBlocked(lightShadowMapSampler2, input.ShadowMapPos2)
             +shadowMapBlocked(lightShadowMapSampler3, input.ShadowMapPos3)
             +shadowMapBlocked(lightShadowMapSampler4, input.ShadowMapPos4)
             +shadowMapBlocked(lightShadowMapSampler5, input.ShadowMapPos5));
+    } else if (lightType == 1) {
+        float dirDot = dot(lightDirection, normalize(input.WorldPosition.xyz - lightPos));
+        if (dirDot < lightConeAngles.x) {
+            if (dirDot < lightConeAngles.y) {
+                c *= 0.0;
+            } else {
+                c *= (dirDot - lightConeAngles.y) / (lightConeAngles.x - lightConeAngles.y);
+            }
+        }
+        c.xyz *= min(1.0,
+            shadowMapBlocked(lightShadowMapSampler0, input.ShadowMapPos0)
+            +shadowMapBlocked(lightShadowMapSampler1, input.ShadowMapPos1)
+            +shadowMapBlocked(lightShadowMapSampler2, input.ShadowMapPos2)
+            +shadowMapBlocked(lightShadowMapSampler3, input.ShadowMapPos3)
+            +shadowMapBlocked(lightShadowMapSampler4, input.ShadowMapPos4)
+            +shadowMapBlocked(lightShadowMapSampler5, input.ShadowMapPos5));
+    }
     /*c.xyz *= 0.0001;
     float2 uv = float2(input.ShadowMapPos1.x / input.ShadowMapPos1.w, input.ShadowMapPos1.y / input.ShadowMapPos1.w);
     uv.y *= -1.0;

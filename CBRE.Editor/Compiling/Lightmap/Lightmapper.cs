@@ -26,6 +26,8 @@ using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Rectangle = System.Drawing.Rectangle;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
+using CBRE.Extensions;
+using CBRE.DataStructures.Transformations;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     sealed partial class Lightmapper {
@@ -91,6 +93,19 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
                 group.AddFace(face);
             }
+
+            /*
+            foreach (var face in ToolFaces) {
+                if (face.Texture.Name.ToLowerInvariant() == "tooltextures/block_light") {
+                    LightmapGroup group = LightmapGroup.FindCoplanar(groups, face);
+                    if (group is null) {
+                        group = new LightmapGroup();
+                        groups.Add(group);
+                    }
+                    group.AddFace(face);
+                }
+            }
+            */
 
             Groups = groups.ToImmutableArray();
         }
@@ -226,11 +241,44 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 (Location - new Vector3(Range, Range, Range)).ToCbre(),
                 (Location + new Vector3(Range, Range, Range)).ToCbre());
         }
-        
+
+        private record SpotLight(Vector3 Location, float Range, Vector3 Color, Vector3 Direction, float InnerConeAngle, float OuterConeAngle) {
+            public SpotLight(MapObject lightEntity) : this(default, default, default, default, default, default) {
+                Location = lightEntity.BoundingBox.Center.ToXna();
+                var data = lightEntity.GetEntityData();
+                DataStructures.Geometric.Vector3 angles = data.GetPropertyVector3("angles");
+                var pitch = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
+                var yaw = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
+                var roll = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
+                var m = new UnitMatrixMult(yaw * roll * pitch);
+                Direction = m.Transform(DataStructures.Geometric.Vector3.UnitY).Normalise().ToXna();
+                float getPropertyFloat(string key)
+                    => float.TryParse(data.GetPropertyValue(key), NumberStyles.Any, CultureInfo.InvariantCulture,
+                        out float v)
+                        ? v
+                        : 0.0f;
+                
+                Range = getPropertyFloat("range");
+                Color = data.GetPropertyVector3("color").ToXna() * getPropertyFloat("intensity") / 255.0f;
+                InnerConeAngle = (float)Math.Cos(getPropertyFloat("innerconeangle") * (float)Math.PI / 180.0f);
+                OuterConeAngle = (float)Math.Cos(getPropertyFloat("outerconeangle") * (float)Math.PI / 180.0f);
+            }
+
+            public Box BoundingBox => new(
+                (Location - new Vector3(Range, Range, Range)).ToCbre(),
+                (Location + new Vector3(Range, Range, Range)).ToCbre());
+        }
+
         private ImmutableArray<PointLight> ExtractPointLights()
             => Document.Map.WorldSpawn.Find(
                     e => string.Equals(e.GetEntityData()?.Name, "light", StringComparison.OrdinalIgnoreCase))
                 .Select(e => new PointLight(e))
+                .ToImmutableArray();
+
+        private ImmutableArray<SpotLight> ExtractSpotLights()
+            => Document.Map.WorldSpawn.Find(
+                    e => string.Equals(e.GetEntityData()?.Name, "spotlight", StringComparison.OrdinalIgnoreCase))
+                .Select(e => new SpotLight(e))
                 .ToImmutableArray();
 
         private ImmutableArray<Atlas> PrepareAtlases() {
