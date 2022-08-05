@@ -35,7 +35,19 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public readonly ImmutableArray<LMFace> ToolFaces;
         public readonly ImmutableArray<LMFace> UnclassifiedFaces;
         public readonly ImmutableArray<LightmapGroup> Groups;
-        
+        public ProgressPopup? progressPopup = null;
+
+        private void UpdateProgress(string msg, float progress) {
+            GameMain.Instance.PostDrawActions.Enqueue(() => {
+                if (progressPopup == null || !GameMain.Instance.Popups.Contains(progressPopup)) {
+                    progressPopup = new ProgressPopup("Lightmap Progress");
+                    GameMain.Instance.Popups.Add(progressPopup);
+                }
+                progressPopup.message = msg;
+                progressPopup.progress = progress;
+            });
+        }
+
         public Lightmapper(Document document) {
             Document = document;
 

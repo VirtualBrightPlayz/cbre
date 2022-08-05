@@ -116,8 +116,55 @@ namespace CBRE.Editor.Popup {
             ImGui.PopItemWidth();
             
             ImGui.PushItemWidth(200.0f);
+
+            ImGui.Separator();
+            ImGui.Text("Modern Lightmapper (Supports limited features)");
+            if (ImGui.Button("Render##new")) {
+                LightmapConfig.DownscaleFactor = downscaleFactor;
+                LightmapConfig.BlurRadius = blurRadius;
+                LightmapConfig.TextureDims = textureDims;
+                LightmapConfig.AmbientColorR = ambientLightColor.R;
+                LightmapConfig.AmbientColorG = ambientLightColor.G;
+                LightmapConfig.AmbientColorB = ambientLightColor.B;
+                LightmapConfig.AmbientNormalX = ambientLightNormal.X;
+                LightmapConfig.AmbientNormalY = ambientLightNormal.Y;
+                LightmapConfig.AmbientNormalZ = ambientLightNormal.Z;
+                LightmapConfig.PlaneMargin = planeMargin;
+                LightmapConfig.BakeModels = bakeModels;
+                LightmapConfig.BakeModelLightmaps = bakeModelLightmaps;
+                LightmapConfig.ComputeShadows = computeShadows;
+                LightmapConfig.BakeGamma = bakeGamma;
+                Task.Run(async () => {
+                    try {
+                        await lightmapper.RenderShadowMapped();
+                    } catch (Exception e) {
+                        Mediator.Publish(EditorMediator.CompileFailed, document);
+                        Logging.Logger.ShowException(e);
+                    }
+                });
+            }
+
+            if (ImGui.Button("Export .rmesh##new")) {
+                var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
+                if (result == NativeFileDialog.Result.Okay) {
+                    if (document.MGLightmaps == null || document.MGLightmaps.Count == 0) {
+                        GameMain.Instance.Popups.Add(new ConfirmPopup("Un-rendered map", "There is no lightmap detected, exporting will be done without lightmaps", new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) }) {
+                            Buttons = new [] {
+                                new ConfirmPopup.Button("Export anyways", () => RMeshProvider.SaveToFile(path, document.Map, null, null, false)),
+                                new ConfirmPopup.Button("Don't export", () => { }),
+                            }.ToImmutableArray(),
+                        });
+                    }
+                    else {
+                        RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray(), null, false);
+                    }
+                }
+            }
+
+            ImGui.Separator();
+            ImGui.Text("Legacy Lightmapper (Supports all features)");
             if (LegacyLightmapper.FaceRenderThreads == null || LegacyLightmapper.FaceRenderThreads.Count == 0) {
-                if (ImGui.Button("Render")) {
+                if (ImGui.Button("Render##legacy")) {
                     LightmapConfig.DownscaleFactor = downscaleFactor;
                     LightmapConfig.BlurRadius = blurRadius;
                     LightmapConfig.TextureDims = textureDims;
@@ -147,7 +194,7 @@ namespace CBRE.Editor.Popup {
                     });
                 }
 
-                if (ImGui.Button("Export .rmesh")) {
+                if (ImGui.Button("Export .rmesh##legacy")) {
                     var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
                     if (result == NativeFileDialog.Result.Okay) {
                         if (document.MGLightmaps == null || document.MGLightmaps.Count == 0) {
@@ -166,6 +213,7 @@ namespace CBRE.Editor.Popup {
                     }
                 }
             }
+            ImGui.Separator();
             ImGui.PopItemWidth();
         }
     }

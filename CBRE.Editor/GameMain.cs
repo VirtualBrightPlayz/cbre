@@ -49,6 +49,7 @@ namespace CBRE.Editor {
         public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
         public List<DockableWindow> Dockables { get; private set; } = new List<DockableWindow>();
         public Queue<Action> PostDrawActions { get; private set; } = new Queue<Action>();
+        public Queue<Action> PreDrawActions { get; private set; } = new Queue<Action>();
 
         public GameMain()
         {
@@ -202,6 +203,14 @@ namespace CBRE.Editor {
 
         protected override void Draw(GameTime gameTime)
         {
+            while (PreDrawActions.Count > 0) {
+                try {
+                    PreDrawActions.Dequeue()?.Invoke();
+                } catch (Exception e) {
+                    Logging.Logger.ShowException(e);
+                }
+            }
+
             ViewportManager.RenderIfNecessary();
 
             GlobalGraphics.GraphicsDevice.Viewport = new Viewport(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
