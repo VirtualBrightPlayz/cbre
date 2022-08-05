@@ -20,6 +20,10 @@ You can find the original source code at https://github.com/SCP-CBN/cbre
 - Screenshot mode
 - Discord RPC
 
+# Download
+
+There is not any releases at this time, however there is a GitHub Actions script so you can download the latest from [the Actions tab](https://github.com/VirtualBrightPlayz/cbre/actions/workflows/dotnet.yml).
+
 # Building
 
 ## Required SDKs
