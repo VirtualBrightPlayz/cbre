@@ -50,12 +50,8 @@ class DiscordManager : IMediatorListener, IDisposable {
         Timestamps = Timestamps.Now,
         Buttons = new [] {
             new Button {
-                Label = "Website",
-                Url = "https://scp-cbn.github.io/cbre/"
-            },
-            new Button {
                 Label = "GitHub",
-                Url = "https://github.com/SCP-CBN/cbre"
+                Url = "https://github.com/VirtualBrightPlayz/cbre"
             }
         }
     };

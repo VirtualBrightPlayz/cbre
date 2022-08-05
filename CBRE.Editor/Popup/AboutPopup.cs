@@ -47,7 +47,7 @@ namespace CBRE.Editor.Popup {
 
             Button("Guide", "https://SCP-CBN.github.io/cbre/");
             ImGui.SameLine();
-            Button("Source", "https://github.com/SCP-CBN/cbre");
+            Button("Source", "https://github.com/VirtualBrightPlayz/cbre");
 
             ImGui.Text("License:");
             ImGui.SameLine();
