@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CBRE.Common;
+using CBRE.Common.Mediator;
 using CBRE.Graphics;
 using CBRE.Settings;
 using Microsoft.Xna.Framework;
@@ -99,7 +100,13 @@ sealed partial class Lightmapper {
         TaskPool.Add("ShadowMap WaitForRender", Task.Delay(100) /*Task.Run(async () => {
             await Task.Delay(100);
         })*/, (t) => {
-            action?.Invoke();
+            try {
+                action?.Invoke();
+            }
+            catch (Exception e) {
+                Mediator.Publish(EditorMediator.CompileFailed, Document);
+                Logging.Logger.ShowException(e);
+            }
             signal = true;
         });
         while (!signal) {
