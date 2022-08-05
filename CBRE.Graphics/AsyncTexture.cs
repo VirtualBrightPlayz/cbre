@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CBRE.Common;
 using Microsoft.Xna.Framework.Graphics;
 using MetadataExtractor;
+using System.Collections.Generic;
 
 namespace CBRE.Graphics {
     public class AsyncTexture : ITexture {
@@ -22,6 +23,7 @@ namespace CBRE.Graphics {
             public bool Transparent;
         }
 
+        public static List<AsyncTexture> AllTextures { get; private set; } = new List<AsyncTexture>();
         public static Action<string> LoadCallback = null;
         public static int MaxDimensions { get; private set; } = 1024;
 
@@ -49,6 +51,7 @@ namespace CBRE.Graphics {
         public readonly string Filename;
 
         public AsyncTexture(string filename, Task<Data> tsk=null) {
+            AllTextures.Add(this);
             MonoGameTexture = null;
             ImGuiTexture = IntPtr.Zero;
 
@@ -58,6 +61,10 @@ namespace CBRE.Graphics {
                 CheckTaskStatus();
                 LoadCallback?.Invoke(Path.GetFileNameWithoutExtension(Filename));
             });
+        }
+
+        ~AsyncTexture() {
+            AllTextures.Remove(this);
         }
 
         private async Task<Data> Load(Semaphore semaphore = null) {

@@ -62,7 +62,7 @@ namespace CBRE.Editor {
         }
 
         public void About() {
-            GameMain.Instance.Popups.Add(new AboutPopup());
+            GameMain.Instance.Popups.Add(new AboutPopup(false));
         }
     }
 }

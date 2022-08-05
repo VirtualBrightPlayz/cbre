@@ -118,7 +118,6 @@ sealed partial class Lightmapper {
                 GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
             }
             signal = true;
-            Console.WriteLine(name);
         });
         while (!signal) {
             await Task.Yield();

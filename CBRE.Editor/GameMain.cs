@@ -155,6 +155,8 @@ namespace CBRE.Editor {
                 new VisgroupsWindow()
             });
 
+            GameMain.Instance.Popups.Add(new AboutPopup(true));
+
             base.Initialize();
 
             timing.StartMeasurement();
