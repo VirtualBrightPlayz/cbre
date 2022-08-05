@@ -94,7 +94,6 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 group.AddFace(face);
             }
 
-            /*
             foreach (var face in ToolFaces) {
                 if (face.Texture.Name.ToLowerInvariant() == "tooltextures/block_light") {
                     LightmapGroup group = LightmapGroup.FindCoplanar(groups, face);
@@ -105,7 +104,6 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     group.AddFace(face);
                 }
             }
-            */
 
             Groups = groups.ToImmutableArray();
         }

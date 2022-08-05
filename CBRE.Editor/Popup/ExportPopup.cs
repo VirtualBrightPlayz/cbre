@@ -112,14 +112,8 @@ namespace CBRE.Editor.Popup {
             Num.Vector3 ambientNormal = new(ambientLightNormal.X, ambientLightNormal.Y, ambientLightNormal.Z);
             ImGui.InputFloat3("##ambientLightNormal", ref ambientNormal);
             ambientLightNormal = ambientNormal;
-            
-            ImGui.PopItemWidth();
-            
-            ImGui.PushItemWidth(200.0f);
 
-            ImGui.Separator();
-            ImGui.Text("Modern Lightmapper (Supports limited features)");
-            if (ImGui.Button("Render##new")) {
+            if (ImGui.Button("Apply render settings")) {
                 LightmapConfig.DownscaleFactor = downscaleFactor;
                 LightmapConfig.BlurRadius = blurRadius;
                 LightmapConfig.TextureDims = textureDims;
@@ -134,9 +128,28 @@ namespace CBRE.Editor.Popup {
                 LightmapConfig.BakeModelLightmaps = bakeModelLightmaps;
                 LightmapConfig.ComputeShadows = computeShadows;
                 LightmapConfig.BakeGamma = bakeGamma;
+            }
+            
+            ImGui.PopItemWidth();
+            
+            ImGui.PushItemWidth(200.0f);
+
+            ImGui.Separator();
+            ImGui.Text("Modern Lightmapper (Supports limited features)");
+            if (ImGui.Button("Render##new")) {
                 Task.Run(async () => {
                     try {
-                        await lightmapper.RenderShadowMapped();
+                        await lightmapper.RenderShadowMapped(false);
+                    } catch (Exception e) {
+                        Mediator.Publish(EditorMediator.CompileFailed, document);
+                        Logging.Logger.ShowException(e);
+                    }
+                });
+            }
+            if (ImGui.Button("Render (Debug)##newdbg")) {
+                Task.Run(async () => {
+                    try {
+                        await lightmapper.RenderShadowMapped(true);
                     } catch (Exception e) {
                         Mediator.Publish(EditorMediator.CompileFailed, document);
                         Logging.Logger.ShowException(e);
@@ -165,26 +178,9 @@ namespace CBRE.Editor.Popup {
             ImGui.Text("Legacy Lightmapper (Supports all features)");
             if (LegacyLightmapper.FaceRenderThreads == null || LegacyLightmapper.FaceRenderThreads.Count == 0) {
                 if (ImGui.Button("Render##legacy")) {
-                    LightmapConfig.DownscaleFactor = downscaleFactor;
-                    LightmapConfig.BlurRadius = blurRadius;
-                    LightmapConfig.TextureDims = textureDims;
-                    LightmapConfig.AmbientColorR = ambientLightColor.R;
-                    LightmapConfig.AmbientColorG = ambientLightColor.G;
-                    LightmapConfig.AmbientColorB = ambientLightColor.B;
-                    LightmapConfig.AmbientNormalX = ambientLightNormal.X;
-                    LightmapConfig.AmbientNormalY = ambientLightNormal.Y;
-                    LightmapConfig.AmbientNormalZ = ambientLightNormal.Z;
-                    LightmapConfig.PlaneMargin = planeMargin;
-                    LightmapConfig.BakeModels = bakeModels;
-                    LightmapConfig.BakeModelLightmaps = bakeModelLightmaps;
-                    LightmapConfig.ComputeShadows = computeShadows;
-                    LightmapConfig.BakeGamma = bakeGamma;
-                    // lightmapper.RenderShadowMapped();
-                    // lightmapper.RenderRayTest();
                     Task.Run(() => {
                         try {
                             LegacyLightmapper.Render(document, out _, out _, LightmapConfig.BakeModels);
-                            // document.ObjectRenderer.MarkDirty();
                         } catch (Exception e) {
                             Mediator.Publish(EditorMediator.CompileFailed, document);
                             GameMain.Instance.PostDrawActions.Enqueue(() => {
@@ -213,7 +209,6 @@ namespace CBRE.Editor.Popup {
                     }
                 }
             }
-            ImGui.Separator();
             ImGui.PopItemWidth();
         }
     }

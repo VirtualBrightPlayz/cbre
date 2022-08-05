@@ -123,6 +123,29 @@ namespace CBRE.DataStructures.MapObjects {
 
         }
 
+        public override Face Copy(IDGenerator generator) {
+            var f = new Displacement(generator.GetNextFaceID()) {
+                Plane = Plane.Clone(),
+                Colour = Colour,
+                IsSelected = IsSelected,
+                IsHidden = IsHidden,
+                Opacity = Opacity,
+                Texture = Texture.Clone(),
+                Parent = Parent,
+                BoundingBox = BoundingBox.Clone(),
+                StartPosition = StartPosition.Clone(),
+                Power = Power,
+                SubDiv = SubDiv,
+                Elevation = Elevation,
+                Points = (DisplacementPoint[,])Points.Clone()
+            };
+            foreach (var v in Vertices.Select(x => x.Clone())) {
+                v.Parent = f;
+                f.Vertices.Add(v);
+            }
+            return f;
+        }
+
         public void CalculatePoints() {
             if (Vertices.Count != 4) throw new Exception("Displacement must have four vertices.");
 

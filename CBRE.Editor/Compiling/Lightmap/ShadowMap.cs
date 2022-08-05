@@ -126,7 +126,7 @@ sealed partial class Lightmapper {
         }
     }
 
-    public async Task RenderShadowMapped() {
+    public async Task RenderShadowMapped(bool debug = false) {
         CancellationToken token = new CancellationToken();
 
         await WaitForRender("ShadowMap Init", null, token);
@@ -220,7 +220,8 @@ sealed partial class Lightmapper {
                         shadowMap.Prepare(j);
                         GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
                         renderAllAtlases();
-                        saveTexture($"shadowMap_0_{i}_{j}.png", shadowMap.RenderTargets[j]);
+                        if (debug)
+                            saveTexture($"shadowMap_0_{i}_{j}.png", shadowMap.RenderTargets[j]);
                     }
                     
                     gd.SetRenderTarget(atlasTexture);
@@ -264,7 +265,8 @@ sealed partial class Lightmapper {
                         shadowMap.Prepare(j);
                         GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
                         renderAllAtlases();
-                        saveTexture($"shadowMap_1_{i}_{j}.png", shadowMap.RenderTargets[j]);
+                        if (debug)
+                            saveTexture($"shadowMap_1_{i}_{j}.png", shadowMap.RenderTargets[j]);
                     }
                     
                     gd.SetRenderTarget(atlasTexture);
