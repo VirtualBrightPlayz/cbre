@@ -45,30 +45,6 @@ namespace CBRE.DataStructures.MapObjects {
                 Matrix yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
                 Matrix roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
                 var tform = ((pitch * yaw * roll) * Matrix.Scale(scale)).Transpose().Translate(Origin);
-                var yzflip = new Matrix(
-                    1, 0, 0, 0,
-                    0, 1, 0, 0,
-                    0, 0, 1, 0,
-                    0, 0, 0, 1
-                );
-                // tform *= yzflip;
-                // tform = tform.Transpose();
-                /*
-                tform = new Matrix(
-                    tform[0], tform[1], tform[2], tform[3],
-                    tform[4], tform[5], tform[6], tform[7],
-                    tform[8], tform[9], tform[10], tform[11],
-                    tform[12], tform[13], tform[14], tform[15]
-                );
-                */
-                /*
-                tform = new Matrix(
-                    tform[0], tform[2], tform[1], tform[3],
-                    tform[8], tform[10], tform[9], tform[11],
-                    tform[4], tform[6], tform[5], tform[7],
-                    tform[12], tform[14], tform[13], tform[15]
-                );
-                */
                 return tform;
             }
         }
