@@ -657,6 +657,7 @@ namespace CBRE.Editor.Rendering {
         }
 
         public void RenderSprites(Viewport3D vp) {
+            World = Matrix.Identity.ToXna();
             Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
             var sprites = Document.Map.WorldSpawn.Find(x => x is Entity { GameData: { } } e && e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
             foreach (var sprite in sprites) {
@@ -709,12 +710,12 @@ namespace CBRE.Editor.Rendering {
                     Vector3 euler = model.EntityData.GetPropertyVector3("angles", Vector3.Zero);
                     Vector3 scale = model.EntityData.GetPropertyVector3("scale", Vector3.One);
                     Matrix modelMat = Matrix.Translation(model.Origin)
-                                    * Matrix.Scale(scale.XZY())
-                                    * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
-                                    * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
-                                    * Matrix.RotationZ(DMath.DegreesToRadians(360-euler.Y))
-                                    ;
-                    ModelRenderer.Render(this.models[path].Model, modelMat, Effects.BasicEffect);
+                                      * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
+                                      * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
+                                      * Matrix.RotationZ(DMath.DegreesToRadians(360-euler.Y))
+                                      * Matrix.Scale(scale.XZY());
+                    World = model.RightHandedWorldMatrix.ToXna();
+                    ModelRenderer.Render(this.models[path].Model, model.RightHandedWorldMatrix, Effects.BasicEffect);
                 } else if (ModelProvider.CanLoad(file)) {
                     ModelReference mref = ModelProvider.CreateModelReference(file);
                     this.models.Add(path, mref);

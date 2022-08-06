@@ -93,11 +93,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     DataStructures.Geometric.Vector3 euler = model.EntityData.GetPropertyVector3("angles", DataStructures.Geometric.Vector3.Zero);
                     DataStructures.Geometric.Vector3 scale = model.EntityData.GetPropertyVector3("scale", DataStructures.Geometric.Vector3.One);
                     bool shouldBake = model.EntityData.GetPropertyValue("bake")?.ToLowerInvariant() != "false";
-                    DataStructures.Geometric.Matrix modelMat = DataStructures.Geometric.Matrix.Translation(model.Origin)
-                                        * DataStructures.Geometric.Matrix.RotationX(DMath.DegreesToRadians(euler.X))
-                                        * DataStructures.Geometric.Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
-                                        * DataStructures.Geometric.Matrix.RotationZ(DMath.DegreesToRadians(euler.Y))
-                                        * DataStructures.Geometric.Matrix.Scale(scale.XZY());
+                    DataStructures.Geometric.Matrix modelMat = model.LeftHandedWorldMatrix;
+                                        /*DataStructures.Geometric.Matrix.Translation(model.Origin)
+                                        * DataStructures.Geometric.Matrix.RotationX(DMath.DegreesToRadians(360-euler.X))
+                                        * DataStructures.Geometric.Matrix.RotationY(DMath.DegreesToRadians(360-euler.Y))
+                                        * DataStructures.Geometric.Matrix.RotationZ(DMath.DegreesToRadians(euler.Z))
+                                        * DataStructures.Geometric.Matrix.Scale(scale.XZY());*/
                     string key = model.GameData.Behaviours.FirstOrDefault(p => p.Name == "model").Values.FirstOrDefault();
                     string path = Directories.GetModelPath(model.EntityData.GetPropertyValue(key));
                     if (string.IsNullOrWhiteSpace(path))
