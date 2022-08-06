@@ -34,7 +34,7 @@ namespace CBRE.Editor.Popup {
         public bool computeShadows;
         public float bakeGamma;
 
-        private readonly Lightmapper lightmapper;
+        private Lightmapper lightmapper;
 
         public ExportPopup(Document document) : base("Export / Compile") {
             this.document = document;
@@ -50,7 +50,6 @@ namespace CBRE.Editor.Popup {
             bakeModelLightmaps = LightmapConfig.BakeModelLightmaps;
             computeShadows = LightmapConfig.ComputeShadows;
             bakeGamma = LightmapConfig.BakeGamma;
-            lightmapper = new Lightmapper(document);
         }
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
@@ -139,6 +138,7 @@ namespace CBRE.Editor.Popup {
             if (ImGui.Button("Render##new")) {
                 Task.Run(async () => {
                     try {
+                        lightmapper = new Lightmapper(document);
                         await lightmapper.RenderShadowMapped(false);
                     } catch (Exception e) {
                         Mediator.Publish(EditorMediator.CompileFailed, document);
@@ -149,6 +149,7 @@ namespace CBRE.Editor.Popup {
             if (ImGui.Button("Render (Debug)##newdbg")) {
                 Task.Run(async () => {
                     try {
+                        lightmapper = new Lightmapper(document);
                         await lightmapper.RenderShadowMapped(true);
                     } catch (Exception e) {
                         Mediator.Publish(EditorMediator.CompileFailed, document);
@@ -169,7 +170,7 @@ namespace CBRE.Editor.Popup {
                         });
                     }
                     else {
-                        RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray(), null, false);
+                        RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray(), document.BakedFaces.ToArray(), true);
                     }
                 }
             }

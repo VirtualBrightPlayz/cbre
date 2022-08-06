@@ -376,7 +376,8 @@ namespace CBRE.Editor.Rendering {
                         ? prevValue
                         : 0) + valueToAdd;
                 for (int i=0;i<faces.Count;i++) {
-                    faces[i].CalculateTextureCoordinates(minimizeShiftValues: true);
+                    if (faces[i].Parent != null)
+                        faces[i].CalculateTextureCoordinates(minimizeShiftValues: true);
                     addCount(vertexCounts, faces[i].LmIndex, faces[i].Vertices.Count);
                     addCount(indexSolidCounts, faces[i].LmIndex, faces[i].GetTriangleIndices().Count()/*(faces[i].Vertices.Count - 2) * 3*/);
                     addCount(indexWireframeCounts, faces[i].LmIndex, faces[i].Vertices.Count * 2);

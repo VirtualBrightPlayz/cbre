@@ -106,30 +106,10 @@ sealed partial class Lightmapper {
         }
     }
 
-    private async Task WaitForRender(string name, Action? action, CancellationToken token) {
-        bool signal = false;
-        TaskPool.Add(name, Task.Delay(100), (t) => {
-            try {
-                action?.Invoke();
-            }
-            catch (Exception e) {
-                Mediator.Publish(EditorMediator.CompileFailed, Document);
-                Logging.Logger.ShowException(e);
-                GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
-            }
-            signal = true;
-        });
-        while (!signal) {
-            await Task.Yield();
-            token.ThrowIfCancellationRequested();
-        }
-    }
-
     public async Task RenderShadowMapped(bool debug = false) {
         CancellationToken token = new CancellationToken();
 
         await WaitForRender("ShadowMap Init", null, token);
-        UpdateProgress("Determining UV coordinates...", 0);
 
         var pointLights = ExtractPointLights();
         var spotLights = ExtractSpotLights();
@@ -137,6 +117,8 @@ sealed partial class Lightmapper {
         Effect? lmLightCalc = null;
         ImmutableArray<Atlas> atlases = new ImmutableArray<Atlas>();
         var gd = GlobalGraphics.GraphicsDevice;
+
+        atlases = PrepareAtlases();
 
         await WaitForRender("ShadowMap UV coords", () => {
             lmLightCalc = GlobalGraphics.LoadEffect("Shaders/lmLightCalc.mgfx");
@@ -148,8 +130,11 @@ sealed partial class Lightmapper {
                 }
                 Document.MGLightmaps = null;
             }
+            foreach (var face in Document.BakedFaces) {
+                Document.ObjectRenderer.RemoveFace(face);
+            }
+            Document.BakedFaces.Clear();
             
-            atlases = PrepareAtlases();
             foreach (var atlas in atlases)
             {
                 atlas.InitGpuBuffers();
@@ -176,7 +161,7 @@ sealed partial class Lightmapper {
             }, token);
         }
         
-        UpdateProgress("Started calculating brightness levels...", 0.05f);
+        UpdateProgress("Calculating brightness levels... (Step 3/3)", 0);
         int progressCount = 0;
         int progressMax = atlases.Length * (pointLights.Length + spotLights.Length);
         for (int atlasIndex = 0; atlasIndex < atlases.Length; atlasIndex++) {
@@ -249,7 +234,8 @@ sealed partial class Lightmapper {
                     gd.BlendState = BlendState.NonPremultiplied;
                 }, token);
                 progressCount++;
-                UpdateProgress(progressCount.ToString() + "/" + progressMax.ToString() + " complete", 0.05f + ((float)progressCount / (float)progressMax) * 0.85f);
+                UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)progressCount / progressMax);
+                // UpdateProgress(progressCount.ToString() + "/" + progressMax.ToString() + " complete", 0.05f + ((float)progressCount / (float)progressMax) * 0.85f);
             }
             
             for (int i = 0; i < spotLights.Length; i++) {
@@ -294,7 +280,8 @@ sealed partial class Lightmapper {
                     gd.BlendState = BlendState.NonPremultiplied;
                 }, token);
                 progressCount++;
-                UpdateProgress(progressCount.ToString() + "/" + progressMax.ToString() + " complete", 0.05f + ((float)progressCount / (float)progressMax) * 0.85f);
+                UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)progressCount / progressMax);
+                // UpdateProgress(progressCount.ToString() + "/" + progressMax.ToString() + " complete", 0.05f + ((float)progressCount / (float)progressMax) * 0.85f);
             }
 
             await saveTextureAsync($"atlas_{atlasIndex}.png", atlasTexture);
@@ -306,7 +293,13 @@ sealed partial class Lightmapper {
         }
         
         UpdateProgress("Lightmapping complete!", 1.0f);
-        Document.ObjectRenderer.MarkDirty();
+        await WaitForRender("Cleanup", () => {
+            foreach (var face in ModelFaces) {
+                Document.BakedFaces.Add(face);
+                Document.ObjectRenderer.AddFace(face);
+            }
+            Document.ObjectRenderer.MarkDirty();
+        }, token);
     }
         
 }
