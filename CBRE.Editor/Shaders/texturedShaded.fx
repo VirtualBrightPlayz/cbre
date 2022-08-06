@@ -33,7 +33,7 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
     VertexShaderOutput output;
     
     float4 worldPosition = mul(input.Position, World);
-    worldPosition = (1.0 - input.Selected) * worldPosition + input.Selected * mul(input.Position, Selection);
+    worldPosition = (1.0 - input.Selected) * worldPosition + input.Selected * mul(worldPosition, Selection);
 
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);

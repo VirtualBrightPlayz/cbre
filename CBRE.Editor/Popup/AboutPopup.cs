@@ -106,8 +106,8 @@ namespace CBRE.Editor.Popup {
             }
 
             if (LoadingBox) {
-                ImGui.Text("Starting...");
                 if (AsyncTexture.AllTextures.Any(x => x.MonoGameTexture == null)) {
+                    ImGui.Text("Starting...");
                     ImGui.ProgressBar(1f - (float)AsyncTexture.AllTextures.Count(x => x.MonoGameTexture == null) / AsyncTexture.AllTextures.Count, new Vector2(250, 0));
                 } else if (!ImGui.IsWindowHovered()) {
                     shouldBeOpen = false;

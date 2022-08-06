@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using ImGuizmoNET;
 
 namespace CBRE.Editor.Tools.SelectTool.TransformationTools
 {
@@ -15,6 +16,11 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
     /// </summary>
     class ThreeDGizmosTool : TransformationTool
     {
+        public readonly OPERATION op;
+
+        public ThreeDGizmosTool(OPERATION op) {
+            this.op = op;
+        }
 
         public override bool RenderCircleHandles
         {
@@ -38,7 +44,7 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
 
         public override IEnumerable<Widget> GetWidgets(Document document)
         {
-            yield return new ImGuizmoWidget(document);
+            yield return new ImGuizmoWidget(document, op);
         }
 
         public override Matrix GetTransformationMatrix(Viewport2D viewport, ViewportEvent mouseEventArgs, BaseBoxTool.BoxState state, Document doc, IEnumerable<Widget> activeWidgets) {

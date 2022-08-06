@@ -48,10 +48,12 @@ namespace CBRE.Editor.Tools.SelectTool
             Usage = ToolUsage.Both;
             _tools = new List<TransformationTool>
                          {
-                            new ThreeDGizmosTool(),
                             new ResizeTool(),
                             new RotateTool(),
-                            new SkewTool()
+                            new SkewTool(),
+                            new ThreeDGizmosTool(ImGuizmoNET.OPERATION.TRANSLATE),
+                            // new ThreeDGizmosTool(ImGuizmoNET.OPERATION.ROTATE),
+                            // new ThreeDGizmosTool(ImGuizmoNET.OPERATION.SCALE),
                          };
             _widgets = new List<Widget>();
 
@@ -411,6 +413,11 @@ namespace CBRE.Editor.Tools.SelectTool
         protected override void MouseDown3D(Viewport3D viewport, ViewportEvent e)
         {
             if (TransformState) return;
+            if (e.Button == MouseButtons.Right) {
+                var idx = _tools.IndexOf(_currentTool);
+                SetCurrentTool(_tools[(idx + 1) % _tools.Count]);
+                return;
+            }
             var keyboardState = Keyboard.GetState();
             // Do not perform selection if space is down
             if (CBRE.Settings.View.Camera3DPanRequiresMouseClick && keyboardState.IsKeyDown(Keys.Space)) return;
