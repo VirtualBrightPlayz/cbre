@@ -715,7 +715,7 @@ namespace CBRE.Editor.Rendering {
                                       * Matrix.RotationZ(DMath.DegreesToRadians(360-euler.Y))
                                       * Matrix.Scale(scale.XZY());
                     World = model.RightHandedWorldMatrix.ToXna();
-                    ModelRenderer.Render(this.models[path].Model, model.RightHandedWorldMatrix, Effects.BasicEffect);
+                    ModelRenderer.Render(this.models[path].Model, Effects.BasicEffect);
                 } else if (ModelProvider.CanLoad(file)) {
                     ModelReference mref = ModelProvider.CreateModelReference(file);
                     this.models.Add(path, mref);
