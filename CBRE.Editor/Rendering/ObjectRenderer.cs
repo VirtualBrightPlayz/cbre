@@ -709,10 +709,11 @@ namespace CBRE.Editor.Rendering {
                     Vector3 euler = model.EntityData.GetPropertyVector3("angles", Vector3.Zero);
                     Vector3 scale = model.EntityData.GetPropertyVector3("scale", Vector3.One);
                     Matrix modelMat = Matrix.Translation(model.Origin)
-                                      * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
-                                      * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
-                                      * Matrix.RotationZ(DMath.DegreesToRadians(-euler.Y))
-                                      * Matrix.Scale(scale.XZY());
+                                    * Matrix.Scale(scale.XZY())
+                                    * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
+                                    * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
+                                    * Matrix.RotationZ(DMath.DegreesToRadians(360-euler.Y))
+                                    ;
                     ModelRenderer.Render(this.models[path].Model, modelMat, Effects.BasicEffect);
                 } else if (ModelProvider.CanLoad(file)) {
                     ModelReference mref = ModelProvider.CreateModelReference(file);
