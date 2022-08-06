@@ -5,6 +5,7 @@ using CBRE.Editor.Rendering;
 using CBRE.Editor.Tools;
 using CBRE.Graphics;
 using ImGuiNET;
+using ImGuizmoNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -272,6 +273,31 @@ namespace CBRE.Editor.Popup {
                     RenderSubView(i, true);
                     ImGui.PushClipRect(clipRectMin, clipRectMax, intersect_with_current_clip_rect: true);
 
+                    var objectRenderer = DocumentManager.CurrentDocument.ObjectRenderer;
+
+                    if (Viewports[i] is Viewport3D vp3d) {
+                        Matrix matView = Matrix.CreateLookAt(-vp3d.Camera.Direction.ToXna() * 3f, vp3d.Camera.Direction.ToXna(), vp3d.Camera.GetUp().ToXna());
+                        float[] view = Viewports[i].GetCameraMatrix().ToCbre().Values.Select(x => (float)x).ToArray();
+                        float[] viewC = matView.ToCbre().Values.Select(x => (float)x).ToArray();
+                        float[] proj = Viewports[i].GetViewportMatrix().ToCbre().Values.Select(x => (float)x).ToArray();
+                        Matrix matWorld = Matrix.Identity;
+                        float[] world = matWorld.ToCbre().Values.Select(x => (float)x).ToArray();
+                        float[][] worldC = new float[][] { matWorld.ToCbre().Values.Select(x => (float)x).ToArray() };
+
+                        var xnaRect2 = xnaRect;
+                        xnaRect2.Size = new Point(50, 50);
+                        xnaRect2.Location = new Point(xnaRect.Right - xnaRect2.Size.X, xnaRect.Top);
+
+                        ImGuizmo.SetDrawlist(ImGui.GetWindowDrawList());
+                        ImGuizmo.SetRect(xnaRect2.X, xnaRect2.Y, xnaRect2.Width, xnaRect2.Height);
+                        ImGuizmo.DrawCubes(ref viewC[0], ref proj[0], ref worldC[0][0], 1);
+                        /*ImGuizmo.SetRect(xnaRect.X, xnaRect.Y, xnaRect.Width, xnaRect.Height);
+                        ImGuizmo.Manipulate(ref view[0], ref proj[0], OPERATION.ROTATE, MODE.LOCAL, ref world[0]);
+                        if (ImGuizmo.IsOver() || ImGuizmo.IsUsing()) {
+                            RenderTargetSelected[i] = false;
+                        }*/
+                    }
+
                     var topLeft = xnaRect.Location;
                     var textPos = new Num.Vector2(topLeft.X + 5, topLeft.Y + 5);
                     using (new AggregateDisposable(
@@ -279,6 +305,7 @@ namespace CBRE.Editor.Popup {
                                new ColorPush(ImGuiCol.ButtonActive, Color.DarkGray),
                                new ColorPush(ImGuiCol.ButtonHovered, Color.Gray))) {
                         ImGui.SetCursorScreenPos(textPos);
+
                         if (ImGui.Button($"{Viewports[i].GetViewType()}##viewType{i}")) {
                             RenderTargetSelected[i] = false;
                             ImGui.OpenPopup($"viewTypePopup{i}");

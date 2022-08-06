@@ -53,6 +53,19 @@
       <Pack>true</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </ContentWithTargetPath>
+
+    <ContentWithTargetPath Include=".\cimgui\win-x64\cimguizmo.dll">
+      <TargetPath>runtimes\win-x64\native\cimguizmo.dll</TargetPath>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ContentWithTargetPath>
+    <!-- TODO -->
+    <!-- <ContentWithTargetPath Include=".\cimgui\linux-x64\cimguizmo.so">
+      <TargetPath>runtimes/linux-x64/native/libcimguizmo.so</TargetPath>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </ContentWithTargetPath> -->
+
     <ContentWithTargetPath Include=".\build\net40\ImGui.NET.targets">
       <TargetPath>build/net40/ImGui.NET.targets</TargetPath>
       <Pack>true</Pack>

@@ -12,6 +12,7 @@ using CBRE.Providers.Model;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
 using ImGuiNET;
+using ImGuizmoNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -223,6 +224,10 @@ namespace CBRE.Editor {
 
             // Call BeforeLayout first to set things up
             imGuiRenderer.BeforeLayout(gameTime);
+
+            // imguizmo didn't work without https://github.com/ocornut/imgui/commit/407a81eb10f661d36b931aa25dad2999fb906f92
+            ImGuizmo.SetImGuiContext(imGuiRenderer.context);
+            ImGuizmo.BeginFrame();
 
             // Draw our UI
             ImGuiLayout();

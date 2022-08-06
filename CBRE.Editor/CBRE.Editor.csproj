@@ -27,6 +27,7 @@
     <ProjectReference Include="..\CBRE.RMesh\CBRE.RMesh.csproj" />
     <ProjectReference Include="..\CBRE.Settings\CBRE.Settings.csproj" />
     <ProjectReference Include="..\ImGui.NET\ImGui.NET.csproj" />
+    <ProjectReference Include="..\ImGuizmo.NET\ImGuizmo.NET.csproj" />
     <ProjectReference Include="..\NativeFileDialog.NET\dotnet\NativeFileDialog.csproj" />
     <ProjectReference Include="..\Tools\RMeshDecomp\RMeshDecomp.csproj" />
   </ItemGroup>
@@ -38,7 +39,7 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Platform)'=='x64'">
+  <!-- <ItemGroup Condition="'$(Platform)'=='x64'">
     <None Include="..\ImGui.NET\cimgui\win-x64\cimgui.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -48,7 +49,7 @@
     <None Include="..\ImGui.NET\cimgui\linux-x64\cimgui.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
+  </ItemGroup> -->
 
   <ItemGroup>
     <None Update="imgui.ini">
