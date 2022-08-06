@@ -133,6 +133,19 @@ namespace CBRE.Editor.Popup {
             
             ImGui.PushItemWidth(200.0f);
 
+            if (ImGui.Button("Clear baked data")) {
+                if (document.MGLightmaps is not null) {
+                    foreach (var lm in document.MGLightmaps) {
+                        lm.Dispose();
+                    }
+                    document.MGLightmaps = null;
+                }
+                foreach (var face in document.BakedFaces) {
+                    document.ObjectRenderer.RemoveFace(face);
+                }
+                document.BakedFaces.Clear();
+                LegacyLightmapper.lastBakeFaces = null;
+            }
             ImGui.Separator();
             ImGui.Text("Modern Lightmapper (Supports limited features)");
             if (ImGui.Button("Render##new")) {
@@ -161,7 +174,7 @@ namespace CBRE.Editor.Popup {
             if (ImGui.Button("Export .rmesh##new")) {
                 var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
                 if (result == NativeFileDialog.Result.Okay) {
-                    if (document.MGLightmaps == null || document.MGLightmaps.Count == 0) {
+                    if (document.MGLightmaps == null || document.MGLightmaps.Count == 0 || document.BakedFaces == null) {
                         GameMain.Instance.Popups.Add(new ConfirmPopup("Un-rendered map", "There is no lightmap detected, exporting will be done without lightmaps", new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) }) {
                             Buttons = new [] {
                                 new ConfirmPopup.Button("Export anyways", () => RMeshProvider.SaveToFile(path, document.Map, null, null, false)),
