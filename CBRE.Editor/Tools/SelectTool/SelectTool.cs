@@ -52,7 +52,7 @@ namespace CBRE.Editor.Tools.SelectTool
                             new RotateTool(),
                             new SkewTool(),
                             new ThreeDGizmosTool(ImGuizmoNET.OPERATION.TRANSLATE),
-                            // new ThreeDGizmosTool(ImGuizmoNET.OPERATION.ROTATE),
+                            new ThreeDGizmosTool(ImGuizmoNET.OPERATION.ROTATE),
                             // new ThreeDGizmosTool(ImGuizmoNET.OPERATION.SCALE),
                          };
             _widgets = new List<Widget>();
