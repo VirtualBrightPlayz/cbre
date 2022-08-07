@@ -387,7 +387,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             List<Atlas> atlases = new();
 
             while (remainingGroups.Any()) {
-                UpdateProgress("Calculating lightmap atlases... (Step 2/3)", (float)remainingGroups.Count / maxGroups);
+                UpdateProgress("Calculating lightmap atlases... (Step 2/3)", 1f - ((float)remainingGroups.Count / maxGroups));
                 int prevCount = remainingGroups.Count;
                 
                 var prevGroups = remainingGroups.ToArray();
