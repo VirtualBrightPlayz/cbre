@@ -23,6 +23,7 @@ namespace CBRE.Editor.Popup {
         protected override bool hasOkButton => false;
 
         private readonly Document document;
+        private int shadowTextureDims;
         private int textureDims;
         private float downscaleFactor;
         private int blurRadius;
@@ -38,6 +39,7 @@ namespace CBRE.Editor.Popup {
 
         public ExportPopup(Document document) : base("Export / Compile") {
             this.document = document;
+            shadowTextureDims = LightmapConfig.ShadowTextureDims;
             textureDims = LightmapConfig.TextureDims;
             downscaleFactor = LightmapConfig.DownscaleFactor;
             ambientLightColor = new Color(
@@ -61,6 +63,10 @@ namespace CBRE.Editor.Popup {
             ImGui.Text("Lightmap dimensions");
             ImGui.SameLine();
             ImGui.InputInt("##lmDim", ref textureDims);
+            
+            ImGui.Text("Shadowmap dimensions");
+            ImGui.SameLine();
+            ImGui.InputInt("##smDim", ref shadowTextureDims);
             
             float quality = 100.0f / downscaleFactor;
             ImGui.Text("Quality");
@@ -115,6 +121,7 @@ namespace CBRE.Editor.Popup {
             if (ImGui.Button("Apply render settings")) {
                 LightmapConfig.DownscaleFactor = downscaleFactor;
                 LightmapConfig.BlurRadius = blurRadius;
+                LightmapConfig.ShadowTextureDims = shadowTextureDims;
                 LightmapConfig.TextureDims = textureDims;
                 LightmapConfig.AmbientColorR = ambientLightColor.R;
                 LightmapConfig.AmbientColorG = ambientLightColor.G;
@@ -207,7 +214,7 @@ namespace CBRE.Editor.Popup {
                 if (ImGui.Button("Export .rmesh##legacy")) {
                     var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
                     if (result == NativeFileDialog.Result.Okay) {
-                        if (document.MGLightmaps == null || document.MGLightmaps.Count == 0) {
+                        if (document.MGLightmaps == null || document.MGLightmaps.Count == 0 || LegacyLightmapper.lastBakeFaces == null) {
                             // using (ColorPush.RedButton()) {
                                 GameMain.Instance.Popups.Add(new ConfirmPopup("Un-rendered map", "There is no lightmap detected, exporting will be done without lightmaps", new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) }) {
                                     Buttons = new [] {

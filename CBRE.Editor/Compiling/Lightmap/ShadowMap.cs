@@ -115,6 +115,7 @@ sealed partial class Lightmapper {
         var spotLights = ExtractSpotLights();
 
         Effect? lmLightCalc = null;
+        Effect? lmBlur = null;
         ImmutableArray<Atlas> atlases = new ImmutableArray<Atlas>();
         var gd = GlobalGraphics.GraphicsDevice;
 
@@ -122,7 +123,7 @@ sealed partial class Lightmapper {
 
         await WaitForRender("ShadowMap UV coords", () => {
             lmLightCalc = GlobalGraphics.LoadEffect("Shaders/lmLightCalc.mgfx");
-
+            lmBlur = GlobalGraphics.LoadEffect("Shaders/lmBlur.mgfx");
 
             if (Document.MGLightmaps is not null) {
                 foreach (var lm in Document.MGLightmaps) {
@@ -205,7 +206,7 @@ sealed partial class Lightmapper {
                 gd.Clear(Color.Black);
                 gd.SetRenderTarget(null);
                 
-                shadowMap = new ShadowMap(LightmapConfig.TextureDims);
+                shadowMap = new ShadowMap(LightmapConfig.ShadowTextureDims);
                 gd.SetRenderTarget(null);
             }, token);
 
@@ -305,6 +306,23 @@ sealed partial class Lightmapper {
             }
 
             await saveTextureAsync($"atlas_{atlasIndex}.png", atlasTexture);
+            await WaitForRender("ShadowMap blur texture", () => {
+                gd.SetRenderTarget(atlasTexture);
+                lmBlur.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
+                lmBlur.Parameters["blurRadius"].SetValue(LightmapConfig.BlurRadius);
+                lmBlur.Parameters["xTexture"].SetValue(atlasTexture);
+                lmBlur.CurrentTechnique.Passes[0].Apply();
+                PrimitiveDrawing.Begin(PrimitiveType.QuadList);
+                PrimitiveDrawing.Vertex2(-1f, -1f, 0f, 1f);
+                PrimitiveDrawing.Vertex2(1f, -1f, 1f, 1f);
+                PrimitiveDrawing.Vertex2(1f, 1f, 1f, 0f);
+                PrimitiveDrawing.Vertex2(-1f, 1f, 0f, 0f);
+                PrimitiveDrawing.End();
+                gd.SetRenderTarget(null);
+                gd.BlendState = BlendState.NonPremultiplied;
+                saveTexture($"atlas_blur_{atlasIndex}.png", atlasTexture);
+            }, token);
+            // await saveTextureAsync($"atlas_blur_{atlasIndex}.png", atlasTexture);
 
             await WaitForRender("Cleanup", () => {
                 gd.SetRenderTarget(null);
