@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
-    <ApplicationIcon />
+    <ApplicationIcon>Resources\CBRE.ico</ApplicationIcon>
     <StartupObject />
     <Platforms>x64;x86</Platforms>
     <Version>0.0.0.0</Version>
@@ -50,6 +50,15 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup> -->
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\CBRE.ico">
+      <LogicalName>Icon.ico</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\CBRE.bmp">
+      <LogicalName>Icon.bmp</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="imgui.ini">
