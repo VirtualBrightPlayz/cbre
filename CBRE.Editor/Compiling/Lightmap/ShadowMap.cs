@@ -150,9 +150,28 @@ sealed partial class Lightmapper {
         }
 
         void saveTexture(string filePath, Texture2D texture) {
-            string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", filePath);
-            using var fileSaveStream = File.Open(fname, FileMode.Create);
-            texture.SaveAsPng(fileSaveStream, texture.Width, texture.Height);
+            if (texture.Format != SurfaceFormat.Vector4) {
+                string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", filePath);
+                using var fileSaveStream = File.Open(fname, FileMode.Create);
+                texture.SaveAsPng(fileSaveStream, texture.Width, texture.Height);
+            } else {
+                using RenderTarget2D rt = new RenderTarget2D(GlobalGraphics.GraphicsDevice, texture.Width, texture.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                GlobalGraphics.GraphicsDevice.SetRenderTarget(rt);
+                using var effect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+                effect.TextureEnabled = true;
+                effect.Texture = texture;
+                effect.CurrentTechnique.Passes[0].Apply();
+                PrimitiveDrawing.Begin(PrimitiveType.QuadList);
+                PrimitiveDrawing.Vertex2(-1f, -1f, 0f, 1f);
+                PrimitiveDrawing.Vertex2(1f, -1f, 1f, 1f);
+                PrimitiveDrawing.Vertex2(1f, 1f, 1f, 0f);
+                PrimitiveDrawing.Vertex2(-1f, 1f, 0f, 0f);
+                PrimitiveDrawing.End();
+                GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
+                string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", filePath);
+                using var fileSaveStream = File.Open(fname, FileMode.Create);
+                rt.SaveAsPng(fileSaveStream, rt.Width, rt.Height);
+            }
         }
 
         async Task saveTextureAsync(string filePath, Texture2D texture) {
@@ -175,7 +194,7 @@ sealed partial class Lightmapper {
                     LightmapConfig.TextureDims,
                     LightmapConfig.TextureDims,
                     mipMap: false,
-                    preferredFormat: SurfaceFormat.Color, /* TODO: HDR */
+                    preferredFormat: SurfaceFormat.Vector4,
                     preferredDepthFormat: DepthFormat.None,
                     preferredMultiSampleCount: 0,
                     usage: RenderTargetUsage.PreserveContents);
@@ -220,6 +239,7 @@ sealed partial class Lightmapper {
                     lmLightCalc.Parameters["lightDirection"].SetValue(Vector3.Zero);
                     lmLightCalc.Parameters["lightConeAngles"].SetValue(Vector2.Zero);
                     lmLightCalc.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
+                    // lmLightCalc.Parameters["blurRadius"].SetValue(LightmapConfig.BlurRadius);
                     for (int j = 0; j < 6; j++) {
                         lmLightCalc.Parameters[$"lightProjView{j}"].SetValue(shadowMap.ProjectionViewMatrices[j]);
                         lmLightCalc.Parameters[$"lightShadowMap{j}"].SetValue(shadowMap.RenderTargets[j]);
@@ -295,10 +315,13 @@ sealed partial class Lightmapper {
         UpdateProgress("Lightmapping complete!", 1.0f);
         await WaitForRender("Cleanup", () => {
             foreach (var face in ModelFaces) {
-                Document.BakedFaces.Add(face);
-                Document.ObjectRenderer.AddFace(face);
+                Document.BakedFaces.Add(face.OriginalFace);
+                Document.ObjectRenderer.AddFace(face.OriginalFace);
             }
             Document.ObjectRenderer.MarkDirty();
+            foreach (var atlas in atlases) {
+                atlas?.Dispose();
+            }
         }, token);
     }
         

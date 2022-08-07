@@ -40,7 +40,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public readonly ImmutableArray<LMFace> ToolFaces;
         public readonly ImmutableArray<LMFace> UnclassifiedFaces;
         public readonly ImmutableArray<LightmapGroup> Groups;
-        public readonly ImmutableArray<Face> ModelFaces;
+        public readonly ImmutableArray<LMFace> ModelFaces;
         public ProgressPopup? progressPopup = null;
 
         public void UpdateProgress(string msg, float progress) {
@@ -71,7 +71,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             List<LMFace> translucentFaces = new();
             List<LMFace> toolFaces = new();
             List<LMFace> unclassifiedFaces = new();
-            List<Face> modelFaces = new();
+            List<LMFace> modelFaces = new();
             foreach (var face in allFaces) {
                 face.UpdateBoundingBox();
                 
@@ -135,8 +135,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                                     tFace.UpdateBoundingBox();
                                     LMFace face = new LMFace(tFace.Clone());
                                     BoxF faceBox = new BoxF(face.BoundingBox.Start - new Vector3F(3.0f, 3.0f, 3.0f), face.BoundingBox.End + new Vector3F(3.0f, 3.0f, 3.0f));
-                                    opaqueFaces.Add(face);
-                                    modelFaces.Add(face.OriginalFace);
+                                    // opaqueFaces.Add(face);
+                                    modelFaces.Add(face);
                                 }
                             }
                         }
@@ -172,7 +172,18 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
             }
 
-            Groups = groups.ToImmutableArray();
+            List<LightmapGroup> modelGroups = new();
+
+            foreach (var face in modelFaces) {
+                LightmapGroup group = LightmapGroup.FindCoplanar(modelGroups, face);
+                if (group is null) {
+                    group = new LightmapGroup();
+                    modelGroups.Add(group);
+                }
+                group.AddFace(face);
+            }
+
+            Groups = groups.Union(modelGroups).ToImmutableArray();
         }
 
         private async Task WaitForRender(string name, Action? action, CancellationToken token) {
@@ -222,12 +233,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 var vertices = faces
                     .SelectMany(f => f.Vertices)
                     .ToImmutableArray();
-                var indices = new List<ushort>();
+                var indices = new List<uint>();
                 long indexOffset = 0;
                 foreach (var f in faces) {
                     indices.AddRange(
                         f.GetTriangleIndices()
-                            .Select(i => (ushort)(i+indexOffset)));
+                            .Select(i => (uint)(i+indexOffset)));
                     indexOffset += f.Vertices.Length;
                 }
                 
@@ -240,7 +251,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     BufferUsage.None);
                 GroupIndices = new IndexBuffer(
                     gd,
-                    IndexElementSize.SixteenBits,
+                    IndexElementSize.ThirtyTwoBits,
                     Groups.Count * 6,
                     BufferUsage.None);
                 
@@ -252,7 +263,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                         i*4+0, i*4+1, i*4+2,
                         i*4+2, i*4+3, i*4+1
                     })
-                    .Select(i => (ushort)i)
+                    .Select(i => (uint)i)
                     .ToArray());
                 
                 GeomVertices = new VertexBuffer(
@@ -262,7 +273,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     BufferUsage.None);
                 GeomIndices = new IndexBuffer(
                     gd,
-                    IndexElementSize.SixteenBits,
+                    IndexElementSize.ThirtyTwoBits,
                     indices.Count,
                     BufferUsage.None);
                 
