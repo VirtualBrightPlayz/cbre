@@ -33,7 +33,7 @@ float4 PixelShaderF(VertexShaderOutput input) : COLOR0 {
             c += tex2D(TextureSampler, input.TexCoord.xy + float2(x, y));
         }
     }
-    c /= (blurRadius * blurRadius * 2 * 2) + 2 * 2;
+    c /= (blurRadius * blurRadius * 2 * 2) + 2;
     // c /= (blurRadius * blurRadius) * 2 * 2;
 
     c.a = 1.0f;

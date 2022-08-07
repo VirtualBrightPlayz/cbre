@@ -305,7 +305,8 @@ sealed partial class Lightmapper {
                 // UpdateProgress(progressCount.ToString() + "/" + progressMax.ToString() + " complete", 0.05f + ((float)progressCount / (float)progressMax) * 0.85f);
             }
 
-            await saveTextureAsync($"atlas_{atlasIndex}.png", atlasTexture);
+            if (debug)
+                await saveTextureAsync($"atlas_{atlasIndex}.png", atlasTexture);
             await WaitForRender("ShadowMap blur texture", () => {
                 gd.SetRenderTarget(atlasTexture);
                 lmBlur.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
