@@ -200,7 +200,7 @@ sealed partial class Lightmapper {
                     preferredMultiSampleCount: 0,
                     usage: RenderTargetUsage.PreserveContents);
                 Document.MGLightmaps ??= new List<Texture2D>();
-                Document.MGLightmaps.Add(atlasTexture);
+                // Document.MGLightmaps.Add(atlasTexture);
                 
                 gd.SetRenderTarget(atlasTexture);
                 gd.Clear(Color.Black);
@@ -308,7 +308,8 @@ sealed partial class Lightmapper {
             if (debug)
                 await saveTextureAsync($"atlas_{atlasIndex}.png", atlasTexture);
             await WaitForRender("ShadowMap blur texture", () => {
-                gd.SetRenderTarget(atlasTexture);
+                RenderTarget2D rt = new RenderTarget2D(GlobalGraphics.GraphicsDevice, atlasTexture.Width, atlasTexture.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                gd.SetRenderTarget(rt);
                 lmBlur.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
                 lmBlur.Parameters["blurRadius"].SetValue(LightmapConfig.BlurRadius);
                 lmBlur.Parameters["xTexture"].SetValue(atlasTexture);
@@ -321,7 +322,9 @@ sealed partial class Lightmapper {
                 PrimitiveDrawing.End();
                 gd.SetRenderTarget(null);
                 gd.BlendState = BlendState.NonPremultiplied;
-                saveTexture($"atlas_blur_{atlasIndex}.png", atlasTexture);
+                saveTexture($"atlas_blur_{atlasIndex}.png", rt);
+                Document.MGLightmaps.Add(rt);
+                atlasTexture.Dispose();
             }, token);
             // await saveTextureAsync($"atlas_blur_{atlasIndex}.png", atlasTexture);
 
