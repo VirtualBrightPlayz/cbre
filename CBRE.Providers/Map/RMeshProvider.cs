@@ -59,7 +59,7 @@ namespace CBRE.Providers.Map {
                         var diff = System.IO.Path.GetFileName((face.Texture.Texture as AsyncTexture).Filename);
                         // var diff = face.Texture.Name+System.IO.Path.GetExtension((face.Texture.Texture as AsyncTexture).Filename);
                         // diff = string.Empty;
-                        var lm = System.IO.Path.GetFileName(path)+"_lm.png";
+                        var lm = System.IO.Path.GetFileName(path)+face.LmIndex.ToString()+"_lm.png";
                         var blendMode = RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped;
                         if (face.Texture.Texture.HasTransparency()) {
                             blendMode = RMesh.RMesh.VisibleMesh.BlendMode.Translucent;
