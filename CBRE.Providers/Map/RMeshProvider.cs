@@ -103,7 +103,7 @@ namespace CBRE.Providers.Map {
                         // var diff = System.IO.Path.GetRelativePath(System.IO.Path.GetDirectoryName(path), (face.Texture.Texture as AsyncTexture).Filename).Replace('\\', '/');
                         // var diff = face.Texture.Name+System.IO.Path.GetExtension((face.Texture.Texture as AsyncTexture).Filename);
                         // diff = string.Empty;
-                        var lm = System.IO.Path.GetFileName(path)+"_lm.png";
+                        var lm = System.IO.Path.GetFileName(path)+face.LmIndex.ToString()+"_lm.png";
                         // lm = string.Empty;
                         var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), diff, lm, modelLightmaps ? RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped : RMesh.RMesh.VisibleMesh.BlendMode.Opaque);
                         visibleMeshes.Add(mesh);
@@ -121,12 +121,37 @@ namespace CBRE.Providers.Map {
                     entities.Add(entity);
                 }
             }
+
+            void saveTexture(string filePath, Texture2D texture) {
+                if (texture.Format != SurfaceFormat.Vector4) {
+                    string fname = System.IO.Path.Combine(typeof(RMeshProvider).Assembly.Location, "..", filePath);
+                    using var fileSaveStream = File.Open(fname, FileMode.Create);
+                    texture.SaveAsPng(fileSaveStream, texture.Width, texture.Height);
+                } else {
+                    using RenderTarget2D rt = new RenderTarget2D(GlobalGraphics.GraphicsDevice, texture.Width, texture.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                    GlobalGraphics.GraphicsDevice.SetRenderTarget(rt);
+                    using var effect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+                    effect.TextureEnabled = true;
+                    effect.Texture = texture;
+                    effect.CurrentTechnique.Passes[0].Apply();
+                    PrimitiveDrawing.Begin(PrimitiveType.QuadList);
+                    PrimitiveDrawing.Vertex2(-1f, -1f, 0f, 1f);
+                    PrimitiveDrawing.Vertex2(1f, -1f, 1f, 1f);
+                    PrimitiveDrawing.Vertex2(1f, 1f, 1f, 0f);
+                    PrimitiveDrawing.Vertex2(-1f, 1f, 0f, 0f);
+                    PrimitiveDrawing.End();
+                    GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
+                    string fname = System.IO.Path.Combine(typeof(RMeshProvider).Assembly.Location, "..", filePath);
+                    using var fileSaveStream = File.Open(fname, FileMode.Create);
+                    rt.SaveAsPng(fileSaveStream, rt.Width, rt.Height);
+                }
+            }
             // LegacyLightmapper.SaveLightmaps(document, 1, path, false);
             if (hasLightmaps) {
-                var texture = lightmaps[0];
-                FileStream fs = File.OpenWrite(path+"_lm.png");
-                texture.SaveAsPng(fs, texture.Width, texture.Height);
-                fs.Close();
+                for (int i = 0; i < lightmaps.Length; i++) {
+                    var texture = lightmaps[i];
+                    saveTexture(path+i+"_lm.png", texture);
+                }
             }
             // var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), "", DocumentManager.CurrentDocument.MapFileName+"_lm0.png", RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped);
             // visibleMeshes.Add(mesh);
