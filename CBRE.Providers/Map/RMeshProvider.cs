@@ -90,8 +90,11 @@ namespace CBRE.Providers.Map {
                         new Vector3F(fv.Location.XZY()),
                         new Vector2F((float)fv.TextureU, (float)fv.TextureV),
                         new Vector2F((float)fv.LMU, (float)fv.LMV), Color.FromArgb(0xff, (byte)(fv.Color.X * 255f), (byte)(fv.Color.Y * 255f), (byte)(fv.Color.Z * 255f)))));
-                    triangles.AddRange(face.GetTriangleIndices().Chunk(3).Select(c => new RMesh.RMesh.Triangle(
-                        (ushort)(c[0] + indexOffset), (ushort)(c[1] + indexOffset), (ushort)(c[2] + indexOffset))));
+                    for (int i = 0; i < vertices.Count; i+=3) {
+                        triangles.Add(new RMesh.RMesh.Triangle((ushort)i, (ushort)(i+1), (ushort)(i+2)));
+                    }
+                    /*triangles.AddRange(face.GetTriangleIndices().Chunk(3).Select(c => new RMesh.RMesh.Triangle(
+                        (ushort)(c[0] + indexOffset), (ushort)(c[1] + indexOffset), (ushort)(c[2] + indexOffset))));*/
                     indexOffset += face.Vertices.Count;
 
                     if (face.Texture.Name.ToLowerInvariant() == "tooltextures/invisible_collision") {

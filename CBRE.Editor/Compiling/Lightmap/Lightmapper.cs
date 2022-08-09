@@ -125,19 +125,19 @@ namespace CBRE.Editor.Compiling.Lightmap {
                                     TextureU = (decimal)(x.TextureU),
                                     TextureV = (decimal)(x.TextureV),
                                 });
-                                for (int i = 0; i < mesh.Vertices.Count; i+=3) {
-                                    tFace.Vertices.Clear();
-                                    tFace.Vertices.Add(verts.ElementAt(i));
+                                tFace.Vertices.Clear();
+                                tFace.Vertices.AddRange(verts);
+                                /*for (int i = 0; i < mesh.Vertices.Count - 1; i+=2) {
+                                    tFace.Vertices.Add(verts.ElementAt(i+0));
                                     tFace.Vertices.Add(verts.ElementAt(i+1));
-                                    tFace.Vertices.Add(verts.ElementAt(i+2));
-                                    tFace.Plane = new DataStructures.Geometric.Plane(tFace.Vertices[0].Location, tFace.Vertices[1].Location, tFace.Vertices[2].Location);
-                                    tFace.Vertices.ForEach(v => { v.LMU = -500.0f; v.LMV = -500.0f; });
-                                    tFace.UpdateBoundingBox();
-                                    LMFace face = new LMFace(tFace.Clone());
-                                    BoxF faceBox = new BoxF(face.BoundingBox.Start - new Vector3F(3.0f, 3.0f, 3.0f), face.BoundingBox.End + new Vector3F(3.0f, 3.0f, 3.0f));
-                                    // opaqueFaces.Add(face);
-                                    modelFaces.Add(face);
-                                }
+                                }*/
+                                tFace.Plane = new DataStructures.Geometric.Plane(tFace.Vertices[0].Location, tFace.Vertices[1].Location, tFace.Vertices[2].Location);
+                                tFace.Vertices.ForEach(v => { v.LMU = -500.0f; v.LMV = -500.0f; });
+                                tFace.UpdateBoundingBox();
+                                LMFace face = new LMFace(tFace.Clone());
+                                BoxF faceBox = new BoxF(face.BoundingBox.Start - new Vector3F(3.0f, 3.0f, 3.0f), face.BoundingBox.End + new Vector3F(3.0f, 3.0f, 3.0f));
+                                // opaqueFaces.Add(face);
+                                modelFaces.Add(face);
                             }
                         }
                     }
