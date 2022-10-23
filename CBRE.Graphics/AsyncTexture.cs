@@ -54,7 +54,7 @@ namespace CBRE.Graphics {
         public readonly string Filename;
 
         public AsyncTexture(string filename, Task<Data> tsk=null) {
-            MonoGameTexture = null;
+            VeldridTexture = null;
             ImGuiTexture = IntPtr.Zero;
 
             Filename = filename;

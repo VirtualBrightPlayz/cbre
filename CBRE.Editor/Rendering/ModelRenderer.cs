@@ -2,10 +2,10 @@ using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.DataStructures.Models;
 using CBRE.Graphics;
-using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Num = System.Numerics;
 
 namespace CBRE.Editor.Rendering {
     public static class ModelRenderer {
@@ -24,7 +24,7 @@ namespace CBRE.Editor.Rendering {
                     foreach (var v in mesh.Vertices) {
                         var transform = transforms[v.BoneWeightings.First().Bone.BoneIndex];
                         Vector3 c = new Vector3(v.Location * transform);
-                        vertexList.Add(new VertexPositionColorTexture(c.ToXna(), Microsoft.Xna.Framework.Color.White, new Microsoft.Xna.Framework.Vector2(v.TextureU, v.TextureV)));
+                        vertexList.Add(new VertexPositionColorTexture(c.ToXna(), Veldrid.RgbaFloat.White, new Num.Vector2(v.TextureU, v.TextureV)));
                     }
                     VertexBuffer buffer = new VertexBuffer(GlobalGraphics.GraphicsDevice, typeof(VertexPositionColorTexture), vertexList.Count, BufferUsage.WriteOnly);
                     buffer.SetData(vertexList.ToArray(), 0, vertexList.Count);
@@ -44,8 +44,8 @@ namespace CBRE.Editor.Rendering {
                 effect.TextureEnabled = true;
                 effect.VertexColorEnabled = false;
                 effect.CurrentTechnique.Passes[0].Apply();
-                GlobalGraphics.GraphicsDevice.SetVertexBuffer(texBuf.Value);
-                GlobalGraphics.GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, texBuf.Value.VertexCount / 3);
+                GlobalGraphics.SetVertexBuffer(texBuf.Value);
+                GlobalGraphics.DrawPrimitives(PrimitiveType.TriangleList, 0, texBuf.Value.VertexCount / 3);
                 if (texture != null) ((AsyncTexture)texture).Unbind();
 
                 effect.TextureEnabled = false;

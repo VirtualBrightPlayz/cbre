@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using CBRE.Common;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Providers.Texture {
     public static class TextureProvider {

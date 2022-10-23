@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "CBRE.Editor": {
+      "commandName": "Project",
+      "hotReloadEnabled": false,
+      "nativeDebugging": true
+    }
+  }
+}

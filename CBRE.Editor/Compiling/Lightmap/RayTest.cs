@@ -8,10 +8,10 @@ using CBRE.DataStructures.Geometric;
 using CBRE.Graphics;
 using CBRE.Settings;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+using Vector3 = System.Numerics.Vector3;
 
 #nullable enable
-namespace CBRE.Editor.Compiling.Lightmap; 
+namespace CBRE.Editor.Compiling.Lightmap;
 
 sealed partial class Lightmapper {
     private readonly struct RenderBuffer : IEnumerable<RenderBuffer.Color> {
@@ -92,9 +92,9 @@ sealed partial class Lightmapper {
             Texture2D texture = new Texture2D(
                 GlobalGraphics.GraphicsDevice,
                 LightmapConfig.TextureDims,
-                LightmapConfig.TextureDims,
-                mipmap: false,
-                SurfaceFormat.Color);
+                LightmapConfig.TextureDims);
+                // mipmap: false,
+                // SurfaceFormat.Color);
             texture.SetData(atlasBuffers[atlas].SelectMany(p => p.ToRgba32Bytes()).ToArray());
             string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"lm_{i}.png");
             texture.Name = $"lm_{i}";

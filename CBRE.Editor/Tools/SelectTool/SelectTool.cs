@@ -18,7 +18,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace CBRE.Editor.Tools.SelectTool
 {
@@ -827,7 +826,8 @@ namespace CBRE.Editor.Tools.SelectTool
             // Draw the insides of the handles in white
             foreach (var handle in handles)
             {
-                PrimitiveDrawing.Begin(PrimitiveType.TriangleFan);
+                // PrimitiveDrawing.Begin(PrimitiveType.TriangleFan);
+                PrimitiveDrawing.Begin(PrimitiveType.LineLoop);
                 PrimitiveDrawing.SetColor(Color.White);
                 if (circles) PrimitiveDrawing.Circle(new Vector3(handle.X, handle.Y, z), (double)(4m / viewport.Zoom));
                 else PrimitiveDrawing.Square(new Vector3(handle.X, handle.Y, z), (double)(4m / viewport.Zoom));

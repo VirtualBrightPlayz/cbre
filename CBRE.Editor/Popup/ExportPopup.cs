@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -42,7 +43,7 @@ namespace CBRE.Editor.Popup {
             shadowTextureDims = LightmapConfig.ShadowTextureDims;
             textureDims = LightmapConfig.TextureDims;
             downscaleFactor = LightmapConfig.DownscaleFactor;
-            ambientLightColor = new Color(
+            ambientLightColor = Color.FromArgb(
                 (byte)LightmapConfig.AmbientColorR,
                 (byte)LightmapConfig.AmbientColorG,
                 (byte)LightmapConfig.AmbientColorB);
@@ -111,7 +112,7 @@ namespace CBRE.Editor.Popup {
             ImGui.Text("Ambient light color");
             Num.Vector3 ambientLight = new(ambientLightColor.R / 255.0f, ambientLightColor.G / 255.0f, ambientLightColor.B / 255.0f);
             ImGui.ColorPicker3("##ambientLight", ref ambientLight);
-            ambientLightColor = new Color(ambientLight.X, ambientLight.Y, ambientLight.Z);
+            ambientLightColor = Color.FromArgb((byte)(ambientLight.X * 255), (byte)(ambientLight.Y * 255), (byte)(ambientLight.Z * 255));
 
             ImGui.Text("Ambient light normal");
             Num.Vector3 ambientNormal = new(ambientLightNormal.X, ambientLightNormal.Y, ambientLightNormal.Z);

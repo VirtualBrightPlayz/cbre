@@ -8,7 +8,6 @@ using CBRE.Editor.Rendering;
 using CBRE.Graphics;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,15 +21,13 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
-using Color = Microsoft.Xna.Framework.Color;
-using Matrix = Microsoft.Xna.Framework.Matrix;
 using Rectangle = System.Drawing.Rectangle;
-using Vector3 = Microsoft.Xna.Framework.Vector3;
 using CBRE.Extensions;
 using CBRE.DataStructures.Transformations;
 using CBRE.FileSystem;
 using CBRE.Providers.Model;
 using CBRE.Common.Mediator;
+using Vector3 = System.Numerics.Vector3;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     sealed partial class Lightmapper {

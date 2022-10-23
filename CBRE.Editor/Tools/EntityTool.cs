@@ -15,7 +15,6 @@ using System.Linq;
 using Select = CBRE.Settings.Select;
 using Microsoft.Xna.Framework.Input;
 using CBRE.Graphics;
-using Microsoft.Xna.Framework.Graphics;
 using ImGuiNET;
 using CBRE.Editor.Documents;
 

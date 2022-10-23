@@ -11,7 +11,11 @@ using CBRE.Common.Mediator;
 using CBRE.Graphics;
 using CBRE.Settings;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Vector4 = System.Numerics.Vector4;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace CBRE.Editor.Compiling.Lightmap;
 
@@ -70,8 +74,8 @@ sealed partial class Lightmapper {
 
             depthEffect.CurrentTechnique.Passes[0].Apply();
 
-            GlobalGraphics.GraphicsDevice.SetRenderTarget(RenderTargets[viewMatrixIndex]);
-            GlobalGraphics.GraphicsDevice.Clear(
+            GlobalGraphics.SetRenderTarget(RenderTargets[viewMatrixIndex]);
+            GlobalGraphics.Clear(
                 ClearOptions.Target | ClearOptions.DepthBuffer | ClearOptions.Stencil,
                 new Vector4(1.0f, 0.0f, 0.0f, 1.0f),
                 1.0f, 0);
@@ -141,7 +145,7 @@ sealed partial class Lightmapper {
                 atlas.InitGpuBuffers();
             }
 
-            gd.SetRenderTarget(null);
+            GlobalGraphics.SetRenderTarget(null);
         }, token);
 
         void renderAllAtlases() {
@@ -150,7 +154,11 @@ sealed partial class Lightmapper {
             }
         }
 
-        void saveTexture(string filePath, Texture2D texture) {
+        void saveTexture(string filePath, RenderTarget2D texture) {
+            string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", filePath);
+            using var fileSaveStream = File.Open(fname, FileMode.Create);
+            texture.SaveAsPng(fileSaveStream);
+            /*
             if (texture.Format != SurfaceFormat.Vector4) {
                 string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", filePath);
                 using var fileSaveStream = File.Open(fname, FileMode.Create);
@@ -173,9 +181,10 @@ sealed partial class Lightmapper {
                 using var fileSaveStream = File.Open(fname, FileMode.Create);
                 rt.SaveAsPng(fileSaveStream, rt.Width, rt.Height);
             }
+            */
         }
 
-        async Task saveTextureAsync(string filePath, Texture2D texture) {
+        async Task saveTextureAsync(string filePath, RenderTarget2D texture) {
             await WaitForRender("ShadowMap save texture", () => {
                 saveTexture(filePath, texture);
             }, token);
@@ -196,18 +205,18 @@ sealed partial class Lightmapper {
                     LightmapConfig.TextureDims,
                     mipMap: false,
                     preferredFormat: SurfaceFormat.Vector4,
-                    preferredDepthFormat: DepthFormat.None,
-                    preferredMultiSampleCount: 0,
-                    usage: RenderTargetUsage.PreserveContents);
+                    preferredDepthFormat: DepthFormat.None);
+                    /*preferredMultiSampleCount: 0,
+                    usage: RenderTargetUsage.PreserveContents);*/
                 Document.MGLightmaps ??= new List<Texture2D>();
                 // Document.MGLightmaps.Add(atlasTexture);
                 
-                gd.SetRenderTarget(atlasTexture);
-                gd.Clear(Color.Black);
-                gd.SetRenderTarget(null);
+                GlobalGraphics.SetRenderTarget(atlasTexture);
+                GlobalGraphics.Clear(Color.Black);
+                GlobalGraphics.SetRenderTarget(null);
                 
                 shadowMap = new ShadowMap(LightmapConfig.ShadowTextureDims);
-                gd.SetRenderTarget(null);
+                GlobalGraphics.SetRenderTarget(null);
             }, token);
 
             bool hasRun = true;
@@ -217,20 +226,20 @@ sealed partial class Lightmapper {
                     var pointLight = pointLights[i];
 
                     shadowMap.SetLight(pointLight);
-                    GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
-                    GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-                    GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                    GlobalGraphics.BlendFactor = Microsoft.Xna.Framework.Color.White;
+                    GlobalGraphics.BlendState = BlendState.NonPremultiplied;
+                    GlobalGraphics.RasterizerState = RasterizerState.CullCounterClockwise;
                     for (int j = 0; j < 6; j++) {
                         shadowMap.Prepare(j);
-                        GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                        GlobalGraphics.DepthStencilState = DepthStencilState.Default;
                         renderAllAtlases();
                         if (debug)
                             saveTexture($"shadowMap_0_{i}_{j}.png", shadowMap.RenderTargets[j]);
                     }
                     
-                    gd.SetRenderTarget(atlasTexture);
+                    GlobalGraphics.SetRenderTarget(atlasTexture);
 
-                    gd.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
+                    GlobalGraphics.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
                     hasRun = false;
 
                     lmLightCalc.Parameters["lightType"].SetValue(0);
@@ -248,11 +257,11 @@ sealed partial class Lightmapper {
 
                     lmLightCalc.CurrentTechnique.Passes[0].Apply();
 
-                    GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                    GlobalGraphics.RasterizerState = RasterizerState.CullNone;
                     atlas.RenderGroups();
 
-                    gd.SetRenderTarget(null);
-                    gd.BlendState = BlendState.NonPremultiplied;
+                    GlobalGraphics.SetRenderTarget(null);
+                    GlobalGraphics.BlendState = BlendState.NonPremultiplied;
                 }, token);
                 progressCount++;
                 UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)progressCount / progressMax);
@@ -264,20 +273,20 @@ sealed partial class Lightmapper {
                     var spotLight = spotLights[i];
 
                     shadowMap.SetLight(spotLight);
-                    GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
-                    GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-                    GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                    GlobalGraphics.BlendFactor = Microsoft.Xna.Framework.Color.White;
+                    GlobalGraphics.BlendState = BlendState.NonPremultiplied;
+                    GlobalGraphics.RasterizerState = RasterizerState.CullCounterClockwise;
                     for (int j = 0; j < 6; j++) {
                         shadowMap.Prepare(j);
-                        GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                        GlobalGraphics.DepthStencilState = DepthStencilState.Default;
                         renderAllAtlases();
                         if (debug)
                             saveTexture($"shadowMap_1_{i}_{j}.png", shadowMap.RenderTargets[j]);
                     }
                     
-                    gd.SetRenderTarget(atlasTexture);
+                    GlobalGraphics.SetRenderTarget(atlasTexture);
 
-                    gd.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
+                    GlobalGraphics.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
                     hasRun = false;
 
                     lmLightCalc.Parameters["lightType"].SetValue(1);
@@ -294,11 +303,11 @@ sealed partial class Lightmapper {
 
                     lmLightCalc.CurrentTechnique.Passes[0].Apply();
 
-                    GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+                    GlobalGraphics.RasterizerState = RasterizerState.CullNone;
                     atlas.RenderGroups();
 
-                    gd.SetRenderTarget(null);
-                    gd.BlendState = BlendState.NonPremultiplied;
+                    GlobalGraphics.SetRenderTarget(null);
+                    GlobalGraphics.BlendState = BlendState.NonPremultiplied;
                 }, token);
                 progressCount++;
                 UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)progressCount / progressMax);
@@ -308,8 +317,8 @@ sealed partial class Lightmapper {
             if (debug)
                 await saveTextureAsync($"atlas_{atlasIndex}.png", atlasTexture);
             await WaitForRender("ShadowMap blur texture", () => {
-                RenderTarget2D rt = new RenderTarget2D(GlobalGraphics.GraphicsDevice, atlasTexture.Width, atlasTexture.Height, false, SurfaceFormat.Vector4, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
-                gd.SetRenderTarget(rt);
+                RenderTarget2D rt = new RenderTarget2D(GlobalGraphics.GraphicsDevice, atlasTexture.Width, atlasTexture.Height, false, SurfaceFormat.Vector4, DepthFormat.None/*, 0, RenderTargetUsage.PreserveContents*/);
+                GlobalGraphics.SetRenderTarget(rt);
                 lmBlur.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
                 lmBlur.Parameters["blurRadius"].SetValue(LightmapConfig.BlurRadius);
                 lmBlur.Parameters["xTexture"].SetValue(atlasTexture);
@@ -320,8 +329,8 @@ sealed partial class Lightmapper {
                 PrimitiveDrawing.Vertex2(1f, 1f, 1f, 0f);
                 PrimitiveDrawing.Vertex2(-1f, 1f, 0f, 0f);
                 PrimitiveDrawing.End();
-                gd.SetRenderTarget(null);
-                gd.BlendState = BlendState.NonPremultiplied;
+                GlobalGraphics.SetRenderTarget(null);
+                GlobalGraphics.BlendState = BlendState.NonPremultiplied;
                 saveTexture($"atlas_blur_{atlasIndex}.png", rt);
                 Document.MGLightmaps.Add(rt);
                 atlasTexture.Dispose();
@@ -329,8 +338,8 @@ sealed partial class Lightmapper {
             // await saveTextureAsync($"atlas_blur_{atlasIndex}.png", atlasTexture);
 
             await WaitForRender("Cleanup", () => {
-                gd.SetRenderTarget(null);
-                gd.BlendState = BlendState.NonPremultiplied;
+                GlobalGraphics.SetRenderTarget(null);
+                GlobalGraphics.BlendState = BlendState.NonPremultiplied;
             }, token);
         }
         

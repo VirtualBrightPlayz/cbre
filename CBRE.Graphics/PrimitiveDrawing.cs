@@ -19,7 +19,8 @@ namespace CBRE.Graphics {
         LineList = 2,
         LineStrip = 3,
         PointList = 4,
-        QuadList,
+        QuadList = 5,
+        LineLoop = 6,
     }
 
     public static class PrimitiveDrawing {
@@ -28,10 +29,11 @@ namespace CBRE.Graphics {
 
         public static bool IsTriangleType(this PrimitiveType type)
             => type is PrimitiveType.TriangleList or PrimitiveType.TriangleStrip;
-        
+
         private static PrimitiveType? currentPrimitiveType = null;
         private static DeviceBuffer vertexBuffer = null;
         private static Shader[] shaders = null;
+        private static VertexFragmentCompilationResult shaderCompilerResult = null;
 
         private static Vector4 color = Vector4.One;
         private static List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
@@ -103,7 +105,7 @@ namespace CBRE.Graphics {
 
         public static void Square(CBREVector3 position, decimal radius)
             => Square(position, (double)radius);
-        
+
         public static void Square(CBRE.DataStructures.Geometric.Vector3 position, double radius) {
             for (int i = 0; i < 4; i++) {
                 double cx = Math.Cos(((double)i + 0.5f) * Math.PI * 2.0 / 4.0) * radius;
@@ -143,7 +145,7 @@ namespace CBRE.Graphics {
                     roundDecimals: 4);
                 foreach (var face in cylinderFaces) {
                     for (int i = 2; i < face.Length; i++) {
-                        Vertex3(face[i-1] * matrix);
+                        Vertex3(face[i - 1] * matrix);
                         Vertex3(face[i] * matrix);
                         Vertex3(face[0] * matrix);
                     }
@@ -156,7 +158,7 @@ namespace CBRE.Graphics {
         public static void FacesWireframe(
             IEnumerable<Face> faces, decimal thickness = 0.0m, CBRE.DataStructures.Geometric.Matrix m = null)
             => FacesWireframe(faces, thickness: (float)thickness, m: m);
-        
+
         public static void FacesWireframe(IEnumerable<Face> faces, float thickness = 0.0f, CBRE.DataStructures.Geometric.Matrix m = null) {
             var matrix = m ?? CBRE.DataStructures.Geometric.Matrix.Identity;
             foreach (var face in faces) {
@@ -179,6 +181,7 @@ namespace CBRE.Graphics {
 
         public static void End() {
             if (currentPrimitiveType == null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.End because a draw operation isn't in progress"); }
+            GlobalGraphics.EndPass();
 
             int primCount = 0;
             PrimitiveTopology topology = PrimitiveTopology.PointList;
@@ -192,9 +195,11 @@ namespace CBRE.Graphics {
                     topology = PrimitiveTopology.LineList;
                     primCount = vertices.Count / 2;
                     break;
-                /*case CustomPrimitiveTopology.LineLoop:
-                    primCount = vertices.Count;
-                    break;*/
+                case PrimitiveType.LineLoop:
+                    topology = PrimitiveTopology.LineStrip;
+                    vertices.Add(vertices[0]);
+                    primCount = vertices.Count - 1;
+                    break;
                 case PrimitiveType.LineStrip:
                     topology = PrimitiveTopology.LineStrip;
                     primCount = vertices.Count - 1;
@@ -212,7 +217,7 @@ namespace CBRE.Graphics {
                     break;*/
                 case PrimitiveType.QuadList:
                     var temp = new List<VertexPositionColorTexture>();
-                    for (int i = 0; i < vertices.Count; i+=4) {
+                    for (int i = 0; i < vertices.Count; i += 4) {
                         var v0 = vertices[i + 0];
                         var v1 = vertices[i + 1];
                         var v2 = vertices[i + 2];
@@ -234,42 +239,51 @@ namespace CBRE.Graphics {
                     break;
             }
 
+            if (Texture == null) {
+                Texture = GlobalGraphics.BlankWhiteTexture;
+            }
+
+            if (shaders == null) {
+
+                string vertexCode = File.ReadAllText("Shaders/TexturedSolid.vert");
+                string fragmentCode = File.ReadAllText("Shaders/TexturedSolid.frag");
+
+                ShaderDescription vertexShaderDesc = new ShaderDescription(
+                    ShaderStages.Vertex,
+                    Encoding.UTF8.GetBytes(vertexCode),
+                    "main");
+                ShaderDescription fragmentShaderDesc = new ShaderDescription(
+                    ShaderStages.Fragment,
+                    Encoding.UTF8.GetBytes(fragmentCode),
+                    "main");
+
+                shaders = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateFromSpirv(vertexShaderDesc, fragmentShaderDesc, new CrossCompileOptions(GlobalGraphics.GraphicsDevice.BackendType == GraphicsBackend.OpenGL, GlobalGraphics.GraphicsDevice.BackendType == GraphicsBackend.Vulkan));
+                shaderCompilerResult = SpirvCompilation.CompileVertexFragment(vertexShaderDesc.ShaderBytes, fragmentShaderDesc.ShaderBytes, CrossCompileTarget.GLSL);
+            }
+
             if (vertices.Count > 0) {
-                if (vertexBuffer == null) {
-                    vertexBuffer = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription(4 * VertexPositionColorTexture.SizeInBytes, BufferUsage.VertexBuffer));
+                if (vertexBuffer == null || true) {
+                    vertexBuffer?.Dispose();
+                    vertexBuffer = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription((uint)vertices.Count * 4 * VertexPositionColorTexture.SizeInBytes, Veldrid.BufferUsage.VertexBuffer));
                 }
                 GlobalGraphics.GraphicsDevice.UpdateBuffer(vertexBuffer, 0, vertices.ToArray());
-                GlobalGraphics.CommandList.SetVertexBuffer(0, vertexBuffer);
 
                 VertexLayoutDescription vertexLayout = new VertexLayoutDescription(
-                    new VertexElementDescription("Position", VertexElementSemantic.Position, VertexElementFormat.Float3),
-                    new VertexElementDescription("TextureCoordinate", VertexElementSemantic.TextureCoordinate, VertexElementFormat.Float2),
-                    new VertexElementDescription("Color", VertexElementSemantic.Color, VertexElementFormat.Float4)
+                    // shaderCompilerResult.Reflection.VertexElements
+                    new VertexElementDescription("Position", VertexElementSemantic.TextureCoordinate, Veldrid.VertexElementFormat.Float3),
+                    new VertexElementDescription("TextureCoordinate", VertexElementSemantic.TextureCoordinate, Veldrid.VertexElementFormat.Float2),
+                    new VertexElementDescription("Color", VertexElementSemantic.TextureCoordinate, Veldrid.VertexElementFormat.Float4)
                 );
 
-                using (ResourceLayout textureLayout = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateResourceLayout(new ResourceLayoutDescription(
+                ResourceLayout textureLayout = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateResourceLayout(new ResourceLayoutDescription(
                     new ResourceLayoutElementDescription("MainTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment),
-                    new ResourceLayoutElementDescription("MainSampler", ResourceKind.Sampler, ShaderStages.Fragment)
-                ))) {
-                    using (var textureSet = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
-                        textureLayout, Texture
-                    ))) {
-                        if (shaders == null) {
-
-                            string vertexCode = File.ReadAllText("Shaders/texturedSolid.vert");
-                            string fragmentCode = File.ReadAllText("Shaders/texturedSolid.frag");
-
-                            ShaderDescription vertexShaderDesc = new ShaderDescription(
-                                ShaderStages.Vertex,
-                                Encoding.UTF8.GetBytes(vertexCode),
-                                "main");
-                            ShaderDescription fragmentShaderDesc = new ShaderDescription(
-                                ShaderStages.Fragment,
-                                Encoding.UTF8.GetBytes(fragmentCode),
-                                "main");
-
-                            shaders = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateFromSpirv(vertexShaderDesc, fragmentShaderDesc);
-                        }
+                    new ResourceLayoutElementDescription("MainTextureSampler", ResourceKind.Sampler, ShaderStages.Fragment)
+                )/*shaderCompilerResult.Reflection.ResourceLayouts[0]*/);
+                {
+                    var textureSet = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateResourceSet(new ResourceSetDescription(
+                        textureLayout, Texture, GlobalGraphics.PointSampler
+                    ));
+                    {
 
                         GraphicsPipelineDescription pipeDesc = new GraphicsPipelineDescription();
                         pipeDesc.BlendState = BlendStateDescription.SingleOverrideBlend;
@@ -278,27 +292,33 @@ namespace CBRE.Graphics {
                             depthWriteEnabled: true,
                             comparisonKind: ComparisonKind.LessEqual
                         );
+                        pipeDesc.DepthStencilState = DepthStencilStateDescription.Disabled;
                         pipeDesc.RasterizerState = new RasterizerStateDescription(
                             cullMode: FaceCullMode.Back,
                             fillMode: PolygonFillMode.Solid,
-                            frontFace: FrontFace.Clockwise,
+                            frontFace: FrontFace.CounterClockwise,
                             depthClipEnabled: true,
                             scissorTestEnabled: false
                         );
+                        pipeDesc.RasterizerState = RasterizerStateDescription.CullNone;
                         pipeDesc.PrimitiveTopology = topology;
                         // pipeDesc.ResourceLayouts = Array.Empty<ResourceLayout>(); // TODO: textures
-                        pipeDesc.ResourceLayouts = new [] { textureLayout };
+                        pipeDesc.ResourceLayouts = new[] { textureLayout };
                         pipeDesc.ShaderSet = new ShaderSetDescription(
                             vertexLayouts: new VertexLayoutDescription[] { vertexLayout },
                             shaders: shaders
                         );
                         pipeDesc.Outputs = GlobalGraphics.GraphicsDevice.SwapchainFramebuffer.OutputDescription;
-                        using (var pipeline = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateGraphicsPipeline(pipeDesc)) {
-                            // GlobalGraphics.CommandList.UpdateBuffer();
+                        var pipeline = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateGraphicsPipeline(pipeDesc);
+                        {
+                            GlobalGraphics.BeginPass();
+                            GlobalGraphics.CommandList.SetPipeline(pipeline);
+                            GlobalGraphics.CommandList.SetGraphicsResourceSet(0, textureSet);
+                            GlobalGraphics.CommandList.SetVertexBuffer(0, vertexBuffer);
+                            GlobalGraphics.CommandList.Draw((uint)vertices.Count);
                         }
                     }
                 }
-                GlobalGraphics.CommandList.Draw((uint)primCount);
             }
             currentPrimitiveType = null;
             Texture = null;

@@ -5,7 +5,6 @@ using CBRE.DataStructures.Transformations;
 using CBRE.Extensions;
 using CBRE.Graphics;
 using CBRE.Providers.Texture;
-using Microsoft.Xna.Framework.Graphics;
 using NativeFileDialog;
 using RMeshDecomp;
 using System;
@@ -126,12 +125,20 @@ namespace CBRE.Providers.Map {
             }
 
             void saveTexture(string filePath, Texture2D texture) {
-                if (texture.Format != SurfaceFormat.Vector4) {
+                    string fname = System.IO.Path.Combine(typeof(RMeshProvider).Assembly.Location, "..", filePath);
+                using var fileSaveStream = File.Open(fname, FileMode.Create);
+                texture.SaveAsPng(fileSaveStream);
+                /*
+                if (texture.Format != Veldrid.PixelFormat.R8_G8_B8_A8_UNorm && texture.Format != Veldrid.PixelFormat.R8_G8_B8_A8_UNorm_SRgb) {
                     string fname = System.IO.Path.Combine(typeof(RMeshProvider).Assembly.Location, "..", filePath);
                     using var fileSaveStream = File.Open(fname, FileMode.Create);
-                    texture.SaveAsPng(fileSaveStream, texture.Width, texture.Height);
+                    GlobalGraphics.SaveAsPng(texture, fileSaveStream, texture.Width, texture.Height);
                 } else {
-                    using RenderTarget2D rt = new RenderTarget2D(GlobalGraphics.GraphicsDevice, texture.Width, texture.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
+                    throw new NotImplementedException();
+                    /*
+                    TextureDescription desc = ;
+                    using RenderTarget2D rt = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateTexture(desc);
+                    //new RenderTarget2D(GlobalGraphics.GraphicsDevice, texture.Width, texture.Height, false, SurfaceFormat.Color, DepthFormat.None, 0, RenderTargetUsage.PreserveContents);
                     GlobalGraphics.GraphicsDevice.SetRenderTarget(rt);
                     using var effect = new BasicEffect(GlobalGraphics.GraphicsDevice);
                     effect.TextureEnabled = true;
@@ -146,8 +153,10 @@ namespace CBRE.Providers.Map {
                     GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
                     string fname = System.IO.Path.Combine(typeof(RMeshProvider).Assembly.Location, "..", filePath);
                     using var fileSaveStream = File.Open(fname, FileMode.Create);
-                    rt.SaveAsPng(fileSaveStream, rt.Width, rt.Height);
+                    GlobalGraphics.SaveAsPng(rt, fileSaveStream, rt.Width, rt.Height);
+                    * /
                 }
+                */
             }
             // LegacyLightmapper.SaveLightmaps(document, 1, path, false);
             if (hasLightmaps) {
@@ -249,8 +258,8 @@ namespace CBRE.Providers.Map {
                     var yscl = (maxV - minV);
                     if (xscl == 0) xscl = 1;
                     if (yscl == 0) yscl = 1;
-                    newFace.Texture.XShift = (v0u / xscl) * minU * newFace.Texture.Texture.Width;
-                    newFace.Texture.YShift = (v0v / yscl) * minV * newFace.Texture.Texture.Height;
+                    newFace.Texture.XShift = (v0u / xscl) * minU * newFace.Texture.Texture.UWidth;
+                    newFace.Texture.YShift = (v0v / yscl) * minV * newFace.Texture.Texture.UHeight;
                     newFace.Texture.XScale = xscl;
                     newFace.Texture.YScale = yscl;
 

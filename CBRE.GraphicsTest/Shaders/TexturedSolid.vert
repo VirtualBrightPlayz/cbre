@@ -9,7 +9,7 @@ layout(location = 1) out vec4 frag_Color;
 
 void main()
 {
-    gl_Position = Position;
+    gl_Position = vec4(Position, 1);
     frag_TexCoord = TextureCoordinate;
     frag_Color = Color;
 }

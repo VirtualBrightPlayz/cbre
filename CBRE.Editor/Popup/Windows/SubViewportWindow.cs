@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Linq;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
@@ -6,10 +7,8 @@ using CBRE.Editor.Tools;
 using CBRE.Graphics;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Num = System.Numerics;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace CBRE.Editor.Popup {
     public partial class ViewportWindow {

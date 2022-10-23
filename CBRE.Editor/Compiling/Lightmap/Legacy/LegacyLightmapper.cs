@@ -8,7 +8,6 @@ using CBRE.Editor.Rendering;
 using CBRE.Graphics;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -405,7 +404,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                 int j = k;
                 GameMain.Instance.PostDrawActions.Enqueue(() => {
                     lock (Lightmaps) {
-                        Texture2D tex = new Texture2D(GameMain.Instance.GraphicsDevice, totalTextureDims, totalTextureDims);
+                        Texture2D tex = new Texture2D(totalTextureDims, totalTextureDims);
                         tex.SetData(byteBuffer);
                         string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"lm_{j}.png");
                         tex.Name = $"lm_{j}";

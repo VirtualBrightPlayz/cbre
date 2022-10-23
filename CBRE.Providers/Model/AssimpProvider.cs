@@ -5,6 +5,8 @@ using CBRE.DataStructures.Models;
 using CBRE.FileSystem;
 using CBRE.Graphics;
 using CBRE.Providers.Texture;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -121,7 +123,7 @@ namespace CBRE.Providers.Model {
             if (tex == null) {
                 AsyncTexture _tex = new AsyncTexture("___", Task.Run(() => {
                     return new AsyncTexture.Data {
-                        Image = Enumerable.Repeat(0xff777777, 64 * 64).SelectMany(i => BitConverter.GetBytes(i)).ToArray(),
+                        Image = Image.LoadPixelData<Rgba32>(Enumerable.Repeat(new Rgba32(119, 119, 119, 255), 64 * 64).ToArray(), 64, 64),//Enumerable.Repeat(0xff777777, 64 * 64).SelectMany(i => BitConverter.GetBytes(i)).ToArray(),
                         Width = 64,
                         Height = 64,
                         Compressed = false

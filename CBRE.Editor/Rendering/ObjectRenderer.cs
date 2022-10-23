@@ -15,7 +15,11 @@ using CBRE.Graphics;
 using CBRE.Providers.Model;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
-using Microsoft.Xna.Framework.Graphics;
+using Num = System.Numerics;
+using Color = System.Numerics.Vector4;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace CBRE.Editor.Rendering {
     public class ObjectRenderer {
@@ -30,27 +34,21 @@ namespace CBRE.Editor.Rendering {
 
         public Document Document;
 
-        public struct PointEntityVertex : IVertexType {
-            public Microsoft.Xna.Framework.Vector3 Position;
-            public Microsoft.Xna.Framework.Vector3 Normal;
-            public Microsoft.Xna.Framework.Color Color;
+        public struct PointEntityVertex {
+            public Vector3 Position;
+            public Vector3 Normal;
+            public Color Color;
             public float Selected;
             public static readonly VertexDeclaration VertexDeclaration;
             public PointEntityVertex(
-                    Microsoft.Xna.Framework.Vector3 position,
-                    Microsoft.Xna.Framework.Vector3 normal,
-                    Microsoft.Xna.Framework.Color color
+                    Vector3 position,
+                    Vector3 normal,
+                    Color color
             ) {
                 this.Position = position;
                 this.Normal = normal;
                 this.Color = color;
                 this.Selected = 0.0f;
-            }
-
-            VertexDeclaration IVertexType.VertexDeclaration {
-                get {
-                    return VertexDeclaration;
-                }
             }
 
             static PointEntityVertex() {
@@ -93,6 +91,7 @@ namespace CBRE.Editor.Rendering {
                 }
 
                 if (vertexBuffer == null || vertices == null || vertices.Length < vertexCount) {
+                    vertexBuffer.Dispose();
                     vertexBuffer = new VertexBuffer(GlobalGraphics.GraphicsDevice, PointEntityVertex.VertexDeclaration, vertexCount, BufferUsage.None);
                 }
 
@@ -113,9 +112,9 @@ namespace CBRE.Editor.Rendering {
                     foreach (var face in entity.BoundingBox.GetBoxFaces()) {
                         var normal = (face[1] - face[0]).Cross(face[2] - face[0]).Normalise();
                         foreach (var point in face) {
-                            vertices[(i * 24) + j].Position = new Microsoft.Xna.Framework.Vector3((float)point.X, (float)point.Y, (float)point.Z);
-                            vertices[(i * 24) + j].Normal = new Microsoft.Xna.Framework.Vector3((float)normal.X, (float)normal.Y, (float)normal.Z);
-                            vertices[(i * 24) + j].Color = new Microsoft.Xna.Framework.Color(entity.Colour.R, entity.Colour.G, entity.Colour.B, entity.Colour.A);
+                            vertices[(i * 24) + j].Position = new Vector3((float)point.X, (float)point.Y, (float)point.Z);
+                            vertices[(i * 24) + j].Normal = new Vector3((float)normal.X, (float)normal.Y, (float)normal.Z);
+                            vertices[(i * 24) + j].Color = new Color(entity.Colour.R, entity.Colour.G, entity.Colour.B, entity.Colour.A);
                             vertices[(i * 24) + j].Selected = entity.IsSelected ? 1.0f : 0.0f;
                             j++;
                         }
@@ -182,9 +181,9 @@ namespace CBRE.Editor.Rendering {
                 if (indexWireframeCount == 0) {
                     return;
                 }
-                GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
-                GlobalGraphics.GraphicsDevice.Indices = indexBufferWireframe;
-                GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, indexWireframeCount / 2);
+                GlobalGraphics.SetVertexBuffer(vertexBuffer);
+                GlobalGraphics.SetIndexBuffer(indexBufferWireframe);
+                GlobalGraphics.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, indexWireframeCount / 2);
             }
 
             public void RenderSolid() {
@@ -192,27 +191,27 @@ namespace CBRE.Editor.Rendering {
                 if (indexSolidCount == 0) {
                     return;
                 }
-                GlobalGraphics.GraphicsDevice.SetVertexBuffer(vertexBuffer);
-                GlobalGraphics.GraphicsDevice.Indices = indexBufferSolid;
-                GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
+                GlobalGraphics.SetVertexBuffer(vertexBuffer);
+                GlobalGraphics.SetIndexBuffer(indexBufferSolid);
+                GlobalGraphics.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, indexSolidCount / 3);
             }
         };
         private readonly PointEntityGeometry pointEntityGeometry;
 
-        public struct BrushVertex : IVertexType {
-            public Microsoft.Xna.Framework.Vector3 Position;
-            public Microsoft.Xna.Framework.Vector3 Normal;
-            public Microsoft.Xna.Framework.Vector2 DiffuseUV;
-            public Microsoft.Xna.Framework.Vector2 LightmapUV;
-            public Microsoft.Xna.Framework.Color Color;
+        public struct BrushVertex {
+            public Vector3 Position;
+            public Vector3 Normal;
+            public Vector2 DiffuseUV;
+            public Vector2 LightmapUV;
+            public Color Color;
             public float Selected;
             public static readonly VertexDeclaration VertexDeclaration;
             public BrushVertex(
-                    Microsoft.Xna.Framework.Vector3 position,
-                    Microsoft.Xna.Framework.Vector3 normal,
-                    Microsoft.Xna.Framework.Vector2 diffUv,
-                    Microsoft.Xna.Framework.Vector2 lmUv,
-                    Microsoft.Xna.Framework.Color color,
+                    Vector3 position,
+                    Vector3 normal,
+                    Vector2 diffUv,
+                    Vector2 lmUv,
+                    Color color,
                     bool selected
             ) {
                 this.Position = position;
@@ -224,10 +223,10 @@ namespace CBRE.Editor.Rendering {
             }
 
             public BrushVertex(Vertex vertex) {
-                Microsoft.Xna.Framework.Vector3 toMgVec3(Vector3 v)
+                Vector3 toMgVec3(DataStructures.Geometric.Vector3 v)
                     => new((float)v.X, (float)v.Y, (float)v.Z);
 
-                Microsoft.Xna.Framework.Color toMgColor(System.Drawing.Color c)
+                Color toMgColor(System.Drawing.Color c)
                     => new(c.R, c.G, c.B, c.A);
                 
                 this.Position = toMgVec3(vertex.Location);
@@ -236,12 +235,6 @@ namespace CBRE.Editor.Rendering {
                 this.LightmapUV = new(vertex.LMU, vertex.LMV);
                 this.Color = toMgColor(vertex.Parent.Colour);
                 this.Selected = 0.0f;
-            }
-
-            VertexDeclaration IVertexType.VertexDeclaration {
-                get {
-                    return VertexDeclaration;
-                }
             }
 
             static BrushVertex() {
@@ -333,16 +326,16 @@ namespace CBRE.Editor.Rendering {
 
                 public void RenderWireframe() {
                     if (WireframeIndices.Count <= 0) { return; }
-                    GlobalGraphics.GraphicsDevice.SetVertexBuffer(Vertices.Buffer);
-                    GlobalGraphics.GraphicsDevice.Indices = WireframeIndices.Buffer;
-                    GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, WireframeIndices.Count / 2);
+                    GlobalGraphics.SetVertexBuffer(Vertices.Buffer);
+                    GlobalGraphics.SetIndexBuffer(WireframeIndices.Buffer);
+                    GlobalGraphics.DrawIndexedPrimitives(PrimitiveType.LineList, 0, 0, WireframeIndices.Count / 2);
                 }
                 
                 public void RenderSolid() {
                     if (SolidIndices.Count <= 0) { return; }
-                    GlobalGraphics.GraphicsDevice.SetVertexBuffer(Vertices.Buffer);
-                    GlobalGraphics.GraphicsDevice.Indices = SolidIndices.Buffer;
-                    GlobalGraphics.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, SolidIndices.Count / 3);
+                    GlobalGraphics.SetVertexBuffer(Vertices.Buffer);
+                    GlobalGraphics.SetIndexBuffer(SolidIndices.Buffer);
+                    GlobalGraphics.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, SolidIndices.Count / 3);
                 }
                 
                 public void Submit() {
@@ -582,7 +575,7 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        public Microsoft.Xna.Framework.Matrix World {
+        public Matrix World {
             get { return Effects.BasicEffect.World; }
             set {
                 Effects.BasicEffect.World = value;
@@ -593,7 +586,7 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        public Microsoft.Xna.Framework.Matrix View {
+        public Matrix View {
             get { return Effects.BasicEffect.View; }
             set {
                 Effects.BasicEffect.View = value;
@@ -604,7 +597,7 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        public Microsoft.Xna.Framework.Matrix Projection {
+        public Matrix Projection {
             get { return Effects.BasicEffect.Projection; }
             set {
                 Effects.BasicEffect.Projection = value;
@@ -646,18 +639,18 @@ namespace CBRE.Editor.Rendering {
             if (!screenshotMode)
                 pointEntityGeometry.RenderSolid();
 
-            var prevDepthStencilState = GlobalGraphics.GraphicsDevice.DepthStencilState;
-            GlobalGraphics.GraphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true, DepthBufferWriteEnable = false };
+            var prevDepthStencilState = GlobalGraphics.DepthStencilState;
+            GlobalGraphics.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true, DepthBufferWriteEnable = false };
             foreach (var (texture, geometry) in translucentGeom) {
                 Effects.TexturedShaded.Parameters["xTexture"].SetValue(texture.VeldridTexture);
                 Effects.TexturedShaded.CurrentTechnique.Passes[0].Apply();
                 geometry.RenderSolid();
             }
-            GlobalGraphics.GraphicsDevice.DepthStencilState = prevDepthStencilState;
+            GlobalGraphics.DepthStencilState = prevDepthStencilState;
         }
 
         public void RenderSprites(Viewport3D vp) {
-            World = Matrix.Identity.ToXna();
+            World = Matrix.Identity;//.ToXna();
             Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
             var sprites = Document.Map.WorldSpawn.Find(x => x is Entity { GameData: { } } e && e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
             foreach (var sprite in sprites) {
@@ -671,7 +664,7 @@ namespace CBRE.Editor.Rendering {
                 if (tex is { Texture: AsyncTexture t }) {
                     PrimitiveDrawing.Begin(PrimitiveType.QuadList);
                     var c = sprite.Origin;
-                    var fcolor = prop?.GetVector3(Vector3.One * 255f) ?? (Vector3.One * 255f);
+                    var fcolor = prop?.GetVector3(Vector3.One.ToCbre() * 255f) ?? (Vector3.One.ToCbre() * 255f);
                     t.Bind();
                     double amount = 25.0;
                     var up = vp.Camera.GetUp().Normalise() * amount;
@@ -687,7 +680,7 @@ namespace CBRE.Editor.Rendering {
                     Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
                     PrimitiveDrawing.End();
                     t.Unbind();
-                    Effects.BasicEffect.DiffuseColor = Microsoft.Xna.Framework.Vector3.One;
+                    Effects.BasicEffect.DiffuseColor = Vector3.One;
                 }
             }
             Effects.BasicEffect.TextureEnabled = false;
@@ -707,13 +700,13 @@ namespace CBRE.Editor.Rendering {
                     continue;
                 NativeFile file = new NativeFile(path);
                 if (this.models.ContainsKey(path)) {
-                    Vector3 euler = model.EntityData.GetPropertyVector3("angles", Vector3.Zero);
-                    Vector3 scale = model.EntityData.GetPropertyVector3("scale", Vector3.One);
-                    Matrix modelMat = Matrix.Translation(model.Origin)
-                                      * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
-                                      * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
-                                      * Matrix.RotationZ(DMath.DegreesToRadians(360-euler.Y))
-                                      * Matrix.Scale(scale.XZY());
+                    DataStructures.Geometric.Vector3 euler = model.EntityData.GetPropertyVector3("angles", Vector3.Zero.ToCbre());
+                    DataStructures.Geometric.Vector3 scale = model.EntityData.GetPropertyVector3("scale", Vector3.One.ToCbre());
+                    Matrix modelMat = Matrix.CreateTranslation(model.Origin.ToXna())
+                                      * Matrix.CreateRotationX((float)DMath.DegreesToRadians((decimal)euler.X))
+                                      * Matrix.CreateRotationY((float)DMath.DegreesToRadians((decimal)euler.Z))
+                                      * Matrix.CreateRotationZ((float)DMath.DegreesToRadians((decimal)(360-euler.Y)))
+                                      * Matrix.CreateScale(scale.XZY().ToXna());
                     World = model.RightHandedWorldMatrix.ToXna();
                     ModelRenderer.Render(this.models[path].Model, Effects.BasicEffect);
                 } else if (ModelProvider.CanLoad(file)) {

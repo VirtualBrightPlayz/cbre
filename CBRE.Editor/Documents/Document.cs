@@ -16,7 +16,6 @@ using CBRE.Providers.Map;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
 using CBRE.Settings.Models;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

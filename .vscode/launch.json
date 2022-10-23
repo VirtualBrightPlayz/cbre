@@ -5,7 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "CBRE GFX Test",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build_gfx_test",
+            "program": "${workspaceFolder}/CBRE.GraphicsTest/bin/Debug/net6.0/CBRE.GraphicsTest.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        },
+        {
+            "name": "CBRE Editor",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",

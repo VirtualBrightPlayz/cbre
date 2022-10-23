@@ -6,8 +6,12 @@ using CBRE.Editor.Documents;
 using CBRE.Editor.Popup;
 using CBRE.Graphics;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Matrix = System.Numerics.Matrix4x4;
+using System.Drawing;
 
 namespace CBRE.Editor.Rendering {
     public enum MouseButtons {
@@ -95,7 +99,8 @@ namespace CBRE.Editor.Rendering {
         }
 
         public static void SetCursorPos(ViewportBase vp, int posX, int posY) {
-            Mouse.SetPosition(posX + vp.X, posY + vp.Y);
+            GlobalGraphics.Window.SetMousePosition(posX + vp.X, posY + vp.Y);
+            // Mouse.SetPosition(posX + vp.X, posY + vp.Y);
         }
 
         public static void RenderIfNecessary() {

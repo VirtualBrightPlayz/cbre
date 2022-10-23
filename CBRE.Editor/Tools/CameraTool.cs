@@ -9,7 +9,6 @@ using System.Linq;
 using ImGuiNET;
 using Camera = CBRE.DataStructures.MapObjects.Camera;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Graphics;
 using Vector3 = CBRE.DataStructures.Geometric.Vector3;
 using Num = System.Numerics;
 using CBRE.Editor.Popup;

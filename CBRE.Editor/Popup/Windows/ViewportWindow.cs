@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using System.Linq;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
@@ -7,10 +8,11 @@ using CBRE.Graphics;
 using ImGuiNET;
 using ImGuizmoNET;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Num = System.Numerics;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace CBRE.Editor.Popup {
     public partial class ViewportWindow : DockableWindow {
@@ -30,11 +32,11 @@ namespace CBRE.Editor.Popup {
         private const int viewportGap = 2;
 
         
-        public Viewport GetXnaViewport(int viewportIndex) {
+        public Rectangle GetXnaViewport(int viewportIndex) {
             if (FullscreenViewport == viewportIndex) {
-                return new Viewport(WindowRectangle.X, WindowRectangle.Y, WindowRectangle.Width, WindowRectangle.Height);
+                return new Rectangle(WindowRectangle.X, WindowRectangle.Y, WindowRectangle.Width, WindowRectangle.Height);
             } else if (FullscreenViewport != -1) {
-                return new Viewport(0, 0, 0, 0);
+                return new Rectangle(0, 0, 0, 0);
             }
             int centerX = (int)(ViewportCenter.X * WindowRectangle.Width);
             int centerY = (int)(ViewportCenter.Y * WindowRectangle.Height);
@@ -45,7 +47,7 @@ namespace CBRE.Editor.Popup {
             (int top, int bottom) = viewportIndex / 2 == 0
                 ? (0, centerY - viewportGap)
                 : (centerY + viewportGap, WindowRectangle.Height);
-            return new Viewport(left, top, right - left, bottom - top);
+            return new Rectangle(left, top, right - left, bottom - top);
         }
 
         public Rectangle GetXnaRectangle(int viewportIndex) {
@@ -90,8 +92,8 @@ namespace CBRE.Editor.Popup {
             RenderTarget[index]?.Dispose();
             RenderTarget[index] = new RenderTarget2D(GlobalGraphics.GraphicsDevice, Math.Max(WindowRectangle.Width, 4), Math.Max(WindowRectangle.Height, 4), false, SurfaceFormat.Color, DepthFormat.Depth24);
 
-            GlobalGraphics.GraphicsDevice.SetRenderTarget(RenderTarget[index]);
-            GlobalGraphics.GraphicsDevice.Clear(Color.Black);
+            GlobalGraphics.SetRenderTarget(RenderTarget[index]);
+            GlobalGraphics.Clear(Color.Black);
             Render(index);
             /*for (int i = 0; i < Viewports.Length; i++) {
                 Render(i);
@@ -104,14 +106,14 @@ namespace CBRE.Editor.Popup {
             basicEffect.World = Matrix.Identity;
             basicEffect.CurrentTechnique.Passes[0].Apply();
 
-            GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
-            RenderTargetImGuiPtr[index] = GlobalGraphics.ImGuiRenderer.BindTexture(RenderTarget[index]);
+            GlobalGraphics.SetRenderTarget(null);
+            RenderTargetImGuiPtr[index] = GlobalGraphics.BindTexture(RenderTarget[index]);
         }
         
         private void Render(int viewportIndex) {
             ViewportBase viewport = Viewports[viewportIndex];
             // return new Viewport(0, 0, WindowRectangle.Width, WindowRectangle.Height);
-            Viewport xnaViewport = new Viewport(0, 0, WindowRectangle.Width, WindowRectangle.Height);
+            Rectangle xnaViewport = new Rectangle(0, 0, WindowRectangle.Width, WindowRectangle.Height);
             // Viewport xnaViewport = GetXnaViewport(viewportIndex);
             // Rectangle xnaRect = new Rectangle(xnaViewport.X + WindowRectangle.X, xnaViewport.Y + WindowRectangle.Y, xnaViewport.Width, xnaViewport.Height);
             Rectangle xnaRect = GetXnaRectangle(viewportIndex);
@@ -127,11 +129,11 @@ namespace CBRE.Editor.Popup {
                 basicEffect.CurrentTechnique.Passes[0].Apply();
             };
 
-            GlobalGraphics.GraphicsDevice.ScissorRectangle = xnaViewport.Bounds;
-            GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+            GlobalGraphics.ScissorRectangle = xnaViewport;
+            GlobalGraphics.DepthStencilState = DepthStencilState.None;
 
-            var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
-            GlobalGraphics.GraphicsDevice.Viewport = xnaViewport;
+            var prevViewport = GlobalGraphics.Viewport;
+            GlobalGraphics.Viewport = xnaViewport;
 
             resetBasicEffect();
 
@@ -140,10 +142,10 @@ namespace CBRE.Editor.Popup {
 
             resetBasicEffect();
 
-            GlobalGraphics.GraphicsDevice.DepthStencilState = viewport is Viewport3D ? DepthStencilState.Default : DepthStencilState.None;
+            GlobalGraphics.DepthStencilState = viewport is Viewport3D ? DepthStencilState.Default : DepthStencilState.None;
             GameMain.Instance.SelectedTool?.Render(viewport);
 
-            GlobalGraphics.GraphicsDevice.Viewport = prevViewport;
+            GlobalGraphics.Viewport = prevViewport;
         }
 
         private bool prevMouse1Down = false;
@@ -250,7 +252,7 @@ namespace CBRE.Editor.Popup {
                 RenderTargetSelected[i] = false;
             }
             // ImGui.SetCursorPos(Num.Vector2.Zero);
-            if (ImGui.BeginChild((Viewports.Length + 1).ToString(), new Num.Vector2(WindowRectangle.Size.X, WindowRectangle.Size.Y), false, flags) && Open) {
+            if (ImGui.BeginChild((Viewports.Length + 1).ToString(), new Num.Vector2(WindowRectangle.Size.Width, WindowRectangle.Size.Height), false, flags) && Open) {
                 var cursorPos = ImGui.GetCursorPos();
 
                 const uint unhoveredColor = 0xff494040;
@@ -286,8 +288,8 @@ namespace CBRE.Editor.Popup {
                             float[][] worldC = new float[][] { matWorld.ToCbre().Values.Select(x => (float)x).ToArray() };
 
                             var xnaRect2 = xnaRect;
-                            xnaRect2.Size = new Point(50, 50);
-                            xnaRect2.Location = new Point(xnaRect.Right - xnaRect2.Size.X, xnaRect.Top);
+                            xnaRect2.Size = (Size)new Point(50, 50);
+                            xnaRect2.Location = new Point(xnaRect.Right - xnaRect2.Size.Width, xnaRect.Top);
 
                             ImGuizmo.SetDrawlist(ImGui.GetWindowDrawList());
                             ImGuizmo.SetRect(xnaRect2.X, xnaRect2.Y, xnaRect2.Width, xnaRect2.Height);
@@ -417,7 +419,7 @@ namespace CBRE.Editor.Popup {
             BasicEffect.Dispose();
             for (int i = 0; i < Viewports.Length; i++) {
                 if (RenderTargetImGuiPtr[i] != IntPtr.Zero) {
-                    GlobalGraphics.ImGuiRenderer.UnbindTexture(RenderTargetImGuiPtr[i]);
+                    GlobalGraphics.UnbindTexture(RenderTargetImGuiPtr[i]);
                 }
                 RenderTarget[i]?.Dispose();
             }
