@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CBRE.Common;
 using MetadataExtractor;
+using System.Collections.Generic;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Veldrid;
@@ -25,6 +26,7 @@ namespace CBRE.Graphics {
             public bool Transparent;
         }
 
+        public static List<AsyncTexture> AllTextures { get; private set; } = new List<AsyncTexture>();
         public static Action<string> LoadCallback = null;
         public static int MaxDimensions { get; private set; } = 1024;
 
@@ -52,7 +54,7 @@ namespace CBRE.Graphics {
         public readonly string Filename;
 
         public AsyncTexture(string filename, Task<Data> tsk=null) {
-            VeldridTexture = null;
+            MonoGameTexture = null;
             ImGuiTexture = IntPtr.Zero;
 
             Filename = filename;
@@ -61,6 +63,10 @@ namespace CBRE.Graphics {
                 CheckTaskStatus();
                 LoadCallback?.Invoke(Path.GetFileNameWithoutExtension(Filename));
             });
+        }
+
+        ~AsyncTexture() {
+            AllTextures.Remove(this);
         }
 
         private async Task<Data> Load(Semaphore semaphore = null) {

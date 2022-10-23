@@ -26,6 +26,11 @@ using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Rectangle = System.Drawing.Rectangle;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
+using CBRE.Extensions;
+using CBRE.DataStructures.Transformations;
+using CBRE.FileSystem;
+using CBRE.Providers.Model;
+using CBRE.Common.Mediator;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     sealed partial class Lightmapper {
@@ -35,20 +40,38 @@ namespace CBRE.Editor.Compiling.Lightmap {
         public readonly ImmutableArray<LMFace> ToolFaces;
         public readonly ImmutableArray<LMFace> UnclassifiedFaces;
         public readonly ImmutableArray<LightmapGroup> Groups;
-        
+        public readonly ImmutableArray<LMFace> ModelFaces;
+        public ProgressPopup? progressPopup = null;
+
+        public void UpdateProgress(string msg, float progress) {
+            GameMain.Instance.PostDrawActions.Enqueue(() => {
+                if (progressPopup == null || !GameMain.Instance.Popups.Contains(progressPopup)) {
+                    progressPopup = new ProgressPopup("Lightmap Progress");
+                    GameMain.Instance.Popups.Add(progressPopup);
+                }
+                progressPopup.message = msg;
+                progressPopup.progress = progress;
+            });
+        }
+
         public Lightmapper(Document document) {
             Document = document;
+
+            UpdateProgress("Gathering faces... (Step 1/3)", 0);
 
             var flattenedObjectList = Document.Map.WorldSpawn
                 .GetSelfAndAllChildren();
             var solids = flattenedObjectList
                 .OfType<Solid>();
+            var models = flattenedObjectList
+                .OfType<Entity>().Where(x => x.GameData != null && x.GameData.Behaviours.Any(p => p.Name == "model"));
             var allFaces = solids.SelectMany(s => s.Faces);
             
             List<LMFace> opaqueFaces = new();
             List<LMFace> translucentFaces = new();
             List<LMFace> toolFaces = new();
             List<LMFace> unclassifiedFaces = new();
+            List<LMFace> modelFaces = new();
             foreach (var face in allFaces) {
                 face.UpdateBoundingBox();
                 
@@ -64,10 +87,68 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
             }
 
+            var modelsRefs = new Dictionary<string, ModelReference>();
+            if (LightmapConfig.BakeModelLightmaps || LightmapConfig.BakeModels) {
+                foreach (var model in models) {
+                    DataStructures.Geometric.Vector3 euler = model.EntityData.GetPropertyVector3("angles", DataStructures.Geometric.Vector3.Zero);
+                    DataStructures.Geometric.Vector3 scale = model.EntityData.GetPropertyVector3("scale", DataStructures.Geometric.Vector3.One);
+                    bool shouldBake = model.EntityData.GetPropertyValue("bake")?.ToLowerInvariant() != "false";
+                    DataStructures.Geometric.Matrix modelMat = model.LeftHandedWorldMatrix;
+                                        /*DataStructures.Geometric.Matrix.Translation(model.Origin)
+                                        * DataStructures.Geometric.Matrix.RotationX(DMath.DegreesToRadians(360-euler.X))
+                                        * DataStructures.Geometric.Matrix.RotationY(DMath.DegreesToRadians(360-euler.Y))
+                                        * DataStructures.Geometric.Matrix.RotationZ(DMath.DegreesToRadians(euler.Z))
+                                        * DataStructures.Geometric.Matrix.Scale(scale.XZY());*/
+                    string key = model.GameData.Behaviours.FirstOrDefault(p => p.Name == "model").Values.FirstOrDefault();
+                    string path = Directories.GetModelPath(model.EntityData.GetPropertyValue(key));
+                    if (string.IsNullOrWhiteSpace(path))
+                        continue;
+                    if (!shouldBake)
+                        continue;
+                    NativeFile file = new NativeFile(path);
+                    if (ModelProvider.CanLoad(file) && !modelsRefs.ContainsKey(path)) {
+                        ModelReference mref = ModelProvider.CreateModelReference(file);
+                        modelsRefs.Add(path, mref);
+                    }
+                    if (modelsRefs.ContainsKey(path)) {
+                        var transforms = modelsRefs[path].Model.GetTransforms();
+                        foreach (var meshGroup in modelsRefs[path].Model.GetActiveMeshes().GroupBy(x => x.SkinRef)) {
+                            var tex = modelsRefs[path].Model.Textures[meshGroup.Key];
+                            foreach (var mesh in meshGroup) {
+                                Face tFace = new Face(0);
+                                tFace.Texture.Name = System.IO.Path.GetFileNameWithoutExtension(tex.Name);
+                                tFace.Texture.Texture = tex.TextureObject;
+                                tFace.Plane = new DataStructures.Geometric.Plane(DataStructures.Geometric.Vector3.UnitY, (decimal)1.0);
+                                tFace.BoundingBox = Box.Empty;
+                                Face mFace = tFace.Clone();
+                                var verts = mesh.Vertices.Select(x => new DataStructures.MapObjects.Vertex(new DataStructures.Geometric.Vector3(x.Location * transforms[x.BoneWeightings.First().Bone.BoneIndex]) * modelMat, mFace) {
+                                    TextureU = (decimal)(x.TextureU),
+                                    TextureV = (decimal)(x.TextureV),
+                                });
+                                tFace.Vertices.Clear();
+                                tFace.Vertices.AddRange(verts);
+                                /*for (int i = 0; i < mesh.Vertices.Count - 1; i+=2) {
+                                    tFace.Vertices.Add(verts.ElementAt(i+0));
+                                    tFace.Vertices.Add(verts.ElementAt(i+1));
+                                }*/
+                                tFace.Plane = new DataStructures.Geometric.Plane(tFace.Vertices[0].Location, tFace.Vertices[1].Location, tFace.Vertices[2].Location);
+                                tFace.Vertices.ForEach(v => { v.LMU = -500.0f; v.LMV = -500.0f; });
+                                tFace.UpdateBoundingBox();
+                                LMFace face = new LMFace(tFace.Clone());
+                                BoxF faceBox = new BoxF(face.BoundingBox.Start - new Vector3F(3.0f, 3.0f, 3.0f), face.BoundingBox.End + new Vector3F(3.0f, 3.0f, 3.0f));
+                                // opaqueFaces.Add(face);
+                                modelFaces.Add(face);
+                            }
+                        }
+                    }
+                }
+            }
+
             OpaqueFaces = opaqueFaces.ToImmutableArray();
             TranslucentFaces = translucentFaces.ToImmutableArray();
             ToolFaces = toolFaces.ToImmutableArray();
             UnclassifiedFaces = unclassifiedFaces.ToImmutableArray();
+            ModelFaces = modelFaces.ToImmutableArray();
 
             List<LightmapGroup> groups = new();
 
@@ -80,7 +161,48 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 group.AddFace(face);
             }
 
-            Groups = groups.ToImmutableArray();
+            foreach (var face in ToolFaces) {
+                if (face.Texture.Name.ToLowerInvariant() == "tooltextures/block_light") {
+                    LightmapGroup group = LightmapGroup.FindCoplanar(groups, face);
+                    if (group is null) {
+                        group = new LightmapGroup();
+                        groups.Add(group);
+                    }
+                    group.AddFace(face);
+                }
+            }
+
+            List<LightmapGroup> modelGroups = new();
+
+            foreach (var face in modelFaces) {
+                LightmapGroup group = LightmapGroup.FindCoplanar(modelGroups, face);
+                if (group is null) {
+                    group = new LightmapGroup();
+                    modelGroups.Add(group);
+                }
+                group.AddFace(face);
+            }
+
+            Groups = groups.Union(modelGroups).ToImmutableArray();
+        }
+
+        private async Task WaitForRender(string name, Action? action, CancellationToken token) {
+            bool signal = false;
+            TaskPool.Add(name, Task.Delay(100), (t) => {
+                try {
+                    action?.Invoke();
+                }
+                catch (Exception e) {
+                    Mediator.Publish(EditorMediator.CompileFailed, Document);
+                    Logging.Logger.ShowException(e);
+                    GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
+                }
+                signal = true;
+            });
+            while (!signal) {
+                await Task.Yield();
+                token.ThrowIfCancellationRequested();
+            }
         }
 
         public class Atlas : IDisposable {
@@ -111,12 +233,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 var vertices = faces
                     .SelectMany(f => f.Vertices)
                     .ToImmutableArray();
-                var indices = new List<ushort>();
+                var indices = new List<uint>();
                 long indexOffset = 0;
                 foreach (var f in faces) {
                     indices.AddRange(
                         f.GetTriangleIndices()
-                            .Select(i => (ushort)(i+indexOffset)));
+                            .Select(i => (uint)(i+indexOffset)));
                     indexOffset += f.Vertices.Length;
                 }
                 
@@ -129,7 +251,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     BufferUsage.None);
                 GroupIndices = new IndexBuffer(
                     gd,
-                    IndexElementSize.SixteenBits,
+                    IndexElementSize.ThirtyTwoBits,
                     Groups.Count * 6,
                     BufferUsage.None);
                 
@@ -141,7 +263,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                         i*4+0, i*4+1, i*4+2,
                         i*4+2, i*4+3, i*4+1
                     })
-                    .Select(i => (ushort)i)
+                    .Select(i => (uint)i)
                     .ToArray());
                 
                 GeomVertices = new VertexBuffer(
@@ -151,7 +273,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     BufferUsage.None);
                 GeomIndices = new IndexBuffer(
                     gd,
-                    IndexElementSize.SixteenBits,
+                    IndexElementSize.ThirtyTwoBits,
                     indices.Count,
                     BufferUsage.None);
                 
@@ -214,11 +336,44 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 (Location - new Vector3(Range, Range, Range)).ToCbre(),
                 (Location + new Vector3(Range, Range, Range)).ToCbre());
         }
-        
+
+        private record SpotLight(Vector3 Location, float Range, Vector3 Color, Vector3 Direction, float InnerConeAngle, float OuterConeAngle) {
+            public SpotLight(MapObject lightEntity) : this(default, default, default, default, default, default) {
+                Location = lightEntity.BoundingBox.Center.ToXna();
+                var data = lightEntity.GetEntityData();
+                DataStructures.Geometric.Vector3 angles = data.GetPropertyVector3("angles");
+                var pitch = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
+                var yaw = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
+                var roll = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
+                var m = new UnitMatrixMult(yaw * roll * pitch);
+                Direction = m.Transform(DataStructures.Geometric.Vector3.UnitY).Normalise().ToXna();
+                float getPropertyFloat(string key)
+                    => float.TryParse(data.GetPropertyValue(key), NumberStyles.Any, CultureInfo.InvariantCulture,
+                        out float v)
+                        ? v
+                        : 0.0f;
+                
+                Range = getPropertyFloat("range");
+                Color = data.GetPropertyVector3("color").ToXna() * getPropertyFloat("intensity") / 255.0f;
+                InnerConeAngle = (float)Math.Cos(getPropertyFloat("innerconeangle") * (float)Math.PI / 180.0f);
+                OuterConeAngle = (float)Math.Cos(getPropertyFloat("outerconeangle") * (float)Math.PI / 180.0f);
+            }
+
+            public Box BoundingBox => new(
+                (Location - new Vector3(Range, Range, Range)).ToCbre(),
+                (Location + new Vector3(Range, Range, Range)).ToCbre());
+        }
+
         private ImmutableArray<PointLight> ExtractPointLights()
             => Document.Map.WorldSpawn.Find(
                     e => string.Equals(e.GetEntityData()?.Name, "light", StringComparison.OrdinalIgnoreCase))
                 .Select(e => new PointLight(e))
+                .ToImmutableArray();
+
+        private ImmutableArray<SpotLight> ExtractSpotLights()
+            => Document.Map.WorldSpawn.Find(
+                    e => string.Equals(e.GetEntityData()?.Name, "spotlight", StringComparison.OrdinalIgnoreCase))
+                .Select(e => new SpotLight(e))
                 .ToImmutableArray();
 
         private ImmutableArray<Atlas> PrepareAtlases() {
@@ -227,10 +382,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 .ThenByDescending(g => g.WorldSpaceWidth)
                 .ThenByDescending(g => g.WorldSpaceHeight)
                 .ToList();
+            int maxGroups = remainingGroups.Count;
 
             List<Atlas> atlases = new();
 
             while (remainingGroups.Any()) {
+                UpdateProgress("Calculating lightmap atlases... (Step 2/3)", 1f - ((float)remainingGroups.Count / maxGroups));
                 int prevCount = remainingGroups.Count;
                 
                 var prevGroups = remainingGroups.ToArray();

@@ -29,8 +29,11 @@ namespace CBRE.Providers.Model {
         }
 
         public static ModelReference CreateModelReference(IFile file) {
+            var reference = References.FirstOrDefault(x => x.Path == file.FullPathName);
+            if (reference != null)
+                return reference;
             var model = LoadModel(file);
-            var reference = new ModelReference(file.FullPathName, model);
+            reference = new ModelReference(file.FullPathName, model);
             References.Add(reference);
             return reference;
         }

@@ -34,7 +34,7 @@ namespace CBRE.Editor.Editing {
         }
 
         public bool IsFaceSelected(Face face) {
-            return face.IsSelected || face.Parent.IsSelected;
+            return face.IsSelected || (face.Parent != null && face.Parent.IsSelected);
         }
 
         public void SwitchToFaceSelection() {

@@ -11,8 +11,10 @@
     <_NativeRuntime Condition=" '$(_NativeRuntime)' == '' And '$(_IsWindows)' == 'true' And ('$(Prefer32Bit)' == 'false' Or '$(PlatformTarget)' == 'x64')">win-x64</_NativeRuntime>
 
     <_NativeLibName Condition="'$(_NativeRuntime)' == 'win-x86' Or '$(_NativeRuntime)' == 'win-x64'">cimgui.dll</_NativeLibName>
+    <_NativeLibName Condition="'$(_NativeRuntime)' == 'win-x86' Or '$(_NativeRuntime)' == 'win-x64'">cimguizmo.dll</_NativeLibName>
     <_NativeLibName Condition="'$(_NativeRuntime)' == 'osx-x64'">libcimgui.dylib</_NativeLibName>
     <_NativeLibName Condition="'$(_NativeRuntime)' == 'linux-x64'">libcimgui.so</_NativeLibName>
+    <!-- <_NativeLibName Condition="'$(_NativeRuntime)' == 'linux-x64'">libcimguizmo.so</_NativeLibName> -->
   </PropertyGroup>
   <ItemGroup>
     <Content Condition="'$(_NativeRuntime)' != ''" Include="$(MSBuildThisFileDirectory)..\..\runtimes\$(_NativeRuntime)\native\$(_NativeLibName)">

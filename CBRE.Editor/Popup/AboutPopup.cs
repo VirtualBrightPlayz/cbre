@@ -1,12 +1,24 @@
+using CBRE.Graphics;
 using ImGuiNET;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace CBRE.Editor.Popup {
     public class AboutPopup : PopupUI
     {
-        public AboutPopup() : base("About") { }
+        public readonly bool LoadingBox;
+        private bool doneLoading = false;
+        protected override bool canBeClosed => !LoadingBox;
+        protected override bool canBeDefocused => !LoadingBox;
+        protected override bool hasOkButton => !LoadingBox || doneLoading;
+
+        public AboutPopup(bool loading) : base(loading ? "Loading" : "About") {
+            LoadingBox = loading;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OpenUrl(string url) {
@@ -31,6 +43,7 @@ namespace CBRE.Editor.Popup {
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
             shouldBeOpen = true;
+            ImGui.SetWindowSize(new Vector2(400, 300), ImGuiCond.Once);
 
             ImGui.Text("CBRE:");
             ImGui.SameLine();
@@ -47,7 +60,7 @@ namespace CBRE.Editor.Popup {
 
             Button("Guide", "https://SCP-CBN.github.io/cbre/");
             ImGui.SameLine();
-            Button("Source", "https://github.com/SCP-CBN/cbre");
+            Button("Source", "https://github.com/VirtualBrightPlayz/cbre");
 
             ImGui.Text("License:");
             ImGui.SameLine();
@@ -73,6 +86,35 @@ namespace CBRE.Editor.Popup {
             Button("ced777ric", "https://github.com/ced777ric");
             ImGui.SameLine();
             Button("Bananaman043", "https://github.com/Bananaman043");
+
+            ImGui.Text("Version: ");
+            ImGui.SameLine();
+            using (new ColorPush(ImGuiCol.Text, new Vector4(0f, 1f, 0f, 1f))) {
+                ImGui.Text(VersionUtil.Version);
+            }
+
+            ImGui.Text("Git Hash: ");
+            ImGui.SameLine();
+            if (string.IsNullOrEmpty(VersionUtil.GitHash)) {
+                using (new ColorPush(ImGuiCol.Text, new Vector4(1f, 0f, 0f, 1f))) {
+                    ImGui.Text("N/A");
+                }
+            } else {
+                using (new ColorPush(ImGuiCol.Text, new Vector4(0f, 1f, 0f, 1f))) {
+                    ImGui.Text(VersionUtil.GitHash);
+                }
+            }
+
+            if (LoadingBox) {
+                if (AsyncTexture.AllTextures.Any(x => x.MonoGameTexture == null)) {
+                    ImGui.Text("Starting...");
+                    ImGui.ProgressBar(1f - (float)AsyncTexture.AllTextures.Count(x => x.MonoGameTexture == null) / AsyncTexture.AllTextures.Count, new Vector2(250, 0));
+                } else if (!ImGui.IsWindowHovered()) {
+                    shouldBeOpen = false;
+                } else {
+                    doneLoading = true;
+                }
+            }
         }
     }
 }

@@ -35,10 +35,7 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
-        public static void Render(DataStructures.Models.Model model, Matrix mat, BasicEffect effect) {
-            var oldWorld = effect.World;
-            effect.World = mat.ToXna();
-
+        public static void Render(DataStructures.Models.Model model, BasicEffect effect) {
             foreach (var texBuf in vertexBuffers[model]) {
                 var texture = texBuf.Key;
 
@@ -54,8 +51,6 @@ namespace CBRE.Editor.Rendering {
                 effect.TextureEnabled = false;
                 effect.VertexColorEnabled = true;
             }
-
-            effect.World = oldWorld;
         }
     }
 }

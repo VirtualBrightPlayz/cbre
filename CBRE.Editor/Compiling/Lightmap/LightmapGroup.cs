@@ -92,8 +92,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 Plane.PointOnPlane.Dot(uAxis),
                 Plane.PointOnPlane.Dot(vAxis));
             Vector3F worldPosition = Plane.PointOnPlane
-                                   + (uv.U - pointOnPlaneUv.X - LightmapConfig.DownscaleFactor) * uAxis
-                                   + (uv.V - pointOnPlaneUv.Y - LightmapConfig.DownscaleFactor) * vAxis;
+                                   + (uv.U - pointOnPlaneUv.X /*- LightmapConfig.DownscaleFactor*/) * uAxis
+                                   + (uv.V - pointOnPlaneUv.Y /*- LightmapConfig.DownscaleFactor*/) * vAxis;
             return worldPosition;
         }
 

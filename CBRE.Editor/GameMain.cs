@@ -12,6 +12,7 @@ using CBRE.Providers.Model;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
 using ImGuiNET;
+using ImGuizmoNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -49,6 +50,7 @@ namespace CBRE.Editor {
         public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
         public List<DockableWindow> Dockables { get; private set; } = new List<DockableWindow>();
         public Queue<Action> PostDrawActions { get; private set; } = new Queue<Action>();
+        public Queue<Action> PreDrawActions { get; private set; } = new Queue<Action>();
 
         public GameMain()
         {
@@ -154,6 +156,8 @@ namespace CBRE.Editor {
                 new VisgroupsWindow()
             });
 
+            GameMain.Instance.Popups.Add(new AboutPopup(true));
+
             base.Initialize();
 
             timing.StartMeasurement();
@@ -202,6 +206,14 @@ namespace CBRE.Editor {
 
         protected override void Draw(GameTime gameTime)
         {
+            while (PreDrawActions.Count > 0) {
+                try {
+                    PreDrawActions.Dequeue()?.Invoke();
+                } catch (Exception e) {
+                    Logging.Logger.ShowException(e);
+                }
+            }
+
             ViewportManager.RenderIfNecessary();
 
             GlobalGraphics.GraphicsDevice.Viewport = new Viewport(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
@@ -212,6 +224,10 @@ namespace CBRE.Editor {
 
             // Call BeforeLayout first to set things up
             imGuiRenderer.BeforeLayout(gameTime);
+
+            // imguizmo didn't work without https://github.com/ocornut/imgui/commit/407a81eb10f661d36b931aa25dad2999fb906f92
+            ImGuizmo.SetImGuiContext(imGuiRenderer.context);
+            ImGuizmo.BeginFrame();
 
             // Draw our UI
             ImGuiLayout();

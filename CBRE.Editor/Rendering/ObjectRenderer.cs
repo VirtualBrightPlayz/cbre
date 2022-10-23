@@ -376,9 +376,10 @@ namespace CBRE.Editor.Rendering {
                         ? prevValue
                         : 0) + valueToAdd;
                 for (int i=0;i<faces.Count;i++) {
-                    faces[i].CalculateTextureCoordinates(minimizeShiftValues: true);
+                    if (faces[i].Parent != null)
+                        faces[i].CalculateTextureCoordinates(minimizeShiftValues: true);
                     addCount(vertexCounts, faces[i].LmIndex, faces[i].Vertices.Count);
-                    addCount(indexSolidCounts, faces[i].LmIndex, (faces[i].Vertices.Count - 2) * 3);
+                    addCount(indexSolidCounts, faces[i].LmIndex, faces[i].GetTriangleIndices().Count()/*(faces[i].Vertices.Count - 2) * 3*/);
                     addCount(indexWireframeCounts, faces[i].LmIndex, faces[i].Vertices.Count * 2);
                 }
 
@@ -656,6 +657,7 @@ namespace CBRE.Editor.Rendering {
         }
 
         public void RenderSprites(Viewport3D vp) {
+            World = Matrix.Identity.ToXna();
             Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
             var sprites = Document.Map.WorldSpawn.Find(x => x is Entity { GameData: { } } e && e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
             foreach (var sprite in sprites) {
@@ -710,9 +712,10 @@ namespace CBRE.Editor.Rendering {
                     Matrix modelMat = Matrix.Translation(model.Origin)
                                       * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
                                       * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
-                                      * Matrix.RotationZ(DMath.DegreesToRadians(-euler.Y))
+                                      * Matrix.RotationZ(DMath.DegreesToRadians(360-euler.Y))
                                       * Matrix.Scale(scale.XZY());
-                    ModelRenderer.Render(this.models[path].Model, modelMat, Effects.BasicEffect);
+                    World = model.RightHandedWorldMatrix.ToXna();
+                    ModelRenderer.Render(this.models[path].Model, Effects.BasicEffect);
                 } else if (ModelProvider.CanLoad(file)) {
                     ModelReference mref = ModelProvider.CreateModelReference(file);
                     this.models.Add(path, mref);

@@ -164,7 +164,6 @@ namespace CBRE.Editor.Rendering {
                 objectRenderer.View = GetCameraMatrix();
                 objectRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
 
-
                 GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
                 GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
                 GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;

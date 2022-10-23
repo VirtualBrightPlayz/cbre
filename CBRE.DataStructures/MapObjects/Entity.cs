@@ -23,6 +23,32 @@ namespace CBRE.DataStructures.MapObjects {
             }
         }
 
+        public Matrix RightHandedWorldMatrix {
+            get {
+                var scale = EntityData.GetPropertyVector3("scale", Vector3.One);
+                scale = new Vector3(scale.X, scale.Z, scale.Y);
+                var angles = EntityData.GetPropertyVector3("angles", Vector3.Zero);
+                Matrix pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
+                Matrix yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
+                Matrix roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
+                var tform = ((pitch * yaw * roll) * Matrix.Scale(scale)).Translate(Origin);
+                return tform;
+            }
+        }
+
+        public Matrix LeftHandedWorldMatrix {
+            get {
+                var scale = EntityData.GetPropertyVector3("scale", Vector3.One);
+                scale = new Vector3(scale.X, scale.Z, scale.Y);
+                var angles = EntityData.GetPropertyVector3("angles", Vector3.Zero);
+                Matrix pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
+                Matrix yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
+                Matrix roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
+                var tform = ((pitch * yaw * roll) * Matrix.Scale(scale)).Transpose().Translate(Origin);
+                return tform;
+            }
+        }
+
         public Entity(long id) : base(id) {
             EntityData = new EntityData();
         }

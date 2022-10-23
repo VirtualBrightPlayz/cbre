@@ -23,6 +23,7 @@ namespace CBRE.Editor.Popup {
         protected override bool hasOkButton => false;
 
         private readonly Document document;
+        private int shadowTextureDims;
         private int textureDims;
         private float downscaleFactor;
         private int blurRadius;
@@ -34,10 +35,11 @@ namespace CBRE.Editor.Popup {
         public bool computeShadows;
         public float bakeGamma;
 
-        private readonly Lightmapper lightmapper;
+        private Lightmapper lightmapper;
 
         public ExportPopup(Document document) : base("Export / Compile") {
             this.document = document;
+            shadowTextureDims = LightmapConfig.ShadowTextureDims;
             textureDims = LightmapConfig.TextureDims;
             downscaleFactor = LightmapConfig.DownscaleFactor;
             ambientLightColor = new Color(
@@ -50,7 +52,6 @@ namespace CBRE.Editor.Popup {
             bakeModelLightmaps = LightmapConfig.BakeModelLightmaps;
             computeShadows = LightmapConfig.ComputeShadows;
             bakeGamma = LightmapConfig.BakeGamma;
-            lightmapper = new Lightmapper(document);
         }
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
@@ -62,6 +63,10 @@ namespace CBRE.Editor.Popup {
             ImGui.Text("Lightmap dimensions");
             ImGui.SameLine();
             ImGui.InputInt("##lmDim", ref textureDims);
+            
+            ImGui.Text("Shadowmap dimensions");
+            ImGui.SameLine();
+            ImGui.InputInt("##smDim", ref shadowTextureDims);
             
             float quality = 100.0f / downscaleFactor;
             ImGui.Text("Quality");
@@ -112,32 +117,91 @@ namespace CBRE.Editor.Popup {
             Num.Vector3 ambientNormal = new(ambientLightNormal.X, ambientLightNormal.Y, ambientLightNormal.Z);
             ImGui.InputFloat3("##ambientLightNormal", ref ambientNormal);
             ambientLightNormal = ambientNormal;
+
+            if (ImGui.Button("Apply render settings")) {
+                LightmapConfig.DownscaleFactor = downscaleFactor;
+                LightmapConfig.BlurRadius = blurRadius;
+                LightmapConfig.ShadowTextureDims = shadowTextureDims;
+                LightmapConfig.TextureDims = textureDims;
+                LightmapConfig.AmbientColorR = ambientLightColor.R;
+                LightmapConfig.AmbientColorG = ambientLightColor.G;
+                LightmapConfig.AmbientColorB = ambientLightColor.B;
+                LightmapConfig.AmbientNormalX = ambientLightNormal.X;
+                LightmapConfig.AmbientNormalY = ambientLightNormal.Y;
+                LightmapConfig.AmbientNormalZ = ambientLightNormal.Z;
+                LightmapConfig.PlaneMargin = planeMargin;
+                LightmapConfig.BakeModels = bakeModels;
+                LightmapConfig.BakeModelLightmaps = bakeModelLightmaps;
+                LightmapConfig.ComputeShadows = computeShadows;
+                LightmapConfig.BakeGamma = bakeGamma;
+            }
             
             ImGui.PopItemWidth();
             
             ImGui.PushItemWidth(200.0f);
+
+            if (ImGui.Button("Clear baked data")) {
+                if (document.MGLightmaps is not null) {
+                    foreach (var lm in document.MGLightmaps) {
+                        lm.Dispose();
+                    }
+                    document.MGLightmaps = null;
+                }
+                foreach (var face in document.BakedFaces) {
+                    document.ObjectRenderer.RemoveFace(face);
+                }
+                document.BakedFaces.Clear();
+                LegacyLightmapper.lastBakeFaces = null;
+            }
+            ImGui.Separator();
+            ImGui.Text("Modern Lightmapper (Supports limited features)");
+            if (ImGui.Button("Render##new")) {
+                Task.Run(async () => {
+                    try {
+                        lightmapper = new Lightmapper(document);
+                        await lightmapper.RenderShadowMapped(false);
+                    } catch (Exception e) {
+                        Mediator.Publish(EditorMediator.CompileFailed, document);
+                        Logging.Logger.ShowException(e);
+                    }
+                });
+            }
+            if (ImGui.Button("Render (Debug)##newdbg")) {
+                Task.Run(async () => {
+                    try {
+                        lightmapper = new Lightmapper(document);
+                        await lightmapper.RenderShadowMapped(true);
+                    } catch (Exception e) {
+                        Mediator.Publish(EditorMediator.CompileFailed, document);
+                        Logging.Logger.ShowException(e);
+                    }
+                });
+            }
+
+            if (ImGui.Button("Export .rmesh##new")) {
+                var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
+                if (result == NativeFileDialog.Result.Okay) {
+                    if (document.MGLightmaps == null || document.MGLightmaps.Count == 0 || document.BakedFaces == null) {
+                        GameMain.Instance.Popups.Add(new ConfirmPopup("Un-rendered map", "There is no lightmap detected, exporting will be done without lightmaps", new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) }) {
+                            Buttons = new [] {
+                                new ConfirmPopup.Button("Export anyways", () => RMeshProvider.SaveToFile(path, document.Map, null, null, false)),
+                                new ConfirmPopup.Button("Don't export", () => { }),
+                            }.ToImmutableArray(),
+                        });
+                    }
+                    else {
+                        RMeshProvider.SaveToFile(path, document.Map, document.MGLightmaps.ToArray(), document.BakedFaces.ToArray(), true);
+                    }
+                }
+            }
+
+            ImGui.Separator();
+            ImGui.Text("Legacy Lightmapper (Supports all features)");
             if (LegacyLightmapper.FaceRenderThreads == null || LegacyLightmapper.FaceRenderThreads.Count == 0) {
-                if (ImGui.Button("Render")) {
-                    LightmapConfig.DownscaleFactor = downscaleFactor;
-                    LightmapConfig.BlurRadius = blurRadius;
-                    LightmapConfig.TextureDims = textureDims;
-                    LightmapConfig.AmbientColorR = ambientLightColor.R;
-                    LightmapConfig.AmbientColorG = ambientLightColor.G;
-                    LightmapConfig.AmbientColorB = ambientLightColor.B;
-                    LightmapConfig.AmbientNormalX = ambientLightNormal.X;
-                    LightmapConfig.AmbientNormalY = ambientLightNormal.Y;
-                    LightmapConfig.AmbientNormalZ = ambientLightNormal.Z;
-                    LightmapConfig.PlaneMargin = planeMargin;
-                    LightmapConfig.BakeModels = bakeModels;
-                    LightmapConfig.BakeModelLightmaps = bakeModelLightmaps;
-                    LightmapConfig.ComputeShadows = computeShadows;
-                    LightmapConfig.BakeGamma = bakeGamma;
-                    // lightmapper.RenderShadowMapped();
-                    // lightmapper.RenderRayTest();
+                if (ImGui.Button("Render##legacy")) {
                     Task.Run(() => {
                         try {
                             LegacyLightmapper.Render(document, out _, out _, LightmapConfig.BakeModels);
-                            // document.ObjectRenderer.MarkDirty();
                         } catch (Exception e) {
                             Mediator.Publish(EditorMediator.CompileFailed, document);
                             GameMain.Instance.PostDrawActions.Enqueue(() => {
@@ -147,10 +211,10 @@ namespace CBRE.Editor.Popup {
                     });
                 }
 
-                if (ImGui.Button("Export .rmesh")) {
+                if (ImGui.Button("Export .rmesh##legacy")) {
                     var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
                     if (result == NativeFileDialog.Result.Okay) {
-                        if (document.MGLightmaps == null || document.MGLightmaps.Count == 0) {
+                        if (document.MGLightmaps == null || document.MGLightmaps.Count == 0 || LegacyLightmapper.lastBakeFaces == null) {
                             // using (ColorPush.RedButton()) {
                                 GameMain.Instance.Popups.Add(new ConfirmPopup("Un-rendered map", "There is no lightmap detected, exporting will be done without lightmaps", new ImColor() { Value = new Num.Vector4(0.75f, 0f, 0f, 1f) }) {
                                     Buttons = new [] {

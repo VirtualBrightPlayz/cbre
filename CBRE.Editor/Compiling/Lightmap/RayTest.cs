@@ -89,15 +89,17 @@ sealed partial class Lightmapper {
 
         for (int i=0;i<atlases.Length;i++) {
             var atlas = atlases[i];
-            using Texture2D texture = new Texture2D(
+            Texture2D texture = new Texture2D(
                 GlobalGraphics.GraphicsDevice,
                 LightmapConfig.TextureDims,
                 LightmapConfig.TextureDims,
                 mipmap: false,
                 SurfaceFormat.Color);
             texture.SetData(atlasBuffers[atlas].SelectMany(p => p.ToRgba32Bytes()).ToArray());
+            string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"lm_{i}.png");
+            texture.Name = $"lm_{i}";
             Document.MGLightmaps.Add(texture);
-            using var fileStream = File.Open($"atlas{i}.png", FileMode.Create);
+            using var fileStream = File.OpenWrite(fname);
             texture.SaveAsPng(fileStream, texture.Width, texture.Height);
         }
     }

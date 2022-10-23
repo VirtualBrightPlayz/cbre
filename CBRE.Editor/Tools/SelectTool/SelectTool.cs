@@ -32,6 +32,7 @@ namespace CBRE.Editor.Tools.SelectTool
     {
         private MapObject ChosenItemFor3DSelection { get; set; }
         private List<MapObject> IntersectingObjectsFor3DSelection { get; set; }
+        public bool TransformState { get; set; } = false;
 
         private readonly List<TransformationTool> _tools;
         private TransformationTool _lastTool;
@@ -47,9 +48,12 @@ namespace CBRE.Editor.Tools.SelectTool
             Usage = ToolUsage.Both;
             _tools = new List<TransformationTool>
                          {
-                             new ResizeTool(),
-                             new RotateTool(),
-                             new SkewTool()
+                            new ResizeTool(),
+                            new RotateTool(),
+                            new SkewTool(),
+                            new ThreeDGizmosTool(ImGuizmoNET.OPERATION.TRANSLATE),
+                            new ThreeDGizmosTool(ImGuizmoNET.OPERATION.ROTATE),
+                            // new ThreeDGizmosTool(ImGuizmoNET.OPERATION.SCALE),
                          };
             _widgets = new List<Widget>();
 
@@ -107,6 +111,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         public override void ToolSelected(bool preventHistory)
         {
+            TransformState = false;
             SetCurrentTool(_currentTool);
             IgnoreGroupingChanged();
 
@@ -120,6 +125,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         public override void ToolDeselected(bool preventHistory)
         {
+            TransformState = false;
             SetCurrentTool(null);
         }
 
@@ -173,6 +179,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         private void OnWidgetTransformed(Matrix transformation)
         {
+            TransformState = false;
             if (transformation != null)
             {
                 ExecuteTransform("Manipulate", CreateMatrixMultTransformation(transformation), false);
@@ -183,6 +190,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         private void OnWidgetTransforming(Matrix transformation)
         {
+            TransformState = true;
             if (transformation != null) Document.SetSelectListTransform(transformation);
         }
 
@@ -201,6 +209,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         private void SelectionChanged()
         {
+            TransformState = false;
             if (Document == null) return;
             var selectedObjects = Document.Selection.GetSelectedObjects().ToArray();
             var types = selectedObjects.Select(o => o.GetType()).Distinct().ToArray();
@@ -289,6 +298,11 @@ namespace CBRE.Editor.Tools.SelectTool
         {
             WidgetAction((w, vp, ev) => w.Render(vp), viewport, null);
             base.Render(viewport);
+        }
+
+        public override void ViewportUi(ViewportBase viewport) {
+            WidgetAction((w, vp, ev) => w.ViewportUi(vp), viewport, null);
+            base.ViewportUi(viewport);
         }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
@@ -398,6 +412,12 @@ namespace CBRE.Editor.Tools.SelectTool
         /// <param name="e">The click event</param>
         protected override void MouseDown3D(Viewport3D viewport, ViewportEvent e)
         {
+            if (TransformState) return;
+            if (e.Button == MouseButtons.Right) {
+                var idx = _tools.IndexOf(_currentTool);
+                SetCurrentTool(_tools[(idx + 1) % _tools.Count]);
+                return;
+            }
             var keyboardState = Keyboard.GetState();
             // Do not perform selection if space is down
             if (CBRE.Settings.View.Camera3DPanRequiresMouseClick && keyboardState.IsKeyDown(Keys.Space)) return;

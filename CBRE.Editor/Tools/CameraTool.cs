@@ -12,6 +12,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
 using Vector3 = CBRE.DataStructures.Geometric.Vector3;
 using Num = System.Numerics;
+using CBRE.Editor.Popup;
 
 namespace CBRE.Editor.Tools
 {
@@ -275,10 +276,20 @@ namespace CBRE.Editor.Tools
         }
         
         public override void KeyHitBackground(ViewportBase viewport, ViewportEvent e) {
-            if (viewport is Viewport3D vp3d && e.KeyCode == Keys.Z && !e.AnyModifiers) {
-                zShortcut = !zShortcut;
-                if (zShortcut) {
-                    ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
+            if (viewport is Viewport3D vp3d && e.KeyCode == Keys.Z) {
+                if (!e.AnyModifiers) {
+                    zShortcut = !zShortcut;
+                    if (zShortcut) {
+                        ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
+                    }
+                } else if (e.Shift) {
+                    IEnumerable<ViewportWindow> vpWindows = GameMain.Instance.Dockables.Where(d => d is ViewportWindow v && v.Viewports.Contains(vp3d)).Cast<ViewportWindow>();
+                    if (vpWindows.Any()) {
+                        if (vpWindows.First().FullscreenViewport == -1)
+                            vpWindows.First().FullscreenViewport = Array.IndexOf(vpWindows.First().Viewports, vp3d);
+                        else
+                            vpWindows.First().FullscreenViewport = -1;
+                    }
                 }
             }
         }

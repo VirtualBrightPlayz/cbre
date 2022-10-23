@@ -42,6 +42,7 @@ namespace CBRE.Editor.Documents {
         public ObjectRenderer ObjectRenderer { get; private set; }
         public bool LightmapTextureOutdated { get; set; }
         public List<Texture2D> MGLightmaps { get; set; } = null;
+        public List<Face> BakedFaces { get; set; } = new List<Face>();
 
         private readonly DocumentSubscriptions _subscriptions;
         private readonly DocumentMemory _memory;

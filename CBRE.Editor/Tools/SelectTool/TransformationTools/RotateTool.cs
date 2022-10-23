@@ -77,7 +77,8 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
 
         public override IEnumerable<Widget> GetWidgets(Document document)
         {
-            yield return new RotationWidget(document);
+            yield break;
+            // yield return new RotationWidget(document);
         }
     }
 }
