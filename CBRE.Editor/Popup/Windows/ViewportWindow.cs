@@ -88,7 +88,8 @@ namespace CBRE.Editor.Popup {
                 RenderTargetImGuiPtr[index] = IntPtr.Zero;
             }
             RenderTarget[index]?.Dispose();
-            RenderTarget[index] = new RenderTarget2D(GlobalGraphics.GraphicsDevice, Math.Max(WindowRectangle.Width, 4), Math.Max(WindowRectangle.Height, 4), false, SurfaceFormat.Color, DepthFormat.Depth24);
+            Rectangle xnaRect = GetXnaRectangle(index);
+            RenderTarget[index] = new RenderTarget2D(GlobalGraphics.GraphicsDevice, Math.Max(xnaRect.Width, 4), Math.Max(xnaRect.Height, 4), false, SurfaceFormat.Color, DepthFormat.Depth24);
 
             GlobalGraphics.GraphicsDevice.SetRenderTarget(RenderTarget[index]);
             GlobalGraphics.GraphicsDevice.Clear(Color.Black);
@@ -131,7 +132,7 @@ namespace CBRE.Editor.Popup {
             GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
 
             var prevViewport = GlobalGraphics.GraphicsDevice.Viewport;
-            GlobalGraphics.GraphicsDevice.Viewport = xnaViewport;
+            // GlobalGraphics.GraphicsDevice.Viewport = xnaViewport;
 
             resetBasicEffect();
 
