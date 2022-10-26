@@ -36,6 +36,14 @@ namespace CBRE.Graphics {
         public static Microsoft.Xna.Framework.Vector3 ToXna(this Vector3F vector) {
             return new Microsoft.Xna.Framework.Vector3((float)vector.X, (float)vector.Y, (float)vector.Z);
         }
+
+        public static System.Numerics.Vector3 ToNum(this Vector3 vector) {
+            return new System.Numerics.Vector3((float)vector.X, (float)vector.Y, (float)vector.Z);
+        }
+
+        public static System.Numerics.Vector3 ToNum(this Vector3F vector) {
+            return new System.Numerics.Vector3((float)vector.X, (float)vector.Y, (float)vector.Z);
+        }
         
         public static Vector3 ToCbre(this Microsoft.Xna.Framework.Vector3 vector) {
             return new Vector3((decimal)vector.X, (decimal)vector.Y, (decimal)vector.Z);
@@ -43,6 +51,10 @@ namespace CBRE.Graphics {
         
         public static Vector3F ToCbreF(this Microsoft.Xna.Framework.Vector3 vector) {
             return new Vector3F(vector.X, vector.Y, vector.Z);
+        }
+        
+        public static System.Numerics.Vector3 ToNum(this Microsoft.Xna.Framework.Vector3 vector) {
+            return new System.Numerics.Vector3(vector.X, vector.Y, vector.Z);
         }
     }
 }

@@ -18,6 +18,7 @@
         public static bool BakeModelLightmaps { get; set; }
         public static bool ComputeShadows { get; set; }
         public static float BakeGamma { get; set; }
+        public static float HitDistanceSquared { get; set; }
 
         static LightmapConfig() {
             DownscaleFactor = 15;
@@ -38,6 +39,8 @@
             BakeModelLightmaps = false;
             ComputeShadows = true;
             BakeGamma = 1.0f;
+
+            HitDistanceSquared = 100f;
         }
     }
 }
