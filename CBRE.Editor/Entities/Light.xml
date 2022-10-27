@@ -13,6 +13,7 @@
         <property name="range" type="Float" default="100.0" />
         <property name="intensity" type="Float" default="1.0" />
         <property name="hassprite" type="Boolean" default="true" />
+        <property name="size" type="Float" default="1.0" />
     </properties>
 
     <sprite name="Sprites/lightbulb" color="color" />

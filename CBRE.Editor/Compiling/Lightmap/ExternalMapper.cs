@@ -94,7 +94,7 @@ sealed partial class Lightmapper {
                 light.Color = data.GetPropertyVector3("color").ToNum() / 255f;
                 light.Range = getPropertyFloat("range") * scale;
                 light.Intensity = getPropertyFloat("intensity");
-                light.Extras = SharpGLTF.IO.JsonContent.Serialize(new ExternalLightData(128f * scale));
+                light.Extras = SharpGLTF.IO.JsonContent.Serialize(new ExternalLightData(MathF.Max(1f, getPropertyFloat("size")) * scale));
                 n.PunctualLight = light;
                 n.WithLocalTranslation(pointLights[i].BoundingBox.Center.ToNum() * scale);
             }
