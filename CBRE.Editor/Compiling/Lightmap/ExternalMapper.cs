@@ -74,7 +74,10 @@ sealed partial class Lightmapper {
                             var v0 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p0, t0);
                             var v1 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p1, t1);
                             var v2 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p2, t2);
-                            prim.AddTriangle(v2, v1, v0);
+                            var val = prim.AddTriangle(v2, v1, v0);
+                            /*if (val.A == -1 || val.B == -1 || val.C == -1) {
+                                Debugger.Break();
+                            }*/
                         }
                     }
                 }
@@ -98,6 +101,17 @@ sealed partial class Lightmapper {
                 n.PunctualLight = light;
                 n.WithLocalTranslation(pointLights[i].BoundingBox.Center.ToNum() * scale);
             }
+
+            {
+                // var cam = Document.Map.GetActiveCamera();
+                // Node n = root.CreateLogicalNode();
+                // var cam2 = root.CreateCamera("ActiveCamera");
+                // cam2.SetPerspectiveMode(1f, 90 * MathF.PI / 180f, 0.01f, 1000f);
+                // n.Camera = cam2;
+                // n.WithLocalTranslation(cam.EyePosition.ToNum() * scale);
+                // n.WithLocalRotation(System.Numerics.Quaternion.CreateFromRotationMatrix(System.Numerics.Matrix4x4.CreateLookAt(cam.EyePosition.ToNum() * scale, cam.LookPosition.ToNum(), cam.GetUp().ToNum())));
+            }
+
             string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"input.glb");
             root.SaveGLB(fname);
 
