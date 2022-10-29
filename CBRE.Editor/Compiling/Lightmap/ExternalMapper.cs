@@ -143,6 +143,7 @@ sealed partial class Lightmapper {
                 await WaitForRender("Add Texture External", () => {
                     Document.MGLightmaps.Add(tex);
                 }, token);
+                UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)(atlasIndex + 1) / atlases.Length);
             }
 
         UpdateProgress("Lightmapping complete!", 1.0f);
