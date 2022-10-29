@@ -59,11 +59,11 @@ sealed partial class Lightmapper {
             ModelRoot root = ModelRoot.CreateModel();
             for (int atlasIndex = 0; atlasIndex < atlases.Length; atlasIndex++) {
                 var atlas = atlases[atlasIndex];
-                Node n = root.CreateLogicalNode();
-                var meshBuilder = new MeshBuilder<VertexPositionNormal, SharpGLTF.Geometry.VertexTypes.VertexTexture2>($"atlas_{atlasIndex}");
-                var prim = meshBuilder.UsePrimitive(new SharpGLTF.Materials.MaterialBuilder("Default"));
                 foreach (var group in atlas.Groups) {
                     foreach (var face in group.Faces) {
+                        Node n = root.CreateLogicalNode();
+                        var meshBuilder = new MeshBuilder<VertexPositionNormal, SharpGLTF.Geometry.VertexTypes.VertexTexture2>($"atlas_{atlasIndex}");
+                        var prim = meshBuilder.UsePrimitive(new SharpGLTF.Materials.MaterialBuilder("Default"));
                         foreach (var tri in face.GetTriangles()) {
                             var p0 = new VertexPositionNormal(tri[0].Location.ToNum() * scale, face.Normal.ToNum());
                             var p1 = new VertexPositionNormal(tri[1].Location.ToNum() * scale, face.Normal.ToNum());
@@ -79,10 +79,10 @@ sealed partial class Lightmapper {
                                 Debugger.Break();
                             }*/
                         }
+                        var mesh = root.CreateMesh(meshBuilder);
+                        n.Mesh = mesh;
                     }
                 }
-                var mesh = root.CreateMesh(meshBuilder);
-                n.Mesh = mesh;
             }
 
             for (int i = 0; i < pointLights.Length; i++) {
