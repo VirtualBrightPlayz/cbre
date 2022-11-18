@@ -46,13 +46,13 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             if (state.Handle == BaseBoxTool.ResizeHandle.Center)
             {
                 var movement = state.BoxStart - state.PreTransformBoxStart;
-                resizeMatrix = Matrix.Translation(movement);
+                resizeMatrix = Matrix.Translation(movement ?? Vector3.Zero);
             }
             else
             {
-                var resize = (state.PreTransformBoxStart - state.BoxStart) +
-                             (state.BoxEnd - state.PreTransformBoxEnd);
-                resize = resize.ComponentDivide(state.PreTransformBoxEnd - state.PreTransformBoxStart);
+                var resize = ((state.PreTransformBoxStart - state.BoxStart) +
+                             (state.BoxEnd - state.PreTransformBoxEnd)) ?? Vector3.Zero;
+                resize = resize.ComponentDivide((state.PreTransformBoxEnd - state.PreTransformBoxStart) ?? Vector3.One);
                 resize += new Vector3(1, 1, 1);
                 var offset = GetOriginForTransform(viewport, state);
                 var trans = Matrix.Translation(offset);
@@ -62,35 +62,35 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             return resizeMatrix;
         }
 
-        private Vector3 GetResizeOrigin(Viewport2D viewport, BaseBoxTool.BoxState state, Document document)
+        private Vector3? GetResizeOrigin(Viewport2D viewport, BaseBoxTool.BoxState state, Document document)
         {
-            if (state.Action != BaseBoxTool.BoxAction.Resizing || state.Handle != BaseBoxTool.ResizeHandle.Center) return null;
+            if (state.Action != BaseBoxTool.BoxAction.Resizing || state.Handle != BaseBoxTool.ResizeHandle.Center) { return null; }
             var sel = document.Selection.GetSelectedParents().ToList();
             if (sel.Count == 1 && sel[0] is Entity && !sel[0].HasChildren)
             {
                 return viewport.Flatten(((Entity)sel[0]).Origin);
             }
-            var st = viewport.Flatten(state.PreTransformBoxStart);
-            var ed = viewport.Flatten(state.PreTransformBoxEnd);
+            var st = viewport.Flatten(state.PreTransformBoxStart ?? Vector3.Zero);
+            var ed = viewport.Flatten(state.PreTransformBoxEnd ?? Vector3.Zero);
             var points = new[] { st, ed, new Vector3(st.X, ed.Y, 0), new Vector3(ed.X, st.Y, 0) };
-            return points.OrderBy(x => (state.MoveStart - x).LengthSquared()).First();
+            return points.OrderBy(x => ((state.MoveStart - x) ?? Vector3.Zero).LengthSquared()).First();
         }
 
-        private Vector3 GetResizeDistance(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document document)
+        private Vector3? GetResizeDistance(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document document)
         {
             var origin = GetResizeOrigin(viewport, state, document);
-            if (origin == null) return null;
-            var before = state.MoveStart;
+            if (origin == null) { return null; }
+            var before = state.MoveStart ?? Vector3.Zero;
             var after = viewport.ScreenToWorld(e.X, viewport.Height - e.Y);
-            return SnapIfNeeded(origin + after - before, document) - origin;
+            return SnapIfNeeded(origin.Value + after - before, document) - origin;
         }
 
-        private Tuple<Vector3, Vector3> GetBoxCoordinatesForSelectionResize(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document document)
+        private (Vector3 Start, Vector3 End) GetBoxCoordinatesForSelectionResize(Viewport2D viewport, ViewportEvent e, BaseBoxTool.BoxState state, Document document)
         {
-            if (state.Action != BaseBoxTool.BoxAction.Resizing) return Tuple.Create(state.BoxStart, state.BoxEnd);
+            if (state.Action != BaseBoxTool.BoxAction.Resizing) return (state.BoxStart ?? Vector3.Zero, state.BoxEnd ?? Vector3.Zero);
             var now = SnapIfNeeded(viewport.ScreenToWorld(e.X, viewport.Height - e.Y), document);
-            var cstart = viewport.Flatten(state.BoxStart);
-            var cend = viewport.Flatten(state.BoxEnd);
+            var cstart = viewport.Flatten(state.BoxStart ?? Vector3.Zero);
+            var cend = viewport.Flatten(state.BoxEnd ?? Vector3.Zero);
 
             // Proportional scaling
             var ostart = viewport.Flatten(state.PreTransformBoxStart ?? Vector3.Zero);
@@ -119,8 +119,8 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
                     var cdiff = cend - cstart;
 
                     var distance = GetResizeDistance(viewport, e, state, document);
-                    if (distance == null) cstart = viewport.Flatten(state.PreTransformBoxStart) + now - SnapIfNeeded(state.MoveStart, document);
-                    else cstart = viewport.Flatten(state.PreTransformBoxStart) + distance;
+                    if (distance == null) cstart = viewport.Flatten(state.PreTransformBoxStart ?? Vector3.Zero) + now - SnapIfNeeded(state.MoveStart ?? Vector3.Zero, document);
+                    else cstart = viewport.Flatten(state.PreTransformBoxStart ?? Vector3.Zero) + distance.Value;
                     cend = cstart + cdiff;
                     break;
                 case BaseBoxTool.ResizeHandle.Right:
@@ -170,17 +170,17 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
                 }
             }
 
-            cstart = viewport.Expand(cstart) + viewport.GetUnusedCoordinate(state.BoxStart);
-            cend = viewport.Expand(cend) + viewport.GetUnusedCoordinate(state.BoxEnd);
-            return Tuple.Create(cstart, cend);
+            cstart = viewport.Expand(cstart) + viewport.GetUnusedCoordinate(state.BoxStart ?? Vector3.Zero);
+            cend = viewport.Expand(cend) + viewport.GetUnusedCoordinate(state.BoxEnd ?? Vector3.Zero);
+            return (cstart, cend);
         }
 
         private static Vector3 GetOriginForTransform(Viewport2D viewport, BaseBoxTool.BoxState state)
         {
             decimal x = 0;
             decimal y = 0;
-            var cstart = viewport.Flatten(state.PreTransformBoxStart);
-            var cend = viewport.Flatten(state.PreTransformBoxEnd);
+            var cstart = viewport.Flatten(state.PreTransformBoxStart ?? Vector3.Zero);
+            var cend = viewport.Flatten(state.PreTransformBoxEnd ?? Vector3.Zero);
             switch (state.Handle)
             {
                 case BaseBoxTool.ResizeHandle.TopLeft:

@@ -1,20 +1,23 @@
+using CBRE.Graphics;
 using ImGuiNET;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace CBRE.Editor.Popup {
     public class AboutPopup : PopupUI
     {
-        private const string githubURL = "https://github.com/VirtualBrightPlayz/cbre";
-        private const string juanjp600URL = "https://juanjp600.github.io/cbre/";
-        private const string cbreURL = "https://github.com/juanjp600/cbre";
-        private const string GPLv2URL = "https://www.gnu.org/licenses/gpl-2.0.html";
-        private const string LogicAndTrick = "https://logic-and-trick.com/";
+        public readonly bool LoadingBox;
+        private bool doneLoading = false;
+        protected override bool canBeClosed => !LoadingBox;
+        protected override bool canBeDefocused => !LoadingBox;
+        protected override bool hasOkButton => !LoadingBox || doneLoading;
 
-        public AboutPopup() : base("About")
-        {
-            GameMain.Instance.PopupSelected = true;
+        public AboutPopup(bool loading) : base(loading ? "Loading" : "About") {
+            LoadingBox = loading;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -38,64 +41,80 @@ namespace CBRE.Editor.Popup {
             }
         }
 
-        protected override bool ImGuiLayout() {
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
+            ImGui.SetWindowSize(new Vector2(400, 300), ImGuiCond.Once);
 
-            ImGui.Text("Source:");
+            ImGui.Text("CBRE:");
             ImGui.SameLine();
 
-            if (ImGui.Button("Github")) {
-                try {
-                    Process.Start(githubURL);
-                } catch {
-                    OpenUrl(githubURL);
+            void Button(string name, string url) {
+                if (ImGui.Button(name)) {
+                    try {
+                        Process.Start(url);
+                    } catch {
+                        OpenUrl(url);
+                    }
                 }
             }
 
-            ImGui.Text("juanjp600:");
+            Button("Guide", "https://SCP-CBN.github.io/cbre/");
             ImGui.SameLine();
-            if (ImGui.Button("GitHub Pages CBRE")) {
-                try {
-                    Process.Start(juanjp600URL);
-                } catch {
-                    OpenUrl(juanjp600URL);
-                }
-            }
-            ImGui.SameLine();
-            if (ImGui.Button("CBRE GitHub")) {
-                try {
-                    Process.Start(cbreURL);
-                } catch {
-                    OpenUrl(cbreURL);
-                }
-            }
+            Button("Source", "https://github.com/VirtualBrightPlayz/cbre");
 
             ImGui.Text("License:");
             ImGui.SameLine();
 
-            if (ImGui.Button("GPLv2")) {
-                try {
-                    Process.Start(GPLv2URL);
-                } catch {
-                    OpenUrl(GPLv2URL);
-                }
-            }
+            Button("GPLv2", "https://www.gnu.org/licenses/gpl-2.0.html");
 
             ImGui.Text("LogicAndTrick:");
             ImGui.SameLine();
 
-            if (ImGui.Button("L&T")) {
-                try {
-                    Process.Start(LogicAndTrick);
-                } catch {
-                    OpenUrl(LogicAndTrick);
+            Button("L&T", "https://logic-and-trick.com/");
+
+            ImGui.Text("Made by:");
+            ImGui.SameLine();
+            Button("juanjp600", "https://github.com/juanjp600");
+            ImGui.SameLine();
+            Button("VirtualBrightPlayz", "https://github.com/VirtualBrightPlayz");
+            ImGui.SameLine();
+            Button("Salvage", "https://github.com/Saalvage");
+            Button("TheMoogle", "https://github.com/TheMoogle");
+            ImGui.SameLine();
+            Button("AestheticalZ", "https://github.com/AestheticalZ");
+            ImGui.SameLine();
+            Button("ced777ric", "https://github.com/ced777ric");
+            ImGui.SameLine();
+            Button("Bananaman043", "https://github.com/Bananaman043");
+
+            ImGui.Text("Version: ");
+            ImGui.SameLine();
+            using (new ColorPush(ImGuiCol.Text, new Vector4(0f, 1f, 0f, 1f))) {
+                ImGui.Text(VersionUtil.Version);
+            }
+
+            ImGui.Text("Git Hash: ");
+            ImGui.SameLine();
+            if (string.IsNullOrEmpty(VersionUtil.GitHash)) {
+                using (new ColorPush(ImGuiCol.Text, new Vector4(1f, 0f, 0f, 1f))) {
+                    ImGui.Text("N/A");
+                }
+            } else {
+                using (new ColorPush(ImGuiCol.Text, new Vector4(0f, 1f, 0f, 1f))) {
+                    ImGui.Text(VersionUtil.GitHash);
                 }
             }
 
-            if (ImGui.Button("Close")) {
-                return false;
+            if (LoadingBox) {
+                if (AsyncTexture.AllTextures.Any(x => x.MonoGameTexture == null)) {
+                    ImGui.Text("Starting...");
+                    ImGui.ProgressBar(1f - (float)AsyncTexture.AllTextures.Count(x => x.MonoGameTexture == null) / AsyncTexture.AllTextures.Count, new Vector2(250, 0));
+                } else if (!ImGui.IsWindowHovered()) {
+                    shouldBeOpen = false;
+                } else {
+                    doneLoading = true;
+                }
             }
-
-            return true;
         }
     }
 }

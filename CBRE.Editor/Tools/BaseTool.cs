@@ -1,4 +1,5 @@
-﻿using CBRE.Common.Mediator;
+﻿using System;
+using CBRE.Common.Mediator;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.Extensions;
@@ -87,9 +88,9 @@ namespace CBRE.Editor.Tools
             return closest;
         }
 
-        protected Vector3 GetNudgeValue(Keys k)
+        protected Vector3? GetNudgeValue(Keys k)
         {
-            if (!Select.ArrowKeysNudgeSelection) return null;
+            if (!Select.ArrowKeysNudgeSelection) { return null; }
             var keyboardState = Keyboard.GetState();
             var ctrl = keyboardState.IsKeyDown(Keys.LeftControl) || keyboardState.IsKeyDown(Keys.RightControl);
             var gridoff = Select.NudgeStyle == NudgeStyle.GridOffCtrl;
@@ -150,30 +151,31 @@ namespace CBRE.Editor.Tools
             // Virtual
         }
 
-        public virtual void Notify(string message, object data)
+        public virtual void Notify(Enum message, object data)
         {
             Mediator.ExecuteDefault(this, message, data);
         }
 
         public abstract void MouseEnter(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseLeave(ViewportBase viewport, ViewportEvent e);
-        public abstract void MouseDown(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseClick(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseDoubleClick(ViewportBase viewport, ViewportEvent e);
-        public abstract void MouseUp(ViewportBase viewport, ViewportEvent e);
+        public abstract void MouseLifted(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseWheel(ViewportBase viewport, ViewportEvent e);
         public abstract void MouseMove(ViewportBase viewport, ViewportEvent e);
-        public abstract void KeyPress(ViewportBase viewport, ViewportEvent e);
-        public abstract void KeyDown(ViewportBase viewport, ViewportEvent e);
-        public abstract void KeyUp(ViewportBase viewport, ViewportEvent e);
+        public virtual void MouseMoveBackground(ViewportBase viewport, ViewportEvent e) { }
+        public virtual void KeyHitBackground(ViewportBase viewport, ViewportEvent e) { }
+        public abstract void KeyHit(ViewportBase viewport, ViewportEvent e);
+        public abstract void KeyLift(ViewportBase viewport, ViewportEvent e);
+        public virtual void KeyUpBackground(ViewportBase viewport, ViewportEvent e) { }
         public abstract void UpdateFrame(ViewportBase viewport, FrameInfo frame);
         public abstract void Render(ViewportBase viewport);
 
-        public virtual void KeyDown(ViewportEvent e) {
+        public virtual void KeyHit(ViewportEvent e) {
             return;
         }
 
-        public virtual void KeyUp(ViewportEvent e) {
+        public virtual void KeyLift(ViewportEvent e) {
             return;
         }
 
@@ -181,6 +183,10 @@ namespace CBRE.Editor.Tools
             return;
         }
 
+        public virtual void ViewportUi(ViewportBase viewport) {
+            return;
+        }
+        
         public virtual void UpdateGui() {
             return;
         }

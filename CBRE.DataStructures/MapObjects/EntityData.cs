@@ -63,9 +63,9 @@ namespace CBRE.DataStructures.MapObjects {
             prop.Value = value;
         }
 
-        public Vector3 GetPropertyVector3(string key, Vector3 def = null) {
+        public Vector3 GetPropertyVector3(string key, Vector3 def = default) {
             var prop = Properties.FirstOrDefault(x => String.Equals(key, x.Key, StringComparison.OrdinalIgnoreCase));
-            return prop == null ? def : prop.GetVector3(def);
+            return prop?.GetVector3(def) ?? def;
         }
     }
 }

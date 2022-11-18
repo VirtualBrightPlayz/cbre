@@ -1,5 +1,6 @@
 ﻿using CBRE.DataStructures.Transformations;
 using System;
+using System.Net;
 using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric {
@@ -46,6 +47,9 @@ namespace CBRE.DataStructures.Geometric {
             if (u > 1) return End;   // Point is after the segment end
             return Start + u * delta;
         }
+
+        public decimal DistanceFrom(Vector3 point)
+            => (point - ClosestPoint(point)).VectorMagnitude();
 
         /// <summary>
         /// Determines if this line is behind, in front, or spanning a plane.
@@ -98,5 +102,11 @@ namespace CBRE.DataStructures.Geometric {
         public static bool operator !=(Line left, Line right) {
             return !Equals(left, right);
         }
+
+        public decimal Length()
+            => (End - Start).VectorMagnitude();
+
+        public Vector3 Direction()
+            => (End - Start).Normalise();
     }
 }

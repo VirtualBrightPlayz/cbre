@@ -73,6 +73,27 @@ namespace CBRE.Editor.Tools.TextureTool {
         private double yoff = 0;
         private double trot = 0;
 
+        private class Popup : PopupUI {
+            private readonly Action guiMethod;
+
+            protected override bool hasOkButton => false;
+
+            protected override void OnCloseButtonHit(ref bool shouldBeOpen) {
+                GameMain.Instance.SelectedTool = GameMain.Instance.ToolBarItems
+                    .Select(tb => tb.Tool)
+                    .First(t => t is SelectTool.SelectTool);
+            }
+
+            public Popup(Action guiMethod) : base("Texture Tool", color: null) {
+                this.guiMethod = guiMethod;
+            }
+
+            protected override void ImGuiLayout(out bool shouldBeOpen) {
+                shouldBeOpen = GameMain.Instance.SelectedTool is TextureTool;
+                guiMethod();
+            }
+        }
+
         public TextureTool() {
             Usage = ToolUsage.View3D;
             /*_form = new TextureApplicationForm();
@@ -90,7 +111,41 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         public override void UpdateGui() {
-            ImGui.BeginChild("Texture Tool");
+            if (ImGui.BeginChild("Texture Tool")) {
+                GuiElements();
+            }
+            ImGui.EndChild();
+        }
+
+        private void GuiElements() {
+            if (Document?.Selection is not null) {
+                var face1 = Document.Selection.GetSelectedFaces().FirstOrDefault();
+                var face2 = Document.Selection.GetSelectedFaces().Skip(1).FirstOrDefault();
+                if (face1 != null) {
+                    ImGui.Text(face1.IsConvex() ? "Convex" : "Not convex");
+                    ImGui.Text(face1.HasColinearEdges() ? "Has colinear edges" : "No colinear edges");
+                }
+                if (face1 != null && face2 != null) {
+                    var edges1 = face1.GetEdges();
+                    var edges2 = face2.GetEdges();
+
+                    if (Math.Abs(face2.Plane.DistanceFromOrigin - face1.Plane.DistanceFromOrigin) < 1m && face1.Plane.Normal.EquivalentTo(face2.Plane.Normal, 0.1m)) {
+                        var sharedEdge = edges1.FirstOrDefault(e1 => edges2.Any(e2 => e1.EquivalentTo(e2, 0.1m)));
+
+                        if (sharedEdge != null) {
+                            ImGui.Text($"{sharedEdge.Start} {sharedEdge.End} {face1.Plane.DistanceFromOrigin} {face2.Plane.DistanceFromOrigin}");
+                        } else {
+                            ImGui.Text($"Edges do not coincide");
+                        }
+                    } else {
+                        ImGui.Text($"Planes don't coincide: {face2.Plane.DistanceFromOrigin - face1.Plane.DistanceFromOrigin} {face1.Plane.Normal - face2.Plane.Normal}");
+                    }
+
+                    //ImGui.Text($"N: {face.Plane.Normal.X} {face.Plane.Normal.Y} {face.Plane.Normal.Z}");
+                    //ImGui.Text($"D: {face.Plane.DistanceFromOrigin}");
+                }
+            }
+            
             if (ImGui.BeginCombo("Left Click", _leftCombo.ToString())) {
                 var e = Enum.GetValues<SelectBehaviour>();
                 for (int i = 0; i < e.Length; i++) {
@@ -98,8 +153,10 @@ namespace CBRE.Editor.Tools.TextureTool {
                         _leftCombo = e[i];
                     }
                 }
+
                 ImGui.EndCombo();
             }
+
             ImGui.NewLine();
             if (ImGui.BeginCombo("Right Click", _rightCombo.ToString())) {
                 var e = Enum.GetValues<SelectBehaviour>();
@@ -108,16 +165,20 @@ namespace CBRE.Editor.Tools.TextureTool {
                         _rightCombo = e[i];
                     }
                 }
+
                 ImGui.EndCombo();
             }
+
             ImGui.NewLine();
             ImGui.Checkbox("Show Offset Preview", ref _showOffset);
             if (ImGui.Button("Align World")) {
                 TextureAligned(this, AlignMode.World);
             }
+
             if (ImGui.Button("Align Face")) {
                 TextureAligned(this, AlignMode.Face);
             }
+
             ImGui.NewLine();
             ImGui.InputDouble("X Scale", ref xscl);
             ImGui.InputDouble("Y Scale", ref yscl);
@@ -131,20 +192,23 @@ namespace CBRE.Editor.Tools.TextureTool {
                 if (_showOffset) {
                     ImGui.Image(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f),
                         // new Num.Vector2(0, 0), new Num.Vector2(1, 1));
-                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width - (float)xscl, (float)yscl * (float)yoff / _texture.AsyncTexture.Height - (float)yscl),
-                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width, (float)yscl * (float)yoff / _texture.AsyncTexture.Height));
+                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width - (float)xscl,
+                            (float)yscl * (float)yoff / _texture.AsyncTexture.Height - (float)yscl),
+                        new Num.Vector2((float)xscl * (float)xoff / _texture.AsyncTexture.Width,
+                            (float)yscl * (float)yoff / _texture.AsyncTexture.Height));
                 }
+
                 if (ImGui.ImageButton(_texture.AsyncTexture.ImGuiTexture, new Num.Vector2(100f, 100f))) {
-                    new TexturePopupUI(t => {
+                    GameMain.Instance.Popups.Add(new TexturePopupUI(t => {
                         _texture = t;
                         TextureChanged(this, t.Texture);
-                    });
+                    }));
                 }
             }
+
             if (ImGui.Button("Apply")) {
                 TextureApplied(this, _texture.Texture, xscl, yscl, xoff, yoff, trot);
             }
-            ImGui.EndChild();
         }
 
         public override void DocumentChanged() {
@@ -290,7 +354,7 @@ namespace CBRE.Editor.Tools.TextureTool {
                 var currentSelection = Document.Selection.GetSelectedObjects();
                 Document.Selection.SwitchToFaceSelection();
                 var newSelection = Document.Selection.GetSelectedFaces().Select(x => x.Parent);
-                Document.RenderSelection(currentSelection.Union(newSelection));
+                Document.RenderObjects(currentSelection.Union(newSelection));
             }
 
             var selection = Document.Selection.GetSelectedFaces().OrderBy(x => x.Texture.Texture == null ? 1 : 0).FirstOrDefault();
@@ -303,31 +367,10 @@ namespace CBRE.Editor.Tools.TextureTool {
             Mediator.Subscribe(EditorMediator.TextureSelected, this);
             Mediator.Subscribe(EditorMediator.DocumentTreeFacesChanged, this);
             Mediator.Subscribe(EditorMediator.SelectionChanged, this);
-            // throw new NotImplementedException();
-            /*_form.Show(Editor.Instance);
-            Editor.Instance.Focus();
 
-            if (!preventHistory) {
-                Document.History.AddHistoryItem(new HistoryAction("Switch selection mode", new ChangeToFaceSelectionMode(GetType(), Document.Selection.GetSelectedObjects())));
-                var currentSelection = Document.Selection.GetSelectedObjects();
-                Document.Selection.SwitchToFaceSelection();
-                var newSelection = Document.Selection.GetSelectedFaces().Select(x => x.Parent);
-                Document.RenderSelection(currentSelection.Union(newSelection));
+            if (!GameMain.Instance.Popups.Any(p => p is Popup)) {
+                GameMain.Instance.Popups.Add(new Popup(GuiElements));
             }
-
-            _form.SelectionChanged();
-
-            var selection = Document.Selection.GetSelectedFaces().OrderBy(x => x.Texture.Texture == null ? 1 : 0).FirstOrDefault();
-            if (selection != null) {
-                var itemToSelect = Document.TextureCollection.GetItem(selection.Texture.Name)
-                                   ?? new TextureItem(null, selection.Texture.Name, TextureFlags.Missing, 64, 64);
-                Mediator.Publish(EditorMediator.TextureSelected, itemToSelect);
-            }
-            _form.SelectTexture(Document.TextureCollection.SelectedTexture);
-
-            Mediator.Subscribe(EditorMediator.TextureSelected, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeFacesChanged, this);
-            Mediator.Subscribe(EditorMediator.SelectionChanged, this);*/
         }
 
         public override void ToolDeselected(bool preventHistory) {
@@ -338,7 +381,7 @@ namespace CBRE.Editor.Tools.TextureTool {
                 var currentSelection = Document.Selection.GetSelectedFaces().Select(x => x.Parent);
                 Document.Selection.SwitchToObjectSelection();
                 var newSelection = Document.Selection.GetSelectedObjects();
-                Document.RenderSelection(currentSelection.Union(newSelection));
+                Document.RenderObjects(currentSelection.Union(newSelection));
             }
 
             Mediator.UnsubscribeAll(this);
@@ -349,8 +392,8 @@ namespace CBRE.Editor.Tools.TextureTool {
         }
 
         private void TextureSelected(TextureItem texture) {
-            // if (texture == null)
-                // return;
+            if (texture == null)
+                return;
             _texture = new TextureData(texture.Texture as AsyncTexture, texture);
             /*_form.SelectTexture(texture);*/
         }
@@ -365,7 +408,7 @@ namespace CBRE.Editor.Tools.TextureTool {
             /*_form.SelectionChanged();*/
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e) {
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e) {
             // throw new NotImplementedException();
             var vp = viewport as Viewport3D;
             if (vp == null || (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right)) return;
@@ -379,7 +422,7 @@ namespace CBRE.Editor.Tools.TextureTool {
             var clickedFace = hits.SelectMany(f => f.Faces)
                 .Select(x => new { Item = x, Intersection = x.GetIntersectionPoint(ray) })
                 .Where(x => x.Intersection != null)
-                .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                 .Select(x => x.Item)
                 .FirstOrDefault();
 
@@ -471,12 +514,13 @@ namespace CBRE.Editor.Tools.TextureTool {
             }
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e) {
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e) {
             //throw new NotImplementedException();
         }
 
         public override void Render(ViewportBase viewport) {
-            if (Document.Map.HideFaceMask) return;
+            if (Document?.Map is null) { return; }
+            if (Document.Map.HideFaceMask) { return; }
 
             foreach (var face in Document.Selection.GetSelectedFaces()) {
                 var lineStart = face.BoundingBox.Center + face.Plane.Normal * 0.5m;
@@ -551,15 +595,11 @@ namespace CBRE.Editor.Tools.TextureTool {
             //
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e) {
-            // Not used
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e) {
             // Not used
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e) {
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e) {
             //
         }
 
@@ -571,11 +611,7 @@ namespace CBRE.Editor.Tools.TextureTool {
             //
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e) {
-            //
-        }
-
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e) {
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e) {
             //
         }
 

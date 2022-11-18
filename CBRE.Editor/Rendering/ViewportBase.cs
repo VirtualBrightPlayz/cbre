@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using CBRE.Common;
+
 namespace CBRE.Editor.Rendering {
     public abstract class ViewportBase {
         private Stopwatch _stopwatch;
@@ -114,5 +116,7 @@ namespace CBRE.Editor.Rendering {
         public abstract void Render();
 
         public virtual void DrawGrid() { }
+
+        public abstract Either<Viewport2D.ViewDirection, Viewport3D.ViewType> GetViewType();
     }
 }

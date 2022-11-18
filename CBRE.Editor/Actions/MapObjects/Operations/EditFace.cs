@@ -37,21 +37,25 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             public void Perform(Document document) {
                 var root = document.Map.WorldSpawn;
                 var face = GetFace(root);
-                if (face == null) return;
-                if (Action != null) Action(document, face);
-                else face.Unclone(After);
+                if (face == null) { return; }
+                document.ObjectRenderer.RemoveFace(face);
+                if (Action != null) { Action(document, face); }
+                else { face.Unclone(After); }
+                document.ObjectRenderer.AddFace(face);
             }
 
             public void Reverse(Document document) {
                 var root = document.Map.WorldSpawn;
                 var face = GetFace(root);
-                if (face == null) return;
+                if (face == null) { return; }
+                document.ObjectRenderer.RemoveFace(face);
                 face.Unclone(Before);
+                document.ObjectRenderer.AddFace(face);
             }
 
             public Face GetFace(MapObject root) {
-                var obj = root.FindByID(ParentID) as Solid;
-                return obj == null ? null : obj.Faces.FirstOrDefault(x => x.ID == ID);
+                var obj = root.FindByID(ParentID);
+                return obj is Solid s ? s.Faces.FirstOrDefault(x => x.ID == ID) : null;
             }
         }
 

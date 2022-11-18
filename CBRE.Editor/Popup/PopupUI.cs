@@ -1,71 +1,88 @@
-using CBRE.Common;
-using CBRE.DataStructures.MapObjects;
-using CBRE.Editor.Documents;
-using CBRE.Editor.Rendering;
-using CBRE.Editor.Tools;
-using CBRE.Graphics;
-using CBRE.Providers.Map;
-using CBRE.Providers.Texture;
-using CBRE.Settings;
 using ImGuiNET;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup {
-    public class PopupUI : IDisposable
-    {
-        private string _title;
-        private bool _hasColor = false;
-        private ImColor _color;
-        public bool DrawAlways { get; protected set; }
+    public abstract class PopupUI : IDisposable {
+        private readonly string title;
+        private readonly ImColor? color = null;
+        
+        protected virtual bool canBeClosed => true;
+        protected virtual bool canBeDefocused => true;
+        protected virtual bool hasOkButton => true;
 
-        public PopupUI(string title)
-        {
-            _title = title;
-            DrawAlways = false;
-            GameMain.Instance.Popups.Add(this);
+        protected int popupIndex => GameMain.Instance.Popups.IndexOf(this);
+
+        protected PopupUI(string title, ImColor? color = null) {
+            this.title = title;
+            this.color = color;
         }
 
-        public PopupUI(string title, ImColor color) : this(title)
-        {
-            _color = color;
-            _hasColor = true;
-        }
+        public virtual void Update() { }
 
-        public virtual bool Draw()
-        {
-            bool shouldBeOpen = true;
-            if (_hasColor)
-                ImGui.PushStyleColor(ImGuiCol.WindowBg, _color.Value);
-            if (ImGui.Begin(_title, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking)) {
-                shouldBeOpen = ImGuiLayout();
+        public void Draw(out bool shouldBeOpen) {
+            string blockerTitleAndIndex = $"##blocker{popupIndex}";
+            if (!canBeDefocused) {
+                ImGui.SetNextWindowPos(new Num.Vector2(0,0));
+                ImGui.SetNextWindowSize(ImGui.GetWindowViewport().Size);
+                using (new ColorPush(ImGuiCol.WindowBg, Color.Black * 0.5f)) {
+                    if (ImGui.Begin(blockerTitleAndIndex,
+                        ImGuiWindowFlags.NoCollapse
+                        | ImGuiWindowFlags.NoDecoration
+                        | ImGuiWindowFlags.NoMove
+                        | ImGuiWindowFlags.NoResize
+                        | ImGuiWindowFlags.NoTitleBar
+                        | ImGuiWindowFlags.NoDocking)) {
+                        ImGui.End();
+                    }
+                }
             }
-            ImGui.End();
-            if (_hasColor)
-                ImGui.PopStyleColor();
-            return shouldBeOpen;
-        }
+            
+            shouldBeOpen = true;
+            bool closeButtonWasntHit = true; //must default to true because ImGui.Begin only writes this when the X button is hit
+            
+            using var _ = new ColorPush(ImGuiCol.WindowBg, color);
 
-        public virtual void Close() {
-            GameMain.Instance.Popups.Remove(this);
-        }
-
-        protected virtual bool ImGuiLayout() {
-            if (ImGui.Button("OK")) {
-                return false;
+            string titleAndIndex = $"{title}##popup{popupIndex}";
+            bool windowWasInitialized = false;
+            if (!canBeDefocused && GameMain.Instance.Popups.Last(p => !p.canBeDefocused) == this) {
+                ImGui.SetWindowFocus(titleAndIndex);
             }
-            return true;
+            if (canBeClosed) {
+                windowWasInitialized = ImGui.Begin(titleAndIndex, ref closeButtonWasntHit,
+                    ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking);
+            } else {
+                windowWasInitialized = ImGui.Begin(titleAndIndex, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking);
+            }
+            if (windowWasInitialized) {
+                if (!closeButtonWasntHit) { OnCloseButtonHit(ref shouldBeOpen); }
+
+                if (shouldBeOpen) {
+                    ImGuiLayout(out shouldBeOpen);
+                    OkButton(out bool okButtonHit);
+                    if (okButtonHit) {
+                        OnOkHit();
+                        shouldBeOpen = false;
+                    }
+                }
+                ImGui.End();
+            }
         }
 
-        public virtual void Dispose() {
-            Close();
+        protected abstract void ImGuiLayout(out bool shouldBeOpen);
+        
+        private void OkButton(out bool hit) {
+            if (!hasOkButton) { hit = false; return; }
+            hit = ImGui.Button("OK");
         }
+
+        protected virtual void OnCloseButtonHit(ref bool shouldBeOpen) { shouldBeOpen = false; }
+
+        public virtual void OnOkHit() { }
+        
+        public virtual void Dispose() { }
     }
 }

@@ -1,17 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Vector3 = Microsoft.Xna.Framework.Vector3;
+using CBREVector3 = CBRE.DataStructures.Geometric.Vector3;
+using CBREMatrix = CBRE.DataStructures.Geometric.Matrix;
 
 namespace CBRE.Graphics {
     public static class PrimitiveDrawing {
+        public static bool IsLineType(this PrimitiveType type)
+            => type is PrimitiveType.LineList or PrimitiveType.LineLoop or PrimitiveType.LineStrip;
+
+        public static bool IsTriangleType(this PrimitiveType type)
+            => type is PrimitiveType.TriangleFan or PrimitiveType.TriangleList or PrimitiveType.TriangleStrip;
+        
         private static PrimitiveType? currentPrimitiveType = null;
 
         private static Color color = Color.White;
         private static List<VertexPositionColorTexture> vertices = new List<VertexPositionColorTexture>();
-        public static Texture2D texture = null;
+        public static Texture2D Texture = null;
 
         public static void Begin(PrimitiveType primType) {
             if (currentPrimitiveType != null) { throw new InvalidOperationException("Cannot call PrimitiveDrawing.Begin because a draw operation is already in progress"); }
@@ -77,6 +87,9 @@ namespace CBRE.Graphics {
             }
         }
 
+        public static void Square(CBREVector3 position, decimal radius)
+            => Square(position, (double)radius);
+        
         public static void Square(CBRE.DataStructures.Geometric.Vector3 position, double radius) {
             for (int i = 0; i < 4; i++) {
                 double cx = Math.Cos(((double)i + 0.5f) * Math.PI * 2.0 / 4.0) * radius;
@@ -85,12 +98,56 @@ namespace CBRE.Graphics {
             }
         }
 
-        public static void FacesWireframe(IEnumerable<Face> faces, CBRE.DataStructures.Geometric.Matrix m = null) {
+        public static void Rectangle(Rectangle rect) {
+            Vector2 posForIndex(int i)
+                => i switch {
+                    0 => new Vector2(rect.Left, rect.Top),
+                    1 => new Vector2(rect.Left, rect.Bottom),
+                    2 => new Vector2(rect.Right, rect.Bottom),
+                    3 => new Vector2(rect.Right, rect.Top)
+                };
+            for (int i = 0; i < 4; i++) {
+                Vector2 pos = posForIndex(i);
+                Vertex3(pos.X, pos.Y, 0.0f);
+            }
+            for (int i = 0; i < 4; i++) {
+                Vector2 pos = posForIndex(3 - i);
+                Vertex3(pos.X, pos.Y, 0.0f);
+            }
+        }
+
+        public static void Line(Line line, float thickness = 1.0f, CBRE.DataStructures.Geometric.Matrix m = null) {
+            var matrix = m ?? CBREMatrix.Identity;
+            if (currentPrimitiveType.Value.IsLineType()) {
+                Vertex3(line.Start * matrix);
+                Vertex3(line.End * matrix);
+            } else if (currentPrimitiveType is PrimitiveType.TriangleList) {
+                var cylinderFaces = ShapeGenerator.Cylinder(
+                    line,
+                    radius: (decimal)thickness,
+                    numSides: 8,
+                    roundDecimals: 4);
+                foreach (var face in cylinderFaces) {
+                    for (int i = 2; i < face.Length; i++) {
+                        Vertex3(face[i-1] * matrix);
+                        Vertex3(face[i] * matrix);
+                        Vertex3(face[0] * matrix);
+                    }
+                }
+            } else {
+                throw new NotImplementedException($"{nameof(Line)} not implemented for {nameof(PrimitiveType)}.{currentPrimitiveType}");
+            }
+        }
+
+        public static void FacesWireframe(
+            IEnumerable<Face> faces, decimal thickness = 0.0m, CBRE.DataStructures.Geometric.Matrix m = null)
+            => FacesWireframe(faces, thickness: (float)thickness, m: m);
+        
+        public static void FacesWireframe(IEnumerable<Face> faces, float thickness = 0.0f, CBRE.DataStructures.Geometric.Matrix m = null) {
             var matrix = m ?? CBRE.DataStructures.Geometric.Matrix.Identity;
             foreach (var face in faces) {
                 foreach (var edge in face.GetEdges()) {
-                    Vertex3(edge.Start * matrix);
-                    Vertex3(edge.End * matrix);
+                    Line(edge, thickness, m);
                 }
             }
         }
@@ -145,7 +202,7 @@ namespace CBRE.Graphics {
                     primCount);
             }
             currentPrimitiveType = null;
-            texture = null;
+            Texture = null;
         }
     }
 }

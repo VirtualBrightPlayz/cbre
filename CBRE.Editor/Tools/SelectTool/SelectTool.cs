@@ -14,6 +14,7 @@ using CBRE.Settings;
 using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
@@ -31,6 +32,7 @@ namespace CBRE.Editor.Tools.SelectTool
     {
         private MapObject ChosenItemFor3DSelection { get; set; }
         private List<MapObject> IntersectingObjectsFor3DSelection { get; set; }
+        public bool TransformState { get; set; } = false;
 
         private readonly List<TransformationTool> _tools;
         private TransformationTool _lastTool;
@@ -46,9 +48,12 @@ namespace CBRE.Editor.Tools.SelectTool
             Usage = ToolUsage.Both;
             _tools = new List<TransformationTool>
                          {
-                             new ResizeTool(),
-                             new RotateTool(),
-                             new SkewTool()
+                            new ResizeTool(),
+                            new RotateTool(),
+                            new SkewTool(),
+                            new ThreeDGizmosTool(ImGuizmoNET.OPERATION.TRANSLATE),
+                            new ThreeDGizmosTool(ImGuizmoNET.OPERATION.ROTATE),
+                            // new ThreeDGizmosTool(ImGuizmoNET.OPERATION.SCALE),
                          };
             _widgets = new List<Widget>();
 
@@ -106,6 +111,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         public override void ToolSelected(bool preventHistory)
         {
+            TransformState = false;
             SetCurrentTool(_currentTool);
             IgnoreGroupingChanged();
 
@@ -119,6 +125,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         public override void ToolDeselected(bool preventHistory)
         {
+            TransformState = false;
             SetCurrentTool(null);
         }
 
@@ -141,7 +148,7 @@ namespace CBRE.Editor.Tools.SelectTool
                 var parents = selected.Select(x => x.FindTopmostParent(y => y is Group || y is Entity) ?? x).Distinct();
                 foreach (var p in parents)
                 {
-                    var children = p.FindAll();
+                    var children = p.GetSelfAndAllChildren();
                     var leaves = children.Where(x => !x.HasChildren);
                     if (leaves.All(selected.Contains)) select.AddRange(children.Where(x => !selected.Contains(x)));
                     else deselect.AddRange(children.Where(selected.Contains));
@@ -172,6 +179,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         private void OnWidgetTransformed(Matrix transformation)
         {
+            TransformState = false;
             if (transformation != null)
             {
                 ExecuteTransform("Manipulate", CreateMatrixMultTransformation(transformation), false);
@@ -182,6 +190,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
         private void OnWidgetTransforming(Matrix transformation)
         {
+            TransformState = true;
             if (transformation != null) Document.SetSelectListTransform(transformation);
         }
 
@@ -200,7 +209,14 @@ namespace CBRE.Editor.Tools.SelectTool
 
         private void SelectionChanged()
         {
+            TransformState = false;
             if (Document == null) return;
+            var selectedObjects = Document.Selection.GetSelectedObjects().ToArray();
+            var types = selectedObjects.Select(o => o.GetType()).Distinct().ToArray();
+            foreach (var t in types) {
+                Debug.WriteLine($"{t}: {selectedObjects.Count(o => o.GetType() == t)}");
+            }
+            
             UpdateBoxBasedOnSelection();
             if (State.Action != BoxAction.ReadyToResize && _currentTool != null) SetCurrentTool(null);
             else if (State.Action == BoxAction.ReadyToResize && _currentTool == null) SetCurrentTool(_lastTool ?? _tools[0]);
@@ -231,13 +247,13 @@ namespace CBRE.Editor.Tools.SelectTool
         #endregion
 
         #region Widget
-        private bool WidgetAction(Action<Widget, ViewportBase, ViewportEvent> action, ViewportBase viewport, ViewportEvent ev)
+        private bool WidgetAction(Action<Widget, ViewportBase, ViewportEvent> action, ViewportBase viewport, ViewportEvent? ev)
         {
             if (_widgets == null) return false;
             foreach (var widget in _widgets)
             {
-                action(widget, viewport, ev);
-                if (ev != null && ev.Handled) return true;
+                action(widget, viewport, ev ?? default);
+                if (ev is { Handled: true }) return true;
             }
             return false;
         }
@@ -248,16 +264,10 @@ namespace CBRE.Editor.Tools.SelectTool
             base.MouseMove(viewport, e);
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
-            if (WidgetAction((w, vp, ev) => w.MouseDown(vp, ev), viewport, e)) return;
-            base.MouseDown(viewport, e);
-        }
-
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
-        {
-            if (WidgetAction((w, vp, ev) => w.MouseUp(vp, ev), viewport, e)) return;
-            base.MouseUp(viewport, e);
+            if (WidgetAction((w, vp, ev) => w.MouseLifted(vp, ev), viewport, e)) return;
+            base.MouseLifted(viewport, e);
         }
 
         public override void MouseClick(ViewportBase viewport, ViewportEvent e)
@@ -290,6 +300,11 @@ namespace CBRE.Editor.Tools.SelectTool
             base.Render(viewport);
         }
 
+        public override void ViewportUi(ViewportBase viewport) {
+            WidgetAction((w, vp, ev) => w.ViewportUi(vp), viewport, null);
+            base.ViewportUi(viewport);
+        }
+
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)
         {
             WidgetAction((w, vp, ev) => w.UpdateFrame(vp, frame), viewport, null);
@@ -311,7 +326,7 @@ namespace CBRE.Editor.Tools.SelectTool
         {
             return ignoreGrouping
                        ? objects.Where(x => !x.HasChildren)
-                       : objects.Select(x => x.FindTopmostParent(y => y is Group || y is Entity) ?? x).Distinct().SelectMany(x => x.FindAll());
+                       : objects.Select(x => x.FindTopmostParent(y => y is Group || y is Entity) ?? x).Distinct().SelectMany(x => x.GetSelfAndAllChildren());
         }
 
         /// <summary>
@@ -336,8 +351,8 @@ namespace CBRE.Editor.Tools.SelectTool
             objectsToDeselect = NormaliseSelection(objectsToDeselect.Where(x => x != null), ignoreGrouping);
             objectsToSelect = NormaliseSelection(objectsToSelect.Where(x => x != null), ignoreGrouping);
 
-            // Don't bother deselecting the objects we're about to select
-            objectsToDeselect = objectsToDeselect.Where(x => !objectsToSelect.Contains(x));
+            // The following line breaks undo, don't uncomment unless you know what you're doing!
+            //objectsToDeselect = objectsToDeselect.Where(x => !objectsToSelect.Contains(x));
 
             // Perform selections
             var deselected = objectsToDeselect.ToList();
@@ -376,9 +391,9 @@ namespace CBRE.Editor.Tools.SelectTool
             base.MouseMove3D(viewport, e);
         }
 
-        private Vector3 GetIntersectionPoint(MapObject obj, Line line)
+        private Vector3? GetIntersectionPoint(MapObject obj, Line line)
         {
-            if (obj == null) return null;
+            if (obj == null) { return null; }
 
             var solid = obj as Solid;
             if (solid == null) return obj.GetIntersectionPoint(line);
@@ -386,7 +401,7 @@ namespace CBRE.Editor.Tools.SelectTool
             return solid.Faces.Where(x => x.Opacity > 0 && !x.IsHidden)
                 .Select(x => x.GetIntersectionPoint(line))
                 .Where(x => x != null)
-                .OrderBy(x => (x - line.Start).VectorMagnitude())
+                .OrderBy(x => (x.Value - line.Start).VectorMagnitude())
                 .FirstOrDefault();
         }
 
@@ -397,6 +412,12 @@ namespace CBRE.Editor.Tools.SelectTool
         /// <param name="e">The click event</param>
         protected override void MouseDown3D(Viewport3D viewport, ViewportEvent e)
         {
+            if (TransformState) return;
+            if (e.Button == MouseButtons.Right) {
+                var idx = _tools.IndexOf(_currentTool);
+                SetCurrentTool(_tools[(idx + 1) % _tools.Count]);
+                return;
+            }
             var keyboardState = Keyboard.GetState();
             // Do not perform selection if space is down
             if (CBRE.Settings.View.Camera3DPanRequiresMouseClick && keyboardState.IsKeyDown(Keys.Space)) return;
@@ -411,7 +432,7 @@ namespace CBRE.Editor.Tools.SelectTool
             IntersectingObjectsFor3DSelection = hits
                 .Select(x => new { Item = x, Intersection = GetIntersectionPoint(x, ray) })
                 .Where(x => x.Intersection != null)
-                .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                 .Select(x => x.Item)
                 .ToList();
 
@@ -529,8 +550,8 @@ namespace CBRE.Editor.Tools.SelectTool
             State.ActiveViewport = null;
 
             var now = viewport.ScreenToWorld(e.X, viewport.Height - e.Y);
-            var start = viewport.Flatten(State.BoxStart);
-            var end = viewport.Flatten(State.BoxEnd);
+            var start = viewport.Flatten(State.BoxStart ?? Vector3.Zero);
+            var end = viewport.Flatten(State.BoxEnd ?? Vector3.Zero);
 
             var ccs = new Vector3(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y), 0);
             var cce = new Vector3(Math.Max(start.X, end.X), Math.Max(start.Y, end.Y), 0);
@@ -674,7 +695,7 @@ namespace CBRE.Editor.Tools.SelectTool
             SelectionChanged();
         }
 
-        protected override Vector3 GetResizeOrigin(Viewport2D viewport)
+        protected override Vector3? GetResizeOrigin(Viewport2D viewport)
         {
             if (State.Action == BoxAction.Resizing && State.Handle == ResizeHandle.Center && !Document.Selection.IsEmpty())
             {
@@ -700,7 +721,7 @@ namespace CBRE.Editor.Tools.SelectTool
             if (CurrentTransform != null)
             {
                 Document.SetSelectListTransform(CurrentTransform);
-                var box = new Box(State.PreTransformBoxStart, State.PreTransformBoxEnd);
+                var box = new Box(State.PreTransformBoxStart ?? Vector3.Zero, State.PreTransformBoxEnd ?? Vector3.Zero);
                 var trans = CreateMatrixMultTransformation(CurrentTransform);
                 Mediator.Publish(EditorMediator.SelectionBoxChanged, box.Transform(trans));
             }
@@ -710,18 +731,17 @@ namespace CBRE.Editor.Tools.SelectTool
             }
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
-        {
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e) {
+            if (!e.MouseOver) { return; }
             var nudge = GetNudgeValue(e.KeyCode);
-            var vp = viewport as Viewport2D;
-            if (nudge != null && vp != null && (State.Action == BoxAction.ReadyToResize || State.Action == BoxAction.Drawn) && !Document.Selection.IsEmpty())
+            if (nudge.HasValue && viewport is Viewport2D vp && (State.Action == BoxAction.ReadyToResize || State.Action == BoxAction.Drawn) && !Document.Selection.IsEmpty())
             {
-                var translate = vp.Expand(nudge);
+                var translate = vp.Expand(nudge.Value);
                 var transformation = Matrix.Translation(translate);
                 ExecuteTransform("Nudge", CreateMatrixMultTransformation(transformation), ViewportManager.Shift);
                 SelectionChanged();
             }
-            base.KeyDown(viewport, e);
+            base.KeyHit(viewport, e);
         }
 
         #endregion
@@ -832,8 +852,8 @@ namespace CBRE.Editor.Tools.SelectTool
                 return;
             }
 
-            var start = viewport.Flatten(State.BoxStart);
-            var end = viewport.Flatten(State.BoxEnd);
+            var start = viewport.Flatten(State.BoxStart ?? Vector3.Zero);
+            var end = viewport.Flatten(State.BoxEnd ?? Vector3.Zero);
 
             if (ShouldDrawBox(viewport))
             {
@@ -859,17 +879,13 @@ namespace CBRE.Editor.Tools.SelectTool
             {
                 RenderTransformBox(viewport);
             }
-            else if (ShouldDrawBox(viewport))
-            {
-                RenderBoxText(viewport, start, end);
-            }
         }
 
         private void RenderTransformBox(Viewport2D viewport)
         {
-            if (CurrentTransform == null) return;
+            if (CurrentTransform == null) { return; }
 
-            var box = new Box(State.PreTransformBoxStart, State.PreTransformBoxEnd);
+            var box = new Box(State.PreTransformBoxStart ?? Vector3.Zero, State.PreTransformBoxEnd ?? Vector3.Zero);
             var trans = CreateMatrixMultTransformation(CurrentTransform);
             box = box.Transform(trans);
             var s = viewport.Flatten(box.Start);
@@ -878,7 +894,6 @@ namespace CBRE.Editor.Tools.SelectTool
             PrimitiveDrawing.Begin(PrimitiveType.LineList);
             PrimitiveDrawing.SetColor(Color.FromArgb(64, BoxColour));
 
-
             PrimitiveDrawing.DottedLine(new Vector3(s.X, s.Y, e.Z), new Vector3(e.X, s.Y, e.Z), 4m / viewport.Zoom);
             PrimitiveDrawing.DottedLine(new Vector3(s.X, e.Y, e.Z), new Vector3(e.X, e.Y, e.Z), 4m / viewport.Zoom);
             PrimitiveDrawing.DottedLine(new Vector3(s.X, s.Y, e.Z), new Vector3(s.X, e.Y, e.Z), 4m / viewport.Zoom);
@@ -886,7 +901,7 @@ namespace CBRE.Editor.Tools.SelectTool
 
             PrimitiveDrawing.End();
 
-            RenderBoxText(viewport, s, e);
+            //RenderBoxText(viewport, s, e);
         }
 
         #endregion
@@ -911,15 +926,15 @@ namespace CBRE.Editor.Tools.SelectTool
             if (clone)
             {
                 // Copy the selection, transform it, and reselect
-                var copies = ClipboardManager.CloneFlatHeirarchy(Document, Document.Selection.GetSelectedObjects()).ToList();
+                var copies = ClipboardManager.CloneFlatHierarchy(Document, Document.Selection.GetSelectedObjects()).ToList();
                 foreach (var mo in copies)
                 {
                     mo.Transform(transform, Document.Map.GetTransformFlags());
                     if (CBRE.Settings.Select.KeepVisgroupsWhenCloning) continue;
-                    foreach (var o in mo.FindAll()) o.Visgroups.Clear();
+                    foreach (var o in mo.GetSelfAndAllChildren()) o.Visgroups.Clear();
                 }
                 cad.Create(Document.Map.WorldSpawn.ID, copies);
-                var sel = new ChangeSelection(copies.SelectMany(x => x.FindAll()), Document.Selection.GetSelectedObjects());
+                var sel = new ChangeSelection(copies.SelectMany(x => x.GetSelfAndAllChildren()), Document.Selection.GetSelectedObjects());
                 action.Add(sel);
             }
             else

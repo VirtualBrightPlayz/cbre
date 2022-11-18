@@ -20,9 +20,11 @@ namespace CBRE.Editor.Brushes.Controls {
         }
 
         public override void Draw() {
-            bool tmp = Checked;
-            if (ImGui.Checkbox(LabelText, ref tmp)) {
-                Checked = tmp;
+            bool val = Checked;
+            if (ControlEnabled) {
+                ImGui.Text(LabelText);
+                if (ImGui.Checkbox(LabelText, ref val))
+                    Checked = val;
             }
         }
     }

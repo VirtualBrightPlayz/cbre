@@ -3,49 +3,48 @@ using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
-    public class Vector : Vector3 {
+    public struct Vector {
         public Vector3 Normal { get; set; }
         public decimal Distance { get; set; }
 
-        public Vector(Vector3 normal, decimal distance)
-            : base(0, 0, 0) {
+        public Vector(Vector3 normal, decimal distance) {
             Normal = normal.Normalise();
             Distance = distance;
-            var temp = Normal * Distance;
-            X = temp.X;
-            Y = temp.Y;
-            Z = temp.Z;
         }
 
-        public Vector(Vector3 offsets)
-            : base(0, 0, 0) {
-            Set(offsets);
+        public Vector(Vector3 offsets) {
+            Distance = offsets.VectorMagnitude();
+            if (Distance == 0) {
+                Normal = Vector3.Zero;
+            } else {
+                Normal = new Vector3(
+                    offsets.X / Distance,
+                    offsets.Y / Distance,
+                    offsets.Z / Distance);
+            }
         }
 
-        protected Vector(SerializationInfo info, StreamingContext context) : base(info, context) {
+        internal Vector(SerializationInfo info, StreamingContext context) {
             Normal = (Vector3)info.GetValue("Normal", typeof(Vector3));
             Distance = info.GetDecimal("Distance");
         }
 
-        public override void GetObjectData(SerializationInfo info, StreamingContext context) {
-            base.GetObjectData(info, context);
+        public void GetObjectData(SerializationInfo info, StreamingContext context) {
             info.AddValue("Normal", Normal);
             info.AddValue("Distance", Distance);
         }
 
         public void SetToZero() {
-            X = Y = Z = Distance = 0;
+            Distance = 0;
+            Normal = Vector3.Zero;
         }
 
         public void Set(Vector3 offsets) {
-            Distance = offsets.VectorMagnitude();
-            if (Distance == 0) {
-                X = Y = Z = 0;
-            } else {
-                X = offsets.X / Distance;
-                Y = offsets.Y / Distance;
-                Z = offsets.Z / Distance;
-            }
+            Vector newVec = new Vector(offsets);
+            Normal = newVec.Normal;
+            Distance = newVec.Distance;
         }
+
+        public static implicit operator Vector3(Vector vec) => vec.Normal * vec.Distance;
     }
 }

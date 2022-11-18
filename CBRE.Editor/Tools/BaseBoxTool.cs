@@ -2,11 +2,14 @@
 using CBRE.DataStructures.Geometric;
 using CBRE.Editor.Rendering;
 using CBRE.Graphics;
+using ImGuiNET;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Drawing;
 using System.Linq;
+using Num = System.Numerics;
+
 #pragma warning disable 0612
 namespace CBRE.Editor.Tools
 {
@@ -61,33 +64,33 @@ namespace CBRE.Editor.Tools
                 if (!(ActiveViewport is Viewport2D)) return;
                 var vp = (Viewport2D)ActiveViewport;
 
-                if (BoxStart.X > BoxEnd.X)
+                if (BoxStart is not { } boxStart) { return; }
+                if (BoxEnd is not { } boxEnd) { return; }
+                
+                if (boxStart.X > boxEnd.X)
                 {
-                    var temp = BoxStart.X;
-                    BoxStart.X = BoxEnd.X;
-                    BoxEnd.X = temp;
+                    (boxStart.X, boxEnd.X) = (boxEnd.X, boxStart.X);
                     var flat = vp.Flatten(Vector3.UnitX);
                     if (flat.X == 1) SwapHandle("Left", "Right");
                     if (flat.Y == 1) SwapHandle("Top", "Bottom");
                 }
-                if (BoxStart.Y > BoxEnd.Y)
+                if (boxStart.Y > boxEnd.Y)
                 {
-                    var temp = BoxStart.Y;
-                    BoxStart.Y = BoxEnd.Y;
-                    BoxEnd.Y = temp;
+                    (boxStart.Y, boxEnd.Y) = (boxEnd.Y, boxStart.Y);
                     var flat = vp.Flatten(Vector3.UnitY);
                     if (flat.X == 1) SwapHandle("Left", "Right");
                     if (flat.Y == 1) SwapHandle("Top", "Bottom");
                 }
-                if (BoxStart.Z > BoxEnd.Z)
+                if (boxStart.Z > boxEnd.Z)
                 {
-                    var temp = BoxStart.Z;
-                    BoxStart.Z = BoxEnd.Z;
-                    BoxEnd.Z = temp;
+                    (boxStart.Z, boxEnd.Z) = (boxEnd.Z, boxStart.Z);
                     var flat = vp.Flatten(Vector3.UnitZ);
                     if (flat.X == 1) SwapHandle("Left", "Right");
                     if (flat.Y == 1) SwapHandle("Top", "Bottom");
                 }
+
+                BoxStart = boxStart;
+                BoxEnd = boxEnd;
 
                 ViewportManager.MarkForRerender();
             }
@@ -108,11 +111,11 @@ namespace CBRE.Editor.Tools
             public ViewportBase ActiveViewport { get; set; }
             public BoxAction Action { get; set; }
             public ResizeHandle Handle { get; set; }
-            public Vector3 BoxStart { get; set; }
-            public Vector3 BoxEnd { get; set; }
-            public Vector3 MoveStart { get; set; }
-            public Vector3 PreTransformBoxStart { get; set; }
-            public Vector3 PreTransformBoxEnd { get; set; }
+            public Vector3? BoxStart { get; set; }
+            public Vector3? BoxEnd { get; set; }
+            public Vector3? MoveStart { get; set; }
+            public Vector3? PreTransformBoxStart { get; set; }
+            public Vector3? PreTransformBoxEnd { get; set; }
             public Point ClickStart { get; set; }
         }
 
@@ -177,11 +180,11 @@ namespace CBRE.Editor.Tools
             Mediator.Publish(EditorMediator.SelectionBoxChanged,
                              State.Action == BoxAction.ReadyToDraw
                                  ? Box.Empty
-                                 : new Box(State.BoxStart, State.BoxEnd));
+                                 : new Box(State.BoxStart ?? Vector3.Zero, State.BoxEnd ?? Vector3.Zero));
         }
 
         // Mouse Down
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             if (viewport is Viewport3D) MouseDown3D((Viewport3D)viewport, e);
             if (e.Button != MouseButtons.Left) return;
@@ -224,18 +227,13 @@ namespace CBRE.Editor.Tools
             State.PreTransformBoxEnd = State.BoxEnd;
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
-        {
-            // Not used
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             // Not used
         }
 
         // Mouse Up
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
             if (viewport is Viewport3D) MouseUp3D((Viewport3D)viewport, e);
             //Editor.Instance.CaptureAltPresses = false;
@@ -376,8 +374,8 @@ namespace CBRE.Editor.Tools
         protected virtual void MouseHoverWhenDrawn(Viewport2D viewport, ViewportEvent e)
         {
             var now = viewport.ScreenToWorld(e.X, viewport.Height - e.Y);
-            var start = viewport.Flatten(State.BoxStart);
-            var end = viewport.Flatten(State.BoxEnd);
+            var start = viewport.Flatten(State.BoxStart ?? Vector3.Zero);
+            var end = viewport.Flatten(State.BoxEnd ?? Vector3.Zero);
             var handle = GetHandle(now, start, end, HandleWidth / viewport.Zoom);
             if (handle.HasValue)
             {
@@ -399,30 +397,30 @@ namespace CBRE.Editor.Tools
             // Nope.
         }
 
-        protected virtual Vector3 GetResizeOrigin(Viewport2D viewport)
+        protected virtual Vector3? GetResizeOrigin(Viewport2D viewport)
         {
-            if (State.Action != BoxAction.Resizing || State.Handle != ResizeHandle.Center) return null;
-            var st = viewport.Flatten(State.PreTransformBoxStart);
-            var ed = viewport.Flatten(State.PreTransformBoxEnd);
+            if (State.Action != BoxAction.Resizing || State.Handle != ResizeHandle.Center) { return null; }
+            var st = viewport.Flatten(State.PreTransformBoxStart ?? Vector3.Zero);
+            var ed = viewport.Flatten(State.PreTransformBoxEnd ?? Vector3.Zero);
             var points = new[] { st, ed, new Vector3(st.X, ed.Y, 0), new Vector3(ed.X, st.Y, 0) };
-            return points.OrderBy(x => (State.MoveStart - x).LengthSquared()).First();
+            return points.OrderBy(x => ((State.MoveStart ?? Vector3.Zero) - x).LengthSquared()).First();
         }
 
-        protected virtual Vector3 GetResizeDistance(Viewport2D viewport, ViewportEvent e)
+        protected virtual Vector3? GetResizeDistance(Viewport2D viewport, ViewportEvent e)
         {
             var origin = GetResizeOrigin(viewport);
-            if (origin == null) return null;
-            var before = State.MoveStart;
+            if (origin == null) { return null; }
+            var before = State.MoveStart ?? Vector3.Zero;
             var after = viewport.ScreenToWorld(e.X, viewport.Height - e.Y);
-            return SnapIfNeeded(origin + after - before) - origin;
+            return SnapIfNeeded(origin.Value + after - before) - origin.Value;
         }
 
-        protected Tuple<Vector3, Vector3> GetResizedBoxCoordinates(Viewport2D viewport, ViewportEvent e)
+        protected (Vector3 Start, Vector3 End) GetResizedBoxCoordinates(Viewport2D viewport, ViewportEvent e)
         {
-            if (State.Action != BoxAction.Resizing && State.Action != BoxAction.Drawing) return Tuple.Create(State.BoxStart, State.BoxEnd);
+            if (State.Action != BoxAction.Resizing && State.Action != BoxAction.Drawing) return (State.BoxStart ?? Vector3.Zero, State.BoxEnd ?? Vector3.Zero);
             var now = SnapIfNeeded(viewport.ScreenToWorld(e.X, viewport.Height - e.Y));
-            var cstart = viewport.Flatten(State.BoxStart);
-            var cend = viewport.Flatten(State.BoxEnd);
+            var cstart = viewport.Flatten(State.BoxStart ?? Vector3.Zero);
+            var cend = viewport.Flatten(State.BoxEnd ?? Vector3.Zero);
 
             // Proportional scaling
             var ostart = viewport.Flatten(State.PreTransformBoxStart ?? Vector3.Zero);
@@ -450,8 +448,8 @@ namespace CBRE.Editor.Tools
                 case ResizeHandle.Center:
                     var cdiff = cend - cstart;
                     var distance = GetResizeDistance(viewport, e);
-                    if (distance == null) cstart = viewport.Flatten(State.PreTransformBoxStart) + now - SnapIfNeeded(State.MoveStart);
-                    else cstart = viewport.Flatten(State.PreTransformBoxStart) + distance;
+                    if (distance == null) cstart = viewport.Flatten(State.PreTransformBoxStart ?? Vector3.Zero) + now - SnapIfNeeded(State.MoveStart ?? Vector3.Zero);
+                    else cstart = viewport.Flatten(State.PreTransformBoxStart ?? Vector3.Zero) + distance.Value;
                     cend = cstart + cdiff;
                     break;
                 case ResizeHandle.Right:
@@ -500,17 +498,12 @@ namespace CBRE.Editor.Tools
                         break;
                 }
             }
-            cstart = viewport.Expand(cstart) + viewport.GetUnusedCoordinate(State.BoxStart);
-            cend = viewport.Expand(cend) + viewport.GetUnusedCoordinate(State.BoxEnd);
-            return Tuple.Create(cstart, cend);
+            cstart = viewport.Expand(cstart) + viewport.GetUnusedCoordinate(State.BoxStart ?? Vector3.Zero);
+            cend = viewport.Expand(cend) + viewport.GetUnusedCoordinate(State.BoxEnd ?? Vector3.Zero);
+            return (cstart, cend);
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
-        {
-
-        }
-
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
             if (State.Action == BoxAction.ReadyToDraw || State.Action == BoxAction.DownToDraw) return;
             switch (e.KeyCode)
@@ -539,7 +532,7 @@ namespace CBRE.Editor.Tools
             State.ActiveViewport = null;
         }
 
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
             // Probably not needed
         }
@@ -617,11 +610,11 @@ namespace CBRE.Editor.Tools
         protected virtual void RenderSnapHandle(Viewport2D viewport)
         {
             var start = GetResizeOrigin(viewport);
-            if (start == null) return;
+            if (start == null) { return; }
             const int size = 6;
             var dist = (double)(size / viewport.Zoom);
 
-            var origin = start + viewport.Flatten(State.BoxStart - State.PreTransformBoxStart);
+            var origin = start.Value + viewport.Flatten((State.BoxStart - State.PreTransformBoxStart) ?? Vector3.Zero);
             PrimitiveDrawing.Begin(PrimitiveType.LineList);
             PrimitiveDrawing.SetColor(GetRenderSnapHandleColour());
             PrimitiveDrawing.Vertex3(origin.DX - dist, origin.DY + dist, 0);
@@ -720,52 +713,35 @@ namespace CBRE.Editor.Tools
             PrimitiveDrawing.End();
         }
 
-        protected void RenderBoxText(Viewport2D viewport, Vector3 boxStart, Vector3 boxEnd)
-        {
-            if (!CBRE.Settings.View.DrawBoxText) return;
+        protected void RenderBoxText(Viewport2D viewport, Vector3 boxStart, Vector3 boxEnd) {
+            if (!CBRE.Settings.View.DrawBoxText) { return; }
 
             var widthText = (Math.Round(boxEnd.X - boxStart.X, 1)).ToString("#.##");
             var heightText = (Math.Round(boxEnd.Y - boxStart.Y, 1)).ToString("#.##");
 
-            //TODO: implement
-            //throw new NotImplementedException();
-            /*var wid = _printer.Measure(widthText, _printerFont, new RectangleF(0, 0, viewport.Width, viewport.Height));
-            var hei = _printer.Measure(heightText, _printerFont, new RectangleF(0, 0, viewport.Width, viewport.Height));
-
             boxStart = viewport.WorldToScreen(boxStart);
             boxEnd = viewport.WorldToScreen(boxEnd);
 
-            var cx = (float)(boxStart.X + (boxEnd.X - boxStart.X) / 2);
-            var cy = (float)(boxStart.Y + (boxEnd.Y - boxStart.Y) / 2);
+            var widthTextPos = new Num.Vector2(
+                ((float)boxStart.X + (float)boxEnd.X - ImGui.CalcTextSize(widthText).X) * 0.5f,
+                (float)boxStart.Y);
+            var heightTextPos = new Num.Vector2(
+                (float)boxEnd.X,
+                ((float)boxStart.Y + (float)boxEnd.Y + ImGui.CalcTextSize(heightText).Y) * 0.5f);
 
-            var wrect = new RectangleF(cx - wid.BoundingBox.Width / 2, viewport.Height - (float)boxEnd.Y - _printerFont.Height - 18, wid.BoundingBox.Width * 1.2f, wid.BoundingBox.Height);
-            var hrect = new RectangleF((float)boxEnd.X + 18, viewport.Height - cy - hei.BoundingBox.Height * 0.75f, hei.BoundingBox.Width * 1.2f, hei.BoundingBox.Height);
-
-            if (wrect.X < 10) wrect.X = 10;
-            if (wrect.X + wrect.Width + 10 > viewport.Width) wrect.X = viewport.Width - 10 - wrect.Width;
-            if (wrect.Y < 10) wrect.Y = 10;
-            if (wrect.Y + wrect.Height + 10 > viewport.Height) wrect.Y = viewport.Height - 10 - wrect.Height;
-
-            if (hrect.X < 10) hrect.X = 10;
-            if (hrect.X + hrect.Width + 10 > viewport.Width) hrect.X = viewport.Width - 10 - hrect.Width;
-            if (hrect.Y < 10) hrect.Y = 10;
-            if (hrect.Y + hrect.Height + 10 > viewport.Height) hrect.Y = viewport.Height - 10 - hrect.Height;
-
-            GL.Disable(EnableCap.CullFace);
-
-            _printer.Begin();
-            _printer.Print(widthText, _printerFont, BoxColour, wrect);
-            _printer.Print(heightText, _printerFont, BoxColour, hrect);
-            _printer.End();
-
-            GL.Enable(EnableCap.CullFace);*/
+            var drawList = ImGui.GetWindowDrawList();
+            drawList.PushClipRect(new Num.Vector2(viewport.X, viewport.Y),
+                new Num.Vector2(viewport.X + viewport.Width, viewport.Y + viewport.Height));
+            drawList.AddText(new Num.Vector2(viewport.X + widthTextPos.X, viewport.Y + viewport.Height - widthTextPos.Y), 0xff00ffff, widthText);
+            drawList.AddText(new Num.Vector2(viewport.X + heightTextPos.X, viewport.Y + viewport.Height - heightTextPos.Y), 0xff00ffff, heightText);
+            drawList.PopClipRect();
         }
 
         protected virtual void Render2D(Viewport2D viewport)
         {
             if (State.Action == BoxAction.ReadyToDraw || State.Action == BoxAction.DownToDraw) return;
-            var start = viewport.Flatten(State.BoxStart);
-            var end = viewport.Flatten(State.BoxEnd);
+            var start = viewport.Flatten(State.BoxStart ?? Vector3.Zero);
+            var end = viewport.Flatten(State.BoxEnd ?? Vector3.Zero);
             if (ShouldDrawBox(viewport))
             {
                 RenderBox(viewport, start, end);
@@ -778,9 +754,17 @@ namespace CBRE.Editor.Tools
             {
                 RenderResizeBox(viewport, start, end);
             }
-            if (ShouldDrawBoxText(viewport))
+        }
+
+        public override void ViewportUi(ViewportBase viewport) {
+            if (GameMain.Instance.SelectedTool != this) { return; }
+            if (State.Action == BoxAction.ReadyToDraw || State.Action == BoxAction.DownToDraw
+                || viewport is not Viewport2D vp2d) return;
+            var start = vp2d.Flatten(State.BoxStart ?? Vector3.Zero);
+            var end = vp2d.Flatten(State.BoxEnd ?? Vector3.Zero);
+            if (ShouldDrawBoxText(vp2d))
             {
-                RenderBoxText(viewport, start, end);
+                RenderBoxText(vp2d, start, end);
             }
         }
 
@@ -808,7 +792,7 @@ namespace CBRE.Editor.Tools
             if (State.Action == BoxAction.ReadyToDraw || State.Action == BoxAction.DownToDraw) return;
             if (ShouldDraw3DBox())
             {
-                Render3DBox(viewport, State.BoxStart, State.BoxEnd);
+                Render3DBox(viewport, State.BoxStart ?? Vector3.Zero, State.BoxEnd ?? Vector3.Zero);
             }
         }
         #endregion
@@ -833,11 +817,15 @@ namespace CBRE.Editor.Tools
             // If one of the dimensions has a depth value of 0, extend it out into infinite space
             // If two or more dimensions have depth 0, do nothing.
 
-            var sameX = State.BoxStart.X == State.BoxEnd.X;
-            var sameY = State.BoxStart.Y == State.BoxEnd.Y;
-            var sameZ = State.BoxStart.Z == State.BoxEnd.Z;
-            var start = State.BoxStart.Clone();
-            var end = State.BoxEnd.Clone();
+            if (State.BoxStart is not { } start
+                || State.BoxEnd is not { } end) {
+                boundingbox = default;
+                return false;
+            }
+            
+            var sameX = start.X == end.X;
+            var sameY = start.Y == end.Y;
+            var sameZ = start.Z == end.Z;
             var invalid = false;
 
             if (sameX)

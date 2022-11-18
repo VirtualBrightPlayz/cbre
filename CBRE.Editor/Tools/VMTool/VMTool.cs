@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using CBRE.Editor.Popup;
 using Select = CBRE.Settings.Select;
 using View = CBRE.Settings.View;
 using Microsoft.Xna.Framework.Input;
@@ -42,7 +43,7 @@ namespace CBRE.Editor.Tools.VMTool
         public List<VMPoint> MoveSelection { get; private set; }
 
         private VMPoint _movingPoint;
-        private Vector3 _snapPointOffset;
+        private Vector3? _snapPointOffset;
         private bool _dirty;
 
         private ShowPoints _showPoints;
@@ -77,13 +78,12 @@ namespace CBRE.Editor.Tools.VMTool
                             _currentTool = _tools[i];
                         }
                     }
-                    ImGui.EndCombo();
+                    ImGui.TreePop();
                 }
-                _currentTool.UpdateGui();
-                ImGui.TreePop();
             }
-            // ImGui.NewLine();
-            if (ImGui.TreeNode("VM Tool Errors")) {
+            ImGui.EndChild();
+            ImGui.NewLine();
+            if (ImGui.TreeNode("Errors")) {
                 var errs = GetErrors().ToArray();
                 for (int i = 0; i < errs.Length; i++) {
                     ImGui.TextColored(new System.Numerics.Vector4(0.75f, 0f, 0f, 1f), errs[i].Message);
@@ -323,12 +323,12 @@ namespace CBRE.Editor.Tools.VMTool
 
         private void Commit(IList<Solid> solids)
         {
-            if (!solids.Any()) return;
+            if (!solids.Any()) { return; }
 
             // Unhide the solids
             foreach (var solid in solids)
             {
-                solid.IsCodeHidden = false;
+                Document.ObjectRenderer.ShowSolid(solid);
             }
             var kvs = _copies.Where(x => solids.Contains(x.Value)).ToList();
             foreach (var kv in kvs)
@@ -360,8 +360,7 @@ namespace CBRE.Editor.Tools.VMTool
 
                 // Set all the original solids to hidden
                 // (do this after we clone it so the clones aren't hidden too)
-                solid.IsCodeHidden = true;
-                copy.Faces.ForEach(p => Document.ObjectRenderer.RemoveFace(p));
+                Document.ObjectRenderer.HideSolid(solid);
             }
             RefreshPoints();
             RefreshMidpoints();
@@ -493,9 +492,9 @@ namespace CBRE.Editor.Tools.VMTool
             }
         }
 
-        private Vector3 GetIntersectionPoint(MapObject obj, Line line)
+        private Vector3? GetIntersectionPoint(MapObject obj, Line line)
         {
-            if (obj == null) return null;
+            if (obj == null) { return null; }
 
             var solid = obj as Solid;
             if (solid == null) return obj.GetIntersectionPoint(line);
@@ -503,13 +502,13 @@ namespace CBRE.Editor.Tools.VMTool
             return solid.Faces.Where(x => x.Opacity > 0 && !x.IsHidden)
                 .Select(x => x.GetIntersectionPoint(line))
                 .Where(x => x != null)
-                .OrderBy(x => (x - line.Start).VectorMagnitude())
+                .OrderBy(x => (x.Value - line.Start).VectorMagnitude())
                 .FirstOrDefault();
         }
 
         private bool _clickSelectionDone = false;
 
-        private void MouseDown(Viewport3D vp, ViewportEvent e)
+        private void MouseClick3D(Viewport3D vp, ViewportEvent e)
         {
             if (!_currentTool.NoSelection())
             {
@@ -558,7 +557,7 @@ namespace CBRE.Editor.Tools.VMTool
                     .OfType<Solid>()
                     .Select(x => new { Item = x, Intersection = GetIntersectionPoint(x, ray) })
                     .Where(x => x.Intersection != null)
-                    .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                    .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                     .Select(x => x.Item)
                     .FirstOrDefault();
 
@@ -584,27 +583,27 @@ namespace CBRE.Editor.Tools.VMTool
                 }
             }
 
-            base.MouseDown(vp, e);
+            base.MouseClick(vp, e);
         }
 
-        public override void MouseDown(ViewportBase vp, ViewportEvent e)
+        public override void MouseClick(ViewportBase vp, ViewportEvent e)
         {
             _clickSelectionDone = false;
             if (_currentTool != null)
             {
                 // If the current tool handles the event, we're done
-                _currentTool.MouseDown(vp, e);
+                _currentTool.MouseClick(vp, e);
                 if (e.Handled) return;
             }
-            if (!(vp is Viewport2D))
+            if (vp is Viewport3D vp3d)
             {
-                MouseDown((Viewport3D)vp, e);
+                MouseClick3D(vp3d, e);
                 return;
             }
 
-            if (_currentTool == null) return;
+            if (_currentTool == null) { return; }
 
-            if (_currentTool.NoSelection()) return;
+            if (_currentTool.NoSelection()) { return; }
 
             var viewport = (Viewport2D)vp;
 
@@ -640,14 +639,14 @@ namespace CBRE.Editor.Tools.VMTool
                 {
                     // select solid
                     var select = new[] { solid };
-                    var deselect = !ViewportManager.Ctrl ? Document.Selection.GetSelectedObjects() : new MapObject[0];
+                    var deselect = !ViewportManager.Ctrl ? Document.Selection.GetSelectedObjects() : Array.Empty<MapObject>();
                     Document.PerformAction("Select VM solid", new ChangeSelection(select, deselect));
 
                     // Don't do other click operations
                     return;
                 }
 
-                base.MouseDown(vp, e);
+                base.MouseClick(vp, e);
                 return;
             }
 
@@ -674,14 +673,14 @@ namespace CBRE.Editor.Tools.VMTool
             _movingPoint = vtx;
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
+        /*public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             var vp = viewport as Viewport2D;
             if (vp == null || _clickSelectionDone) return;
 
             var vtxs = _currentTool.GetVerticesAtPoint(e.X, viewport.Height - e.Y, vp);
             DoSelection(vtxs, vp);
-        }
+        }*/
 
         private void DoSelection(List<VMPoint> vertices, Viewport2D vp)
         {
@@ -722,12 +721,12 @@ namespace CBRE.Editor.Tools.VMTool
             // Not used
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
-            base.MouseUp(viewport, e);
+            base.MouseLifted(viewport, e);
 
             if (_currentTool == null) return;
-            _currentTool.MouseUp(viewport, e);
+            _currentTool.MouseLifted(viewport, e);
 
             if (!(viewport is Viewport2D)) return;
             if (_currentTool.NoSelection()) return;
@@ -793,7 +792,7 @@ namespace CBRE.Editor.Tools.VMTool
                 if (!ViewportManager.Alt && ViewportManager.Shift)
                 {
                     // If shift is down, retain the offset the point was at before (relative to the grid)
-                    point += _snapPointOffset;
+                    point += _snapPointOffset ?? Vector3.Zero;
                 }
                 var moveDistance = point - viewport.ZeroUnusedCoordinate(_movingPoint.Vector3);
                 _currentTool.DragMove(moveDistance);
@@ -805,12 +804,12 @@ namespace CBRE.Editor.Tools.VMTool
 
         public override HotkeyInterceptResult InterceptHotkey(HotkeysMediator hotkeyMessage, object parameters)
         {
-            throw new NotImplementedException();
-            /*switch (hotkeyMessage)
+            switch (hotkeyMessage)
             {
                 case HotkeysMediator.HistoryUndo:
                 case HotkeysMediator.HistoryRedo:
-                    MessageBox.Show("Please exit the VM tool to undo any changes.");
+                    GameMain.Instance.Popups.Add(
+                        new MessagePopup("Error", "Please exit the VM tool to undo any changes."));
                     return HotkeyInterceptResult.Abort;
                 case HotkeysMediator.OperationsPaste:
                 case HotkeysMediator.OperationsPasteSpecial:
@@ -823,7 +822,7 @@ namespace CBRE.Editor.Tools.VMTool
                     }
                     break;
             }
-            return HotkeyInterceptResult.Continue;*/
+            return HotkeyInterceptResult.Continue;
         }
 
         private void CycleShowPoints()
@@ -856,12 +855,12 @@ namespace CBRE.Editor.Tools.VMTool
             if (_currentTool != null) _currentTool.Render2D(vp);
 
             // Render out the solid previews
-            PrimitiveDrawing.Begin(PrimitiveType.LineList);
+            PrimitiveDrawing.Begin(PrimitiveType.TriangleList);
             PrimitiveDrawing.SetColor(Color.Pink);
             // Matrix.Push();
             var matrix = vp.GetModelViewMatrix();
             // GL.MultMatrix(ref matrix);
-            PrimitiveDrawing.FacesWireframe(_copies.Keys.SelectMany(x => x.Faces), matrix.ToCbre());
+            PrimitiveDrawing.FacesWireframe(_copies.Keys.SelectMany(x => x.Faces), thickness: 1m / vp.Zoom, m: matrix.ToCbre());
             // Matrix.Pop();
             PrimitiveDrawing.End();
 
@@ -878,9 +877,9 @@ namespace CBRE.Editor.Tools.VMTool
             {
                 var c = vp.Flatten(point.Vector3);
                 PrimitiveDrawing.SetColor(Color.Black);
-                PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 4);
+                PrimitiveDrawing.Square(new Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 4m / vp.Zoom);
                 PrimitiveDrawing.SetColor(point.GetColour());
-                PrimitiveDrawing.Square(new DataStructures.Geometric.Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 3);
+                PrimitiveDrawing.Square(new Vector3((decimal)c.DX, (decimal)c.DY, (decimal)z), 3m / vp.Zoom);
                 // GLX.Square(new Vector2d(c.DX, c.DY), 3, z, true);
             }
             PrimitiveDrawing.End();
@@ -891,9 +890,6 @@ namespace CBRE.Editor.Tools.VMTool
             base.Render3D(vp);
 
             if (_currentTool != null) _currentTool.Render3D(vp);
-
-            // throw new NotImplementedException();
-            // TextureHelper.Unbind();
 
             if (_currentTool == null || _currentTool.DrawVertices())
             {
@@ -924,16 +920,10 @@ namespace CBRE.Editor.Tools.VMTool
                     c -= half;
 
                     PrimitiveDrawing.SetColor(Color.Black);
-                    PrimitiveDrawing.Vertex2(c.DX - 4, c.DY - 4);
-                    PrimitiveDrawing.Vertex2(c.DX - 4, c.DY + 4);
-                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY + 4);
-                    PrimitiveDrawing.Vertex2(c.DX + 4, c.DY - 4);
+                    PrimitiveDrawing.Square(new Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 4d);
 
                     PrimitiveDrawing.SetColor(point.GetColour());
-                    PrimitiveDrawing.Vertex2(c.DX - 3, c.DY - 3);
-                    PrimitiveDrawing.Vertex2(c.DX - 3, c.DY + 3);
-                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY + 3);
-                    PrimitiveDrawing.Vertex2(c.DX + 3, c.DY - 3);
+                    PrimitiveDrawing.Square(new Vector3((decimal)c.DX, (decimal)c.DY, (decimal)c.Z), 3d);
                 }
                 PrimitiveDrawing.End();
 
@@ -966,25 +956,25 @@ namespace CBRE.Editor.Tools.VMTool
 
                 PrimitiveDrawing.Begin(PrimitiveType.LineList);
                 PrimitiveDrawing.SetColor(Color.Pink);
-                PrimitiveDrawing.FacesWireframe(faces);
+                PrimitiveDrawing.FacesWireframe(faces, thickness: 0f);
                 PrimitiveDrawing.End();
             }
             else
             {
                 PrimitiveDrawing.Begin(PrimitiveType.LineList);
                 PrimitiveDrawing.SetColor(Color.FromArgb(255, 64, 192, 64));
-                PrimitiveDrawing.FacesWireframe(faces.Where(x => !x.IsSelected));
+                PrimitiveDrawing.FacesWireframe(faces.Where(x => !x.IsSelected), thickness: 0f);
                 PrimitiveDrawing.SetColor(Color.FromArgb(255, 255, 128, 128));
-                PrimitiveDrawing.FacesWireframe(faces.Where(x => x.IsSelected));
+                PrimitiveDrawing.FacesWireframe(faces.Where(x => x.IsSelected), thickness: 0f);
                 PrimitiveDrawing.End();
             }
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
-            if (_currentTool != null) _currentTool.KeyDown(viewport, e);
+            if (_currentTool != null) _currentTool.KeyHit(viewport, e);
             if (e.Handled) return;
-            base.KeyDown(viewport, e);
+            base.KeyHit(viewport, e);
         }
 
         public override void Render(ViewportBase viewport)
@@ -1014,18 +1004,11 @@ namespace CBRE.Editor.Tools.VMTool
             base.MouseWheel(viewport, e);
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
-            if (_currentTool != null) _currentTool.KeyPress(viewport, e);
+            if (_currentTool != null) _currentTool.KeyLift(viewport, e);
             if (e.Handled) return;
-            base.KeyPress(viewport, e);
-        }
-
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
-        {
-            if (_currentTool != null) _currentTool.KeyUp(viewport, e);
-            if (e.Handled) return;
-            base.KeyUp(viewport, e);
+            base.KeyLift(viewport, e);
         }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame)

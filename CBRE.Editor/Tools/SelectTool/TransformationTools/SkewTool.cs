@@ -43,15 +43,15 @@ namespace CBRE.Editor.Tools.SelectTool.TransformationTools
             var shearUpDown = state.Handle == BaseBoxTool.ResizeHandle.Left || state.Handle == BaseBoxTool.ResizeHandle.Right;
             var shearTopRight = state.Handle == BaseBoxTool.ResizeHandle.Top || state.Handle == BaseBoxTool.ResizeHandle.Right;
 
-            var nsmd = viewport.ScreenToWorld(e.X, viewport.Height - e.Y) - state.MoveStart;
+            var nsmd = (viewport.ScreenToWorld(e.X, viewport.Height - e.Y) - state.MoveStart) ?? Vector3.Zero;
             var mouseDiff = SnapIfNeeded(nsmd, doc);
             if (ViewportManager.Shift)
             {
                 mouseDiff = doc.Snap(nsmd, doc.Map.GridSpacing / 2);
             }
 
-            var relative = viewport.Flatten(state.PreTransformBoxEnd - state.PreTransformBoxStart);
-            var shearOrigin = (shearTopRight) ? state.PreTransformBoxStart : state.PreTransformBoxEnd;
+            var relative = viewport.Flatten((state.PreTransformBoxEnd - state.PreTransformBoxStart) ?? Vector3.Zero);
+            var shearOrigin = ((shearTopRight) ? state.PreTransformBoxStart : state.PreTransformBoxEnd) ?? Vector3.Zero;
 
             var shearAmount = new Vector3(mouseDiff.X / relative.Y, mouseDiff.Y / relative.X, 0);
             if (!shearTopRight) shearAmount *= -1;

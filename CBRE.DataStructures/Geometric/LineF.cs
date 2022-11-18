@@ -46,6 +46,9 @@ namespace CBRE.DataStructures.Geometric {
             if (u > 1) return End;   // Point is after the segment end
             return Start + u * delta;
         }
+        
+        public float DistanceFrom(Vector3F point)
+            => (point - ClosestPoint(point)).VectorMagnitude();
 
         /// <summary>
         /// Determines if this line is behind, in front, or spanning a plane.

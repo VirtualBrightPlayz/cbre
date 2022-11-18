@@ -109,10 +109,10 @@ namespace CBRE.DataStructures.MapObjects {
         /// </summary>
         /// <param name="line">The intersection line</param>
         /// <returns>The closest intersecting point, or null if the line doesn't intersect.</returns>
-        public override Vector3 GetIntersectionPoint(Line line) {
+        public override Vector3? GetIntersectionPoint(Line line) {
             return Faces.Select(x => x.GetIntersectionPoint(line))
                 .Where(x => x != null)
-                .OrderBy(x => (x - line.Start).VectorMagnitude())
+                .OrderBy(x => (x.Value - line.Start).VectorMagnitude())
                 .FirstOrDefault();
         }
 

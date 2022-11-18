@@ -157,7 +157,7 @@ namespace CBRE.Editor.Tools.VMTool
 
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             var vp = viewport as Viewport3D;
             if (vp == null || e.Button != MouseButtons.Left) return;
@@ -169,7 +169,7 @@ namespace CBRE.Editor.Tools.VMTool
             var clickedFace = hits.SelectMany(f => f.Faces)
                 .Select(x => new { Item = x, Intersection = x.GetIntersectionPoint(ray) })
                 .Where(x => x.Intersection != null)
-                .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                 .Select(x => x.Item)
                 .FirstOrDefault();
 
@@ -195,17 +195,12 @@ namespace CBRE.Editor.Tools.VMTool
             }
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
-        {
-            // Not used
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             // Not used
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
 
         }
@@ -220,17 +215,12 @@ namespace CBRE.Editor.Tools.VMTool
 
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
 
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
-        {
-
-        }
-
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
 
         }

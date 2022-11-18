@@ -1,8 +1,8 @@
 <entity name="model">
     <rmesh>
-        <write property="position" as="Vector" />
         <write property="file" as="B3DString" />
-        <write property="angles" as="Vector" />
+        <write property="position" as="Vector" />
+        <write property="angles" as="Vector3D" />
         <write property="scale" as="Vector" />
     </rmesh>
 
@@ -11,6 +11,7 @@
         <property name="file" type="String" />
         <property name="angles" type="Vector" default="0.0 0.0 0.0" />
         <property name="scale" type="Vector" default="1.0 1.0 1.0" />
+        <property name="bake" type="Boolean" default="true" />
     </properties>
 
     <model name="file" />

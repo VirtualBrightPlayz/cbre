@@ -1,5 +1,4 @@
 ﻿using CBRE.Common.Mediator;
-using CBRE.DataStructures.Geometric;
 using CBRE.Graphics;
 using CBRE.Settings;
 using CBRE.Editor.Rendering;
@@ -7,9 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using ImGuiNET;
 using Camera = CBRE.DataStructures.MapObjects.Camera;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Graphics;
+using Vector3 = CBRE.DataStructures.Geometric.Vector3;
+using Num = System.Numerics;
+using CBRE.Editor.Popup;
 
 namespace CBRE.Editor.Tools
 {
@@ -32,6 +35,7 @@ namespace CBRE.Editor.Tools
             Down = 0x8
         }
 
+        private bool zShortcut = false;
         private State _state;
         private Camera _stateCamera;
 
@@ -164,7 +168,7 @@ namespace CBRE.Editor.Tools
             //
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
             if (viewport is Viewport2D vp) {
                 _state = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
@@ -184,17 +188,12 @@ namespace CBRE.Editor.Tools
             }
         }
 
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
-        {
-            // Not used
-        }
-
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
         {
             // Not used
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
             _state = State.None;
         }
@@ -204,83 +203,113 @@ namespace CBRE.Editor.Tools
             //
         }
 
-        public override void MouseMove(ViewportBase viewport, ViewportEvent e)
-        {
-            if (viewport is Viewport2D vp) {
-                var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
-                var cursor = MouseCursor.Arrow;
-
-                switch (_state) {
-                    case State.None:
-                        var st = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
-                        if (st != State.None) cursor = MouseCursor.SizeAll;
-                        break;
-                    case State.MovingPosition:
-                        if (_stateCamera == null) break;
-                        var newEye = vp.GetUnusedCoordinate(_stateCamera.EyePosition) + p;
-                        if (ViewportManager.Ctrl) _stateCamera.LookPosition += (newEye - _stateCamera.EyePosition);
-                        _stateCamera.EyePosition = newEye;
-                        if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
-                        break;
-                    case State.MovingLook:
-                        if (_stateCamera == null) break;
-                        var newLook = vp.GetUnusedCoordinate(_stateCamera.LookPosition) + p;
-                        if (ViewportManager.Ctrl) _stateCamera.EyePosition += (newLook - _stateCamera.LookPosition);
-                        _stateCamera.LookPosition = newLook;
-                        if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
-                        break;
-                }
-                vp.Cursor = cursor;
-            } else if (viewport is Viewport3D vp3d && _state == State.Moving3d) {
-                //if (!FreeLook) return;
-
-                var camera = GetCameras().FirstOrDefault();
-
-                var left = e.Button.HasFlag(MouseButtons.Left);
-                var right = e.Button.HasFlag(MouseButtons.Right);
-                var updown = !left && right;
-                var forwardback = left && right;
-
-                int dx = -e.DeltaX; int dy = e.DeltaY;
-
-                if (CBRE.Settings.View.InvertX) dx = -dx;
-                if (CBRE.Settings.View.InvertY) dy = -dy;
-
-                if (updown) {
-                    camera.Strafe(-dx);
-                    camera.Ascend(-dy);
-                } else if (forwardback) {
-                    camera.Strafe(-dx);
-                    camera.Advance(-dy);
-                } else { // left mouse or z-toggle
-                    var fovdiv = (vp3d.Width / 60m) / 2.5m;
-                    camera.Pan(dx / fovdiv);
-                    camera.Tilt(dy / fovdiv);
-                }
-                
-                ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
-                SetViewportCamera(camera.EyePosition, camera.LookPosition, vp3d.Camera);
+        public override void MouseMoveBackground(ViewportBase viewport, ViewportEvent e) {
+            if (viewport is Viewport3D && zShortcut) {
+                MouseMove(viewport, e);
             }
-
         }
+        
+        public override void MouseMove(ViewportBase viewport, ViewportEvent e) {
+            switch (viewport)
+            {
+                case Viewport2D vp:
+                {
+                    var p = SnapIfNeeded(vp.Expand(vp.ScreenToWorld(e.X, vp.Height - e.Y)));
+                    var cursor = MouseCursor.Arrow;
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
-        {
+                    switch (_state) {
+                        case State.None:
+                            var st = GetStateAtPoint(e.X, vp.Height - e.Y, vp, out _stateCamera);
+                            if (st != State.None) cursor = MouseCursor.SizeAll;
+                            break;
+                        case State.MovingPosition:
+                            if (_stateCamera == null) break;
+                            var newEye = vp.GetUnusedCoordinate(_stateCamera.EyePosition) + p;
+                            if (ViewportManager.Ctrl) _stateCamera.LookPosition += (newEye - _stateCamera.EyePosition);
+                            _stateCamera.EyePosition = newEye;
+                            if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
+                            break;
+                        case State.MovingLook:
+                            if (_stateCamera == null) break;
+                            var newLook = vp.GetUnusedCoordinate(_stateCamera.LookPosition) + p;
+                            if (ViewportManager.Ctrl) _stateCamera.EyePosition += (newLook - _stateCamera.LookPosition);
+                            _stateCamera.LookPosition = newLook;
+                            if (Document.Map.ActiveCamera == _stateCamera) { SetViewportCamera(_stateCamera.EyePosition, _stateCamera.LookPosition); }
+                            break;
+                    }
+                    vp.Cursor = cursor;
+                    break;
+                }
+                case Viewport3D vp3d when _state == State.Moving3d || zShortcut:
+                {
+                    //if (!FreeLook) return;
+
+                    var camera = GetCameras().FirstOrDefault();
+
+                    var left = e.Button.HasFlag(MouseButtons.Left);
+                    var right = e.Button.HasFlag(MouseButtons.Right);
+                    var updown = !left && right;
+                    var forwardback = left && right;
+
+                    int dx = -e.DeltaX; int dy = e.DeltaY;
+
+                    if (CBRE.Settings.View.InvertX) dx = -dx;
+                    if (CBRE.Settings.View.InvertY) dy = -dy;
+
+                    if (updown) {
+                        camera.Strafe(-dx);
+                        camera.Ascend(-dy);
+                    } else if (forwardback) {
+                        camera.Strafe(-dx);
+                        camera.Advance(-dy);
+                    } else { // left mouse or z-toggle
+                        var fovdiv = (vp3d.Width / 60m) / 2.5m;
+                        camera.Pan(dx / fovdiv);
+                        camera.Tilt(dy / fovdiv);
+                    }
+                
+                    ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
+                    SetViewportCamera(camera.EyePosition, camera.LookPosition, vp3d.Camera);
+                    break;
+                }
+            }
+        }
+        
+        public override void KeyHitBackground(ViewportBase viewport, ViewportEvent e) {
+            if (viewport is Viewport3D vp3d && e.KeyCode == Keys.Z) {
+                if (!e.AnyModifiers) {
+                    zShortcut = !zShortcut;
+                    if (zShortcut) {
+                        ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
+                    }
+                } else if (e.Shift) {
+                    IEnumerable<ViewportWindow> vpWindows = GameMain.Instance.Dockables.Where(d => d is ViewportWindow v && v.Viewports.Contains(vp3d)).Cast<ViewportWindow>();
+                    if (vpWindows.Any()) {
+                        if (vpWindows.First().FullscreenViewport == -1)
+                            vpWindows.First().FullscreenViewport = Array.IndexOf(vpWindows.First().Viewports, vp3d);
+                        else
+                            vpWindows.First().FullscreenViewport = -1;
+                    }
+                }
+            }
+        }
+        
+        public override void KeyUpBackground(ViewportBase viewport, ViewportEvent e) {
             //
         }
 
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e) {
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e) {
             //
         }
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e) {
-            //
-        }
-
-        public override void KeyDown(ViewportEvent e) {
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e) {
             //
         }
 
-        public override void KeyUp(ViewportEvent e) {
+        public override void KeyHit(ViewportEvent e) {
+            //
+        }
+
+        public override void KeyLift(ViewportEvent e) {
             //
         }
 
@@ -294,11 +323,10 @@ namespace CBRE.Editor.Tools
 
         public override void Render(ViewportBase viewport)
         {
-            var vp = viewport as Viewport2D;
-            if (vp == null) return;
+            if (viewport is not Viewport2D vp) { return; }
 
             var cams = GetCameras().ToList();
-            if (!cams.Any()) return;
+            if (!cams.Any()) { return; }
 
             var z = (double)vp.Zoom;
 
@@ -379,6 +407,35 @@ namespace CBRE.Editor.Tools
             PrimitiveDrawing.End();
 
             //GL.Disable(EnableCap.LineSmooth);
+        }
+
+        public override void ViewportUi(ViewportBase viewport) {
+            if (!zShortcut && (_state != State.Moving3d || GameMain.Instance.SelectedTool != this)) {
+                GameMain.Instance.IsMouseVisible = true;
+                return;
+            }
+            GameMain.Instance.IsMouseVisible = false;
+            
+            if (viewport is not Viewport3D vp3d) { return; }
+
+            var center = new Num.Vector2(viewport.X + viewport.Width / 2, viewport.Y + viewport.Height / 2);
+            var drawList = ImGui.GetForegroundDrawList();
+            drawList.AddRectFilled(
+                center - Num.Vector2.UnitX * 2 + Num.Vector2.UnitY * 6,
+                center + Num.Vector2.UnitX * 2 - Num.Vector2.UnitY * 6,
+                0xff000000);
+            drawList.AddRectFilled(
+                center - Num.Vector2.UnitX * 6 + Num.Vector2.UnitY * 2,
+                center + Num.Vector2.UnitX * 6 - Num.Vector2.UnitY * 2,
+                0xff000000);
+            drawList.AddRectFilled(
+                center - Num.Vector2.UnitX * 1 + Num.Vector2.UnitY * 5,
+                center + Num.Vector2.UnitX * 1 - Num.Vector2.UnitY * 5,
+                0xffaaaaaa);
+            drawList.AddRectFilled(
+                center - Num.Vector2.UnitX * 5 + Num.Vector2.UnitY * 1,
+                center + Num.Vector2.UnitX * 5 - Num.Vector2.UnitY * 1,
+                0xffaaaaaa);
         }
 
         protected static void Coord(Vector3 c)

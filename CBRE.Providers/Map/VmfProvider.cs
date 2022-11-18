@@ -9,6 +9,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 
+using static CBRE.Common.PrimitiveConversion;
+
 namespace CBRE.Providers.Map {
     public class VmfProvider : MapProvider {
         protected override IEnumerable<MapFeature> GetFormatFeatures() {
@@ -44,21 +46,26 @@ namespace CBRE.Providers.Map {
 
         private static void FlattenTree(MapObject parent, List<Solid> solids, List<Entity> entities, List<Group> groups) {
             foreach (var mo in parent.GetChildren()) {
-                if (mo is Solid) {
-                    solids.Add((Solid)mo);
-                } else if (mo is Entity) {
-                    entities.Add((Entity)mo);
-                } else if (mo is Group) {
-                    groups.Add((Group)mo);
-                    FlattenTree(mo, solids, entities, groups);
+                switch (mo)
+                {
+                    case Solid solid:
+                        solids.Add(solid);
+                        break;
+                    case Entity entity:
+                        entities.Add(entity);
+                        break;
+                    case Group group:
+                        groups.Add(group);
+                        FlattenTree(group, solids, entities, groups);
+                        break;
                 }
             }
         }
 
         private static string FormatVector3(Vector3 c) {
-            return c.X.ToString("0.00000000")
-                + " " + c.Y.ToString("0.00000000")
-                + " " + c.Z.ToString("0.00000000");
+            return c.X.ToString("0.00000000", CultureInfo.InvariantCulture)
+                + " " + c.Y.ToString("0.00000000", CultureInfo.InvariantCulture)
+                + " " + c.Z.ToString("0.00000000", CultureInfo.InvariantCulture);
         }
 
         private static string FormatColor(Color c) {
@@ -215,9 +222,9 @@ namespace CBRE.Providers.Map {
                                          FormatVector3(face.Vertices[1].Location),
                                          FormatVector3(face.Vertices[2].Location));
             ret["material"] = face.Texture.Name;
-            ret["uaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.UAxis), face.Texture.XShift, face.Texture.XScale);
-            ret["vaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.VAxis), face.Texture.YShift, face.Texture.YScale);
-            ret["rotation"] = face.Texture.Rotation.ToString();
+            ret["uaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.UAxis), face.Texture.XShift.ToString(CultureInfo.InvariantCulture), face.Texture.XScale.ToString(CultureInfo.InvariantCulture));
+            ret["vaxis"] = String.Format("[{0} {1}] {2}", FormatVector3(face.Texture.VAxis), face.Texture.YShift.ToString(CultureInfo.InvariantCulture), face.Texture.YScale.ToString(CultureInfo.InvariantCulture));
+            ret["rotation"] = face.Texture.Rotation.ToString(CultureInfo.InvariantCulture);
             // ret["lightmapscale"]
             // ret["smoothing_groups"]
 
@@ -275,7 +282,7 @@ namespace CBRE.Providers.Map {
             }
 
             ret.Colour = editor.PropertyColour("color", Colour.GetRandomBrushColour());
-            ret.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(int.Parse).Where(x => x > 0));
+            ret.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(ParseInt).Where(x => x > 0));
             foreach (var face in ret.Faces) {
                 face.Parent = ret;
                 face.Colour = ret.Colour;
@@ -325,7 +332,7 @@ namespace CBRE.Providers.Map {
             };
             var editor = entity.GetChildren("editor").FirstOrDefault() ?? new GenericStructure("editor");
             ret.Colour = editor.PropertyColour("color", Colour.GetRandomBrushColour());
-            ret.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(int.Parse).Where(x => x > 0));
+            ret.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(ParseInt).Where(x => x > 0));
             foreach (var child in entity.GetChildren("solid").Select(solid => ReadSolid(solid, generator)).Where(s => s != null)) {
                 child.SetParent(ret, false);
             }
@@ -343,7 +350,7 @@ namespace CBRE.Providers.Map {
             var editor = WriteEditor(ent);
             ret.Children.Add(editor);
 
-            foreach (var solid in ent.GetChildren().SelectMany(x => x.FindAll()).OfType<Solid>().OrderBy(x => x.ID)) {
+            foreach (var solid in ent.GetChildren().SelectMany(x => x.GetSelfAndAllChildren()).OfType<Solid>().OrderBy(x => x.ID)) {
                 ret.Children.Add(WriteSolid(solid));
             }
 
@@ -354,7 +361,7 @@ namespace CBRE.Providers.Map {
             var g = new Group(GetObjectID(group, generator));
             var editor = group.GetChildren("editor").FirstOrDefault() ?? new GenericStructure("editor");
             g.Colour = editor.PropertyColour("color", Colour.GetRandomBrushColour());
-            g.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(int.Parse).Where(x => x > 0));
+            g.Visgroups.AddRange(editor.GetAllPropertyValues("visgroupid").Select(ParseInt).Where(x => x > 0));
             return g;
         }
 

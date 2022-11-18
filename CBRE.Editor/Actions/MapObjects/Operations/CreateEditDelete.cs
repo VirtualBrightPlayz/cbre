@@ -50,12 +50,12 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
                 if (obj == null) return;
 
                 // Unclone will reset children, need to reselect them if needed
-                var deselect = obj.FindAll().Where(x => x.IsSelected).ToList();
+                var deselect = obj.GetSelfAndAllChildren().Where(x => x.IsSelected).SelectMany(GetSelfAndChildren).ToList();
                 document.Selection.Deselect(deselect);
 
                 EditOperation.PerformOperation(obj);
 
-                var select = obj.FindAll().Where(x => deselect.Any(y => x.ID == y.ID));
+                var select = obj.GetSelfAndAllChildren().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);
 
                 document.Map.UpdateAutoVisgroups(obj, true);
@@ -64,18 +64,20 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             public void Reverse(Document document) {
                 var root = document.Map.WorldSpawn;
                 var obj = root.FindByID(ID);
-                if (obj == null) return;
+                if (obj == null) { return; }
 
                 // Unclone will reset children, need to reselect them if needed
-                var deselect = obj.FindAll().Where(x => x.IsSelected).ToList();
+                var deselect = obj.GetSelfAndAllChildren().Where(x => x.IsSelected).SelectMany(GetSelfAndChildren).ToList();
                 document.Selection.Deselect(deselect);
 
+                document.ObjectRenderer.RemoveMapObject(obj);
                 obj.Unclone(Before);
 
-                var select = obj.FindAll().Where(x => deselect.Any(y => x.ID == y.ID));
+                var select = obj.GetSelfAndAllChildren().Where(x => deselect.Any(y => x.ID == y.ID));
                 document.Selection.Select(select);
 
                 document.Map.UpdateAutoVisgroups(obj, true);
+                document.ObjectRenderer.AddMapObject(obj);
             }
         }
 
@@ -141,6 +143,12 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             _editObjects = null;
         }
 
+        private static IEnumerable<MapObject> GetSelfAndChildren(CreateReference reference)
+            => GetSelfAndChildren(reference.MapObject);
+
+        private static IEnumerable<MapObject> GetSelfAndChildren(MapObject obj)
+            => obj.GetSelfAndAllChildren();
+
         public virtual void Reverse(Document document) {
             // Edit
             _editObjects.ForEach(x => x.Reverse(document));
@@ -148,24 +156,19 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             // Create
             _objectsToCreate = document.Map.WorldSpawn.Find(x => _createdIds.Contains(x.ID)).Select(x => new CreateReference(x.Parent.ID, x)).ToList();
             
-            _objectsToCreate.ForEach(p => {
-                if (p.MapObject is Solid s)
-                    s.Faces.ForEach(f => document.ObjectRenderer.RemoveFace(f));
-            });
+            _objectsToCreate.ForEach(p => document.ObjectRenderer.RemoveMapObject(p.MapObject));
             if (_objectsToCreate.Any(x => x.MapObject.IsSelected)) {
-                document.Selection.Deselect(_objectsToCreate.Where(x => x.MapObject.IsSelected).Select(x => x.MapObject));
+                document.Selection.Deselect(_objectsToCreate.Where(x => x.MapObject.IsSelected).SelectMany(GetSelfAndChildren));
             }
             _objectsToCreate.ForEach(x => x.MapObject.SetParent(null));
             _createdIds = null;
-
+            
             // Delete
             _idsToDelete = _deletedObjects.Select(x => x.Object.ID).ToList();
-            _deletedObjects.ForEach(p => {
-                if (p.Object is Solid s)
-                    s.Faces.ForEach(f => document.ObjectRenderer.AddFace(f));
-            });
+            _deletedObjects.ForEach(p => document.ObjectRenderer.AddMapObject(p.Object));
             foreach (var dr in _deletedObjects.Where(x => x.TopMost)) {
                 dr.Object.SetParent(document.Map.WorldSpawn.FindByID(dr.ParentID));
+                RecalculatePastedFaces(document, dr.Object);
                 document.Map.UpdateAutoVisgroups(dr.Object, true);
             }
             document.Selection.Select(_deletedObjects.Where(x => x.IsSelected).Select(x => x.Object));
@@ -181,32 +184,32 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             Mediator.Publish(EditorMediator.VisgroupsChanged);
         }
 
+        private static void RecalculatePastedFaces(Document doc, MapObject x) {
+            foreach (var f in x.GetSelfAndAllChildren().OfType<Solid>().SelectMany(o => o.Faces)) {
+                f.Texture.Texture = doc.GetTexture(f.Texture.Name);
+                f.CalculateTextureCoordinates(minimizeShiftValues: false);
+            }
+        }
+        
         public virtual void Perform(Document document) {
             // Create
             _createdIds = _objectsToCreate.Select(x => x.MapObject.ID).ToList();
-            _objectsToCreate.ForEach(x => x.MapObject.SetParent(document.Map.WorldSpawn.FindByID(x.ParentID)));
-
-            foreach (var solid in _objectsToCreate.Where(o => o.MapObject is Solid).Select(o => o.MapObject as Solid)) {
-                foreach (var face in solid.Faces) {
-                    document.ObjectRenderer.AddFace(face);
-                }
-            }
+            _objectsToCreate.ForEach(x => {
+                x.MapObject.SetParent(document.Map.WorldSpawn.FindByID(x.ParentID));
+                RecalculatePastedFaces(document, x.MapObject);
+                document.ObjectRenderer.AddMapObject(x.MapObject);
+            });
 
             // Select objects if IsSelected is true
             var sel = _objectsToCreate.Where(x => x.IsSelected).ToList();
-            sel.RemoveAll(x => x.MapObject.BoundingBox == null); // Don't select objects with no bbox
-            if (sel.Any()) document.Selection.Select(sel.Select(x => x.MapObject));
+            //sel.RemoveAll(x => x.MapObject.BoundingBox == null); // Don't select objects with no bbox
+            if (sel.Any()) { document.Selection.Select(sel.SelectMany(GetSelfAndChildren)); }
 
             document.Map.UpdateAutoVisgroups(_objectsToCreate.Select(x => x.MapObject.Parent is World ? x.MapObject : x.MapObject.Parent), true);
             _objectsToCreate = null;
 
             // Delete
-            var objects = document.Map.WorldSpawn.Find(x => _idsToDelete.Contains(x.ID) && x.Parent != null).SelectMany(x => x.FindAll()).ToList();
-            
-            objects.ForEach(p => {
-                if (p is Solid s)
-                    s.Faces.ForEach(f => document.ObjectRenderer.RemoveFace(f));
-            });
+            var objects = document.Map.WorldSpawn.Find(x => _idsToDelete.Contains(x.ID) && x.Parent != null).SelectMany(GetSelfAndChildren).ToList();
 
             // Recursively check for parent groups that will be empty after these objects have been deleted
             IList<MapObject> emptyParents;
@@ -224,6 +227,8 @@ namespace CBRE.Editor.Actions.MapObjects.Operations {
             foreach (var dr in _deletedObjects.Where(x => x.TopMost)) {
                 dr.Object.SetParent(null);
             }
+            _deletedObjects.ForEach(x => document.ObjectRenderer.RemoveMapObject(x.Object));
+
             _idsToDelete = null;
 
             // Edit

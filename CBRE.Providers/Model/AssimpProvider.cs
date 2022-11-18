@@ -212,8 +212,8 @@ namespace CBRE.Providers.Model {
                 newNode.MeshIndices.Add(scene.MeshCount - 1);
             }
 
-            foreach (MapObject mapObject in map.WorldSpawn.FindAll()) {
-                DataStructures.GameData.GameDataObject data = gameData.Classes.Find(p => p.Name == mapObject.ClassName);
+            foreach (MapObject mapObject in map.WorldSpawn.GetSelfAndAllChildren()) {
+                DataStructures.GameData.GameDataObject data = gameData.Classes.FirstOrDefault(p => p.Name == mapObject.ClassName);
                 if (data == null) {
                     continue;
                 }

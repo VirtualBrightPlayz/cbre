@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric {
     [Serializable]
-    public class Vector3F : ISerializable {
+    public struct Vector3F : ISerializable {
         public readonly static Vector3F MaxValue = new Vector3F(float.MaxValue, float.MaxValue, float.MaxValue);
         public readonly static Vector3F MinValue = new Vector3F(float.MinValue, float.MinValue, float.MinValue);
         public readonly static Vector3F Zero = new Vector3F(0, 0, 0);
@@ -13,9 +13,9 @@ namespace CBRE.DataStructures.Geometric {
         public readonly static Vector3F UnitY = new Vector3F(0, 1, 0);
         public readonly static Vector3F UnitZ = new Vector3F(0, 0, 1);
 
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
+        public float X;
+        public float Y;
+        public float Z;
 
         public Vector3F(Vector3 c) {
             X = (float)c.X;
@@ -29,7 +29,7 @@ namespace CBRE.DataStructures.Geometric {
             Z = z;
         }
 
-        protected Vector3F(SerializationInfo info, StreamingContext context) {
+        internal Vector3F(SerializationInfo info, StreamingContext context) {
             X = info.GetSingle("X");
             Y = info.GetSingle("Y");
             Z = info.GetSingle("Z");
@@ -49,15 +49,12 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public bool Equals(Vector3F other) {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
             return EquivalentTo(other);
         }
 
         public override bool Equals(object obj) {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == typeof(Vector3F) && Equals((Vector3F)obj);
+            if (ReferenceEquals(null, obj)) { return false; }
+            return obj is Vector3F otherVec && Equals(otherVec);
         }
 
         public override int GetHashCode() {
@@ -112,11 +109,11 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public static bool operator ==(Vector3F c1, Vector3F c2) {
-            return Equals(c1, null) ? Equals(c2, null) : c1.Equals(c2);
+            return c1.Equals(c2);
         }
 
         public static bool operator !=(Vector3F c1, Vector3F c2) {
-            return Equals(c1, null) ? !Equals(c2, null) : !c1.Equals(c2);
+            return !c1.Equals(c2);
         }
 
         public static Vector3F operator +(Vector3F c1, Vector3F c2) {
@@ -158,12 +155,19 @@ namespace CBRE.DataStructures.Geometric {
             return "(" + X.ToString("0.0000") + " " + Y.ToString("0.0000") + " " + Z.ToString("0.0000") + ")";
         }
 
+        [Obsolete("Redundant because Vector3F is a value type")]
         public Vector3F Clone() {
-            return new Vector3F(X, Y, Z);
+            return this;
         }
 
         public static Vector3F Parse(string x, string y, string z) {
             return new Vector3F(float.Parse(x), float.Parse(y), float.Parse(z));
         }
+
+        public float DistanceFrom(Vector3F other)
+            => (this - other).VectorMagnitude();
+        
+        public static Vector3F Lerp(Vector3F from, Vector3F to, float amount)
+            => from * (1.0f - amount) + to * amount;
     }
 }

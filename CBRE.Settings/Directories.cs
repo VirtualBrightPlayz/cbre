@@ -37,6 +37,7 @@ namespace CBRE.Settings {
                 if (dir.Last() != '/' && dir.Last() != '\\') {
                     dirSlash += "/";
                 }
+                if (File.Exists(dirSlash + filename)) { return dirSlash + filename; }
                 foreach (string ext in ModelExtensions) {
                     string fullFilename = dirSlash + filename + "." + ext;
                     if (File.Exists(fullFilename)) { return fullFilename; }

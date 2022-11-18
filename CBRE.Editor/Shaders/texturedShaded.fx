@@ -25,6 +25,7 @@ struct VertexShaderOutput
     float Selected : COLOR1;
     float2 TexCoord : TEXCOORD0;
     float2 LmCoord : TEXCOORD1;
+    float4 Position_VisibleToFragShader : TEXCOORD3;
 };
 
 VertexShaderOutput VertexShaderF(VertexShaderInput input)
@@ -36,6 +37,7 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
 
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
+    output.Position_VisibleToFragShader = output.Position;
 
     output.Normal = input.Normal;
 

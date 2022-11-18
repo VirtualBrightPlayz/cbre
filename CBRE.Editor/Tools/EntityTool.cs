@@ -128,11 +128,11 @@ namespace CBRE.Editor.Tools
             viewport.Cursor = MouseCursor.Arrow;
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
         {
-            if (viewport is Viewport3D)
+            if (viewport is Viewport3D viewport3D)
             {
-                MouseDown((Viewport3D)viewport, e);
+                MouseDown(viewport3D, e);
                 return;
             }
             if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right) return;
@@ -157,18 +157,13 @@ namespace CBRE.Editor.Tools
             var hit = hits
                 .Select(x => new { Item = x, Intersection = x.GetIntersectionPoint(ray) })
                 .Where(x => x.Intersection != null)
-                .OrderBy(x => (x.Intersection - ray.Start).VectorMagnitude())
+                .OrderBy(x => (x.Intersection.Value - ray.Start).VectorMagnitude())
                 .FirstOrDefault();
 
-            if (hit == null) return; // Nothing was clicked
+            if (hit == null) { return; } // Nothing was clicked
 
             _state = EntityState.Moving;
-            _location = hit.Intersection;
-        }
-
-        public override void MouseClick(ViewportBase viewport, ViewportEvent e)
-        {
-            // Not used
+            _location = hit.Intersection.Value;
         }
 
         public override void MouseDoubleClick(ViewportBase viewport, ViewportEvent e)
@@ -176,7 +171,7 @@ namespace CBRE.Editor.Tools
             // Not used
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
             if (e.Button != MouseButtons.Left) return;
             _state = EntityState.Drawn;
@@ -200,12 +195,7 @@ namespace CBRE.Editor.Tools
             _location = vp.GetUnusedCoordinate(_location) + vp.Expand(loc);
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
-        {
-            // Nothing
-        }
-
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
             switch (e.KeyCode)
             {
@@ -222,10 +212,11 @@ namespace CBRE.Editor.Tools
         private GameDataObject selectedEntity = null;
 
         public override void UpdateGui() {
-            if (DocumentManager.CurrentDocument == null) { return; }
+            if (DocumentManager.CurrentDocument is null) { return; }
+            var entityTypes = DocumentManager.CurrentDocument.GameData.Classes.Where(c => c.ClassType == ClassType.Point);
+            selectedEntity ??= entityTypes.First();
 
             if (ImGui.BeginCombo("Entity type", selectedEntity?.Name ?? "<none>")) {
-                var entityTypes = DocumentManager.CurrentDocument.GameData.Classes.Where(c => c.ClassType == ClassType.Point);
                 foreach (var entityType in entityTypes) {
                     if (ImGui.Selectable(entityType.Name)) {
                         selectedEntity = entityType;
@@ -238,8 +229,8 @@ namespace CBRE.Editor.Tools
         private void CreateEntity(Vector3 origin, GameDataObject gd = null)
         {
             ViewportManager.MarkForRerender();
-            if (gd == null) gd = selectedEntity;
-            if (gd == null) return;
+            gd ??= selectedEntity;
+            if (gd == null) { return; }
 
             var col = gd.Behaviours.Where(x => x.Name == "color").ToArray();
             var colour = col.Any() ? col[0].GetColour(0) : Colour.GetDefaultEntityColour();
@@ -269,7 +260,7 @@ namespace CBRE.Editor.Tools
             }
         }
 
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
             //
         }

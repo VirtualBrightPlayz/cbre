@@ -7,14 +7,11 @@ using Num = System.Numerics;
 namespace CBRE.Editor.Popup {
     public class MapInformationPopup : PopupUI {
 
-        public MapInformationPopup() : base("Map Information")
-        {
-            GameMain.Instance.PopupSelected = true;
-        }
+        public MapInformationPopup() : base("Map Information") { }
 
-        protected override bool ImGuiLayout() {
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
             var document = DocumentManager.CurrentDocument;
-            var all = document.Map.WorldSpawn.FindAll();
+            var all = document.Map.WorldSpawn.GetSelfAndAllChildren();
             var solids = all.OfType<Solid>().ToList();
             var faces = solids.SelectMany(x => x.Faces).ToList();
             var entities = all.OfType<Entity>().ToList();
@@ -37,11 +34,10 @@ namespace CBRE.Editor.Popup {
             ImGui.Text($"Unique Textures: {numUniqueTextures}");
             ImGui.Text($"Texture Memory: {textureMemory.ToString("#,##0")} bytes");
 
+            shouldBeOpen = true;
             if (ImGui.Button("Close")) {
-                return false;
+                shouldBeOpen = false;
             }
-
-            return true;
         }
     }
 }

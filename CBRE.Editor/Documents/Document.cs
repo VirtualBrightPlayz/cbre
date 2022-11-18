@@ -41,8 +41,8 @@ namespace CBRE.Editor.Documents {
 
         public ObjectRenderer ObjectRenderer { get; private set; }
         public bool LightmapTextureOutdated { get; set; }
-        public ITexture[] Lightmaps { get; set; } = new ITexture[4];
-        public Texture2D[] MGLightmaps { get; set; } = new Texture2D[4];
+        public List<Texture2D> MGLightmaps { get; set; } = null;
+        public List<Face> BakedFaces { get; set; } = new List<Face>();
 
         private readonly DocumentSubscriptions _subscriptions;
         private readonly DocumentMemory _memory;
@@ -129,11 +129,9 @@ namespace CBRE.Editor.Documents {
 
             if (!string.IsNullOrEmpty(path)) {
                 IEnumerable<string> noSaveExtensions = FileTypeRegistration.GetSupportedExtensions().Where(x => !x.CanSave).Select(x => x.Extension);
-                foreach (string ext in noSaveExtensions) {
-                    if (path.EndsWith(ext, StringComparison.OrdinalIgnoreCase)) {
-                        path = null;
-                        break;
-                    }
+                if (noSaveExtensions.Any(ext => path.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    path = null;
                 }
             }
 
@@ -237,13 +235,12 @@ namespace CBRE.Editor.Documents {
                 if (!match.Success) continue;
 
                 // Parse the date and add it if it is valid
-                DateTime date;
-                var result = DateTime.TryParse(String.Format("{0}-{1}-{2}T{3}:{4}:{5}Z",
+                var result = DateTime.TryParse(string.Format("{0}-{1}-{2}T{3}:{4}:{5}Z",
                                                              match.Groups[1].Value, match.Groups[2].Value,
                                                              match.Groups[3].Value, match.Groups[4].Value,
                                                              match.Groups[5].Value, match.Groups[6].Value),
                                                              CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal,
-                                                             out date);
+                                                             out var date);
                 if (result) {
                     ret.Add(file, date);
                 }
@@ -254,9 +251,8 @@ namespace CBRE.Editor.Documents {
         public Vector3 Snap(Vector3 c, decimal spacing = 0) {
             if (!Map.SnapToGrid) return c;
 
-            bool snap = true;
-            /*var snap = (Select.SnapStyle == SnapStyle.SnapOnAlt && ViewportManager.Alt) ||
-                       (Select.SnapStyle == SnapStyle.SnapOffAlt && !ViewportManager.Alt);*/
+            bool snap = (Select.SnapStyle == SnapStyle.SnapOnAlt && ViewportManager.Alt) ||
+                       (Select.SnapStyle == SnapStyle.SnapOffAlt && !ViewportManager.Alt);
 
             return snap ? c.Snap(spacing == 0 ? Map.GridSpacing : spacing) : c;
         }
@@ -271,7 +267,7 @@ namespace CBRE.Editor.Documents {
                 action.Perform(this);
             } catch (Exception ex) {
                 var st = new StackTrace();
-                var frames = st.GetFrames() ?? new StackFrame[0];
+                var frames = st.GetFrames();
                 var msg = "Action exception: " + name + " (" + action + ")";
                 foreach (var frame in frames) {
                     var method = frame.GetMethod();
@@ -285,12 +281,12 @@ namespace CBRE.Editor.Documents {
         }
 
         public Matrix SelectListTransform {
-            get { return ObjectRenderer.TexturedShaded.Parameters["Selection"].GetValueMatrix().ToCbre(); }
+            get { return ObjectRenderer.Effects.TexturedShaded.Parameters["Selection"].GetValueMatrix().ToCbre(); }
             set {
-                ObjectRenderer.TexturedLightmapped.Parameters["Selection"].SetValue(value.ToXna());
-                ObjectRenderer.TexturedShaded.Parameters["Selection"].SetValue(value.ToXna());
-                ObjectRenderer.SolidShaded.Parameters["Selection"].SetValue(value.ToXna());
-                ObjectRenderer.Solid.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.Effects.TexturedLightmapped.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.Effects.TexturedShaded.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.Effects.SolidShaded.Parameters["Selection"].SetValue(value.ToXna());
+                ObjectRenderer.Effects.Solid.Parameters["Selection"].SetValue(value.ToXna());
             }
         }
 
@@ -310,10 +306,6 @@ namespace CBRE.Editor.Documents {
         public void RenderAll() {
             ObjectRenderer.MarkDirty();
             ViewportManager.MarkForRerender();
-        }
-
-        public void RenderSelection(IEnumerable<MapObject> objects) {
-            RenderObjects(objects);
         }
 
         public void RenderObjects(IEnumerable<MapObject> objects) {

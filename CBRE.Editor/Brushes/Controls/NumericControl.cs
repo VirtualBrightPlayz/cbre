@@ -11,7 +11,7 @@ namespace CBRE.Editor.Brushes.Controls {
 
         public string LabelText { get; set; }
 
-        public bool ControlEnabled { get; set; }
+        public bool ControlEnabled { get; set; } = true;
 
         public int Precision { get; set; }
 
@@ -28,9 +28,19 @@ namespace CBRE.Editor.Brushes.Controls {
         }
 
         public override void Draw() {
-            string tmp = Value.ToString();
-            if (ImGui.InputText(LabelText, ref tmp, 1024) && decimal.TryParse(tmp, out decimal tmpval) && (Maximum == Minimum || (tmpval <= Maximum && tmpval >= Minimum))) {
-                Value = tmpval;
+            double val = (double)Value;
+            float val2 = (float)Value;
+            if (ControlEnabled) {
+                ImGui.Text(LabelText);
+                if (ImGui.InputDouble(LabelText, ref val)) {
+                    // val = Math.Clamp(val, (double)Minimum, (double)Maximum);
+                    Value = (decimal)val;
+                }
+                if (Minimum != Maximum) {
+                    if (ImGui.SliderFloat(LabelText + " Slider", ref val2, (float)Minimum, (float)Maximum)) {
+                        Value = (decimal)val2;
+                    }
+                }
             }
         }
     }

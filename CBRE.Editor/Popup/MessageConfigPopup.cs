@@ -4,78 +4,56 @@ using ImGuiNET;
 
 namespace CBRE.Editor.Popup {
     public class MessageConfigPopup<T> : PopupUI where T : class {
-        private string _message;
-        private T _data;
-        private Action<MessageConfigPopup<T>, T> _callback;
+        private readonly string message;
+        private readonly T data;
+        private readonly Action<MessageConfigPopup<T>, T> callback;
         private FieldInfo[] infos;
 
-        public MessageConfigPopup(string title, string message, T data, Action<MessageConfigPopup<T>, T> callback) : base(title) {
-            _message = message;
-            _data = data;
-            _callback = callback;
-            GameMain.Instance.PopupSelected = true;
+        public MessageConfigPopup(string title, string message, T data, Action<MessageConfigPopup<T>, T> callback, ImColor? color = null) : base(title, color) {
+            this.message = message;
+            this.data = data;
+            this.callback = callback;
         }
 
-        public MessageConfigPopup(string title, string message, T data, Action<MessageConfigPopup<T>, T> callback, ImColor color) : base(title, color) {
-            _message = message;
-            _data = data;
-            _callback = callback;
-            GameMain.Instance.PopupSelected = true;
-        }
-
-        protected override bool ImGuiLayout() {
-            ImGui.Text(_message);
-            if (infos == null) {
-                infos = _data.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
-            }
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            shouldBeOpen = true;
+            
+            ImGui.Text(message);
+            infos ??= data.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
             foreach (FieldInfo field in infos) {
-                object fdata = field.GetValue(_data);
-                switch (fdata)
-                {
-                    case bool b:
-                    {
+                object fieldData = field.GetValue(data);
+                switch (fieldData) {
+                    case bool b: {
                         bool val = b;
-                        if (ImGui.Checkbox(field.Name, ref val))
-                        {
-                            field.SetValue(_data, val);
+                        if (ImGui.Checkbox(field.Name, ref val)) {
+                            field.SetValue(data, val);
                         }
-                    }
-                    break;
-                    case float f:
-                    {
+                    } break;
+                    case float f: {
                         float val = f;
-                        if (ImGui.InputFloat(field.Name, ref val))
-                        {
-                            field.SetValue(_data, val);
+                        if (ImGui.InputFloat(field.Name, ref val)) {
+                            field.SetValue(data, val);
                         }
-                    }
-                    break;
+                    } break;
                     case int i:
                     {
                         int val = i;
-                        if (ImGui.InputInt(field.Name, ref val))
-                        {
-                            field.SetValue(_data, val);
+                        if (ImGui.InputInt(field.Name, ref val)) {
+                            field.SetValue(data, val);
                         }
-                    }
-                    break;
-                    case string s:
-                    {
+                    } break;
+                    case string s: {
                         string val = s;
-                        if (ImGui.InputText(field.Name, ref val, 1024))
-                        {
-                            field.SetValue(_data, val);
+                        if (ImGui.InputText(field.Name, ref val, 1024)) {
+                            field.SetValue(data, val);
                         }
-                    }
-                    break;
+                    } break;
                 }
             }
-            return base.ImGuiLayout();
         }
 
-        public override void Close() {
-            _callback?.Invoke(this, _data);
-            base.Close();
+        public override void Dispose() {
+            callback?.Invoke(this, data);
         }
     }
 }

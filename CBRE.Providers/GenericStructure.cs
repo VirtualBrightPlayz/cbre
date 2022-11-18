@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using static CBRE.Common.PrimitiveConversion;
 
 namespace CBRE.Providers {
     /// <summary>
@@ -160,9 +161,8 @@ namespace CBRE.Providers {
             return defaultValue;
         }
 
-        public Vector3 PropertyVector3(string name, Vector3 defaultValue = null) {
+        public Vector3 PropertyVector3(string name, Vector3 defaultValue = default) {
             var prop = this[name];
-            if (defaultValue == null) defaultValue = Vector3.Zero;
             if (prop == null || prop.Count(c => c == ' ') != 2) return defaultValue;
             var split = prop.Replace("[", "").Replace("]", "").Replace("(", "").Replace(")", "").Split(' ');
             decimal x, y, z;
@@ -416,7 +416,7 @@ namespace CBRE.Providers {
                 case "String":
                     return value;
                 case "Numeric":
-                    return Decimal.Parse(value, NumberStyles.Float);
+                    return ParseDecimal(value);
                 case "DateTime":
                     return DateTime.ParseExact(value, "u", CultureInfo.InvariantCulture);
                 case "Colour":
@@ -429,7 +429,7 @@ namespace CBRE.Providers {
                         Vector3.Parse(spl[3].TrimStart('('), spl[4], spl[5].TrimEnd(')'))
                     );
                 case "Plane":
-                    return new Plane(Vector3.Parse(spl[0].TrimStart('('), spl[1], spl[2].TrimEnd(')')), Decimal.Parse(spl[3]));
+                    return new Plane(Vector3.Parse(spl[0].TrimStart('('), spl[1], spl[2].TrimEnd(')')), ParseDecimal(spl[3]));
                 case "Rectangle":
                     return new Rectangle(int.Parse(spl[0]), int.Parse(spl[1]), int.Parse(spl[2]), int.Parse(spl[3]));
                 default:

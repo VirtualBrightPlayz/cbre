@@ -1,8 +1,9 @@
 ﻿using CBRE.Common;
 using CBRE.Common.Mediator;
-using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Popup;
+using CBRE.Editor.Problems;
+using CBRE.Editor.Problems.RMesh;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.Tools;
 using CBRE.Graphics;
@@ -11,12 +12,12 @@ using CBRE.Providers.Model;
 using CBRE.Providers.Texture;
 using CBRE.Settings;
 using ImGuiNET;
+using ImGuizmoNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Num = System.Numerics;
@@ -26,8 +27,10 @@ namespace CBRE.Editor {
     {
         public static GameMain Instance { get; private set; }
 
-        private GraphicsDeviceManager _graphics;
-        private ImGuiRenderer _imGuiRenderer;
+        private DiscordManager discord;
+
+        private GraphicsDeviceManager graphics;
+        private ImGuiRenderer imGuiRenderer;
 
         private AsyncTexture rotateCursorTexture;
         private MouseCursor rotateCursor;
@@ -42,21 +45,23 @@ namespace CBRE.Editor {
             }
         }
 
-        public bool PopupSelected { get; set; } = false;
+        public GameTime LastTime { get; set; }
 
         public List<PopupUI> Popups { get; private set; } = new List<PopupUI>();
+        public List<DockableWindow> Dockables { get; private set; } = new List<DockableWindow>();
+        public Queue<Action> PostDrawActions { get; private set; } = new Queue<Action>();
         public Queue<Action> PreDrawActions { get; private set; } = new Queue<Action>();
 
         public GameMain()
         {
             Instance = this;
 
-            _graphics = new GraphicsDeviceManager(this);
-            _graphics.PreferredBackBufferWidth = 1600;
-            _graphics.PreferredBackBufferHeight = 900;
-            _graphics.PreferMultiSampling = false;
-            _graphics.SynchronizeWithVerticalRetrace = false;
-            _graphics.ApplyChanges();
+            graphics = new GraphicsDeviceManager(this);
+            graphics.PreferredBackBufferWidth = 1600;
+            graphics.PreferredBackBufferHeight = 900;
+            graphics.PreferMultiSampling = false;
+            graphics.SynchronizeWithVerticalRetrace = false;
+            graphics.ApplyChanges();
             Window.AllowUserResizing = true;
 
             IsMouseVisible = true;
@@ -64,35 +69,52 @@ namespace CBRE.Editor {
 
         public static Dictionary<string, AsyncTexture> MenuTextures;
 
-        ImGuiStylePtr ImGuiStyle;
+        private ImGuiStylePtr imGuiStyle;
+
+        private DocumentTabs documentTabs;
+
+        public void CreateImGuiRenderer(out ImGuiRenderer renderer, out ImGuiStylePtr style) {
+            renderer = new ImGuiRenderer(this);
+            renderer.RebuildFontAtlas();
+
+            style = ImGui.GetStyle();
+            style.TabMinWidthForCloseButton = 50f;
+            style.ChildRounding = 0;
+            style.FrameRounding = 0;
+            style.GrabRounding = 0;
+            style.PopupRounding = 0;
+            style.ScrollbarRounding = 0;
+            style.TabRounding = 0;
+            style.WindowRounding = 0;
+            style.FrameBorderSize = 0;
+            style.DisplayWindowPadding = Num.Vector2.Zero;
+            style.WindowPadding = Num.Vector2.Zero;
+            style.IndentSpacing = 0;
+            var colors = style.Colors;
+            colors[(int)ImGuiCol.FrameBg] = new Num.Vector4(0.05f, 0.05f, 0.07f, 1.0f);
+        }
+
+        public void SetDiscord(bool enabled) {
+            if (enabled) {
+                if (discord == null) {
+                    discord = new();
+                }
+            } else if (discord != null) {
+                discord.Dispose();
+                discord = null;
+            }
+        }
 
         protected override void Initialize()
         {
             SettingsManager.Read();
             ToolManager.Init();
 
-            _imGuiRenderer = new ImGuiRenderer(this);
-            _imGuiRenderer.RebuildFontAtlas();
-
-            GlobalGraphics.Set(GraphicsDevice, Window, _imGuiRenderer);
-
-            ImGuiStyle = ImGui.GetStyle();
-            ImGuiStyle.TabMinWidthForCloseButton = 50f;
-            ImGuiStyle.ChildRounding = 0;
-            ImGuiStyle.FrameRounding = 0;
-            ImGuiStyle.GrabRounding = 0;
-            ImGuiStyle.PopupRounding = 0;
-            ImGuiStyle.ScrollbarRounding = 0;
-            ImGuiStyle.TabRounding = 0;
-            ImGuiStyle.WindowRounding = 0;
-            ImGuiStyle.FrameBorderSize = 0;
-            ImGuiStyle.DisplayWindowPadding = Num.Vector2.Zero;
-            ImGuiStyle.WindowPadding = Num.Vector2.Zero;
-            ImGuiStyle.IndentSpacing = 0;
-            var colors = ImGuiStyle.Colors;
-            colors[(int)ImGuiCol.FrameBg] = new Num.Vector4(0.05f, 0.05f, 0.07f, 1.0f);
+            CreateImGuiRenderer(out imGuiRenderer, out imGuiStyle);
 
             ImGui.GetIO().ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+
+            GlobalGraphics.Set(GraphicsDevice, Window, imGuiRenderer);
 
             MenuTextures = new Dictionary<string, AsyncTexture>();
             string[] files = Directory.GetFiles("Resources");
@@ -114,29 +136,31 @@ namespace CBRE.Editor {
             MapProvider.Register(new RmfProvider());
             MapProvider.Register(new MapFormatProvider());
             MapProvider.Register(new L3DWProvider());
+            MapProvider.Register(new RMeshProvider());
 
             ModelProvider.Register(new AssimpProvider());
 
-            DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
-            /*Map map = MapProvider.GetMapFromFile("gateA.3dw");
-            Map map2 = MapProvider.GetMapFromFile("room2_2.3dw");
-            DocumentManager.AddAndSwitch(new Document("gateA.3dw", map));
-            DocumentManager.Add(new Document("room2_2.3dw", map2));*/
-
             ViewportManager.Init();
+            DocumentManager.AddAndSwitch(new Document(Document.NewDocumentName, new DataStructures.MapObjects.Map()));
 
+            SetDiscord(Misc.DiscordIntegration);
+
+            documentTabs = new DocumentTabs();
+            
             // Initial windows
-            new ToolsWindow();
-            new DocumentTabWindow();
-            new ToolPropsWindow();
-            new StatsWindow();
-            new ViewportWindow(0);
-            new ViewportWindow(1);
-            new ViewportWindow(2);
-            new ViewportWindow(3);
-            new VisgroupsWindow();
+            Dockables.AddRange(new DockableWindow[] {
+                new ToolsWindow(),
+                new ToolPropsWindow(),
+                new StatsWindow(),
+                new ViewportWindow(),
+                new VisgroupsWindow()
+            });
+
+            GameMain.Instance.Popups.Add(new AboutPopup(true));
 
             base.Initialize();
+
+            timing.StartMeasurement();
         }
 
         protected override void OnExiting(object sender, EventArgs args) {
@@ -148,65 +172,40 @@ namespace CBRE.Editor {
             return new AsyncTexture(filename);
         }
 
-        protected override void LoadContent()
-        {
-            base.LoadContent();
-        }
-
-        private Timing timing = new Timing();
-        private Keys[] previousKeys = new Keys[0];
+        private readonly Timing timing = new Timing();
+        private Keys[] previousKeys = Array.Empty<Keys>();
 
         protected override void Update(GameTime gameTime) {
+            timing.EndMeasurement();
+            timing.StartMeasurement();
+
             base.Update(gameTime);
 
-            if (PopupSelected && !Popups.Any(p => !(p is WindowUI)))
-                PopupSelected = false;
-
-            if (!PopupSelected) {
+            if (!Popups.Any()) {
                 // Hotkeys
-                {
-                    Keys[] keys = Keyboard.GetState().GetPressedKeys();
-                    List<Keys> pressed = new List<Keys>();
-                    foreach (var key in keys) {
-                        if (!previousKeys.Contains(key)) {
-                            pressed.Add(key);
-                        }
-                    }
-                    bool ctrlpressed = keys.Contains(Keys.LeftControl) || keys.Contains(Keys.RightControl);
-                    bool shiftpressed = keys.Contains(Keys.LeftShift) || keys.Contains(Keys.RightShift);
-                    bool altpressed = keys.Contains(Keys.LeftAlt) || keys.Contains(Keys.RightAlt);
-                    HotkeyImplementation def = Hotkeys.GetHotkeyFor(pressed.ToArray(), ctrlpressed, shiftpressed, altpressed);
-                    if (def != null) {
-                        Mediator.Publish(def.Definition.Action, def.Definition.Parameter);
-                    }
-                    previousKeys = keys;
+                Keys[] pressedKeys = Keyboard.GetState().GetPressedKeys().Where(k => k != Keys.None).ToArray();
+                Keys[] hitKeys = pressedKeys.Where(k => !previousKeys.Contains(k)).ToArray();
+
+                bool ctrlPressed = pressedKeys.Contains(Keys.LeftControl) || pressedKeys.Contains(Keys.RightControl);
+                bool shiftPressed = pressedKeys.Contains(Keys.LeftShift) || pressedKeys.Contains(Keys.RightShift);
+                bool altPressed = pressedKeys.Contains(Keys.LeftAlt) || pressedKeys.Contains(Keys.RightAlt);
+                HotkeyImplementation def = Hotkeys.GetHotkeyFor(hitKeys, ctrlPressed, shiftPressed, altPressed);
+                if (def != null) {
+                    Mediator.Publish(def.Definition.Action, def.Definition.Parameter);
                 }
+                previousKeys = pressedKeys;
             }
 
-            timing.StartMeasurement();
-            timing.PerformTicks(ViewportManager.Update);
-            timing.EndMeasurement();
+            timing.PerformTicks(() => {
+                Popups.ForEach(p => p.Update());
+                Dockables.ForEach(d => d.Update());
+            });
+
+            LastTime = gameTime;
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            GlobalGraphics.GraphicsDevice.Viewport = new Viewport(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
-
-            TaskPool.Update();
-
-            GraphicsDevice.Clear(new Color(50, 50, 60));
-
-            // Call BeforeLayout first to set things up
-            _imGuiRenderer.BeforeLayout(gameTime);
-
-            // Draw our UI
-            ImGuiLayout();
-
-            // Call AfterLayout now to finish up and draw all the things
-            _imGuiRenderer.AfterLayout();
-
-            base.Draw(gameTime);
-
             while (PreDrawActions.Count > 0) {
                 try {
                     PreDrawActions.Dequeue()?.Invoke();
@@ -214,35 +213,90 @@ namespace CBRE.Editor {
                     Logging.Logger.ShowException(e);
                 }
             }
+
+            ViewportManager.RenderIfNecessary();
+
+            GlobalGraphics.GraphicsDevice.Viewport = new Viewport(0, 0, Window.ClientBounds.Width, Window.ClientBounds.Height);
+
+            TaskPool.Update();
+
+            GraphicsDevice.Clear(new Color(50, 50, 60));
+
+            // Call BeforeLayout first to set things up
+            imGuiRenderer.BeforeLayout(gameTime);
+
+            // imguizmo didn't work without https://github.com/ocornut/imgui/commit/407a81eb10f661d36b931aa25dad2999fb906f92
+            ImGuizmo.SetImGuiContext(imGuiRenderer.context);
+            ImGuizmo.BeginFrame();
+
+            // Draw our UI
+            ImGuiLayout();
+
+            // Call AfterLayout now to finish up and draw all the things
+            imGuiRenderer.AfterLayout();
+
+            base.Draw(gameTime);
+
+            while (PostDrawActions.Count > 0) {
+                try {
+                    PostDrawActions.Dequeue()?.Invoke();
+                } catch (Exception e) {
+                    Logging.Logger.ShowException(e);
+                }
+            }
         }
 
+        public const int MenuBarHeight = 20;
         protected virtual void ImGuiLayout() {
             uint dockId = ImGui.GetID("Dock");
             ImGuiViewportPtr viewportPtr = ImGui.GetMainViewport();
             ImGui.SetNextWindowPos(viewportPtr.Pos);
-            ImGui.SetNextWindowSize(viewportPtr.Size);
-            ImGui.Begin("Main Window", ImGuiWindowFlags.NoMove |
-                                        ImGuiWindowFlags.NoResize |
-                                        ImGuiWindowFlags.NoBringToFrontOnFocus |
-                                        ImGuiWindowFlags.NoCollapse);
-            ImGui.DockSpace(dockId);
-            ImGui.End();
-            if (ImGui.BeginMainMenuBar()) {
-                ViewportManager.TopMenuOpen = false;
-                UpdateMenus();
-                // UpdateTopBar();
+            ImGui.SetNextWindowSize(new Num.Vector2(viewportPtr.Size.X,MenuBarHeight + TopBarHeight + DocumentTabs.Height));
+            if (ImGui.Begin("Main Window", ImGuiWindowFlags.NoMove |
+                                           ImGuiWindowFlags.NoResize |
+                                           ImGuiWindowFlags.NoBringToFrontOnFocus |
+                                           ImGuiWindowFlags.NoCollapse |
+                                           ImGuiWindowFlags.NoScrollbar)) {
+                if (ImGui.BeginMainMenuBar()) {
+                    UpdateMenus();
+                    ImGui.EndMainMenuBar();
+                }
+                UpdateTopBar();
+                documentTabs.ImGuiLayout();
+                
+                ImGui.End();
             }
-            ImGui.EndMainMenuBar();
+            
+            ImGui.SetNextWindowPos(viewportPtr.Pos + new Num.Vector2(0, MenuBarHeight + TopBarHeight + DocumentTabs.Height));
+            ImGui.SetNextWindowSize(viewportPtr.Size - new Num.Vector2(0, MenuBarHeight + TopBarHeight + DocumentTabs.Height));
+            if (ImGui.Begin("Dock Space", ImGuiWindowFlags.NoMove |
+                                          ImGuiWindowFlags.NoResize |
+                                          ImGuiWindowFlags.NoCollapse |
+                                          ImGuiWindowFlags.NoTitleBar |
+                                          ImGuiWindowFlags.NoBringToFrontOnFocus)) {
+                ImGui.DockSpace(dockId);
+                ImGui.End();
+            }
 
-            for (int i = 0; i < Popups.Count; i++)
-            {
-                ImGui.SetNextWindowDockID(dockId, ImGuiCond.FirstUseEver);
-                if (!Popups[i].Draw())
-                {
-                    Popups[i].Close();
+            for (int i = 0; i < Popups.Count; i++) {
+                Popups[i].Draw(out bool shouldBeOpen);
+                if (!shouldBeOpen) {
+                    Popups[i].Dispose();
+                    Popups.RemoveAt(i);
                     i--;
                 }
             }
+
+            for (int i = 0; i < Dockables.Count; i++) {
+                ImGui.SetNextWindowDockID(dockId, ImGuiCond.FirstUseEver);
+                Dockables[i].Draw(out bool shouldBeOpen);
+                if (!shouldBeOpen) {
+                    Dockables[i].Dispose();
+                    Dockables.RemoveAt(i);
+                    i--;
+                }
+            }
+            ImGui.SetNextWindowDockID(0, ImGuiCond.Always);
         }
 	}
 }

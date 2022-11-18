@@ -308,7 +308,7 @@ namespace CBRE.DataStructures.MapObjects {
             base.Transform(transform, flags);
         }
 
-        public override Vector3 GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
+        public override Vector3? GetIntersectionPoint(Line line, bool ignoreDirection = false, bool ignoreSegment = false) {
             // Return the first intersection we find, don't care where it is
             return GetTriangles()
                 .Select(triangle => GetIntersectionPoint(triangle.Select(x => x.Location).ToList(), line, ignoreDirection, ignoreSegment))

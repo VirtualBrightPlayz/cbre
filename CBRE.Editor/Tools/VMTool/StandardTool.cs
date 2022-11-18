@@ -5,7 +5,9 @@ using CBRE.Settings;
 using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using CBRE.Editor.Popup;
 using ImGuiNET;
 
 namespace CBRE.Editor.Tools.VMTool
@@ -231,9 +233,18 @@ Select two (non-adjacent) points on a face to enable splitting.";
         {
             if (_state == VMState.Moving)
             {
-                if (AutomaticallyMerge()) CheckMergedVertices();
-                else if (CanMerge() && ConfirmMerge()) CheckMergedVertices();
-                else MainTool.SetDirty(true, true);
+                if (AutomaticallyMerge()) { CheckMergedVertices(); }
+                else if (CanMerge()) {
+                    GameMain.Instance.Popups.Add(new ConfirmPopup(
+                        "Merge vertices?",
+                        "Overlapping vertices detected! Merge vertices?") {
+                        Buttons = new[]{
+                            new ConfirmPopup.Button("Yes", CheckMergedVertices),
+                            new ConfirmPopup.Button("No", () => MainTool.SetDirty(true, true) )
+                        }.ToImmutableArray()
+                    });
+                }
+                else { MainTool.SetDirty(true, true); }
             }
             _state = VMState.None;
             // throw new NotImplementedException();
@@ -268,12 +279,6 @@ Select two (non-adjacent) points on a face to enable splitting.";
                 }
             }
             return false;
-        }
-
-        private bool ConfirmMerge()
-        {
-            throw new NotImplementedException();
-            /*return MessageBox.Show("Merge vertices?", "Overlapping vertices detected", MessageBoxButtons.YesNo) == DialogResult.Yes;*/
         }
 
         private void CheckMergedVertices()
@@ -322,12 +327,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
 
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e)
-        {
-
-        }
-
-        public override void MouseUp(ViewportBase viewport, ViewportEvent e)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
 
         }
@@ -342,17 +342,11 @@ Select two (non-adjacent) points on a face to enable splitting.";
 
         }
 
-        public override void KeyPress(ViewportBase viewport, ViewportEvent e)
+        public override void KeyHit(ViewportBase viewport, ViewportEvent e)
         {
-
-        }
-
-        public override void KeyDown(ViewportBase viewport, ViewportEvent e)
-        {
-            var nudge = GetNudgeValue(e.KeyCode);
-            var vp = viewport as Viewport2D;
+            var nudge = GetNudgeValue(e.KeyCode) ?? Vector3.Zero;
             var sel = MainTool.GetSelectedPoints();
-            if (nudge != null && vp != null && _state == VMState.None && sel.Any())
+            if (viewport is Viewport2D vp && _state == VMState.None && sel.Any())
             {
                 var translate = vp.Expand(nudge);
                 foreach (var p in sel)
@@ -363,7 +357,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
             }
         }
 
-        public override void KeyUp(ViewportBase viewport, ViewportEvent e)
+        public override void KeyLift(ViewportBase viewport, ViewportEvent e)
         {
 
         }

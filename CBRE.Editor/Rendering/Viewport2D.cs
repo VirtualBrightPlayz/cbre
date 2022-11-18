@@ -5,8 +5,11 @@ using CBRE.Graphics;
 using CBRE.Settings;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Drawing;
 using System.Linq;
+using CBRE.Common;
 
 namespace CBRE.Editor.Rendering {
     public class Viewport2D : ViewportBase {
@@ -51,16 +54,12 @@ namespace CBRE.Editor.Rendering {
         }
 
         private static Vector3 Flatten(Vector3 c, ViewDirection direction) {
-            switch (direction) {
-                case ViewDirection.Top:
-                    return new Vector3(c.X, c.Y, 0);
-                case ViewDirection.Front:
-                    return new Vector3(c.Y, c.Z, 0);
-                case ViewDirection.Side:
-                    return new Vector3(c.X, c.Z, 0);
-                default:
-                    throw new ArgumentOutOfRangeException("direction");
-            }
+            return direction switch {
+                ViewDirection.Top => new Vector3(c.X, c.Y, 0),
+                ViewDirection.Front => new Vector3(c.Y, c.Z, 0),
+                ViewDirection.Side => new Vector3(c.X, c.Z, 0),
+                _ => throw new ArgumentOutOfRangeException("direction")
+            };
         }
 
         private static Vector3 Expand(Vector3 c, ViewDirection direction) {
@@ -178,6 +177,10 @@ namespace CBRE.Editor.Rendering {
             return ScreenToWorld(location.X, location.Y);
         }
 
+        public Vector3 ScreenToWorld(Microsoft.Xna.Framework.Point location) {
+            return ScreenToWorld(location.X, location.Y);
+        }
+
         public Vector3 ScreenToWorld(decimal x, decimal y) {
             return ScreenToWorld(new Vector3(x, y, 0));
         }
@@ -263,5 +266,8 @@ namespace CBRE.Editor.Rendering {
                 PrimitiveDrawing.End();
             }
         }
+
+        public override Either<ViewDirection, Viewport3D.ViewType> GetViewType()
+            => Direction;
     }
 }

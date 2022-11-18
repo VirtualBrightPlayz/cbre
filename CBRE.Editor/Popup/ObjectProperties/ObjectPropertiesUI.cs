@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ using ImGuiNET;
 using Num = System.Numerics;
 
 namespace CBRE.Editor.Popup.ObjectProperties {
-    public class ObjectPropertiesUI : PopupUI {
+    public sealed class ObjectPropertiesUI : PopupUI {
         public enum VisgroupAction {
             NoChange,
             Add,
@@ -30,14 +31,15 @@ namespace CBRE.Editor.Popup.ObjectProperties {
         private Dictionary<int, VisgroupAction> visgroupActions = new Dictionary<int, VisgroupAction>();
         private Dictionary<int, Color> visgroupColors = new Dictionary<int, Color>();
 
+        protected override bool hasOkButton => false;
+
         public ObjectPropertiesUI(Document document, MapObject mapobject) : base("Object Properties") {
             _document = document;
             _obj = mapobject;
-            GameMain.Instance.PopupSelected = true;
             Setup();
         }
 
-        protected virtual void Setup() {
+        private void Setup() {
             _className = _obj.ClassName;
             visgroupActions = new Dictionary<int, VisgroupAction>();
             foreach (var group in _document.Map.Visgroups) {
@@ -77,34 +79,31 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             _propVals = list;
         }
 
-        protected override bool ImGuiLayout() {
-            if (_obj is Entity || _obj is World)
+        protected override void ImGuiLayout(out bool shouldBeOpen) {
+            if (_obj is Entity || _obj is World) {
                 EntityGui(_obj);
                 VisgroupGui(_obj);
-            return ImGuiButtons();
+            }
+            shouldBeOpen = ImGuiButtons();
         }
 
-        protected virtual void VisgroupGui(MapObject obj) {
+        private void VisgroupGui(MapObject obj) {
             if (ImGui.TreeNode("Visgroups")) {
                 for (int i = 0; i < _document.Map.Visgroups.Count; i++) {
                     if (_document.Map.Visgroups[i] is DataStructures.MapObjects.AutoVisgroup) {
                         continue;
                     }
                     var c = _document.Map.Visgroups[i].Colour;
-                    var col = new Num.Vector4(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
-                    ImGui.PushStyleColor(ImGuiCol.Text, col);
-                    int id = _document.Map.Visgroups[i].ID;
-                    bool isInVis = obj.IsInVisgroup(id, false);
-                    if (visgroupActions[id] != VisgroupAction.NoChange) {
-                        isInVis = visgroupActions[id] == VisgroupAction.Add ? true : false;
+                    using (new ColorPush(ImGuiCol.Text, c)) {
+                        int id = _document.Map.Visgroups[i].ID;
+                        bool isInVis = obj.IsInVisgroup(id, false);
+                        if (visgroupActions[id] != VisgroupAction.NoChange) {
+                            isInVis = visgroupActions[id] == VisgroupAction.Add;
+                        }
+                        if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
+                            visgroupActions[id] = isInVis ? VisgroupAction.Add : VisgroupAction.Remove;
+                        }
                     }
-                    if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
-                        if (isInVis)
-                            visgroupActions[id] = VisgroupAction.Add;
-                        else
-                            visgroupActions[id] = VisgroupAction.Remove;
-                    }
-                    ImGui.PopStyleColor();
                     /*ImGui.SameLine();
                     if (ImGui.ColorEdit4($"{_document.Map.Visgroups[i].Name}", ref col)) {
                         if (!visgroupColors.ContainsKey(id))
@@ -118,17 +117,13 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                 for (int i = 0; i < _document.Map.Visgroups.Count; i++) {
                     if (_document.Map.Visgroups[i] is DataStructures.MapObjects.AutoVisgroup) {
                         var c = _document.Map.Visgroups[i].Colour;
-                        var col = new Num.Vector4(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
-                        ImGui.PushStyleColor(ImGuiCol.Text, col);
-                        int id = _document.Map.Visgroups[i].ID;
-                        bool isInVis = obj.IsInVisgroup(id, false);
-                        if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
-                            if (isInVis)
-                                visgroupActions[id] = VisgroupAction.Add;
-                            else
-                                visgroupActions[id] = VisgroupAction.Remove;
+                        using (new ColorPush(ImGuiCol.Text, c)) {
+                            int id = _document.Map.Visgroups[i].ID;
+                            bool isInVis = obj.IsInVisgroup(id, false);
+                            if (ImGui.Checkbox($"{_document.Map.Visgroups[i].Name}", ref isInVis)) {
+                                visgroupActions[id] = isInVis ? VisgroupAction.Add : VisgroupAction.Remove;
+                            }
                         }
-                        ImGui.PopStyleColor();
                         /*ImGui.SameLine();
                         if (ImGui.ColorEdit4($"{_document.Map.Visgroups[i].Name}", ref col)) {
                             if (!visgroupColors.ContainsKey(id))
@@ -141,7 +136,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             }
         }
 
-        protected virtual void EntityGui(MapObject obj) {
+        private void EntityGui(MapObject obj) {
             if (ImGui.BeginCombo("Entity type", selectedEntity?.Name ?? "<No Change>")) {
                 var entityTypes = _document.GameData.Classes.Where(c => c.ClassType == ClassType.Point);
                 foreach (var entityType in entityTypes) {
@@ -155,36 +150,35 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             var data = obj.GetEntityData();
             ImGui.Text($"{data.Name}");
 
-            ImGui.BeginChild($"{data.Name}Properties", new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 12));
-            ImGui.Columns(3, $"{data.Name}properties", true);
-            ImGui.Separator();
-            ImGui.Text("Key");
-            ImGui.NextColumn();
-            ImGui.Text("Value");
-            ImGui.NextColumn();
-            ImGui.Text("State");
-            ImGui.NextColumn();
-            ImGui.Separator();
-
-            var props = _propVals;
-
-            for (int i = 0; i < props.Count; i++) {
-                ImGui.Text(props[i].NewKey);
+            if (ImGui.BeginChild($"{data.Name}Properties",
+                new Num.Vector2(0, ImGui.GetTextLineHeightWithSpacing() * 12))) {
+                ImGui.Columns(3, $"{data.Name}properties", true);
+                ImGui.Separator();
+                ImGui.Text("Key");
                 ImGui.NextColumn();
-                string tmp = props[i].Value;
-                switch (props[i].Class) {
-                    case VariableType.Float:
-                        {
+                ImGui.Text("Value");
+                ImGui.NextColumn();
+                ImGui.Text("State");
+                ImGui.NextColumn();
+                ImGui.Separator();
+
+                var props = _propVals;
+
+                for (int i = 0; i < props.Count; i++) {
+                    ImGui.Text(props[i].NewKey);
+                    ImGui.NextColumn();
+                    string tmp = props[i].Value;
+                    switch (props[i].Class) {
+                        case VariableType.Float: {
                             float fl = 0f;
                             float.TryParse(tmp, out fl);
                             if (ImGui.InputFloat(props[i].OriginalKey, ref fl)) {
-                                props[i].Value = fl.ToString();
+                                props[i].Value = fl.ToString(CultureInfo.InvariantCulture);
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    case VariableType.Integer:
-                        {
+                            break;
+                        case VariableType.Integer: {
                             int fl = 0;
                             int.TryParse(tmp, out fl);
                             if (ImGui.InputInt(props[i].OriginalKey, ref fl)) {
@@ -192,9 +186,8 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    case VariableType.Color255:
-                        {
+                            break;
+                        case VariableType.Color255: {
                             Color color = props[i].GetColour255(Color.White);
                             Num.Vector4 v4 = new Num.Vector4(color.R / 255f, color.G / 255f, color.B / 255f, 1f);
                             if (ImGui.ColorEdit4(props[i].OriginalKey, ref v4)) {
@@ -202,18 +195,16 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    case VariableType.Vector:
-                        {
+                            break;
+                        case VariableType.Vector: {
                             Num.Vector3 v3 = props[i].GetVector3(Num.Vector3.Zero);
                             if (ImGui.InputFloat3(props[i].OriginalKey, ref v3)) {
                                 props[i].Value = $"{v3.X} {v3.Y} {v3.Z}";
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    case VariableType.Bool:
-                        {
+                            break;
+                        case VariableType.Bool: {
                             bool b = default(bool);
                             bool.TryParse(props[i].Value, out b);
                             if (ImGui.Checkbox(props[i].OriginalKey, ref b)) {
@@ -221,28 +212,30 @@ namespace CBRE.Editor.Popup.ObjectProperties {
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                    default:
-                        {
+                            break;
+                        default: {
                             if (ImGui.InputText(props[i].OriginalKey, ref tmp, 1024)) {
                                 props[i].Value = tmp;
                                 props[i].IsModified = true;
                             }
                         }
-                        break;
-                }
-                ImGui.NextColumn();
-                var col = props[i].GetStateColour();
-                ImGui.TextColored(new Num.Vector4(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f), props[i].GetState());
-                ImGui.NextColumn();
-                /*if (ImGui.Button("-")) {
-                    props[i].IsRemoved = true;
-                }
-                ImGui.NextColumn();*/
-            }
+                            break;
+                    }
 
-            ImGui.Columns(1);
-            ImGui.Separator();
+                    ImGui.NextColumn();
+                    var col = props[i].GetStateColour();
+                    ImGui.TextColored(new Num.Vector4(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f),
+                        props[i].GetState());
+                    ImGui.NextColumn();
+                    /*if (ImGui.Button("-")) {
+                        props[i].IsRemoved = true;
+                    }
+                    ImGui.NextColumn();*/
+                }
+
+                ImGui.Columns(1);
+                ImGui.Separator();
+            }
             ImGui.EndChild();
 
             ImGui.NewLine();
@@ -256,7 +249,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             }*/
         }
 
-        protected virtual bool ImGuiButtons() {
+        private bool ImGuiButtons() {
             if (ImGui.Button("Cancel")) {
                 return false;
             }
@@ -267,7 +260,7 @@ namespace CBRE.Editor.Popup.ObjectProperties {
             return true;
         }
 
-        protected virtual bool EntityApply() {
+        private bool EntityApply() {
             string actionText = null;
             var ac = new ActionCollection();
             var editAction = GetEditEntityDataAction();

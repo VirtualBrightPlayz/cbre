@@ -107,9 +107,9 @@ namespace CBRE.Editor.Tools
             base.OnBoxChanged();
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent e) {
-            if (BrushManager.CurrentBrush == null) return;
-            base.MouseDown(viewport, e);
+        public override void MouseClick(ViewportBase viewport, ViewportEvent e) {
+            if (BrushManager.CurrentBrush == null) { return; }
+            base.MouseClick(viewport, e);
         }
 
         protected override void LeftMouseDownToDraw(Viewport2D viewport, ViewportEvent e)
@@ -158,7 +158,11 @@ namespace CBRE.Editor.Tools
 
         public override void BoxDrawnConfirm(ViewportBase viewport)
         {
-            var box = new Box(State.BoxStart, State.BoxEnd);
+            if (State.BoxStart is not { } boxStart
+                || State.BoxEnd is not { } boxEnd) {
+                return;
+            }
+            var box = new Box(boxStart, boxEnd);
             if (box.Start.X != box.End.X && box.Start.Y != box.End.Y && box.Start.Z != box.End.Z)
             {
                 CreateBrush(box);
@@ -178,7 +182,7 @@ namespace CBRE.Editor.Tools
 
         public override void BoxDrawnCancel(ViewportBase viewport)
         {
-            _lastBox = new Box(State.BoxStart, State.BoxEnd);
+            _lastBox = new Box(State.BoxStart ?? Vector3.Zero, State.BoxEnd ?? Vector3.Zero);
             _preview = null;
             base.BoxDrawnCancel(viewport);
         }
@@ -187,7 +191,7 @@ namespace CBRE.Editor.Tools
         {
             if (_updatePreview && ShouldDrawBox(viewport))
             {
-                var box = new Box(State.BoxStart, State.BoxEnd);
+                var box = new Box(State.BoxStart ?? Vector3.Zero, State.BoxEnd ?? Vector3.Zero);
                 var brush = GetBrush(box, new IDGenerator());
                 _preview = new List<Face>();
                 CollectFaces(_preview, new[] { brush });
@@ -233,7 +237,7 @@ namespace CBRE.Editor.Tools
                 PrimitiveDrawing.Begin(PrimitiveType.LineList);
                 PrimitiveDrawing.SetColor(GetRenderColour());
                 var matrix = viewport.GetModelViewMatrix();
-                PrimitiveDrawing.FacesWireframe(_preview, matrix.ToCbre());
+                PrimitiveDrawing.FacesWireframe(_preview, thickness: 0f, m: matrix.ToCbre());
                 PrimitiveDrawing.End();
             }
         }
@@ -251,7 +255,7 @@ namespace CBRE.Editor.Tools
 
                 PrimitiveDrawing.Begin(PrimitiveType.LineList);
                 PrimitiveDrawing.SetColor(GetRenderColour());
-                PrimitiveDrawing.FacesWireframe(_preview, matrix.ToCbre());
+                PrimitiveDrawing.FacesWireframe(_preview, thickness: 0f, m: matrix.ToCbre());
                 PrimitiveDrawing.End();
             }
         }

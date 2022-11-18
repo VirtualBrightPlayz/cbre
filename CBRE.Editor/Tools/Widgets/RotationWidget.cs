@@ -62,7 +62,7 @@ namespace CBRE.Editor.Tools.Widgets
         private CircleType _mouseOver;
         private CircleType _mouseDown;
         private Vector3 _mouseDownPoint;
-        private Vector3 _mouseMovePoint;
+        private Vector3? _mouseMovePoint;
 
         public Vector3 GetPivotPoint()
         {
@@ -87,7 +87,7 @@ namespace CBRE.Editor.Tools.Widgets
             if (cls == PlaneClassification.Back) return;
             if (cls == PlaneClassification.Spanning)
             {
-                var isect = test.GetIntersectionPoint(line, true);
+                var isect = test.GetIntersectionPoint(line, ignoreDirection: true).Value;
                 var first = test.OnPlane(line.Start) > 0 ? line.Start : line.End;
                 line = new Line(first, isect);
             }
@@ -296,31 +296,34 @@ namespace CBRE.Editor.Tools.Widgets
             }
         }
 
-        public override void MouseDown(ViewportBase viewport, ViewportEvent ve)
-        {
-            if (viewport is Viewport2D)
+        public override void MouseClick(ViewportBase viewport, ViewportEvent ve) {
+            switch (viewport)
             {
-                var vp2 = (Viewport2D)viewport;
-                if (ve.Button == MouseButtons.Left && MouseOverPivot(vp2, ve))
+                case Viewport2D vp2d:
                 {
-                    _movingPivot = true;
-                    ve.Handled = true;
+                    if (ve.Button == MouseButtons.Left && MouseOverPivot(vp2d, ve))
+                    {
+                        _movingPivot = true;
+                        ve.Handled = true;
+                    }
+                    return;
                 }
-                return;
+                case Viewport3D vp3d:
+                    if (vp3d != _activeViewport
+                        || ve.Button != MouseButtons.Left
+                        || _mouseOver == CircleType.None) {
+                        return;
+                    }
+                    _mouseDown = _mouseOver;
+                    _mouseDownPoint = new Vector3(ve.X, vp3d.Height - ve.Y, 0);
+                    _mouseMovePoint = null;
+                    ve.Handled = true;
+                    vp3d.AquireInputLock(this);
+                    break;
             }
-
-            var vp = viewport as Viewport3D;
-            if (vp == null || vp != _activeViewport) return;
-
-            if (ve.Button != MouseButtons.Left || _mouseOver == CircleType.None) return;
-            _mouseDown = _mouseOver;
-            _mouseDownPoint = new Vector3(ve.X, vp.Height - ve.Y, 0);
-            _mouseMovePoint = null;
-            ve.Handled = true;
-            vp.AquireInputLock(this);
         }
 
-        public override void MouseUp(ViewportBase viewport, ViewportEvent ve)
+        public override void MouseLifted(ViewportBase viewport, ViewportEvent ve)
         {
             if (viewport is Viewport2D)
             {
@@ -437,7 +440,7 @@ namespace CBRE.Editor.Tools.Widgets
 
                 PrimitiveDrawing.SetColor(Color.LightGray);
                 PrimitiveDrawing.Vertex3(_pivotPoint);
-                PrimitiveDrawing.Vertex3(viewport.ScreenToWorld(_mouseMovePoint));
+                PrimitiveDrawing.Vertex3(viewport.ScreenToWorld(_mouseMovePoint ?? Vector3.Zero));
 
                 PrimitiveDrawing.End();
                 /*GL.Disable(EnableCap.LineStipple);

@@ -21,12 +21,22 @@ using CBRE.Settings;
 using CBRE.Editor.Rendering;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Quaternion = CBRE.DataStructures.Geometric.Quaternion;
 using CBRE.Editor.Popup;
 using CBRE.Editor.Popup.ObjectProperties;
+using CBRE.Providers;
+using CBRE.RMesh;
+using ImGuiNET;
+using NativeFileDialog;
+using RMeshDecomp;
+using Path = CBRE.DataStructures.MapObjects.Path;
+using CBRE.Graphics;
 
 namespace CBRE.Editor.Documents {
     /// <summary>
@@ -40,110 +50,109 @@ namespace CBRE.Editor.Documents {
         }
 
         public void Subscribe() {
-            Mediator.Subscribe(EditorMediator.DocumentTreeStructureChanged, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeObjectsChanged, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeSelectedObjectsChanged, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeFacesChanged, this);
-            Mediator.Subscribe(EditorMediator.DocumentTreeSelectedFacesChanged, this);
+            Mediator.Subscribe(EditorMediator.DocumentTreeStructureChanged, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.DocumentTreeObjectsChanged, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.DocumentTreeSelectedObjectsChanged, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.DocumentTreeFacesChanged, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.DocumentTreeSelectedFacesChanged, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.SettingsChanged, this);
+            Mediator.Subscribe(EditorMediator.SettingsChanged, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.FileClose, this);
-            Mediator.Subscribe(HotkeysMediator.FileSave, this);
-            Mediator.Subscribe(HotkeysMediator.FileSaveAs, this);
-            //Mediator.Subscribe(HotkeysMediator.FileExport, this);
-            Mediator.Subscribe(HotkeysMediator.FileCompile, this);
+            Mediator.Subscribe(HotkeysMediator.FileClose, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FileSave, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FileSaveAs, this, priority: -1);
+            //Mediator.Subscribe(HotkeysMediator.FileExport, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FileCompile, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.HistoryUndo, this);
-            Mediator.Subscribe(HotkeysMediator.HistoryRedo, this);
+            Mediator.Subscribe(HotkeysMediator.HistoryUndo, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.HistoryRedo, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.OperationsCopy, this);
-            Mediator.Subscribe(HotkeysMediator.OperationsCut, this);
-            Mediator.Subscribe(HotkeysMediator.OperationsPaste, this);
-            Mediator.Subscribe(HotkeysMediator.OperationsPasteSpecial, this);
-            Mediator.Subscribe(HotkeysMediator.OperationsDelete, this);
-            Mediator.Subscribe(HotkeysMediator.SelectionClear, this);
-            Mediator.Subscribe(HotkeysMediator.SelectAll, this);
-            Mediator.Subscribe(HotkeysMediator.ObjectProperties, this);
+            Mediator.Subscribe(HotkeysMediator.OperationsCopy, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.OperationsCut, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.OperationsPaste, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.OperationsPasteSpecial, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.OperationsDelete, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.SelectionClear, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.SelectAll, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ObjectProperties, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.QuickHideSelected, this);
-            Mediator.Subscribe(HotkeysMediator.QuickHideUnselected, this);
-            Mediator.Subscribe(HotkeysMediator.QuickHideShowAll, this);
+            Mediator.Subscribe(HotkeysMediator.QuickHideSelected, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.QuickHideUnselected, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.QuickHideShowAll, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.SwitchTool, this);
-            Mediator.Subscribe(HotkeysMediator.ApplyCurrentTextureToSelection, this);
+            Mediator.Subscribe(HotkeysMediator.SwitchTool, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ApplyCurrentTextureToSelection, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.RotateClockwise, this);
-            Mediator.Subscribe(HotkeysMediator.RotateCounterClockwise, this);
+            Mediator.Subscribe(HotkeysMediator.RotateClockwise, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.RotateCounterClockwise, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.Carve, this);
-            Mediator.Subscribe(HotkeysMediator.MakeHollow, this);
-            Mediator.Subscribe(HotkeysMediator.GroupingGroup, this);
-            Mediator.Subscribe(HotkeysMediator.GroupingUngroup, this);
-            Mediator.Subscribe(HotkeysMediator.TieToEntity, this);
-            Mediator.Subscribe(HotkeysMediator.TieToWorld, this);
-            Mediator.Subscribe(HotkeysMediator.Transform, this);
-            Mediator.Subscribe(HotkeysMediator.ReplaceTextures, this);
-            Mediator.Subscribe(HotkeysMediator.SnapSelectionToGrid, this);
-            Mediator.Subscribe(HotkeysMediator.SnapSelectionToGridIndividually, this);
-            Mediator.Subscribe(HotkeysMediator.AlignXMax, this);
-            Mediator.Subscribe(HotkeysMediator.AlignXMin, this);
-            Mediator.Subscribe(HotkeysMediator.AlignYMax, this);
-            Mediator.Subscribe(HotkeysMediator.AlignYMin, this);
-            Mediator.Subscribe(HotkeysMediator.AlignZMax, this);
-            Mediator.Subscribe(HotkeysMediator.AlignZMin, this);
-            Mediator.Subscribe(HotkeysMediator.FlipX, this);
-            Mediator.Subscribe(HotkeysMediator.FlipY, this);
-            Mediator.Subscribe(HotkeysMediator.FlipZ, this);
+            Mediator.Subscribe(HotkeysMediator.Carve, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.MakeHollow, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GroupingGroup, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GroupingUngroup, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.TieToEntity, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.TieToWorld, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.Transform, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ReplaceTextures, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.SnapSelectionToGrid, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.SnapSelectionToGridIndividually, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignXMax, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignXMin, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignYMax, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignYMin, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignZMax, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.AlignZMin, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FlipX, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FlipY, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.FlipZ, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.GridIncrease, this);
-            Mediator.Subscribe(HotkeysMediator.GridDecrease, this);
-            Mediator.Subscribe(HotkeysMediator.CenterAllViewsOnSelection, this);
-            Mediator.Subscribe(HotkeysMediator.Center2DViewsOnSelection, this);
-            Mediator.Subscribe(HotkeysMediator.Center3DViewsOnSelection, this);
-            Mediator.Subscribe(HotkeysMediator.GoToBrushID, this);
-            Mediator.Subscribe(HotkeysMediator.GoToCoordinates, this);
+            Mediator.Subscribe(HotkeysMediator.GridIncrease, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GridDecrease, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.CenterAllViewsOnSelection, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.Center2DViewsOnSelection, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.Center3DViewsOnSelection, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GoToBrushID, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.GoToCoordinates, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.ToggleSnapToGrid, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleShow2DGrid, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleShow3DGrid, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleIgnoreGrouping, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleTextureLock, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleTextureScalingLock, this);
-            //Mediator.Subscribe(HotkeysMediator.ToggleCordon, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleHideFaceMask, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleHideDisplacementSolids, this);
-            Mediator.Subscribe(HotkeysMediator.ToggleHideNullTextures, this);
+            Mediator.Subscribe(HotkeysMediator.ToggleSnapToGrid, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleShow2DGrid, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleShow3DGrid, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleIgnoreGrouping, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleTextureLock, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleTextureScalingLock, this, priority: -1);
+            //Mediator.Subscribe(HotkeysMediator.ToggleCordon, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleHideFaceMask, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleHideDisplacementSolids, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ToggleHideNullTextures, this, priority: -1);
 
-            Mediator.Subscribe(HotkeysMediator.ShowSelectedBrushID, this);
-            Mediator.Subscribe(HotkeysMediator.ShowMapInformation, this);
-            Mediator.Subscribe(HotkeysMediator.ShowLogicalTree, this);
-            Mediator.Subscribe(HotkeysMediator.ShowEntityReport, this);
-            Mediator.Subscribe(HotkeysMediator.CheckForProblems, this);
+            Mediator.Subscribe(HotkeysMediator.ShowSelectedBrushID, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ShowMapInformation, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ShowLogicalTree, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.ShowEntityReport, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.CheckForProblems, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.ViewportRightClick, this);
+            Mediator.Subscribe(EditorMediator.ViewportRightClick, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.WorldspawnProperties, this);
+            Mediator.Subscribe(EditorMediator.WorldspawnProperties, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.VisgroupSelect, this);
-            Mediator.Subscribe(EditorMediator.VisgroupShowAll, this);
-            Mediator.Subscribe(EditorMediator.VisgroupShowEditor, this);
-            Mediator.Subscribe(EditorMediator.VisgroupToggled, this);
-            Mediator.Subscribe(HotkeysMediator.VisgroupCreateNew, this);
-            Mediator.Subscribe(EditorMediator.SetZoomValue, this);
-            Mediator.Subscribe(EditorMediator.TextureSelected, this);
-            Mediator.Subscribe(EditorMediator.SelectMatchingTextures, this);
+            Mediator.Subscribe(EditorMediator.VisgroupSelect, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.VisgroupShowAll, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.VisgroupShowEditor, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.VisgroupToggled, this, priority: -1);
+            Mediator.Subscribe(HotkeysMediator.VisgroupCreateNew, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.SetZoomValue, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.TextureSelected, this, priority: -1);
+            Mediator.Subscribe(EditorMediator.SelectMatchingTextures, this, priority: -1);
 
-            Mediator.Subscribe(EditorMediator.ViewportCreated, this);
+            Mediator.Subscribe(EditorMediator.ViewportCreated, this, priority: -1);
         }
 
         public void Unsubscribe() {
             Mediator.UnsubscribeAll(this);
         }
 
-        public void Notify(string message, object data) {
-            HotkeysMediator val;
-            if (ToolManager.ActiveTool != null && Enum.TryParse(message, true, out val)) {
+        public void Notify(Enum message, object data) {
+            if (ToolManager.ActiveTool != null && message is HotkeysMediator val) {
                 var result = ToolManager.ActiveTool.InterceptHotkey(val, data);
                 if (result == HotkeyInterceptResult.Abort) return;
                 if (result == HotkeyInterceptResult.SwitchToSelectTool) {
@@ -167,7 +176,12 @@ namespace CBRE.Editor.Documents {
         }
 
         private void DocumentTreeSelectedObjectsChanged(IEnumerable<MapObject> objects) {
-            _document.RenderSelection(objects);
+            var selectedObjects = _document.Selection.GetSelectedObjects().ToArray();
+            var types = selectedObjects.Select(o => o.GetType()).Distinct().ToArray();
+            foreach (var t in types) {
+                Debug.WriteLine($"{t}: {selectedObjects.Count(o => o.GetType() == t)}");
+            }
+            _document.RenderObjects(objects);
         }
 
         private void DocumentTreeFacesChanged(IEnumerable<Face> faces) {
@@ -175,7 +189,7 @@ namespace CBRE.Editor.Documents {
         }
 
         private void DocumentTreeSelectedFacesChanged(IEnumerable<Face> faces) {
-            _document.RenderSelection(faces.Select(x => x.Parent).Distinct());
+            _document.RenderObjects(faces.Select(x => x.Parent).Distinct());
         }
 
         public void SettingsChanged() {
@@ -193,22 +207,127 @@ namespace CBRE.Editor.Documents {
 
         public void FileClose() {
             if (_document.History.TotalActionsSinceLastSave > 0) {
-                new SaveMap("", _document, true);
-                return;
+                GameMain.Instance.Popups.Add(new ConfirmPopup($"Closing {_document.MapFileName}",
+                    $"{_document.MapFileName} has unsaved changes.\nWould you like to save before closing?") {
+                    Buttons = new [] {
+                        new ConfirmPopup.Button("Yes", () => {
+                            var result = NativeFileDialog.SaveDialog.Open("vmf", _document.MapFileName, out string outPath);
+                            if (result == Result.Okay) {
+                                try {
+                                    _document.SaveFile(outPath);
+                                    DocumentManager.Remove(_document);
+                                } catch (ProviderNotFoundException e) {
+                                    GameMain.Instance.Popups.Add(
+                                        new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) }, true));
+                                }
+                            }
+                        }),
+                        new ConfirmPopup.Button("No", () => {
+                            DocumentManager.Remove(_document);
+                        }),
+                        new ConfirmPopup.Button("Cancel", () => { }),
+                    }.ToImmutableArray()
+                });
+            } else {
+                DocumentManager.Remove(_document);
             }
-            DocumentManager.Remove(_document);
         }
 
         public void FileSave() {
+            var visibleMeshes = new List<RMesh.RMesh.VisibleMesh>();
+            var invisibleCollisionMeshes = new List<RMesh.RMesh.InvisibleCollisionMesh>();
+
+            var vertices = new List<RMesh.RMesh.VisibleMesh.Vertex>();
+            var triangles = new List<RMesh.RMesh.Triangle>();
+            int indexOffset = 0;
+            foreach (var solid in _document.Map.WorldSpawn.GetSelfAndAllChildren().OfType<Solid>()) {
+                foreach (var face in solid.Faces) {
+                    vertices.AddRange(face.Vertices.Select(fv => new RMesh.RMesh.VisibleMesh.Vertex(
+                        new Vector3F(fv.Location),
+                        new Vector2F((float)fv.TextureU, (float)fv.TextureV),
+                        Vector2F.Zero, Color.White)));
+                    triangles.AddRange(face.GetTriangleIndices().Chunk(3).Select(c => new RMesh.RMesh.Triangle(
+                        (ushort)(c[0] + indexOffset), (ushort)(c[1] + indexOffset), (ushort)(c[2] + indexOffset))));
+                    indexOffset += face.Vertices.Count;
+                }
+            }
+            
+            var mesh = new RMesh.RMesh.VisibleMesh(vertices.ToImmutableArray(), triangles.ToImmutableArray(), "", "", RMesh.RMesh.VisibleMesh.BlendMode.Opaque);
+            visibleMeshes.Add(mesh);
+
+            #if FALSE
+            RMesh.RMesh rmesh = new RMesh.RMesh(
+                visibleMeshes.ToImmutableArray(),
+                invisibleCollisionMeshes.ToImmutableArray(),
+                null, null, null);
+
+            RMesh.RMesh.Saver.ToFile(rmesh, DocumentManager.CurrentDocument.MapFile+".rmesh");
+            var result = NativeFileDialog.OpenDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string outPath);
+            if (result == Result.Okay) {
+                rmesh = RMesh.RMesh.Loader.FromFile(outPath);
+
+                var idGenerator = _document.Map.IDGenerator;
+
+                var rng = new Random();
+                foreach (var subMesh in rmesh.VisibleMeshes) {
+                    if (subMesh.TextureBlendMode != RMesh.RMesh.VisibleMesh.BlendMode.Lightmapped) { continue; }
+                    
+                    var newFaces = new HashSet<Face>();
+                    ExtractFaces.Invoke(subMesh, newFaces);
+
+                    if (!newFaces.Any()) { continue; }
+                    
+                    var newSolid = new Solid(idGenerator.GetNextObjectID());
+                    newSolid.Colour = Color.Chartreuse;
+                    //newSolid.Faces.AddRange(newFaces);
+                    foreach (var newFace in newFaces) {
+                        newSolid.Faces.Add(newFace);
+                        newFace.Parent = newSolid;
+                        newFace.Texture = new TextureReference();
+                        string tex = subMesh.DiffuseTexture.Replace(".jpg", "").Replace(".jpeg", "").Replace(".png", "");
+                        TextureItem item = TextureProvider.GetItem(tex);
+                        newFace.Texture.Name = item?.Name;
+                        newFace.Texture.Texture = item?.Texture as AsyncTexture;
+                        newFace.Colour = Color.FromArgb(255,
+                            rng.Next()%256,
+                            newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 255 : 0,
+                            newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 0 : 255);
+                        // newFace.AlignTextureToWorld();
+                        // newFace.CalculateTextureCoordinates(false);
+                    }
+
+                    if (newSolid.Faces.Any()) {
+                        newSolid.SetParent(_document.Map.WorldSpawn);
+                        _document.ObjectRenderer.AddMapObject(newSolid);
+                    }
+                }
+            }
+            
+            _document.ObjectRenderer.MarkDirty();
+            
+            return;
+            #endif
             _document.SaveFile();
         }
 
         public void FileSaveAs() {
-            new SaveMap("", _document, false);
+            var currFilePath = System.IO.Path.GetDirectoryName(DocumentManager.CurrentDocument.MapFile);
+            if (string.IsNullOrEmpty(currFilePath)) { currFilePath = Directory.GetCurrentDirectory(); }
+
+            var result = NativeFileDialog.SaveDialog.Open("vmf", currFilePath, out string outPath);
+            if (result == Result.Okay) {
+                try {
+                    _document.SaveFile(outPath);
+                }
+                catch (ProviderNotFoundException e) {
+                    new MessagePopup("Error", e.Message, new ImColor() { Value = new System.Numerics.Vector4(1f, 0f, 0f, 1f) }, true);
+                }
+            }
         }
 
         public void FileCompile() {
             ExportPopup form = new ExportPopup(_document);
+            GameMain.Instance.Popups.Add(form);
             // throw new NotImplementedException();
         }
 
@@ -224,15 +343,15 @@ namespace CBRE.Editor.Documents {
         }
 
         public void OperationsPaste() {
-            if (!ClipboardManager.CanPaste()) return;
+            if (!ClipboardManager.CanPaste()) { return; }
 
             var content = ClipboardManager.GetPastedContent(_document);
-            if (content == null) return;
+            if (content == null) { return; }
 
             var list = content.ToList();
-            if (!list.Any()) return;
+            if (!list.Any()) { return; }
 
-            list.SelectMany(x => x.FindAll()).ToList().ForEach(x => x.IsSelected = true);
+            list.SelectMany(x => x.GetSelfAndAllChildren()).ToList().ForEach(x => x.IsSelected = true);
             _document.Selection.SwitchToObjectSelection();
 
             var name = "Pasted " + list.Count + " item" + (list.Count == 1 ? "" : "s");
@@ -240,6 +359,12 @@ namespace CBRE.Editor.Documents {
             _document.PerformAction(name, new ActionCollection(
                                               new Deselect(selected), // Deselect the current objects
                                               new Create(_document.Map.WorldSpawn.ID, list))); // Add and select the new objects
+            
+            var selectedObjects = _document.Selection.GetSelectedObjects().ToArray();
+            var types = selectedObjects.Select(o => o.GetType()).Distinct().ToArray();
+            foreach (var t in types) {
+                Debug.WriteLine($"{t}: {selectedObjects.Count(o => o.GetType() == t)}");
+            }
         }
 
         public void OperationsPasteSpecial() {
@@ -251,7 +376,7 @@ namespace CBRE.Editor.Documents {
             var list = content.ToList();
             if (!list.Any()) return;
 
-            foreach (var face in list.SelectMany(x => x.FindAll().OfType<Solid>().SelectMany(y => y.Faces))) {
+            foreach (var face in list.SelectMany(x => x.GetSelfAndAllChildren().OfType<Solid>().SelectMany(y => y.Faces))) {
                 face.Texture.Texture = _document.GetTexture(face.Texture.Name);
             }
 
@@ -271,9 +396,9 @@ namespace CBRE.Editor.Documents {
 
         public void OperationsDelete() {
             if (!_document.Selection.IsEmpty() && !_document.Selection.InFaceSelection) {
-                var sel = _document.Selection.GetSelectedParents().Select(x => x.ID).ToList();
-                var name = "Removed " + sel.Count + " item" + (sel.Count == 1 ? "" : "s");
-                _document.PerformAction(name, new Delete(sel));
+                var deleted = _document.Selection.GetSelectedObjects().Select(x => x.ID).ToList();
+                var name = "Removed " + deleted.Count + " item" + (deleted.Count == 1 ? "" : "s");
+                _document.PerformAction(name, new Delete(deleted));
             }
         }
 
@@ -283,19 +408,18 @@ namespace CBRE.Editor.Documents {
         }
 
         public void SelectAll() {
-            var all = _document.Map.WorldSpawn.Find(x => !(x is World));
+            var all = _document.Map.WorldSpawn.Find(x => x is not World && !x.IsSelected);
             _document.PerformAction("Select all", new Actions.MapObjects.Selection.Select(all));
         }
 
         public void ObjectProperties() {
-            new ObjectPropertiesUI(_document, _document.Selection.GetSelectedParents().FirstOrDefault());
-            // throw new NotImplementedException();
-            /*var pd = new ObjectPropertiesDialog(_document);
-            pd.Show(Editor.Instance);*/
+            var mapObject = _document.Selection.GetSelectedParents().FirstOrDefault();
+            if (mapObject is null) { return; }
+            GameMain.Instance.Popups.Add(new ObjectPropertiesUI(_document, mapObject));
         }
 
         public void SwitchTool(HotkeyTool tool) {
-            if (ToolManager.ActiveTool != null && ToolManager.ActiveTool.GetHotkeyToolType() == tool) tool = HotkeyTool.Selection;
+            if (ToolManager.ActiveTool != null && ToolManager.ActiveTool.GetHotkeyToolType() == tool) { tool = HotkeyTool.Selection; }
             ToolManager.Activate(tool);
             GameMain.Instance.SelectedTool = ToolManager.Tools.FirstOrDefault(p => p.GetHotkeyToolType() == tool);
         }
@@ -331,7 +455,7 @@ namespace CBRE.Editor.Documents {
             var autohide = _document.Map.GetAllVisgroups().FirstOrDefault(x => x.Name == "Autohide");
             if (autohide == null) return;
 
-            var objects = _document.Map.WorldSpawn.FindAll().Except(_document.Selection.GetSelectedObjects()).Where(x => !(x is World) && !(x is Group));
+            var objects = _document.Map.WorldSpawn.GetSelfAndAllChildren().Except(_document.Selection.GetSelectedObjects()).Where(x => !(x is World) && !(x is Group));
             _document.PerformAction("Hide objects", new QuickHideObjects(objects));
         }
 
@@ -813,7 +937,9 @@ namespace CBRE.Editor.Documents {
         }
 
         public void CheckForProblems() {
-            throw new NotImplementedException();
+            CheckForProblemsPopup form = new CheckForProblemsPopup(_document);
+            GameMain.Instance.Popups.Add(form);
+            // throw new NotImplementedException();
             /*using (var cfpd = new CheckForProblemsDialog(_document)) {
                 cfpd.ShowDialog(Editor.Instance);
             }*/

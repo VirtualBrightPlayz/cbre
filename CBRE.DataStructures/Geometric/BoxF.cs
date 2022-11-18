@@ -82,6 +82,8 @@ namespace CBRE.DataStructures.Geometric {
             Center = (Start + End) / 2;
         }
 
+        public BoxF(Box box) : this(box.Start.ToVector3F(), box.End.ToVector3F()) { }
+        
         protected BoxF(SerializationInfo info, StreamingContext context) {
             Start = (Vector3F)info.GetValue("Start", typeof(Vector3F));
             End = (Vector3F)info.GetValue("End", typeof(Vector3F));

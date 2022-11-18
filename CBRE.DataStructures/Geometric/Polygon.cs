@@ -120,6 +120,7 @@ namespace CBRE.DataStructures.Geometric {
         }
 
         public bool IsConvex(decimal epsilon = 0.001m) {
+            if (Vertices.Count <= 3) { return true; }
             for (var i = 0; i < Vertices.Count; i++) {
                 var v1 = Vertices[i];
                 var v2 = Vertices[(i + 1) % Vertices.Count];
@@ -127,9 +128,22 @@ namespace CBRE.DataStructures.Geometric {
                 var l1 = (v1 - v2).Normalise();
                 var l2 = (v3 - v2).Normalise();
                 var cross = l1.Cross(l2);
-                if (Plane.OnPlane(v2 + cross, epsilon) < 0.0001m) return false;
+                if (Plane.OnPlane(v2 + cross, epsilon) < 0.0001m) { return false; }
             }
             return true;
+        }
+
+        public bool HasColinearEdges(decimal epsilon = 0.001m) {
+            var edges = Enumerable.Range(0, Vertices.Count)
+                .Select(i => new Line(Vertices[i], Vertices[(i+1) % Vertices.Count]))
+                .ToArray();
+            for (int i = 0; i < edges.Length; i++) {
+                var edge1 = edges[i];
+                var edge2 = edges[(i + 1) % edges.Length];
+
+                if (Math.Abs(edge1.Direction().Dot(edge2.Direction())) > (1m - epsilon)) { return true; }
+            }
+            return false;
         }
 
         /// <summary>
@@ -231,9 +245,9 @@ namespace CBRE.DataStructures.Geometric {
                     var start = Vertices[i - 1];
                     var line = new Line(start, end);
                     var isect = clip.GetIntersectionPoint(line, true);
-                    if (isect == null) throw new Exception("Expected intersection, got null.");
-                    frontVerts.Add(isect);
-                    backVerts.Add(isect);
+                    if (isect is null) { throw new Exception("Expected intersection, got null."); }
+                    frontVerts.Add(isect.Value);
+                    backVerts.Add(isect.Value);
                 }
 
                 // Add original points

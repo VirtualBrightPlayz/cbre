@@ -20,6 +20,7 @@ namespace CBRE.Editor {
             Menus.Add(new Menu("File",
                 new MenuItem(HotkeysMediator.FileNew.ToString(), MenuTextures["Menu_New"]),
                 new MenuItem(HotkeysMediator.FileOpen.ToString(), MenuTextures["Menu_Open"]),
+                RecentMenu.Instance,
                 new MenuItem(HotkeysMediator.FileClose.ToString(), MenuTextures["Menu_Close"]),
                 new MenuItem(HotkeysMediator.FileSave.ToString(), MenuTextures["Menu_Save"]),
                 new MenuItem(HotkeysMediator.FileSaveAs.ToString(), MenuTextures["Menu_SaveAs"]),
@@ -107,11 +108,8 @@ namespace CBRE.Editor {
                 new MenuItem("Create New Layout Window", "", MenuTextures["Menu_NewWindow"]),
                 new MenuItem("Layout Window Settings...", "", MenuTextures["Menu_WindowSettings"])));
             Menus.Add(new Menu("Window",
-                new MenuItem("Document View", "", MenuTextures["Menu_NewWindow"], action: () => new DocumentTabWindow()),
-                new MenuItem("Viewport 0 - 3d", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow(0)),
-                new MenuItem("Viewport 1 - Top", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow(1)),
-                new MenuItem("Viewport 2 - Side", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow(2)),
-                new MenuItem("Viewport 3 - Front", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow(3)),
+                new MenuItem("Document View", "", MenuTextures["Menu_NewWindow"], action: () => new DocumentTabs()),
+                new MenuItem("Viewports", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow()),
                 new MenuItem("Tool Properties", "", MenuTextures["Menu_NewWindow"], action: () => new ToolPropsWindow()),
                 new MenuItem("Stats View", "", MenuTextures["Menu_NewWindow"], action: () => new StatsWindow()),
                 new MenuItem("Tools", "", MenuTextures["Menu_NewWindow"], action: () => new ToolsWindow())));
@@ -120,14 +118,11 @@ namespace CBRE.Editor {
         }
 
         private void UpdateMenus() {
-            // if (ImGui.BeginMenuBar()) {
-                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.One * 8);
-                for (int i = 0; i < Menus.Count; i++) {
-                    Menus[i].Draw(true);
-                }
-                ImGui.PopStyleVar();
-                // ImGui.EndMenuBar();
-            // }
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.One * 8);
+            for (int i = 0; i < Menus.Count; i++) {
+                Menus[i].Draw(true);
+            }
+            ImGui.PopStyleVar();
         }
 
         public class MenuItem {
@@ -189,13 +184,16 @@ namespace CBRE.Editor {
             public override void Draw(bool topLevel) {
                 Num.Vector2 pos = ImGui.GetCursorPos() + ImGui.GetWindowPos();
                 if (ImGui.BeginMenu(GetDrawnText(topLevel))) {
-                    ViewportManager.TopMenuOpen = true;
                     Items.ForEach(it => it.Draw(false));
+                    PostponedActions.ForEach(x => x.Invoke());
+                    PostponedActions.Clear();
+
                     ImGui.EndMenu();
                 }
                 RenderIcon(pos);
             }
             public List<MenuItem> Items;
+            protected List<Action> PostponedActions = new();
         }
 
         public class MenuSeparator : MenuItem {

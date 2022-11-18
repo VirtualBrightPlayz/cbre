@@ -3,7 +3,7 @@
     <Description>A .NET wrapper for the Dear ImGui library.</Description>
     <AssemblyVersion>1.82.0</AssemblyVersion>
     <Authors>Eric Mellino</Authors>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>portable</DebugType>
     <AssemblyName>ImGui.NET</AssemblyName>
@@ -14,6 +14,10 @@
     <PackageProjectUrl>https://github.com/mellinoe/imgui.net</PackageProjectUrl>
     <DocumentationFile Condition="'$(Configuration)' == 'Release'">$(OutputPath)\ImGui.NET.xml</DocumentationFile>
     <RootNamespace>ImGuiNET</RootNamespace>
+    <Platforms>AnyCPU;x86</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile>bin\Release\\ImGui.NET.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />
@@ -49,6 +53,19 @@
       <Pack>true</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </ContentWithTargetPath>
+
+    <ContentWithTargetPath Include=".\cimgui\win-x64\cimguizmo.dll">
+      <TargetPath>runtimes\win-x64\native\cimguizmo.dll</TargetPath>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ContentWithTargetPath>
+    <!-- TODO -->
+    <!-- <ContentWithTargetPath Include=".\cimgui\linux-x64\cimguizmo.so">
+      <TargetPath>runtimes/linux-x64/native/libcimguizmo.so</TargetPath>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </ContentWithTargetPath> -->
+
     <ContentWithTargetPath Include=".\build\net40\ImGui.NET.targets">
       <TargetPath>build/net40/ImGui.NET.targets</TargetPath>
       <Pack>true</Pack>

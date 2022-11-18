@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Microsoft.Xna.Framework.Input;
 
 namespace CBRE.Settings {
@@ -9,7 +10,7 @@ namespace CBRE.Settings {
         public bool Ctrl { get; private set; } = false;
         public bool Shift { get; private set; } = false;
         public bool Alt { get; private set; } = false;
-        public List<Keys> ShortcutKeys { get; private set; } = new List<Keys>();
+        public ImmutableHashSet<Keys> ShortcutKeys { get; private set; }
 
         public HotkeyImplementation(HotkeyDefinition definition, string hotkey) {
             Definition = definition;
@@ -18,28 +19,35 @@ namespace CBRE.Settings {
         }
 
         public void SetupKeys() {
-            ShortcutKeys = new List<Keys>();
+            var shortcutKeys = new HashSet<Keys>();
+            if (Hotkey == "+") {
+                shortcutKeys.Add(Keys.Add);
+                shortcutKeys.Add(Keys.OemPlus);
+            }
             string[] keys = Hotkey.Split("+");
             for (int i = 0; i < keys.Length; i++) {
-                if (keys[i].ToLower() == "ctrl") {
+                string keyLower = keys[i].ToLowerInvariant();
+                if (keyLower == "ctrl") {
                     Ctrl = true;
-                }
-                else if (keys[i].ToLower() == "shift") {
+                } else if (keyLower == "shift") {
                     Shift = true;
-                }
-                else if (keys[i].ToLower() == "alt") {
+                } else if (keyLower == "alt") {
                     Alt = true;
-                }
-                else if (keys[i].ToLower() == "[") {
-                    ShortcutKeys.Add(Keys.OemOpenBrackets);
-                }
-                else if (keys[i].ToLower() == "]") {
-                    ShortcutKeys.Add(Keys.OemCloseBrackets);
-                }
-                else {
-                    ShortcutKeys.Add(Enum.TryParse<Keys>(keys[i], true, out Keys res) ? res : Keys.None);
+                } else if (keyLower == "[") {
+                    shortcutKeys.Add(Keys.OemOpenBrackets);
+                } else if (keyLower == "]") {
+                    shortcutKeys.Add(Keys.OemCloseBrackets);
+                } else if (keyLower == "del") {
+                    shortcutKeys.Add(Keys.Delete);
+                } else if (keyLower == "-") {
+                    shortcutKeys.Add(Keys.Subtract);
+                    shortcutKeys.Add(Keys.OemMinus);
+                } else {
+                    shortcutKeys.Add(Enum.TryParse<Keys>(keys[i], true, out Keys res) ? res : Keys.None);
                 }
             }
+
+            ShortcutKeys = shortcutKeys.ToImmutableHashSet();
         }
     }
 }

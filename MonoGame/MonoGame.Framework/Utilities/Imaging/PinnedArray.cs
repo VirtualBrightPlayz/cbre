@@ -34,29 +34,23 @@ namespace MonoGame.Utilities
         }
     }
 
-    internal unsafe class PinnedArray<T> : Pointer
+    internal unsafe class PinnedArray<T> : Pointer where T : struct
     {
-        private GCHandle _handle;
         private bool _disposed;
-        private void* _ptr;
         private long _size;
 
-        public GCHandle Handle
-        {
-            get { return _handle; }
-        }
-
+        private void* _ptr;
         public override void* Ptr
         {
             get { return _ptr; }
         }
 
-        public T[] Data { get; private set; }
+        public Span<T> Data => new Span<T>(_ptr, (int)Count);
 
         public T this[long index]
         {
-            get { return Data[index]; }
-            set { Data[index] = value; }
+            get { return Data[(int)index]; }
+            set { Data[(int)index] = value; }
         }
 
         public long Count { get; private set; }
@@ -69,30 +63,16 @@ namespace MonoGame.Utilities
         public long ElementSize { get; private set; }
 
         public PinnedArray(long size)
-            : this(new T[size])
         {
-        }
-
-        public PinnedArray(T[] data)
-        {
-            Data = data;
-
-            _ptr = null;
-            if (data != null)
-            {
-                _handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-                var addr = _handle.AddrOfPinnedObject();
-                _ptr = addr.ToPointer();
-                ElementSize = Marshal.SizeOf(typeof (T));
-                Count = data.Length;
-                _size = ElementSize*data.Length;
+            ElementSize = Marshal.SizeOf(typeof(T));
+            Count = size;
+            _size = Count * ElementSize;
+            try {
+                _ptr = Marshal.AllocHGlobal((int)_size).ToPointer();
+            } catch (OutOfMemoryException oom) {
+                throw new OutOfMemoryException($"Failed to allocate {_size} bytes");
             }
-            else
-            {
-                ElementSize = 0;
-                Count = 0;
-                _size = 0;
-            }
+            GC.AddMemoryPressure(_size);
 
             lock (_lock)
             {
@@ -129,11 +109,11 @@ namespace MonoGame.Utilities
                 _allocatedTotal -= Size;
             }
 
-            if (Data != null)
+            if (_ptr != null)
             {
-                _handle.Free();
+                Marshal.FreeHGlobal((IntPtr)_ptr);
+                GC.RemoveMemoryPressure(_size);
                 _ptr = null;
-                Data = null;
                 _size = 0;
             }
 

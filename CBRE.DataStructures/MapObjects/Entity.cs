@@ -23,6 +23,32 @@ namespace CBRE.DataStructures.MapObjects {
             }
         }
 
+        public Matrix RightHandedWorldMatrix {
+            get {
+                var scale = EntityData.GetPropertyVector3("scale", Vector3.One);
+                scale = new Vector3(scale.X, scale.Z, scale.Y);
+                var angles = EntityData.GetPropertyVector3("angles", Vector3.Zero);
+                Matrix pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
+                Matrix yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
+                Matrix roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
+                var tform = ((pitch * yaw * roll) * Matrix.Scale(scale)).Translate(Origin);
+                return tform;
+            }
+        }
+
+        public Matrix LeftHandedWorldMatrix {
+            get {
+                var scale = EntityData.GetPropertyVector3("scale", Vector3.One);
+                scale = new Vector3(scale.X, scale.Z, scale.Y);
+                var angles = EntityData.GetPropertyVector3("angles", Vector3.Zero);
+                Matrix pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
+                Matrix yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
+                Matrix roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
+                var tform = ((pitch * yaw * roll) * Matrix.Scale(scale)).Transpose().Translate(Origin);
+                return tform;
+            }
+        }
+
         public Entity(long id) : base(id) {
             EntityData = new EntityData();
         }
@@ -89,8 +115,8 @@ namespace CBRE.DataStructures.MapObjects {
                 var add = new Vector3(16, 16, 16);
                 var behav = GameData.Behaviours.SingleOrDefault(x => x.Name == "size");
                 if (behav != null && behav.Values.Count >= 6) {
-                    sub = behav.GetVector3(0);
-                    add = behav.GetVector3(1);
+                    sub = behav.GetVector3(0) ?? Vector3.Zero;
+                    add = behav.GetVector3(1) ?? Vector3.Zero;
                 } else if (GameData.Name == "infodecal") {
                     sub = Vector3.One * -4m;
                     add = Vector3.One * 4m;
@@ -192,11 +218,11 @@ namespace CBRE.DataStructures.MapObjects {
         /// </summary>
         /// <param name="line">The intersection line</param>
         /// <returns>The closest intersecting point, or null if the line doesn't intersect.</returns>
-        public override Vector3 GetIntersectionPoint(Line line) {
+        public override Vector3? GetIntersectionPoint(Line line) {
             var faces = GetBoxFaces().Union(MetaData.GetAll<List<Face>>().SelectMany(x => x));
             return faces.Select(x => x.GetIntersectionPoint(line))
                 .Where(x => x != null)
-                .OrderBy(x => (x - line.Start).VectorMagnitude())
+                .OrderBy(x => (x.Value - line.Start).VectorMagnitude())
                 .FirstOrDefault();
         }
 

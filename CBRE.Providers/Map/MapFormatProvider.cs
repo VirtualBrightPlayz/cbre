@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using static CBRE.Common.PrimitiveConversion;
 
 namespace CBRE.Providers.Map {
     public class MapFormatProvider : MapProvider {
@@ -52,8 +53,6 @@ namespace CBRE.Providers.Map {
         }
 
         private Face ReadFace(string line, IDGenerator generator) {
-            const NumberStyles ns = NumberStyles.Float;
-
             var parts = line.Split(' ').Where(x => !String.IsNullOrWhiteSpace(x)).ToList();
 
 
@@ -74,11 +73,11 @@ namespace CBRE.Providers.Map {
             // Cater for older-style map formats
             if (parts.Count == 21) {
                 face.AlignTextureToFace();
-                face.Texture.XShift = decimal.Parse(parts[16], ns);
-                face.Texture.YShift = decimal.Parse(parts[17], ns);
-                face.Texture.Rotation = decimal.Parse(parts[18], ns);
-                face.Texture.XScale = decimal.Parse(parts[19], ns);
-                face.Texture.YScale = decimal.Parse(parts[20], ns);
+                face.Texture.XShift = ParseDecimal(parts[16]);
+                face.Texture.YShift = ParseDecimal(parts[17]);
+                face.Texture.Rotation = ParseDecimal(parts[18]);
+                face.Texture.XScale = ParseDecimal(parts[19]);
+                face.Texture.YScale = ParseDecimal(parts[20]);
             } else {
                 Assert(parts[16] == "[");
                 Assert(parts[21] == "]");
@@ -86,12 +85,12 @@ namespace CBRE.Providers.Map {
                 Assert(parts[27] == "]");
 
                 face.Texture.UAxis = Vector3.Parse(parts[17], parts[18], parts[19]);
-                face.Texture.XShift = decimal.Parse(parts[20], ns);
+                face.Texture.XShift = ParseDecimal(parts[20]);
                 face.Texture.VAxis = Vector3.Parse(parts[23], parts[24], parts[25]);
-                face.Texture.YShift = decimal.Parse(parts[26], ns);
-                face.Texture.Rotation = decimal.Parse(parts[28], ns);
-                face.Texture.XScale = decimal.Parse(parts[29], ns);
-                face.Texture.YScale = decimal.Parse(parts[30], ns);
+                face.Texture.YShift = ParseDecimal(parts[26]);
+                face.Texture.Rotation = ParseDecimal(parts[28]);
+                face.Texture.XScale = ParseDecimal(parts[29]);
+                face.Texture.YScale = ParseDecimal(parts[30]);
             }
 
             return face;

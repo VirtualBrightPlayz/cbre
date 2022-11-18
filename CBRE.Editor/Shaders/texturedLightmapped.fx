@@ -2,20 +2,13 @@ float4x4 World;
 float4x4 View;
 float4x4 Projection;
 float4x4 Selection;
-float Alpha;
 
-Texture2D xTexture;
-Texture2D yTexture;
-// Texture2D yTexture0;
-// Texture2D yTexture1;
-// Texture2D yTexture2;
-// Texture2D yTexture3;
-sampler TextureSampler : register (s0) = sampler_state { Texture = <xTexture>; };
-sampler TextureSampler0 : register (s1) = sampler_state { Texture = <yTexture>; };
-// sampler TextureSampler0 : register (s1) = sampler_state { Texture = <yTexture0>; };
-// sampler TextureSampler1 : register (s2) = sampler_state { Texture = <yTexture1>; };
-// sampler TextureSampler2 : register (s3) = sampler_state { Texture = <yTexture2>; };
-// sampler TextureSampler3 : register (s4) = sampler_state { Texture = <yTexture3>; };
+Texture2D diffTexture;
+Texture2D lmTexture;
+sampler diffSampler : register (s0) = sampler_state { Texture = <diffTexture>; };
+sampler lmSampler : register (s1) = sampler_state { Texture = <lmTexture>; };
+
+float lmGamma;
 
 struct VertexShaderInput
 {
@@ -61,17 +54,16 @@ VertexShaderOutput VertexShaderF(VertexShaderInput input)
 
 float4 PixelShaderF(VertexShaderOutput input) : COLOR0
 {
-    // float lighting1 = dot(input.Normal, float3(0.2672,0.8017,0.5345)) * 0.25 + 0.75;
-    // float4 lighting = float4(lighting1, lighting1, lighting1, lighting1);
+    float4 lighting;
+    /*if ((input.LmCoord.x > 1.0 || input.LmCoord.x < 0.0) && (input.LmCoord.y > 1.0 || input.LmCoord.y < 0.0)) {
+        float lighting1 = dot(input.Normal, float3(0.2672,0.8017,0.5345)) * 0.25 + 0.75;
+        lighting = float4(lighting1, lighting1, lighting1, 1.0);
+    } else {*/
+        lighting = tex2D(lmSampler, input.LmCoord) * lmGamma;
+    // }
 
-    float4 lighting = tex2D(TextureSampler0, input.LmCoord);
+    float4 c = (tex2D(diffSampler, input.TexCoord) * lighting) * float4(1.0, 1.0 - input.Selected, 1.0 - input.Selected, 1.0);
 
-    float4 c = (tex2D(TextureSampler, input.TexCoord) * lighting) * float4(1.0, 1.0 - input.Selected, 1.0 - input.Selected, 1.0);
-    if ((input.TexCoord.x > 1f || input.TexCoord.x < 0f) && (input.TexCoord.y > 1f || input.TexCoord.y < 0f)) {
-        c.a = 0.0;
-    }
-
-    c.a = Alpha;
     return c;
 }
 

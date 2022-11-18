@@ -10,6 +10,9 @@
             }
         }
 
+        public virtual void Draw() {
+        }
+
         protected readonly IBrush Brush;
 
         private BrushControl() {
