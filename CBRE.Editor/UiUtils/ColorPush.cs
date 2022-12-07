@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using CBRE.Graphics;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -22,7 +23,7 @@ namespace CBRE.Editor {
             => new ColorPush(ImGuiCol.Button, (Num.Vector4?)null);
         
         private readonly bool pushed;
-        
+
         public ColorPush(ImGuiCol element, Num.Vector4? color) {
             if (color.HasValue) { ImGui.PushStyleColor(element, color.Value); }
             pushed = color.HasValue;
@@ -36,11 +37,11 @@ namespace CBRE.Editor {
             (float)color.B / 255f,
             (float)color.A / 255f)) { }
         
-        public ColorPush(ImGuiCol element, System.Drawing.Color color) : this(element, new Num.Vector4(
-            (float)color.R / 255f,
-            (float)color.G / 255f,
-            (float)color.B / 255f,
-            (float)color.A / 255f)) { }
+        public ColorPush(ImGuiCol element, Veldrid.RgbaFloat color) : this(element, new Num.Vector4(
+            color.R,
+            color.G,
+            color.B,
+            color.A)) { }
         
         public void Dispose() {
             if (pushed) { ImGui.PopStyleColor(); }

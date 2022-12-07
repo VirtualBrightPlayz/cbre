@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -16,6 +17,12 @@ namespace CBRE.Graphics {
         public static ImGuiRenderer ImGuiRenderer { get; private set; }
         public static Texture BlankWhiteTexture { get; private set; }
         public static Sampler PointSampler { get; private set; }
+
+        public static class SelectedColors {
+            public static readonly Vector4 Button = new Vector4(0.3f, 0.6f, 0.7f, 1.0f);
+            public static readonly Vector4 ButtonActive = new Vector4(0.15f, 0.3f, 0.4f, 1.0f);
+            public static readonly Vector4 ButtonHovered = new Vector4(0.45f, 0.9f, 1.0f, 1.0f);
+        }
 
         public static void Set(GraphicsDevice gfxDev, Sdl2Window window, ImGuiRenderer imGuiRenderer) {
             GraphicsDevice = gfxDev;

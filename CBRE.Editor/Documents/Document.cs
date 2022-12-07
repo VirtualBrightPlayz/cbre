@@ -40,7 +40,7 @@ namespace CBRE.Editor.Documents {
 
         public ObjectRenderer ObjectRenderer { get; private set; }
         public bool LightmapTextureOutdated { get; set; }
-        public List<Texture2D> MGLightmaps { get; set; } = null;
+        public List<ITextureResource> MGLightmaps { get; set; } = null;
         public List<Face> BakedFaces { get; set; } = new List<Face>();
 
         private readonly DocumentSubscriptions _subscriptions;
@@ -280,7 +280,7 @@ namespace CBRE.Editor.Documents {
         }
 
         public Matrix SelectListTransform {
-            get { return ObjectRenderer.Effects.TexturedShaded.Parameters["Selection"].GetValueMatrix().ToCbre(); }
+            get { return ObjectRenderer.Effects.TexturedShaded.Parameters["Selection"].GetValue<System.Numerics.Matrix4x4>().ToCbre(); }
             set {
                 ObjectRenderer.Effects.TexturedLightmapped.Parameters["Selection"].SetValue(value.ToXna());
                 ObjectRenderer.Effects.TexturedShaded.Parameters["Selection"].SetValue(value.ToXna());

@@ -6,8 +6,10 @@ using CBRE.Graphics;
 using CBRE.Settings;
 using ImGuiNET;
 using ImGuizmoNET;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
+using Num = System.Numerics;
+using Vector2 = System.Numerics.Vector2;
+using Vector3 = System.Numerics.Vector3;
+using Matrix = System.Numerics.Matrix4x4;
 
 namespace CBRE.Editor.Tools.Widgets {
     public class ImGuizmoWidget : Widget {

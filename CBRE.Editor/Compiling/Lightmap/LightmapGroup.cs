@@ -8,6 +8,8 @@ using CBRE.Editor.Rendering;
 using CBRE.Graphics;
 using Microsoft.Xna.Framework;
 using Vector3 = CBRE.DataStructures.Geometric.Vector3;
+using System.Drawing;
+using System.Numerics;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     /// <summary>
@@ -238,7 +240,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     lmUv: new Vector2(
                         MathF.Floor(u / LightmapConfig.DownscaleFactor + StartWriteUV.U) / LightmapConfig.TextureDims,
                         MathF.Floor(v / LightmapConfig.DownscaleFactor + StartWriteUV.V) / LightmapConfig.TextureDims),
-                    color: Color.White,
+                    color: Vector4.One,
                     selected: false);
 
             yield return genVert(0.0f, 0.0f);

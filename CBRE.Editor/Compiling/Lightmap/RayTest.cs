@@ -76,7 +76,7 @@ sealed partial class Lightmapper {
                 groupToAtlas.Add(group, atlas);
             }
         }
-        Document.MGLightmaps ??= new List<Texture2D>();
+        Document.MGLightmaps ??= new List<ITextureResource>();
 
         var atlasBuffers = new Dictionary<Atlas, RenderBuffer>();
         foreach (var atlas in atlases) {

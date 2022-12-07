@@ -17,6 +17,8 @@ namespace CBRE.Graphics {
         public BlendState _prevState;
         public RgbaFloat BlendFactor { get; set; } = RgbaFloat.White;
         public BlendState BlendState { get; set; } = BlendState.Opaque;
+        public DepthStencilState DepthStencilState { get; set; } = DepthStencilState.Default;
+        public RasterizerState RasterizerState { get; set; } = RasterizerState.CullNone;
         private string _name;
 
         public Effect(string path) {
@@ -64,7 +66,7 @@ namespace CBRE.Graphics {
                     break;
             }
             desc.BlendState = new BlendStateDescription(BlendFactor, blendAttachment);
-            desc.DepthStencilState = DepthStencilStateDescription.Disabled;
+            desc.DepthStencilState = new DepthStencilStateDescription(DepthStencilState.DepthBufferEnable, DepthStencilState.DepthBufferWriteEnable, ComparisonKind.LessEqual);
             desc.RasterizerState = RasterizerStateDescription.Default;
             desc.PrimitiveTopology = PrimitiveTopology.TriangleList;
             desc.ResourceLayouts = _layouts.ToArray();

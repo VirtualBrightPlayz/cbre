@@ -149,7 +149,7 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                 }
                 document.MGLightmaps = null;
             }
-            document.MGLightmaps ??= new List<Texture2D>();
+            document.MGLightmaps ??= new List<ITextureResource>();
             // for (int i = 0; i < 4; i++) {
                 // document.MGLightmaps.Add(null);
             // }
@@ -441,13 +441,13 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                         var texture = document.MGLightmaps[i];
                         if (lmCount == 1) {
                             FileStream fs = File.OpenWrite(iPath + ".png");
-                            texture.SaveAsPng(fs, texture.Width, texture.Height);
+                            texture.SaveAsPng(fs);
                             fs.Close();
                         } else {
                             for (int j = 0; j < lmCount; j++) {
                                 
                                 FileStream fs = File.OpenWrite(iPath + "_" + j.ToString() + ".png");
-                                texture.SaveAsPng(fs, texture.Width, texture.Height);
+                                texture.SaveAsPng(fs);
                                 fs.Close();
                                 /*int x = ((j % 2) * LightmapConfig.TextureDims);
                                 int y = ((j / 2) * LightmapConfig.TextureDims);

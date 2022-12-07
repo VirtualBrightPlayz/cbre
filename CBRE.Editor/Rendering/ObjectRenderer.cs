@@ -543,7 +543,7 @@ namespace CBRE.Editor.Rendering {
         public ObjectRenderer(Document doc) {
             Document = doc;
 
-            Effects.BasicEffect = new BasicEffect(GlobalGraphics.GraphicsDevice);
+            Effects.BasicEffect = GlobalGraphics.LoadBasicEffect();
             Effects.TexturedLightmapped = GlobalGraphics.LoadEffect("Shaders/texturedLightmapped.mgfx");
             Effects.TexturedShaded = GlobalGraphics.LoadEffect("Shaders/texturedShaded.mgfx");
             Effects.SolidShaded = GlobalGraphics.LoadEffect("Shaders/solidShaded.mgfx");

@@ -3,7 +3,7 @@ using System.IO;
 using Veldrid;
 
 namespace CBRE.Graphics {
-    public class RenderTarget2D : GraphicsResource {
+    public class RenderTarget2D : GraphicsResource, ITextureResource {
         internal Texture _texture;
         internal Texture _depth;
         internal Framebuffer _framebuffer;
@@ -36,6 +36,10 @@ namespace CBRE.Graphics {
 
         public void SaveAsPng(Stream stream) {
             GlobalGraphics.SaveAsPng(_texture, stream, _texture.Width, _texture.Height);
+        }
+
+        public Texture GetInternalTexture() {
+            return _texture;
         }
     }
 

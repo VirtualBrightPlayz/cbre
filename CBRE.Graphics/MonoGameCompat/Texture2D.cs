@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using Veldrid;
 
 namespace CBRE.Graphics {
-    public class Texture2D : GraphicsResource {
+    public class Texture2D : GraphicsResource, ITextureResource {
         internal Texture _texture;
         public string Name { get => _texture.Name; set => _texture.Name = value; }
         public int Width => (int)_texture.Width;
@@ -20,6 +20,10 @@ namespace CBRE.Graphics {
         public Texture2D(uint w, uint h) {
             TextureDescription texDesc = TextureDescription.Texture2D(w, h, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled | TextureUsage.Staging);
             _texture = GlobalGraphics.GraphicsDevice.ResourceFactory.CreateTexture(texDesc);
+        }
+
+        public Texture2D(Texture tex) {
+            _texture = tex;
         }
 
         public override void Dispose() {
@@ -41,6 +45,10 @@ namespace CBRE.Graphics {
 
         public void SaveAsPng(Stream stream) {
             GlobalGraphics.SaveAsPng(_texture, stream, _texture.Width, _texture.Height);
+        }
+
+        public Texture GetInternalTexture() {
+            return _texture;
         }
     }
 }

@@ -34,6 +34,10 @@ namespace CBRE.Graphics {
             CommandList.SetIndexBuffer(buffer._buffer, buffer._indexFormat);
         }
 
+        public static void DrawPrimitives(PrimitiveType type, int offset, int count) {
+            CommandList.Draw((uint)count);
+        }
+
         public static void DrawIndexedPrimitives(PrimitiveType type, int offset, int stride, int indices) {
             CommandList.DrawIndexed((uint)indices);
         }
@@ -65,9 +69,14 @@ namespace CBRE.Graphics {
             Effect eff = new Effect(path);
             return eff;
         }
+
+        public static Effect LoadBasicEffect() {
+            Effect eff = new Effect("Shaders/basic.mgfx");
+            return eff;
+        }
     }
 
-    public class DepthStencilState {
+    public sealed class DepthStencilState {
         public static readonly DepthStencilState None = new DepthStencilState() {
             DepthBufferEnable = false,
             DepthBufferWriteEnable = false,
@@ -85,5 +94,27 @@ namespace CBRE.Graphics {
         Target = 1,
         DepthBuffer = 2,
         Stencil = 4,
+    }
+
+    public sealed class RasterizerState {
+        public static readonly RasterizerState CullCounterClockwise = new RasterizerState() {
+            CullMode = FaceCullMode.Back,
+            FillMode = PolygonFillMode.Solid,
+            Front = FrontFace.CounterClockwise,
+            DepthClipEnabled = true,
+            ScissorTestEnabled = false,
+        };
+        public static readonly RasterizerState CullNone = new RasterizerState() {
+            CullMode = FaceCullMode.None,
+            FillMode = PolygonFillMode.Solid,
+            Front = FrontFace.Clockwise,
+            DepthClipEnabled = true,
+            ScissorTestEnabled = false,
+        };
+        public FaceCullMode CullMode { get; set; }
+        public PolygonFillMode FillMode { get; set; }
+        public FrontFace Front { get; set; }
+        public bool DepthClipEnabled { get; set; }
+        public bool ScissorTestEnabled { get; set; }
     }
 }

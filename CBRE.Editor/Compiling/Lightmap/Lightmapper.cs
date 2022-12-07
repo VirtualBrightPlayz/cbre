@@ -192,7 +192,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 catch (Exception e) {
                     Mediator.Publish(EditorMediator.CompileFailed, Document);
                     Logging.Logger.ShowException(e);
-                    GlobalGraphics.GraphicsDevice.SetRenderTarget(null);
+                    GlobalGraphics.SetRenderTarget(null);
                 }
                 signal = true;
             });
@@ -284,20 +284,20 @@ namespace CBRE.Editor.Compiling.Lightmap {
             public void RenderGeom() {
                 var gd = GlobalGraphics.GraphicsDevice;
                 
-                gd.SetVertexBuffer(GeomVertices);
-                gd.Indices = GeomIndices;
-                gd.DrawIndexedPrimitives(
-                    primitiveType: PrimitiveType.TriangleList,
+                GlobalGraphics.SetVertexBuffer(GeomVertices);
+                GlobalGraphics.SetIndexBuffer(GeomIndices);
+                GlobalGraphics.DrawIndexedPrimitives(
+                    PrimitiveType.TriangleList,
                     0, 0, indexCount / 3);
             }
 
             public void RenderGroups() {
                 var gd = GlobalGraphics.GraphicsDevice;
 
-                gd.SetVertexBuffer(GroupVertices);
-                gd.Indices = GroupIndices;
-                gd.DrawIndexedPrimitives(
-                    primitiveType: PrimitiveType.TriangleList,
+                GlobalGraphics.SetVertexBuffer(GroupVertices);
+                GlobalGraphics.SetIndexBuffer(GroupIndices);
+                GlobalGraphics.DrawIndexedPrimitives(
+                    PrimitiveType.TriangleList,
                     0, 0, Groups.Count * 2);
             }
 
