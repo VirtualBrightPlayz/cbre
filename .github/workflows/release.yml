@@ -1,4 +1,4 @@
-name: .NET Debug
+name: .NET Release
 
 on:
   workflow_dispatch:
@@ -18,11 +18,11 @@ jobs:
 
     - name: Build nfd.lib
       working-directory: ${{github.workspace}}/NativeFileDialog.NET/dynamicLib/VS2019/
-      run: msbuild './nfd.vcxproj' -p:Configuration='Debug' -p:Platform='x64'
+      run: msbuild './nfd.vcxproj' -p:Configuration='Release' -p:Platform='x64'
 
     - name: Build nfd.dll
       working-directory: ${{github.workspace}}/NativeFileDialog.NET/dynamicLib/VS2019/
-      run: msbuild './nfd_dll.vcxproj' -p:Configuration='Debug' -p:Platform='x64'
+      run: msbuild './nfd_dll.vcxproj' -p:Configuration='Release' -p:Platform='x64'
       
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
@@ -31,14 +31,14 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore CBRE.Editor
     - name: Build
-      run: dotnet build CBRE.Editor -p:Platform="x64" -c Debug
+      run: dotnet build CBRE.Editor -p:Platform="x64" -c Release
 
     - name: Output Git Info to file
-      working-directory: ${{github.workspace}}/CBRE.Editor/bin/x64/Debug/net6.0/
+      working-directory: ${{github.workspace}}/CBRE.Editor/bin/x64/Release/net6.0/
       run: git log -1 --format=%h > gitinfo.txt
 
     - uses: actions/upload-artifact@v2
       with:
         name: CBRE.Editor Build
-        path: CBRE.Editor/bin/x64/Debug/net6.0/
+        path: CBRE.Editor/bin/x64/Release/net6.0/
         retention-days: 5

@@ -24,7 +24,7 @@ You can find the original source code at https://github.com/SCP-CBN/cbre
 
 Make sure to install vc_redist_x86 from [here](https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist) when on Windows
 
-There is not any releases at this time, however there is a GitHub Actions script so you can download the latest from [the Actions tab](https://github.com/VirtualBrightPlayz/cbre/actions/workflows/dotnet.yml).
+There is a GitHub Actions script so you can download the latest from [the Actions tab](https://github.com/VirtualBrightPlayz/cbre/actions).
 
 # Building
 
