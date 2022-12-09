@@ -164,6 +164,18 @@ namespace CBRE.Editor.Popup {
             ImGui.Separator();
             ImGui.Text("External Lightmapper");
 
+            if (ImGui.Button("Export GLB.##external")) {
+                Task.Run(async () => {
+                    try {
+                        lightmapper = new Lightmapper(document);
+                        await lightmapper.ExportGLB();
+                    } catch (Exception e) {
+                        Mediator.Publish(EditorMediator.CompileFailed, document);
+                        Logging.Logger.ShowException(e);
+                    }
+                });
+            }
+
             if (ImGui.Button("Render##external")) {
                 Task.Run(async () => {
                     try {
