@@ -53,36 +53,51 @@ sealed partial class Lightmapper {
         }, token);
 
         // UpdateProgress("Calculating brightness levels... (Step 3/3)", 0);
-        float scale = 1f / 128f;
+        // float scale = 1f / 128f;
+        float scale = 1f;// / 128f;
         // int progressCount = 0;
         // int progressMax = atlases.Length * (pointLights.Length + spotLights.Length);
             ModelRoot root = ModelRoot.CreateModel();
-            for (int atlasIndex = 0; atlasIndex < atlases.Length; atlasIndex++) {
-                var atlas = atlases[atlasIndex];
-                foreach (var group in atlas.Groups) {
-                    foreach (var face in group.Faces) {
-                        Node n = root.CreateLogicalNode();
-                        var meshBuilder = new MeshBuilder<VertexPositionNormal, SharpGLTF.Geometry.VertexTypes.VertexTexture2>($"atlas_{atlasIndex}");
-                        var prim = meshBuilder.UsePrimitive(new SharpGLTF.Materials.MaterialBuilder("Default"));
-                        foreach (var tri in face.GetTriangles()) {
-                            var p0 = new VertexPositionNormal(tri[0].Location.ToNum() * scale, face.Normal.ToNum());
-                            var p1 = new VertexPositionNormal(tri[1].Location.ToNum() * scale, face.Normal.ToNum());
-                            var p2 = new VertexPositionNormal(tri[2].Location.ToNum() * scale, face.Normal.ToNum());
-                            var t0 = new VertexTexture2(new System.Numerics.Vector2(tri[0].DiffU, tri[0].DiffV), new System.Numerics.Vector2(tri[0].LMU, tri[0].LMV));
-                            var t1 = new VertexTexture2(new System.Numerics.Vector2(tri[1].DiffU, tri[1].DiffV), new System.Numerics.Vector2(tri[1].LMU, tri[1].LMV));
-                            var t2 = new VertexTexture2(new System.Numerics.Vector2(tri[2].DiffU, tri[2].DiffV), new System.Numerics.Vector2(tri[2].LMU, tri[2].LMV));
-                            var v0 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p0, t0);
-                            var v1 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p1, t1);
-                            var v2 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p2, t2);
-                            var val = prim.AddTriangle(v2, v1, v0);
-                            /*if (val.A == -1 || val.B == -1 || val.C == -1) {
-                                Debugger.Break();
-                            }*/
+            {
+                Dictionary<ITexture, PrimitiveBuilder<SharpGLTF.Materials.MaterialBuilder, VertexPositionNormal, VertexTexture2, VertexEmpty>> dict = new Dictionary<ITexture, PrimitiveBuilder<SharpGLTF.Materials.MaterialBuilder, VertexPositionNormal, VertexTexture2, VertexEmpty>>();
+                Node n = root.CreateLogicalNode();
+                var meshBuilder = new MeshBuilder<VertexPositionNormal, SharpGLTF.Geometry.VertexTypes.VertexTexture2>($"atlas_{0}");
+                for (int atlasIndex = 0; atlasIndex < atlases.Length; atlasIndex++) {
+                    var atlas = atlases[atlasIndex];
+                    foreach (var group in atlas.Groups) {
+                        foreach (var face in group.Faces) {
+                            // Node n = root.CreateLogicalNode();
+                            // var meshBuilder = new MeshBuilder<VertexPositionNormal, SharpGLTF.Geometry.VertexTypes.VertexTexture2>($"atlas_{atlasIndex}");
+                            PrimitiveBuilder<SharpGLTF.Materials.MaterialBuilder, VertexPositionNormal, VertexTexture2, VertexEmpty> prim = null;
+                            if (dict.ContainsKey(face.Texture.Texture))
+                                prim = dict[face.Texture.Texture];
+                            else
+                            {
+                                string path = face.Texture.Texture is AsyncTexture tex ? tex.Filename : face.Texture.Name;
+                                prim = meshBuilder.UsePrimitive(new SharpGLTF.Materials.MaterialBuilder(face.Texture.Name).WithChannelImage("BaseColor", path));
+                            }
+                            foreach (var tri in face.GetTriangles()) {
+                                var p0 = new VertexPositionNormal(tri[0].Location.ToNum() * scale, face.Normal.ToNum());
+                                var p1 = new VertexPositionNormal(tri[1].Location.ToNum() * scale, face.Normal.ToNum());
+                                var p2 = new VertexPositionNormal(tri[2].Location.ToNum() * scale, face.Normal.ToNum());
+                                var t0 = new VertexTexture2(new System.Numerics.Vector2(tri[0].DiffU, tri[0].DiffV), new System.Numerics.Vector2(tri[0].LMU, tri[0].LMV));
+                                var t1 = new VertexTexture2(new System.Numerics.Vector2(tri[1].DiffU, tri[1].DiffV), new System.Numerics.Vector2(tri[1].LMU, tri[1].LMV));
+                                var t2 = new VertexTexture2(new System.Numerics.Vector2(tri[2].DiffU, tri[2].DiffV), new System.Numerics.Vector2(tri[2].LMU, tri[2].LMV));
+                                var v0 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p0, t0);
+                                var v1 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p1, t1);
+                                var v2 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p2, t2);
+                                var val = prim.AddTriangle(v2, v1, v0);
+                                /*if (val.A == -1 || val.B == -1 || val.C == -1) {
+                                    Debugger.Break();
+                                }*/
+                            }
+                            // var mesh = root.CreateMesh(meshBuilder);
+                            // n.Mesh = mesh;
                         }
-                        var mesh = root.CreateMesh(meshBuilder);
-                        n.Mesh = mesh;
                     }
                 }
+                var mesh = root.CreateMesh(meshBuilder);
+                n.Mesh = mesh;
             }
 
             for (int i = 0; i < pointLights.Length; i++) {
