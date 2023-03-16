@@ -33,6 +33,8 @@ Install [Naxela's The Lightmapper addon for Blender](https://github.com/Naxela/T
 
 Copy the files from `BlenderBaking` into your install of `CBRE.Editor` and change the `raytrace-lm.bat`'s contents to point to a valid install of Blender.
 
+Create an empty blender file setup for baking with The Lightmapper named `bake.blend` in the same place as `CBRE.Editor`
+
 # Building
 
 ## Required SDKs
