@@ -161,7 +161,7 @@ sealed partial class Lightmapper {
         await WaitForRender("External UV coords", () => {
             if (Document.MGLightmaps is not null) {
                 foreach (var lm in Document.MGLightmaps) {
-                    lm.Dispose();
+                    lm?.Dispose();
                 }
                 Document.MGLightmaps = null;
             }
@@ -220,7 +220,7 @@ sealed partial class Lightmapper {
                     : 0.0f;
             light.Color = data.GetPropertyVector3("color").ToNum() / 255f;
             light.Range = getPropertyFloat("range") * scale;
-            light.Intensity = getPropertyFloat("intensity");
+            light.Intensity = getPropertyFloat("intensity") * LightmapConfig.BakeGamma;
             light.Extras = SharpGLTF.IO.JsonContent.Serialize(new ExternalLightData(MathF.Max(1f, getPropertyFloat("size")) * scale));
             n.PunctualLight = light;
             n.WithLocalTranslation(pointLights[i].BoundingBox.Center.ToNum() * scale);

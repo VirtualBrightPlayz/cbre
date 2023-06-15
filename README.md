@@ -21,6 +21,14 @@ You can find the original source code at https://github.com/SCP-CBN/cbre
 - Screenshot mode
 - Discord RPC
 
+## Blender Lightmapping
+
+- Install [The Lightmapper](https://github.com/Naxela/The_Lightmapper) for Blender, make sure it's installed folder in Blender is named `thelightmapper`
+- Look in the tools folder for `raytrace-lm.bat`, `bake.blend` and `bake.py`
+- Edit `raytrace-lm.bat` to have the correct `blender.exe` file path
+- Paste `raytrace-lm.bat`, `bake.blend` and `bake.py` next to the `CBRE.Editor` and use External Lightmapper
+- Feel free to edit [The Lightmapper](https://github.com/Naxela/The_Lightmapper) settings in Blender using the `bake.blend` file
+
 # Download
 
 Make sure to install vc_redist_x86 from [here](https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist) when on Windows
