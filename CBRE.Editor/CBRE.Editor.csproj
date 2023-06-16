@@ -384,6 +384,8 @@
   <ItemGroup>
     <PackageReference Include="AssimpNet" Version="5.0.0-beta1" />
     <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
+    <PackageReference Include="SharpGLTF.Core" Version="1.0.0-alpha0027" />
+    <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.0-alpha0027" />
   </ItemGroup>
 
 </Project>

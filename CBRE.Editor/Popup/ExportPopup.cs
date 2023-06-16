@@ -34,6 +34,7 @@ namespace CBRE.Editor.Popup {
         public bool bakeModelLightmaps;
         public bool computeShadows;
         public float bakeGamma;
+        public float hitDistSqr;
 
         private Lightmapper lightmapper;
 
@@ -52,6 +53,7 @@ namespace CBRE.Editor.Popup {
             bakeModelLightmaps = LightmapConfig.BakeModelLightmaps;
             computeShadows = LightmapConfig.ComputeShadows;
             bakeGamma = LightmapConfig.BakeGamma;
+            hitDistSqr = LightmapConfig.HitDistanceSquared;
         }
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
@@ -103,6 +105,10 @@ namespace CBRE.Editor.Popup {
             ImGui.Text("Bake Gamma");
             ImGui.SameLine();
             ImGui.InputFloat("##bakeGamma", ref bakeGamma);
+
+            ImGui.Text("Hit Distance Squared");
+            ImGui.SameLine();
+            ImGui.InputFloat("##hitDistSqr", ref hitDistSqr);
             
             ImGui.PopItemWidth();
 
@@ -134,6 +140,7 @@ namespace CBRE.Editor.Popup {
                 LightmapConfig.BakeModelLightmaps = bakeModelLightmaps;
                 LightmapConfig.ComputeShadows = computeShadows;
                 LightmapConfig.BakeGamma = bakeGamma;
+                LightmapConfig.HitDistanceSquared = hitDistSqr;
             }
             
             ImGui.PopItemWidth();
@@ -153,13 +160,41 @@ namespace CBRE.Editor.Popup {
                 document.BakedFaces.Clear();
                 LegacyLightmapper.lastBakeFaces = null;
             }
+
+            ImGui.Separator();
+            ImGui.Text("External Lightmapper");
+
+            if (ImGui.Button("Export GLB.##external")) {
+                Task.Run(async () => {
+                    try {
+                        lightmapper = new Lightmapper(document);
+                        await lightmapper.ExportGLB();
+                    } catch (Exception e) {
+                        Mediator.Publish(EditorMediator.CompileFailed, document);
+                        Logging.Logger.ShowException(e);
+                    }
+                });
+            }
+
+            if (ImGui.Button("Render##external")) {
+                Task.Run(async () => {
+                    try {
+                        lightmapper = new Lightmapper(document);
+                        await lightmapper.RenderExternal();
+                    } catch (Exception e) {
+                        Mediator.Publish(EditorMediator.CompileFailed, document);
+                        Logging.Logger.ShowException(e);
+                    }
+                });
+            }
+
             ImGui.Separator();
             ImGui.Text("Modern Lightmapper (Supports limited features)");
             if (ImGui.Button("Render##new")) {
                 Task.Run(async () => {
                     try {
                         lightmapper = new Lightmapper(document);
-                        await lightmapper.RenderShadowMapped(false);
+                        await lightmapper.RenderShadowMapped();
                     } catch (Exception e) {
                         Mediator.Publish(EditorMediator.CompileFailed, document);
                         Logging.Logger.ShowException(e);

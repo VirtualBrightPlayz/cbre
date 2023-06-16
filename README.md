@@ -17,14 +17,31 @@ You can find the original source code at https://github.com/SCP-CBN/cbre
 - `.rmesh` file exporting
 - Lightmapping
 - (WIP) GPU Lightmapping
+- Lightmapping with Blender
 - Screenshot mode
 - Discord RPC
+
+## Blender Lightmapping
+
+- Install [The Lightmapper](https://github.com/Naxela/The_Lightmapper) for Blender, make sure it's installed folder in Blender is named `thelightmapper`
+- Look in the tools folder for `raytrace-lm.bat`, `bake.blend` and `bake.py`
+- Edit `raytrace-lm.bat` to have the correct `blender.exe` file path
+- Paste `raytrace-lm.bat`, `bake.blend` and `bake.py` next to the `CBRE.Editor` and use External Lightmapper
+- Feel free to edit [The Lightmapper](https://github.com/Naxela/The_Lightmapper) settings in Blender using the `bake.blend` file
 
 # Download
 
 Make sure to install vc_redist_x86 from [here](https://docs.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist) when on Windows
 
 There is a GitHub Actions script so you can download the latest from [the Actions tab](https://github.com/VirtualBrightPlayz/cbre/actions).
+
+# Blender Lightmapping
+
+Install [Naxela's The Lightmapper addon for Blender](https://github.com/Naxela/The_Lightmapper)
+
+Copy the files from `BlenderBaking` into your install of `CBRE.Editor` and change the `raytrace-lm.bat`'s contents to point to a valid install of Blender.
+
+Create an empty blender file setup for baking with The Lightmapper named `bake.blend` in the same place as `CBRE.Editor`
 
 # Building
 
