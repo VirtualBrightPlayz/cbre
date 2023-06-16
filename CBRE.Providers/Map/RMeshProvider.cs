@@ -209,15 +209,50 @@ namespace CBRE.Providers.Map {
                 ExtractFaces.Invoke(subMesh, newFaces);
 
                 if (!newFaces.Any()) { continue; }
-                
+
+                var newSolids = new HashSet<Solid>();
+
                 var newSolid = new Solid(idGenerator.GetNextObjectID());
                 newSolid.Colour = Color.Chartreuse;
                 //newSolid.Faces.AddRange(newFaces);
+
+                newSolids.Add(newSolid);
+
                 foreach (var newFace in newFaces) {
-                    // newFace.Plane = new Plane(newFace.Vertices[0].Location, newFace.Vertices[1].Location, newFace.Vertices[2].Location);
-                    // newFace.UpdateBoundingBox();
+                    newFace.Plane = new Plane(newFace.Vertices[0].Location, newFace.Vertices[1].Location, newFace.Vertices[2].Location);
+                    newFace.UpdateBoundingBox();
+                    /*
+                    newFace.Parent = null;
+                    foreach (var solid in newSolids) {
+                        solid.Faces.Add(newFace);
+                        if (solid.Faces.Any() && !solid.IsValid()) {
+                            solid.Faces.Remove(newFace);
+                        } else {
+                            // solid.Faces.Remove(newFace);
+                            newFace.Parent = solid;
+                            break;
+                        }
+                    }
+                    if (newFace.Parent == null) {
+                        newSolid.SetParent(map.WorldSpawn);
+                        newSolid = new Solid(idGenerator.GetNextObjectID());
+                        newSolid.Colour = Color.Chartreuse;
+                        newSolids.Add(newSolid);
+                        newSolid.Faces.Add(newFace);
+                        newFace.Parent = newSolid;
+                    }
+                    */
                     newSolid.Faces.Add(newFace);
+                    if (newSolid.Faces.Any() && !newSolid.IsValid(0.001m)) {
+                        newSolid.Faces.Remove(newFace);
+                        newSolid.SetParent(map.WorldSpawn);
+                        newSolid = new Solid(idGenerator.GetNextObjectID());
+                        newSolid.Colour = Color.Chartreuse;
+                        newSolids.Add(newSolid);
+                        newSolid.Faces.Add(newFace);
+                    }
                     newFace.Parent = newSolid;
+
                     newFace.Texture = new TextureReference();
                     string tex = subMesh.DiffuseTexture.Replace(".jpg", "").Replace(".jpeg", "").Replace(".png", "");
                     TextureItem item = TextureProvider.GetItem(tex);
@@ -340,10 +375,10 @@ namespace CBRE.Providers.Map {
 
                     var v0uv = new Vector2d(verts[0].TextureU, verts[0].TextureV);
                     var v1uv = new Vector2d(verts[1].TextureU, verts[1].TextureV);
-                    var uvUpDir = (v1uv - v0uv);
-                    var uvUpDirN = uvUpDir.Normalized();
-                    var uDir = Vector2d.Dot(uvUpDirN, Vector2d.UnitX);
-                    var vDir = Vector2d.Dot(uvUpDirN, Vector2d.UnitY);
+                    // var uvUpDir = (v1uv - v0uv);
+                    // var uvUpDirN = uvUpDir.Normalized();
+                    // var uDir = Vector2d.Dot(uvUpDirN, Vector2d.UnitX);
+                    // var vDir = Vector2d.Dot(uvUpDirN, Vector2d.UnitY);
                     // minU = verts[0];
                     // minV = verts[0];
                     // maxU = verts[1];
@@ -468,10 +503,13 @@ namespace CBRE.Providers.Map {
                     newFace.CalculateTextureCoordinates(true);
 #endif
                 }
+                if (newSolid.Faces.Any()) {
+                    newSolid.SetParent(map.WorldSpawn);
+                }
 
+#if false
                 if (newSolid.Faces.Any()) {
                     // TODO: textures
-#if false
                     foreach (var newFace in newSolid.Faces.GroupBy(x => x.Texture, x => x).ToDictionary(x => x.Key, x => x.ToList())) {
                         var axis = newFace.Value.SelectMany(x => x.Vertices).OrderByDescending(x => x.TextureU + x.TextureV);
                         var uaxis = newFace.Value.SelectMany(x => x.Vertices).OrderByDescending(x => x.TextureU);
@@ -543,10 +581,10 @@ namespace CBRE.Providers.Map {
                             }
                         }
                     }
-#endif
                     newSolid.SetParent(map.WorldSpawn);
                     // _document.ObjectRenderer.AddMapObject(newSolid);
                 }
+#endif
             }
 
             return map;
