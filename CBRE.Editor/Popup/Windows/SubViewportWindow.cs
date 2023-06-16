@@ -24,6 +24,10 @@ namespace CBRE.Editor.Popup {
             bool mouse3Down = mouseState.MiddleButton == ButtonState.Pressed;
             bool mouse3Hit = mouse3Down && !prevMouse3Down;
             int scrollWheelValue = mouseState.ScrollWheelValue;
+            MouseButtons mouseButtons = MouseButtons.None;
+            if (mouse1Down) { mouseButtons |= MouseButtons.Left; }
+            if (mouse2Down) { mouseButtons |= MouseButtons.Right; }
+            if (mouse3Down) { mouseButtons |= MouseButtons.Middle; }
 
             var mousePos = mouseState.Position;
 
@@ -37,7 +41,7 @@ namespace CBRE.Editor.Popup {
                     if (!mouse1Down && prevMouse1Down) {
                         GameMain.Instance.SelectedTool?.MouseLifted(viewport, new ViewportEvent() {
                             Handled = false,
-                            Button = MouseButtons.Left,
+                            Button = mouseButtons,//MouseButtons.Left,
                             X = mouseState.X - viewport.X,
                             Y = mouseState.Y - viewport.Y,
                             LastX = viewport.PrevMouseX,
@@ -49,7 +53,7 @@ namespace CBRE.Editor.Popup {
                     if (!mouse2Down && prevMouse2Down) {
                         GameMain.Instance.SelectedTool?.MouseLifted(viewport, new ViewportEvent() {
                             Handled = false,
-                            Button = MouseButtons.Right,
+                            Button = mouseButtons,//MouseButtons.Right,
                             X = mouseState.X - viewport.X,
                             Y = mouseState.Y - viewport.Y,
                             LastX = viewport.PrevMouseX,
@@ -59,8 +63,10 @@ namespace CBRE.Editor.Popup {
                         focusedViewport = -1;
                     }
 
-                    GameMain.Instance.SelectedTool?.UpdateFrame(viewport,
-                        new FrameInfo(0)); //TODO: fix FrameInfo
+                    foreach (var tool in GameMain.Instance.ToolBarItems.Select(tbi => tbi.Tool)) {
+                        tool.UpdateFrame(viewport,
+                            new FrameInfo(0)); //TODO: fix FrameInfo
+                    }
 
                     foreach (var key in keysDown.Where(k => !prevKeysDown.Contains(k))) {
                         GameMain.Instance.SelectedTool?.KeyHit(viewport, new ViewportEvent() {
@@ -96,6 +102,7 @@ namespace CBRE.Editor.Popup {
                         }
                     }
 
+                    /*
                     if (viewport is Viewport3D vp3d && !ViewportManager.AnyModifiers) {
                         bool shiftDown = mouse2Down;
                         bool mustRerender = false;
@@ -154,6 +161,7 @@ namespace CBRE.Editor.Popup {
                             ViewportManager.MarkForRerender();
                         }
                     }
+                    */
 
                     int currMouseX = mouseState.X - viewport.X;
                     int currMouseY = mouseState.Y - viewport.Y;
@@ -161,7 +169,7 @@ namespace CBRE.Editor.Popup {
                         viewport.PrevMouseY != currMouseY) {
                         var ev = new ViewportEvent() {
                             Handled = false,
-                            Button = MouseButtons.Left,
+                            Button = mouseButtons,
                             X = currMouseX,
                             Y = currMouseY,
                             LastX = viewport.PrevMouseX,
@@ -177,7 +185,7 @@ namespace CBRE.Editor.Popup {
                     if (mouse1Hit) {
                         GameMain.Instance.SelectedTool?.MouseClick(viewport, new ViewportEvent() {
                             Handled = false,
-                            Button = MouseButtons.Left,
+                            Button = mouseButtons,//MouseButtons.Left,
                             X = currMouseX,
                             Y = currMouseY,
                             LastX = viewport.PrevMouseX,
@@ -191,7 +199,7 @@ namespace CBRE.Editor.Popup {
                     if (mouse2Hit) {
                         GameMain.Instance.SelectedTool?.MouseClick(viewport, new ViewportEvent() {
                             Handled = false,
-                            Button = MouseButtons.Right,
+                            Button = mouseButtons,//MouseButtons.Right,
                             X = currMouseX,
                             Y = currMouseY,
                             LastX = viewport.PrevMouseX,

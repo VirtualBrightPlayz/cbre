@@ -38,6 +38,7 @@ namespace CBRE.Editor.Tools
         private bool zShortcut = false;
         private State _state;
         private Camera _stateCamera;
+        private int _scrollWheelValue;
 
         public override void ToolSelected(bool preventHistory)
         {
@@ -195,7 +196,9 @@ namespace CBRE.Editor.Tools
 
         public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
-            _state = State.None;
+            if (e.Button == MouseButtons.None) {
+                _state = State.None;
+            }
         }
 
         public override void MouseWheel(ViewportBase viewport, ViewportEvent e)
@@ -267,6 +270,8 @@ namespace CBRE.Editor.Tools
                         camera.Pan(dx / fovdiv);
                         camera.Tilt(dy / fovdiv);
                     }
+
+                    camera.Advance(e.Delta * 128m);
                 
                     ViewportManager.SetCursorPos(vp3d, vp3d.Width / 2, vp3d.Height / 2);
                     SetViewportCamera(camera.EyePosition, camera.LookPosition, vp3d.Camera);
@@ -290,6 +295,80 @@ namespace CBRE.Editor.Tools
                         else
                             vpWindows.First().FullscreenViewport = -1;
                     }
+                }
+            }
+        }
+
+        public void HandleWASDMovement(ViewportBase viewport) {
+            var mouseState = Mouse.GetState();
+            var keyboardState = Keyboard.GetState();
+            var keysDown = keyboardState.GetPressedKeys();
+            bool mouse1Down = mouseState.LeftButton == ButtonState.Pressed;
+            bool mouse2Down = mouseState.RightButton == ButtonState.Pressed;
+            bool mouse3Down = mouseState.MiddleButton == ButtonState.Pressed;
+            int scrollWheelValue = mouseState.ScrollWheelValue;
+            if (viewport is Viewport3D vp3d && !ViewportManager.AnyModifiers) {
+                bool shiftDown = false;
+                bool mustRerender = false;
+                // WASD
+                if (keyboardState.IsKeyDown(Keys.A)) {
+                    vp3d.Camera.Strafe(-5m - (shiftDown ? 5m : 0m));
+                    mustRerender = true;
+                }
+
+                if (keyboardState.IsKeyDown(Keys.D)) {
+                    vp3d.Camera.Strafe(5m + (shiftDown ? 5m : 0m));
+                    mustRerender = true;
+                }
+
+                if (keyboardState.IsKeyDown(Keys.W)) {
+                    vp3d.Camera.Advance(5m + (shiftDown ? 5m : 0m));
+                    mustRerender = true;
+                }
+
+                if (keyboardState.IsKeyDown(Keys.S)) {
+                    vp3d.Camera.Advance(-5m - (shiftDown ? 5m : 0m));
+                    mustRerender = true;
+                }
+
+                // look around
+                var fovdiv = (vp3d.Width / 60m) / 2.5m;
+                if (keyboardState.IsKeyDown(Keys.Left)) {
+                    vp3d.Camera.Pan(5m / fovdiv);
+                    mustRerender = true;
+                }
+
+                if (keyboardState.IsKeyDown(Keys.Right)) {
+                    vp3d.Camera.Pan(-5m / fovdiv);
+                    mustRerender = true;
+                }
+
+                if (keyboardState.IsKeyDown(Keys.Up)) {
+                    vp3d.Camera.Tilt(-5m / fovdiv);
+                    mustRerender = true;
+                }
+
+                if (keyboardState.IsKeyDown(Keys.Down)) {
+                    vp3d.Camera.Tilt(5m / fovdiv);
+                    mustRerender = true;
+                }
+
+                int delta = mouseState.ScrollWheelValue - _scrollWheelValue;
+                if (delta != 0) {
+                    vp3d.Camera.Advance(delta * 5m);
+                    mustRerender = true;
+                }
+
+                if (mustRerender) {
+                    var map = Documents.DocumentManager.CurrentDocument.Map;
+                    if (map.ActiveCamera == null) { map.ActiveCamera = map.Cameras.FirstOrDefault(); }
+
+                    if (map.ActiveCamera != null) {
+                        map.ActiveCamera.EyePosition = vp3d.Camera.EyePosition;
+                        map.ActiveCamera.LookPosition = vp3d.Camera.LookPosition;
+                    }
+
+                    ViewportManager.MarkForRerender();
                 }
             }
         }
@@ -318,7 +397,10 @@ namespace CBRE.Editor.Tools
         }
 
         public override void UpdateFrame(ViewportBase viewport, FrameInfo frame) {
-            //
+            if (_state == State.Moving3d || zShortcut) {
+                HandleWASDMovement(viewport);
+            }
+            _scrollWheelValue = Mouse.GetState().ScrollWheelValue;
         }
 
         public override void Render(ViewportBase viewport)
