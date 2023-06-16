@@ -136,7 +136,7 @@ sealed partial class Lightmapper {
         }
 
         foreach (var light in spotLights) {
-            RenderLight(new PointLight(light.Location, light.Range, light.Color), groupToAtlas, atlasBuffers);
+            RenderLight(new PointLight(light.Location, light.Range, light.Color, light.Color, light.Intensity), groupToAtlas, atlasBuffers);
             rayTestProgress++;
         }
 

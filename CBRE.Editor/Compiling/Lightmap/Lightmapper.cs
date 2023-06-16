@@ -317,8 +317,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
         }
 
-        private record PointLight(Vector3 Location, float Range, Vector3 Color) {
-            public PointLight(MapObject lightEntity) : this(default, default, default) {
+        private record PointLight(Vector3 Location, float Range, Vector3 Color, Vector3 RawColor, float Intensity) {
+            public PointLight(MapObject lightEntity) : this(default, default, default, default, default) {
                 Location = lightEntity.BoundingBox.Center.ToXna();
                 
                 var data = lightEntity.GetEntityData();
@@ -330,6 +330,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 
                 Range = getPropertyFloat("range");
                 Color = data.GetPropertyVector3("color").ToXna() * getPropertyFloat("intensity") / 255.0f;
+                RawColor = data.GetPropertyVector3("color").ToXna() / 255.0f;
+                Intensity = getPropertyFloat("intensity");
             }
 
             public Box BoundingBox => new(
@@ -337,8 +339,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 (Location + new Vector3(Range, Range, Range)).ToCbre());
         }
 
-        private record SpotLight(Vector3 Location, float Range, Vector3 Color, Vector3 Direction, float InnerConeAngle, float OuterConeAngle) {
-            public SpotLight(MapObject lightEntity) : this(default, default, default, default, default, default) {
+        private record SpotLight(Vector3 Location, float Range, Vector3 Color, Vector3 Direction, float InnerConeAngle, float OuterConeAngle, Vector3 RawColor, float Intensity) {
+            public SpotLight(MapObject lightEntity) : this(default, default, default, default, default, default, default, default) {
                 Location = lightEntity.BoundingBox.Center.ToXna();
                 var data = lightEntity.GetEntityData();
                 DataStructures.Geometric.Vector3 angles = data.GetPropertyVector3("angles");
@@ -357,6 +359,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 Color = data.GetPropertyVector3("color").ToXna() * getPropertyFloat("intensity") / 255.0f;
                 InnerConeAngle = (float)Math.Cos(getPropertyFloat("innerconeangle") * (float)Math.PI / 180.0f);
                 OuterConeAngle = (float)Math.Cos(getPropertyFloat("outerconeangle") * (float)Math.PI / 180.0f);
+                RawColor = data.GetPropertyVector3("color").ToXna() / 255.0f;
+                Intensity = getPropertyFloat("intensity");
             }
 
             public Box BoundingBox => new(

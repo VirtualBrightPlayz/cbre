@@ -148,10 +148,10 @@ sealed partial class Lightmapper {
 
         await WaitForRender("External Init", null, token);
 
-        // var pointLights = ExtractPointLights();
-        var pointLights = Document.Map.WorldSpawn.Find(e => string.Equals(e.GetEntityData()?.Name, "light", StringComparison.OrdinalIgnoreCase))
-            .ToImmutableArray();
-        // var spotLights = ExtractSpotLights();
+        var pointLights = ExtractPointLights();
+        /*var pointLights = Document.Map.WorldSpawn.Find(e => string.Equals(e.GetEntityData()?.Name, "light", StringComparison.OrdinalIgnoreCase))
+            .ToImmutableArray();*/
+        var spotLights = ExtractSpotLights();
 
         ImmutableArray<Atlas> atlases = new ImmutableArray<Atlas>();
         var gd = GlobalGraphics.GraphicsDevice;
@@ -212,6 +212,12 @@ sealed partial class Lightmapper {
         for (int i = 0; i < pointLights.Length; i++) {
             Node n = root.CreateLogicalNode();
             var light = root.CreatePunctualLight($"pointlight_{i}", PunctualLightType.Point);
+
+            light.Color = pointLights[i].RawColor.ToNum();
+            light.Range = pointLights[i].Range * scale;
+            light.Intensity = pointLights[i].Intensity * LightmapConfig.BakeGamma;
+
+            /*
             var data = pointLights[i].GetEntityData();
             float getPropertyFloat(string key)
                 => float.TryParse(data.GetPropertyValue(key), NumberStyles.Any, CultureInfo.InvariantCulture,
@@ -222,8 +228,28 @@ sealed partial class Lightmapper {
             light.Range = getPropertyFloat("range") * scale;
             light.Intensity = getPropertyFloat("intensity") * LightmapConfig.BakeGamma;
             light.Extras = SharpGLTF.IO.JsonContent.Serialize(new ExternalLightData(MathF.Max(1f, getPropertyFloat("size")) * scale));
+            */
             n.PunctualLight = light;
             n.WithLocalTranslation(pointLights[i].BoundingBox.Center.ToNum() * scale);
+        }
+
+        for (int i = 0; i < spotLights.Length; i++) {
+            Node n = root.CreateLogicalNode();
+            var light = root.CreatePunctualLight($"pointlight_{i}", PunctualLightType.Spot);
+
+            light.Color = spotLights[i].RawColor.ToNum();
+            light.Range = spotLights[i].Range * scale;
+            light.Intensity = spotLights[i].Intensity * LightmapConfig.BakeGamma;
+            if (spotLights[i].InnerConeAngle >= spotLights[i].OuterConeAngle) {
+                light.SetSpotCone(0, spotLights[i].OuterConeAngle);
+            } else {
+                light.SetSpotCone(spotLights[i].InnerConeAngle, spotLights[i].OuterConeAngle);
+            }
+
+            n.PunctualLight = light;
+            n.WithLocalTranslation(spotLights[i].BoundingBox.Center.ToNum() * scale);
+            var rot = Quaternion.CreateFromAxisAngle(spotLights[i].Direction, 0);
+            n.WithLocalRotation(new System.Numerics.Quaternion(rot.X, rot.Y, rot.Z, rot.W));
         }
 
         string fname = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..", $"input.glb");
