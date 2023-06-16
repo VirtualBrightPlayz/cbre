@@ -385,6 +385,7 @@ public static class ExtractFaces {
         newFaces.Add(new PlaneKey(new Plane(Vector3.UnitX, 0m)), newFaceList);
         
         foreach (var kvp in newFaces) {
+            // break;
             foreach (var face in kvp.Value.Where(f => !f.IsConvex(precision * 0.1m) || f.HasColinearEdges(precision * 0.1m)).ToList()) {
                 kvp.Value.Remove(face); kvp.Value.AddRange(splitNonConvex(face));
             }

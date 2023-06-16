@@ -179,7 +179,7 @@ public partial record RMesh {
 
             for (int i = 0; i < entityCount; i++) {
                 string name = reader.ReadString();
-                var gameClass = gameData.Classes.First(x => x.RMeshDef.ClassName == name.ToLowerInvariant());
+                var gameClass = gameData.Classes.FirstOrDefault(x => x.RMeshDef.ClassName.ToLowerInvariant() == name.ToLowerInvariant());
                 Entity entity = new Entity(0) {
                     EntityData = new EntityData(gameClass),
                     GameData = gameClass,
@@ -204,6 +204,7 @@ public partial record RMesh {
                                 entity.EntityData.SetPropertyValue(rmEntry.Property, reader.ReadFloat().ToString());
                             }
                             break;
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector3D:
                         case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector:
                             {
                                 var v3 = new Vector3((decimal)reader.ReadFloat(), (decimal)reader.ReadFloat(), (decimal)reader.ReadFloat());
@@ -212,8 +213,8 @@ public partial record RMesh {
                             break;
                         case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Bool:
                             throw new NotImplementedException(); // TODO
-                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector3D:
-                            throw new NotImplementedException(); // TODO
+                        // case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector3D:
+                            // throw new NotImplementedException(); // TODO
                     }
                 }
             }

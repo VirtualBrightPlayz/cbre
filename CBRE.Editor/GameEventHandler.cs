@@ -41,7 +41,7 @@ namespace CBRE.Editor {
             var currFilePath = Path.GetDirectoryName(DocumentManager.CurrentDocument?.MapFile);
             if (string.IsNullOrEmpty(currFilePath)) { currFilePath = Directory.GetCurrentDirectory(); }
 
-            var result = NativeFileDialog.OpenDialog.Open("3dw,vmf", currFilePath, out string outPath);
+            var result = NativeFileDialog.OpenDialog.Open("3dw,vmf,rmesh", currFilePath, out string outPath);
             if (result == Result.Okay) {
                 try {
                     Map _map = MapProvider.GetMapFromFile(outPath);

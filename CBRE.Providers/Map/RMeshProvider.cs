@@ -214,6 +214,8 @@ namespace CBRE.Providers.Map {
                 newSolid.Colour = Color.Chartreuse;
                 //newSolid.Faces.AddRange(newFaces);
                 foreach (var newFace in newFaces) {
+                    // newFace.Plane = new Plane(newFace.Vertices[0].Location, newFace.Vertices[1].Location, newFace.Vertices[2].Location);
+                    // newFace.UpdateBoundingBox();
                     newSolid.Faces.Add(newFace);
                     newFace.Parent = newSolid;
                     newFace.Texture = new TextureReference();
@@ -225,36 +227,209 @@ namespace CBRE.Providers.Map {
                         rng.Next()%256,
                         newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 255 : 0,
                         newFace.IsConvex(0.001m) && !newFace.HasColinearEdges(0.001m) ? 0 : 255);
-                    
-                    var v0u = newFace.Vertices[0].Location.Dot(newFace.Texture.UAxis);
-                    var v0v = newFace.Vertices[0].Location.Dot(newFace.Texture.VAxis);
-                    var v1u = newFace.Vertices[1].Location.Dot(newFace.Texture.UAxis);
-                    var v1v = newFace.Vertices[1].Location.Dot(newFace.Texture.VAxis);
-                    var v2u = newFace.Vertices[2].Location.Dot(newFace.Texture.UAxis);
-                    var v2v = newFace.Vertices[2].Location.Dot(newFace.Texture.VAxis);
+
+                    // newFace.AlignTextureToFace();
+                    // newFace.AlignTextureToWorld();
+
+                    // var h = Quaternion.AxisAngle(newFace.Plane.Normal, 0).GetMatrix().Inverse();
+                    // newFace.BoundingBox.Dimensions.VectorMagnitude();
+
+                    var lst = new List<Vector3>();
+                    var tris = newFace.GetTriangles().ToList();
+
+                    for (int i = 0; i < tris.Count; i++) {
+                        for (int j = 0; j < tris[i].Length; j++) {
+                            var u = tris[i][j].TextureU;
+                            var v = tris[i][j].TextureV;
+#if false
+                            while (u <= 0m) {
+                                u += 1m;
+                            }
+                            while (v <= 0m) {
+                                v += 1m;
+                            }
+                            u = u % 1m;
+                            v = v % 1m;
+                            u *= -1m;
+                            v *= -1m;
+#endif
+                            v *= -1m;
+                            if (u < 0 || u > 1 || v < 0 || v > 1) {
+                                continue;
+                            }
+                            var bary = Vector4d.BaryCentric(new Vector4d(tris[i][0].Location), new Vector4d(tris[i][1].Location), new Vector4d(tris[i][2].Location), u, v);
+                            lst.Add(new Vector3(bary.X, bary.Y, bary.Z));
+                        }
+                        // break;
+                    }
+
+#if false
+                    if (lst.Count > 0) {
+                        var cloud = new Cloud(lst);
+                        var plMin = newFace.Plane.Project(newFace.BoundingBox.Start);
+                        var plMax = newFace.Plane.Project(newFace.BoundingBox.End);
+                        var verts = newFace.Vertices.Select(x => x.Clone()).ToList();
+                        // var cloud = new Cloud(newFace.Vertices.Select(x => new Vector3(x.TextureU, x.TextureV, 0m)));
+                        // var cloud = new Cloud(newFace.BoundingBox.GetBoxPoints());
+                        // newFace.AlignTextureToWorld();
+                        try {
+                            newFace.AlignTextureToFace();
+                            // newFace.AlignTextureToWorld();
+                            Vertex getVertexForUAxis(Vertex y) {
+                                return verts.OrderByDescending(x => (x.Location - y.Location).Dot(newFace.Texture.UAxis)).First();
+                            }
+                            Vertex getVertexForVAxis(Vertex y) {
+                                return verts.OrderByDescending(x => (x.Location - y.Location).Dot(newFace.Texture.VAxis)).First();
+                            }
+                            var matrix = Microsoft.Xna.Framework.Matrix.CreateLookAt(Vector3.Zero.ToXna(), newFace.Texture.GetNormal().ToXna(), newFace.Texture.VAxis.ToXna()).ToCbre();
+                            decimal getUAxisSpace(Vertex x, Vertex u) {
+                                return (u.Location * matrix - x.Location * matrix).X;// * (u.TextureU + x.TextureU);
+                            }
+                            decimal getVAxisSpace(Vertex x, Vertex v) {
+                                return (v.Location * matrix - x.Location * matrix).Y;// * (v.TextureV + x.TextureV);
+                            }
+
+                            var matrix2 = Microsoft.Xna.Framework.Matrix.CreateLookAt(Vector3.Zero.ToXna(), newFace.Texture.GetNormal().ToXna(), newFace.Texture.VAxis.ToXna()).ToCbre();
+                            // matrix2 *= Matrix.Scale(new Vector3(1 / newFace.BoundingBox.Width, 1 / newFace.BoundingBox.Length, 1 / newFace.BoundingBox.Height));
+                            matrix2 *= Matrix.Scale(newFace.BoundingBox.Dimensions);
+                            // var cloud = new Cloud(verts.Select(x => new Vector3(x.TextureU, x.TextureV, 0m) * matrix2));
+                            newFace.FitTextureToPointCloud(cloud, 1, 1);
+                            // newFace.Texture.XScale *= newFace.Plane.Normal.Dot(newFace.Texture.UAxis);
+                            // newFace.Texture.YScale *= newFace.Plane.Normal.Dot(newFace.Texture.VAxis);
+                            // newFace.Texture.XScale *= newFace.BoundingBox.Dimensions.VectorMagnitude();
+                            // newFace.Texture.YScale *= newFace.Texture.Texture.Height;
+                            // newFace.AlignTextureWithPointCloud(cloud, Face.BoxAlignMode.Bottom);
+                            // newFace.AlignTextureWithPointCloud(cloud, Face.BoxAlignMode.Center);
+                            // newFace.AlignTextureWithPointCloud(cloud, Face.BoxAlignMode.Left);
+                            // newFace.AlignTextureWithPointCloud(cloud, Face.BoxAlignMode.Right);
+                            // newFace.AlignTextureWithPointCloud(cloud, Face.BoxAlignMode.Top);
+                            // newFace.Texture.XScale *= newFace.Texture.Texture.Width;
+                            // newFace.Texture.YScale *= newFace.Texture.Texture.Height;
+                        } catch (DivideByZeroException) {
+                        }
+                    }
+#endif
+
+#if true
+                    var verts = newFace.Vertices.Select(x => x.Clone()).ToList();
+                    newFace.AlignTextureToFace();
+                    // newFace.AlignTextureToWorld();
+
+                    var v0u = verts[0].Location.Dot(newFace.Texture.UAxis);
+                    var v0v = verts[0].Location.Dot(newFace.Texture.VAxis);
+                    var v1u = verts[1].Location.Dot(newFace.Texture.UAxis);
+                    var v1v = verts[1].Location.Dot(newFace.Texture.VAxis);
+                    var v2u = verts[2].Location.Dot(newFace.Texture.UAxis);
+                    var v2v = verts[2].Location.Dot(newFace.Texture.VAxis);
                     if (v0u == 0) v0u = 1;
                     if (v0v == 0) v0v = 1;
                     if (v1u == 0) v1u = 1;
                     if (v1v == 0) v1v = 1;
                     if (v2u == 0) v2u = 1;
                     if (v2v == 0) v2v = 1;
-                    decimal minU = newFace.Vertices[0].TextureU;
-                    decimal minV = newFace.Vertices[0].TextureV;
-                    decimal maxU = newFace.Vertices[2].TextureU;
-                    decimal maxV = newFace.Vertices[2].TextureV;
+                    var minU = verts.MinBy(x => (x.TextureU));
+                    var minV = verts.MinBy(x => (x.TextureV));
+                    var maxU = verts.MaxBy(x => (x.TextureU));
+                    var maxV = verts.MaxBy(x => (x.TextureV));
                     var dimU = newFace.BoundingBox.Dimensions.Dot(newFace.Texture.UAxis);
                     var dimV = newFace.BoundingBox.Dimensions.Dot(newFace.Texture.VAxis);
+                    // dimU = verts[0].Location.Dot(newFace.Texture.UAxis);
+                    // dimV = verts[0].Location.Dot(newFace.Texture.VAxis);
                     if (dimU == 0) dimU = 1;
                     if (dimV == 0) dimV = 1;
 
-                    var xscl = (maxU - minU);
-                    var yscl = (maxV - minV);
+                    var v0uv = new Vector2d(verts[0].TextureU, verts[0].TextureV);
+                    var v1uv = new Vector2d(verts[1].TextureU, verts[1].TextureV);
+                    var uvUpDir = (v1uv - v0uv);
+                    var uvUpDirN = uvUpDir.Normalized();
+                    var uDir = Vector2d.Dot(uvUpDirN, Vector2d.UnitX);
+                    var vDir = Vector2d.Dot(uvUpDirN, Vector2d.UnitY);
+                    // minU = verts[0];
+                    // minV = verts[0];
+                    // maxU = verts[1];
+                    // maxV = verts[1];
+
+                    var xscl = (maxU.TextureU - minU.TextureU);// * uDir / uvUpDir.Length;
+                    var yscl = (maxV.TextureV - minV.TextureV);// * vDir / uvUpDir.Length;
                     if (xscl == 0) xscl = 1;
                     if (yscl == 0) yscl = 1;
-                    newFace.Texture.XShift = (v0u / xscl) * minU * newFace.Texture.Texture.Width;
-                    newFace.Texture.YShift = (v0v / yscl) * minV * newFace.Texture.Texture.Height;
-                    newFace.Texture.XScale = xscl;
-                    newFace.Texture.YScale = yscl;
+
+                    newFace.Texture.XScale = 1 / (xscl / (dimU) * newFace.Texture.Texture.Width);
+                    newFace.Texture.YScale = -1 / (yscl / (dimV) * newFace.Texture.Texture.Height);
+                    newFace.Texture.XShift = -(minU.Location.Dot(newFace.Texture.UAxis) / (newFace.Texture.XScale * newFace.Texture.Texture.Width) - minU.TextureU) * newFace.Texture.Texture.Width;
+                    newFace.Texture.YShift = -(minV.Location.Dot(newFace.Texture.VAxis) / (newFace.Texture.YScale * newFace.Texture.Texture.Height) - minV.TextureV) * newFace.Texture.Texture.Height;
+
+#if false
+                    if (newFace.Texture.Texture.Width > 0 && newFace.Texture.Texture.Height > 0 && verts.Count > 0) {
+                        newFace.Texture.XScale = 0;
+                        newFace.Texture.YScale = 0;
+                        newFace.Texture.XShift = 0;
+                        newFace.Texture.YShift = 0;
+
+                        int j = 0;
+                        var loc = Vector3.Zero;
+
+                        for (int i = 0; i < verts.Count; i++) {
+                            var v0 = verts[i];
+
+
+                            loc += v0.Location;
+                            var testU = Math.Abs(v0.TextureU + v0.Location.Dot(newFace.Texture.UAxis));
+                            var testV = Math.Abs(v0.TextureV + v0.Location.Dot(newFace.Texture.VAxis));
+                            var oldXShift = newFace.Texture.XShift;
+                            var oldYShift = newFace.Texture.YShift;
+                            newFace.Texture.XShift = newFace.Texture.Texture.Width;
+                            newFace.Texture.YShift = newFace.Texture.Texture.Height;
+                            newFace.Texture.XShift = 0;
+                            newFace.Texture.YShift = 0;
+
+                            for (int x = 1; x < newFace.Texture.Texture.Width; x++) {
+                                var testU2 = testU * ((decimal)x / newFace.Texture.Texture.Width);
+                                testU2 = Math.Abs(testU2);
+                                if (testU2 > newFace.Texture.XShift) {
+                                    newFace.Texture.XShift = testU2;
+                                }
+                            }
+                            for (int y = 1; y < newFace.Texture.Texture.Height; y++) {
+                                var testV2 = testV * ((decimal)y / newFace.Texture.Texture.Height);
+                                testV2 = Math.Abs(testV2);
+                                if (testV2 > newFace.Texture.YShift) {
+                                    newFace.Texture.YShift = testV2;
+                                }
+                            }
+
+                            var testU3 = testU;
+                            var testV3 = testV;
+                            if (Math.Abs(newFace.Texture.XShift) > 0.001m) {
+                                // testU3 /= newFace.Texture.XShift;
+                            }
+                            if (Math.Abs(newFace.Texture.YShift) > 0.001m) {
+                                // testV3 /= newFace.Texture.YShift;
+                            }
+                            newFace.Texture.XScale += testU3 / newFace.Texture.Texture.Width;
+                            newFace.Texture.YScale += testV3 / newFace.Texture.Texture.Height;
+                            newFace.Texture.XShift += oldXShift;
+                            newFace.Texture.YShift += oldYShift;
+                            j++;
+                            // break;
+                        }
+
+                        newFace.Texture.XScale /= j;
+                        newFace.Texture.YScale /= j;
+                        // loc /= j;
+                        // if (loc.VectorMagnitude() != 0) {
+                        //     newFace.Texture.XScale /= (loc.VectorMagnitude());
+                        //     newFace.Texture.YScale /= (loc.VectorMagnitude());
+                        // }
+                        newFace.Texture.XShift /= j;
+                        newFace.Texture.YShift /= j;
+                        newFace.Texture.XShift = 0;
+                        newFace.Texture.YShift = 0;
+
+                        // newFace.Texture.XScale *= newFace.Texture.Texture.Width;
+                        // newFace.Texture.YScale *= newFace.Texture.Texture.Height;
+                    }
+#endif
 
                     /*
                     xscale = texUMax - texUMin
@@ -291,6 +466,7 @@ namespace CBRE.Providers.Map {
                     
                     // newFace.AlignTextureToFace();
                     newFace.CalculateTextureCoordinates(true);
+#endif
                 }
 
                 if (newSolid.Faces.Any()) {

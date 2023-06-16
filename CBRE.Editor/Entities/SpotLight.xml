@@ -1,10 +1,13 @@
 <entity name="spotlight">
-    <rmesh name="light">
+    <rmesh name="spotlight">
         <condition property="hassprite" equals="True" />
         <write property="position" as="Vector" />
         <write property="range" as="Float" />
         <write property="color" as="B3DString" />
         <write property="intensity" as="Float" />
+        <write property="angles" as="B3DString" />
+        <write property="innerconeangle" as="Float" />
+        <write property="outerconeangle" as="Float" />
     </rmesh>
 
     <properties>
