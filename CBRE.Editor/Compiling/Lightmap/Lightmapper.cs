@@ -343,11 +343,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
             public SpotLight(MapObject lightEntity) : this(default, default, default, default, default, default, default, default) {
                 Location = lightEntity.BoundingBox.Center.ToXna();
                 var data = lightEntity.GetEntityData();
-                DataStructures.Geometric.Vector3 angles = data.GetPropertyVector3("angles");
+                var m = new UnitMatrixMult((lightEntity as Entity).LeftHandedWorldMatrix);
+                /*DataStructures.Geometric.Vector3 angles = data.GetPropertyVector3("angles");
                 var pitch = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
                 var yaw = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
                 var roll = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
-                var m = new UnitMatrixMult(yaw * roll * pitch);
+                var m = new UnitMatrixMult(yaw * roll * pitch);*/
                 Direction = m.Transform(DataStructures.Geometric.Vector3.UnitY).Normalise().ToXna();
                 float getPropertyFloat(string key)
                     => float.TryParse(data.GetPropertyValue(key), NumberStyles.Any, CultureInfo.InvariantCulture,
