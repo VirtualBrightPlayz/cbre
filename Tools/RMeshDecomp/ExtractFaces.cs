@@ -118,14 +118,20 @@ public static class ExtractFaces {
             .Where(t => triangleVertices(t).All(v => v.Color.ToArgb() == Color.White.ToArgb()))
             .Select(t => new Triangle(mesh, t))
             .ToList();
-        
+
+
         var triangleGrouping = new List<(List<Triangle> Triangles, HashSet<int> Indices)>();
 
-        for (int i = 0; i < pendingTriangles.Count; i++) {
+        // for (int i = 0; i < pendingTriangles.Count; i++) {
+        while (pendingTriangles.Count > 0) {
+            // break;
+            int i = 0;
             List<Triangle> trianglesInGroup = new List<Triangle>();
             trianglesInGroup.Add(pendingTriangles[i]);
             HashSet<int> indices = pendingTriangles[i].Indices.ToHashSet();
-            for (int j = (i+1); j < pendingTriangles.Count; j++) {
+            pendingTriangles.RemoveAt(i);
+            for (int j = 0; j < pendingTriangles.Count; j++) {
+                // if (i == j) { continue; }
                 var intersection = indices.Intersect(pendingTriangles[j].Indices).ToArray();
                 
                 if (!intersection.Any()) { continue; }
@@ -133,8 +139,9 @@ public static class ExtractFaces {
                 indices.UnionWith(pendingTriangles[j].Indices);
                 trianglesInGroup.Add(pendingTriangles[j]);
                 pendingTriangles.RemoveAt(j);
-                j--;
+                j = 0;
             }
+            // i--;
             triangleGrouping.Add((trianglesInGroup, indices));
         }
         pendingTriangles.Clear();
@@ -143,7 +150,7 @@ public static class ExtractFaces {
             var edges = face.GetEdges().ToArray();
 
             bool vertexEquals(RMesh.VisibleMesh.Vertex vertex, Vector3 point)
-                => point.EquivalentTo(new Vector3(vertex.Position), precision);
+                => point.EquivalentTo(new Vector3(vertex.Position), precision * 1m);
 
             var matchingEdge = edges.FirstOrDefault(e =>
                 triangle.Vertices.Count(v => vertexEquals(v, e.Start) || vertexEquals(v, e.End)) == 2);
@@ -162,9 +169,25 @@ public static class ExtractFaces {
         }
 
         var newFaceList = new List<Face>();
-        
+
+#if false
+        foreach (var tri in pendingTriangles) {
+            var newFace = createNewFace();
+            newFace.Vertices = tri.Vertices.Select(v => new Vertex(new Vector3(v.Position), newFace) {
+                TextureU = (decimal)v.DiffuseUv.X,
+                TextureV = (decimal)v.DiffuseUv.Y,
+            }).ToList();
+            newFaceList.Add(newFace);
+        }
+
+        faces.UnionWith(newFaceList);
+        return;
+#endif
+
         foreach (var (trianglesPrime, _) in triangleGrouping) {
+            // break;
             IEnumerable<List<Triangle>> subgroupings = new [] { trianglesPrime };
+            // subgroupings = trianglesPrime.GroupBy(t => new PlaneKey(t.Plane)).Select(e => e.ToList());
             if (trianglesPrime.Any(t1
                 => trianglesPrime.Any(t2
                     => !t2.Plane.Normal.EquivalentTo(t1.Plane.Normal, precision * 0.01m)))) {
@@ -172,6 +195,8 @@ public static class ExtractFaces {
             }
 
             foreach (var triangles in subgroupings) {
+            // while (subgroupings.Any()) {
+                // var triangles = subgroupings.ElementAt(0);
                 var newFace = createNewFace();
                 newFace.Vertices = triangles[0].Vertices.Select(v => new Vertex(new Vector3(v.Position), newFace) {
                     TextureU = (decimal)v.DiffuseUv.X,
@@ -181,6 +206,10 @@ public static class ExtractFaces {
                 triangles.RemoveAt(0);
                 while (triangles.Count > 0) {
                     var toRemove = triangles.FindIndex(t => addTriangleToFace(t, newFace));
+                    if (toRemove == -1) {
+                        // Debugger.Break();
+                        break;
+                    }
                     triangles.RemoveAt(toRemove);
                 }
                 newFaceList.Add(newFace);
