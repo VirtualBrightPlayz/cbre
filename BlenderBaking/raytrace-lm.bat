@@ -1,1 +1,0 @@
-blender.exe -b bake.blend --background --python bake.py -- %1 %2 %3
