@@ -215,7 +215,7 @@ sealed partial class Lightmapper {
 
             light.Color = pointLights[i].RawColor.ToNum();
             light.Range = pointLights[i].Range * scale;
-            light.Intensity = pointLights[i].Intensity * LightmapConfig.BakeGamma;
+            light.Intensity = pointLights[i].Intensity * LightmapConfig.BakeGamma * (LightmapConfig.MultiplyIntensityByRange ? light.Range : 1);
 
             /*
             var data = pointLights[i].GetEntityData();
@@ -235,11 +235,11 @@ sealed partial class Lightmapper {
 
         for (int i = 0; i < spotLights.Length; i++) {
             Node n = root.CreateLogicalNode();
-            var light = root.CreatePunctualLight($"pointlight_{i}", PunctualLightType.Spot);
+            var light = root.CreatePunctualLight($"spotlight_{i}", PunctualLightType.Spot);
 
             light.Color = spotLights[i].RawColor.ToNum();
             light.Range = spotLights[i].Range * scale;
-            light.Intensity = spotLights[i].Intensity * LightmapConfig.BakeGamma;
+            light.Intensity = spotLights[i].Intensity * LightmapConfig.BakeGamma * (LightmapConfig.MultiplyIntensityByRange ? light.Range : 1);
             if (spotLights[i].InnerConeAngle >= spotLights[i].OuterConeAngle) {
                 light.SetSpotCone(0, spotLights[i].OuterConeAngle);
             } else {

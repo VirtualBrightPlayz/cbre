@@ -18,6 +18,7 @@
         public static bool BakeModelLightmaps { get; set; }
         public static bool ComputeShadows { get; set; }
         public static float BakeGamma { get; set; }
+        public static bool MultiplyIntensityByRange { get; set; }
         public static float HitDistanceSquared { get; set; }
 
         static LightmapConfig() {
@@ -39,6 +40,7 @@
             BakeModelLightmaps = false;
             ComputeShadows = true;
             BakeGamma = 1.0f;
+            MultiplyIntensityByRange = false;
 
             HitDistanceSquared = 100f;
         }

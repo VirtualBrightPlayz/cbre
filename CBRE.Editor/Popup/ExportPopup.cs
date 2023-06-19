@@ -34,6 +34,7 @@ namespace CBRE.Editor.Popup {
         public bool bakeModelLightmaps;
         public bool computeShadows;
         public float bakeGamma;
+        public bool mulIntensityRange;
         public float hitDistSqr;
 
         private Lightmapper lightmapper;
@@ -53,6 +54,7 @@ namespace CBRE.Editor.Popup {
             bakeModelLightmaps = LightmapConfig.BakeModelLightmaps;
             computeShadows = LightmapConfig.ComputeShadows;
             bakeGamma = LightmapConfig.BakeGamma;
+            mulIntensityRange = LightmapConfig.MultiplyIntensityByRange;
             hitDistSqr = LightmapConfig.HitDistanceSquared;
         }
 
@@ -106,6 +108,10 @@ namespace CBRE.Editor.Popup {
             ImGui.SameLine();
             ImGui.InputFloat("##bakeGamma", ref bakeGamma);
 
+            ImGui.Text("Multiply Intensity By Range");
+            ImGui.SameLine();
+            ImGui.Checkbox("##mulIntensityRange", ref mulIntensityRange);
+
             ImGui.Text("Hit Distance Squared");
             ImGui.SameLine();
             ImGui.InputFloat("##hitDistSqr", ref hitDistSqr);
@@ -140,6 +146,7 @@ namespace CBRE.Editor.Popup {
                 LightmapConfig.BakeModelLightmaps = bakeModelLightmaps;
                 LightmapConfig.ComputeShadows = computeShadows;
                 LightmapConfig.BakeGamma = bakeGamma;
+                LightmapConfig.MultiplyIntensityByRange = mulIntensityRange;
                 LightmapConfig.HitDistanceSquared = hitDistSqr;
             }
             
