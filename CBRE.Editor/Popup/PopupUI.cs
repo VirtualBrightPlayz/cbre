@@ -48,14 +48,14 @@ namespace CBRE.Editor.Popup {
 
             string titleAndIndex = $"{title}##popup{popupIndex}";
             bool windowWasInitialized = false;
-            if (!canBeDefocused && GameMain.Instance.Popups.Last(p => !p.canBeDefocused) == this) {
-                ImGui.SetWindowFocus(titleAndIndex);
-            }
             if (canBeClosed) {
                 windowWasInitialized = ImGui.Begin(titleAndIndex, ref closeButtonWasntHit,
                     ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking);
             } else {
                 windowWasInitialized = ImGui.Begin(titleAndIndex, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDocking);
+            }
+            if (!ImGui.IsWindowFocused() && !canBeDefocused && GameMain.Instance.Popups.Last(p => !p.canBeDefocused) == this) {
+                ImGui.SetWindowFocus(titleAndIndex);
             }
             if (windowWasInitialized) {
                 if (!closeButtonWasntHit) { OnCloseButtonHit(ref shouldBeOpen); }

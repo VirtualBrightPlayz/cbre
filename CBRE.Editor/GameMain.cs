@@ -148,6 +148,7 @@ namespace CBRE.Editor {
             documentTabs = new DocumentTabs();
             
             // Initial windows
+            /*
             Dockables.AddRange(new DockableWindow[] {
                 new ToolsWindow(),
                 new ToolPropsWindow(),
@@ -155,6 +156,13 @@ namespace CBRE.Editor {
                 new ViewportWindow(),
                 new VisgroupsWindow()
             });
+            */
+            foreach (var winName in Layout.OpenWindows) {
+                var win = DockableWindow.OpenFromFullName(winName);
+                if (win == null) { continue; }
+                Dockables.Add(win);
+            }
+            // Dockables.AddRange(Layout.OpenWindows.Select(x => DockableWindow.OpenFromFullName(x)).Where(x => x != null));
 
             GameMain.Instance.Popups.Add(new AboutPopup(true));
 
@@ -246,6 +254,11 @@ namespace CBRE.Editor {
             }
         }
 
+        public void AddWindow(DockableWindow window) {
+            Dockables.Add(window);
+            CBRE.Settings.Layout.OpenWindows.Add(window.GetType().FullName);
+        }
+
         public const int MenuBarHeight = 20;
         protected virtual void ImGuiLayout() {
             uint dockId = ImGui.GetID("Dock");
@@ -291,6 +304,7 @@ namespace CBRE.Editor {
                 ImGui.SetNextWindowDockID(dockId, ImGuiCond.FirstUseEver);
                 Dockables[i].Draw(out bool shouldBeOpen);
                 if (!shouldBeOpen) {
+                    Layout.OpenWindows.Remove(Dockables[i].GetType().FullName);
                     Dockables[i].Dispose();
                     Dockables.RemoveAt(i);
                     i--;

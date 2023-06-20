@@ -274,8 +274,6 @@ namespace CBRE.Editor.Popup {
                     RenderSubView(i, true);
                     ImGui.PushClipRect(clipRectMin, clipRectMax, intersect_with_current_clip_rect: true);
 
-                    var objectRenderer = DocumentManager.CurrentDocument.ObjectRenderer;
-
                     if (Viewports[i] is Viewport3D vp3d) {
                         try {
                             Matrix matView = Matrix.CreateLookAt(-vp3d.Camera.Direction.ToXna() * 3f, vp3d.Camera.Direction.ToXna(), vp3d.Camera.GetUp().ToXna());
@@ -422,6 +420,7 @@ namespace CBRE.Editor.Popup {
                 }
                 RenderTarget[i]?.Dispose();
             }
+            base.Dispose();
         }
     }
 }

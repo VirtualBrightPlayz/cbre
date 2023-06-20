@@ -105,14 +105,28 @@ namespace CBRE.Editor {
                 new MenuSeparator(),
                 new MenuItem("Options...", "", MenuTextures["Menu_Options"], action: Options)));
             Menus.Add(new Menu("Layout",
+                new MenuItem("Use Default Layout", "", MenuTextures["Menu_NewWindow"], action: () => {
+                    for (int i = 0; i < Dockables.Count; i++) {
+                        Dockables[i].Dispose();
+                    }
+                    Dockables.Clear();
+                    Layout.OpenWindows.Clear();
+                    AddWindow(new ToolsWindow());
+                    AddWindow(new ToolPropsWindow());
+                    AddWindow(new StatsWindow());
+                    AddWindow(new ViewportWindow());
+                    AddWindow(new VisgroupsWindow());
+                    ImGui.LoadIniSettingsFromDisk("imgui_template.ini");
+                }),
                 new MenuItem("Create New Layout Window", "", MenuTextures["Menu_NewWindow"]),
                 new MenuItem("Layout Window Settings...", "", MenuTextures["Menu_WindowSettings"])));
             Menus.Add(new Menu("Window",
-                new MenuItem("Document View", "", MenuTextures["Menu_NewWindow"], action: () => new DocumentTabs()),
-                new MenuItem("Viewports", "", MenuTextures["Menu_NewWindow"], action: () => new ViewportWindow()),
-                new MenuItem("Tool Properties", "", MenuTextures["Menu_NewWindow"], action: () => new ToolPropsWindow()),
-                new MenuItem("Stats View", "", MenuTextures["Menu_NewWindow"], action: () => new StatsWindow()),
-                new MenuItem("Tools", "", MenuTextures["Menu_NewWindow"], action: () => new ToolsWindow())));
+                // new MenuItem("Document View", "", MenuTextures["Menu_NewWindow"], action: () => new DocumentTabs()),
+                new MenuItem("Viewports", "", MenuTextures["Menu_NewWindow"], action: () => AddWindow(new ViewportWindow())),
+                new MenuItem("Tool Properties", "", MenuTextures["Menu_NewWindow"], action: () => AddWindow(new ToolPropsWindow())),
+                new MenuItem("Stats View", "", MenuTextures["Menu_NewWindow"], action: () => AddWindow(new StatsWindow())),
+                new MenuItem("Tools", "", MenuTextures["Menu_NewWindow"], action: () => AddWindow(new ToolsWindow())),
+                new MenuItem("Visgroups", "", MenuTextures["Menu_NewWindow"], action: () => AddWindow(new VisgroupsWindow()))));
             Menus.Add(new Menu("Help",
                 new MenuItem("About...", "", action: About)));
         }

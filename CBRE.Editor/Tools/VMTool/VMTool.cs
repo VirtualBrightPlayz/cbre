@@ -809,8 +809,7 @@ namespace CBRE.Editor.Tools.VMTool
             {
                 case HotkeysMediator.HistoryUndo:
                 case HotkeysMediator.HistoryRedo:
-                    GameMain.Instance.Popups.Add(
-                        new MessagePopup("Error", "Please exit the VM tool to undo any changes."));
+                    GameMain.Instance.Popups.Add(new MessagePopup("Error", "Please exit the VM tool to undo any changes."));
                     return HotkeyInterceptResult.Abort;
                 case HotkeysMediator.OperationsPaste:
                 case HotkeysMediator.OperationsPasteSpecial:

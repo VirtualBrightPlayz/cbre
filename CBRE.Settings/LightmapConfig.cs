@@ -40,7 +40,7 @@
             BakeModelLightmaps = false;
             ComputeShadows = true;
             BakeGamma = 1.0f;
-            MultiplyIntensityByRange = false;
+            MultiplyIntensityByRange = true;
 
             HitDistanceSquared = 100f;
         }

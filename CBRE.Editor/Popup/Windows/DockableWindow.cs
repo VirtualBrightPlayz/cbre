@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+using System.Reflection;
 using ImGuiNET;
 
 namespace CBRE.Editor.Popup
@@ -9,8 +12,14 @@ namespace CBRE.Editor.Popup
         private bool open = true;
         public bool Open => open;
 
+        public static DockableWindow OpenFromFullName(string name) {
+            var ctor = typeof(DockableWindow).Assembly.GetType(name).GetConstructor(Type.EmptyTypes);
+            if (ctor == null) { return null; }
+            return ctor.Invoke(null) as DockableWindow;
+        }
+
         public DockableWindow(string title, ImGuiWindowFlags flags) {
-            this.title = title;
+            this.title = $"{title}##{GameMain.Instance.Dockables.Count(x => x.GetType() == GetType())}";
             this.flags = flags;
         }
 
@@ -26,6 +35,7 @@ namespace CBRE.Editor.Popup
             }
         }
 
-        public virtual void Dispose() { }
+        public virtual void Dispose() {
+        }
     }
 }

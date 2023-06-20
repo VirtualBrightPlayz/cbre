@@ -240,10 +240,14 @@ sealed partial class Lightmapper {
             light.Color = spotLights[i].RawColor.ToNum();
             light.Range = spotLights[i].Range * scale;
             light.Intensity = spotLights[i].Intensity * LightmapConfig.BakeGamma * (LightmapConfig.MultiplyIntensityByRange ? light.Range : 1);
-            if (MathF.Abs(spotLights[i].InnerConeAngle) >= MathF.Abs(spotLights[i].OuterConeAngle)) {
-                light.SetSpotCone(0, MathF.Min(MathF.Abs(spotLights[i].OuterConeAngle), MathF.PI / 2f));
+            var ang = (MathF.PI / 180f);
+            ang = 1;
+            float inner = MathF.Abs(spotLights[i].InnerConeAngle * ang);
+            float outer = MathF.Abs(spotLights[i].OuterConeAngle * ang);
+            if (inner >= outer) {
+                light.SetSpotCone(outer, inner);
             } else {
-                light.SetSpotCone(MathF.Abs(spotLights[i].InnerConeAngle), MathF.Abs(spotLights[i].OuterConeAngle));
+                light.SetSpotCone(inner, outer);
             }
 
             n.PunctualLight = light;
