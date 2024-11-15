@@ -1,10 +1,12 @@
 ﻿using CBRE.DataStructures.Geometric;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using CBRE.Common;
+using Matrix = System.Numerics.Matrix4x4;
+using Vector3 = System.Numerics.Vector3;
+using CBRE.Graphics;
 
 namespace CBRE.Editor.Rendering {
     public abstract class ViewportBase {
@@ -73,20 +75,20 @@ namespace CBRE.Editor.Rendering {
             _stopwatch = new Stopwatch();
         }
 
-        public virtual Microsoft.Xna.Framework.Matrix GetViewportMatrix() {
-            return Microsoft.Xna.Framework.Matrix.Identity;
+        public virtual Matrix GetViewportMatrix() {
+            return Matrix.Identity;
         }
 
-        public virtual Microsoft.Xna.Framework.Matrix GetCameraMatrix() {
-            return Microsoft.Xna.Framework.Matrix.Identity;
+        public virtual Matrix GetCameraMatrix() {
+            return Matrix.Identity;
         }
 
-        public virtual Microsoft.Xna.Framework.Matrix GetModelViewMatrix() {
-            return Microsoft.Xna.Framework.Matrix.Identity;
+        public virtual Matrix GetModelViewMatrix() {
+            return Matrix.Identity;
         }
 
         public virtual void FocusOn(Box box) {
-            FocusOn(box.Center);
+            FocusOn(box.Center.ToXna());
         }
 
         public virtual void FocusOn(Vector3 coordinate) {

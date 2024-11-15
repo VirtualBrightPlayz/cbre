@@ -34,6 +34,10 @@ namespace CBRE.Graphics {
             Bindables = new BindableResource[] { val, GlobalGraphics.PointSampler }; // TODO: samplers
         }
 
+        public void SetValue(ITextureResource val) {
+            SetValue(val.GetInternalTexture());
+        }
+
         public void SetValue(RenderTarget2D val) {
             IsDirty = true;
             _value = val;

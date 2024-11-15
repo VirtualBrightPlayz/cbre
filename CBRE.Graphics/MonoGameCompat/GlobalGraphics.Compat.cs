@@ -70,8 +70,8 @@ namespace CBRE.Graphics {
             return eff;
         }
 
-        public static Effect LoadBasicEffect() {
-            Effect eff = new Effect("Shaders/basic.mgfx");
+        public static BasicEffect LoadBasicEffect() {
+            BasicEffect eff = new BasicEffect();
             return eff;
         }
     }

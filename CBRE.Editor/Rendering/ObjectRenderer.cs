@@ -608,6 +608,50 @@ namespace CBRE.Editor.Rendering {
             }
         }
 
+        public Veldrid.RgbaFloat BlendFactor {
+            get => Effects.BasicEffect.BlendFactor;
+            set {
+                Effects.BasicEffect.BlendFactor = value;
+                Effects.TexturedLightmapped.BlendFactor = value;
+                Effects.TexturedShaded.BlendFactor = value;
+                Effects.SolidShaded.BlendFactor = value;
+                Effects.Solid.BlendFactor = value;
+            }
+        }
+
+        public BlendState BlendState {
+            get => Effects.BasicEffect.BlendState;
+            set {
+                Effects.BasicEffect.BlendState = value;
+                Effects.TexturedLightmapped.BlendState = value;
+                Effects.TexturedShaded.BlendState = value;
+                Effects.SolidShaded.BlendState = value;
+                Effects.Solid.BlendState = value;
+            }
+        }
+
+        public DepthStencilState DepthStencilState {
+            get => Effects.BasicEffect.DepthStencilState;
+            set {
+                Effects.BasicEffect.DepthStencilState = value;
+                Effects.TexturedLightmapped.DepthStencilState = value;
+                Effects.TexturedShaded.DepthStencilState = value;
+                Effects.SolidShaded.DepthStencilState = value;
+                Effects.Solid.DepthStencilState = value;
+            }
+        }
+
+        public RasterizerState RasterizerState {
+            get => Effects.BasicEffect.RasterizerState;
+            set {
+                Effects.BasicEffect.RasterizerState = value;
+                Effects.TexturedLightmapped.RasterizerState = value;
+                Effects.TexturedShaded.RasterizerState = value;
+                Effects.SolidShaded.RasterizerState = value;
+                Effects.Solid.RasterizerState = value;
+            }
+        }
+
         private readonly List<(AsyncTexture Texture, BrushGeometry Geometry)> translucentGeom = new();
 
         private Dictionary<string, ModelReference> models = new Dictionary<string, ModelReference>();
@@ -627,31 +671,31 @@ namespace CBRE.Editor.Rendering {
                         continue;
                     } else {
                         Effects.TexturedShaded.Parameters["xTexture"].SetValue(asyncTexture.VeldridTexture);
-                        Effects.TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                        Effects.TexturedShaded.Apply();
                     }
                 } else {
-                    Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
+                    Effects.SolidShaded.Apply();
                 }
                 kvp.Value.RenderSolid();
             }
             
-            Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
+            Effects.SolidShaded.Apply();
             if (!screenshotMode)
                 pointEntityGeometry.RenderSolid();
 
-            var prevDepthStencilState = GlobalGraphics.DepthStencilState;
-            GlobalGraphics.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true, DepthBufferWriteEnable = false };
+            var prevDepthStencilState = Effects.TexturedShaded.DepthStencilState;
+            Effects.TexturedShaded.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true, DepthBufferWriteEnable = false };
             foreach (var (texture, geometry) in translucentGeom) {
                 Effects.TexturedShaded.Parameters["xTexture"].SetValue(texture.VeldridTexture);
-                Effects.TexturedShaded.CurrentTechnique.Passes[0].Apply();
+                Effects.TexturedShaded.Apply();
                 geometry.RenderSolid();
             }
-            GlobalGraphics.DepthStencilState = prevDepthStencilState;
+            Effects.TexturedShaded.DepthStencilState = prevDepthStencilState;
         }
 
         public void RenderSprites(Viewport3D vp) {
             World = Matrix.Identity;//.ToXna();
-            Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Effects.BasicEffect.Apply();
             var sprites = Document.Map.WorldSpawn.Find(x => x is Entity { GameData: { } } e && e.GameData.Behaviours.Any(p => p.Name == "sprite")).OfType<Entity>().ToList();
             foreach (var sprite in sprites) {
                 string key = sprite.GameData.Behaviours.FirstOrDefault(p => p.Name == "sprite")?.Values.FirstOrDefault();
@@ -677,7 +721,7 @@ namespace CBRE.Editor.Rendering {
                     Effects.BasicEffect.DiffuseColor = fcolor.ToXna() / 255f;
                     Effects.BasicEffect.TextureEnabled = true;
                     Effects.BasicEffect.VertexColorEnabled = false;
-                    Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
+                    Effects.BasicEffect.Apply();
                     PrimitiveDrawing.End();
                     t.Unbind();
                     Effects.BasicEffect.DiffuseColor = Vector3.One;
@@ -689,7 +733,7 @@ namespace CBRE.Editor.Rendering {
 
         public void RenderModels() {
             // Models
-            Effects.BasicEffect.CurrentTechnique.Passes[0].Apply();
+            Effects.BasicEffect.Apply();
             var models = Document.Map.WorldSpawn
                 .Find(x => x is Entity e && e.GameData != null && e.GameData.Behaviours.Any(p => p.Name == "model"))
                 .OfType<Entity>().ToList();
@@ -739,11 +783,11 @@ namespace CBRE.Editor.Rendering {
                     if (item is {Texture: AsyncTexture {VeldridTexture: { }} asyncTexture}) {
                         Effects.TexturedLightmapped.Parameters["diffTexture"].SetValue(asyncTexture.VeldridTexture);
                     }
-                    Effects.TexturedLightmapped.CurrentTechnique.Passes[0].Apply();
+                    Effects.TexturedLightmapped.Apply();
                     kvp.Value.RenderSolid(i);
                 }
             }
-            Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
+            Effects.SolidShaded.Apply();
             if (!screenshotMode)
                 pointEntityGeometry.RenderSolid();
 
@@ -751,24 +795,24 @@ namespace CBRE.Editor.Rendering {
 
         public void RenderSolidUntextured() {
             foreach (var kvp in brushGeom) {
-                Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
+                Effects.SolidShaded.Apply();
                 kvp.Value.RenderSolid();
             }
-            Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
+            Effects.SolidShaded.Apply();
             pointEntityGeometry.RenderSolid();
         }
 
         public void RenderFlatUntextured() {
             foreach (var kvp in brushGeom) {
-                Effects.Solid.CurrentTechnique.Passes[0].Apply();
+                Effects.Solid.Apply();
                 kvp.Value.RenderSolid();
             }
-            Effects.SolidShaded.CurrentTechnique.Passes[0].Apply();
+            Effects.SolidShaded.Apply();
             pointEntityGeometry.RenderSolid();
         }
 
         public void RenderWireframe() {
-            Effects.Solid.CurrentTechnique.Passes[0].Apply();
+            Effects.Solid.Apply();
             foreach (var kvp in brushGeom) {
                 kvp.Value.RenderWireframe();
             }

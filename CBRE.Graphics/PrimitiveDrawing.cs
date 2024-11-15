@@ -302,7 +302,6 @@ namespace CBRE.Graphics {
                         );
                         pipeDesc.RasterizerState = RasterizerStateDescription.CullNone;
                         pipeDesc.PrimitiveTopology = topology;
-                        // pipeDesc.ResourceLayouts = Array.Empty<ResourceLayout>(); // TODO: textures
                         pipeDesc.ResourceLayouts = new[] { textureLayout };
                         pipeDesc.ShaderSet = new ShaderSetDescription(
                             vertexLayouts: new VertexLayoutDescription[] { vertexLayout },

@@ -9,7 +9,7 @@ namespace CBRE.Editor.Popup {
     public abstract class PopupUI : IDisposable {
         private readonly string title;
         private readonly ImColor? color = null;
-        
+
         protected virtual bool canBeClosed => true;
         protected virtual bool canBeDefocused => true;
         protected virtual bool hasOkButton => true;
@@ -28,7 +28,7 @@ namespace CBRE.Editor.Popup {
             if (!canBeDefocused) {
                 ImGui.SetNextWindowPos(new Num.Vector2(0,0));
                 ImGui.SetNextWindowSize(ImGui.GetWindowViewport().Size);
-                using (new ColorPush(ImGuiCol.WindowBg, Color.Black * 0.5f)) {
+                using (new ColorPush(ImGuiCol.WindowBg, Veldrid.RgbaFloat.Black.ToVector4() * 0.5f)) {
                     if (ImGui.Begin(blockerTitleAndIndex,
                         ImGuiWindowFlags.NoCollapse
                         | ImGuiWindowFlags.NoDecoration
@@ -40,10 +40,10 @@ namespace CBRE.Editor.Popup {
                     }
                 }
             }
-            
+
             shouldBeOpen = true;
             bool closeButtonWasntHit = true; //must default to true because ImGui.Begin only writes this when the X button is hit
-            
+
             using var _ = new ColorPush(ImGuiCol.WindowBg, color);
 
             string titleAndIndex = $"{title}##popup{popupIndex}";
@@ -73,7 +73,7 @@ namespace CBRE.Editor.Popup {
         }
 
         protected abstract void ImGuiLayout(out bool shouldBeOpen);
-        
+
         private void OkButton(out bool hit) {
             if (!hasOkButton) { hit = false; return; }
             hit = ImGui.Button("OK");
@@ -82,7 +82,7 @@ namespace CBRE.Editor.Popup {
         protected virtual void OnCloseButtonHit(ref bool shouldBeOpen) { shouldBeOpen = false; }
 
         public virtual void OnOkHit() { }
-        
+
         public virtual void Dispose() { }
     }
 }

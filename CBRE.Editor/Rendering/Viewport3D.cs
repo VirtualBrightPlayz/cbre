@@ -6,7 +6,8 @@ using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Graphics;
 using CBRE.Settings;
-using Microsoft.Xna.Framework.Graphics;
+using Matrix = System.Numerics.Matrix4x4;
+using Vector3 = System.Numerics.Vector3;
 
 namespace CBRE.Editor.Rendering {
     public class Viewport3D : ViewportBase {
@@ -51,8 +52,8 @@ namespace CBRE.Editor.Rendering {
         public override void FocusOn(Box box) {
             var dist = System.Math.Max(System.Math.Max(box.Width, box.Length), box.Height);
             var normal = Camera.EyePosition - Camera.LookPosition;
-            var v = new Vector(new Vector3(normal.X, normal.Y, normal.Z), dist);
-            FocusOn(box.Center, v);
+            var v = normal * dist;//new Vector(normal, dist);
+            FocusOn(box.Center.ToXna(), v.ToXna());
         }
 
         public override void FocusOn(Vector3 coordinate) {
@@ -61,24 +62,24 @@ namespace CBRE.Editor.Rendering {
 
         public void FocusOn(Vector3 coordinate, Vector3 distance) {
             var pos = coordinate + distance;
-            Camera.EyePosition = new Vector3(pos.X, pos.Y, pos.Z);
-            Camera.LookPosition = new Vector3(coordinate.X, coordinate.Y, coordinate.Z);
+            Camera.EyePosition = new Vector3(pos.X, pos.Y, pos.Z).ToCbre();
+            Camera.LookPosition = new Vector3(coordinate.X, coordinate.Y, coordinate.Z).ToCbre();
         }
 
-        public override Microsoft.Xna.Framework.Matrix GetViewportMatrix() {
+        public override Matrix GetViewportMatrix() {
             const float near = 0.1f;
             var ratio = Width / (float)Height;
             if (ratio <= 0) { ratio = 1; }
 
             Camera.FOV = View.CameraFOV;
-            return Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), ratio, near, 10000.0f);
+            return Matrix.CreatePerspectiveFieldOfView(MathFunctions.ToRadians((float)Camera.FOV), ratio, near, 10000.0f);
         }
 
-        public override Microsoft.Xna.Framework.Matrix GetCameraMatrix() {
-            Microsoft.Xna.Framework.Vector3 eyePos = new Microsoft.Xna.Framework.Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z);
-            Microsoft.Xna.Framework.Vector3 lookPos = new Microsoft.Xna.Framework.Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z);
-            Microsoft.Xna.Framework.Vector3 upVector = new Microsoft.Xna.Framework.Vector3(0, 0, 1);
-            return Microsoft.Xna.Framework.Matrix.CreateLookAt(eyePos, lookPos, upVector);
+        public override Matrix GetCameraMatrix() {
+            Vector3 eyePos = new Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z);
+            Vector3 lookPos = new Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z);
+            Vector3 upVector = new Vector3(0, 0, 1);
+            return Matrix.CreateLookAt(eyePos, lookPos, upVector);
         }
 
         protected override void UpdateBeforeClearViewport() {
@@ -119,12 +120,12 @@ namespace CBRE.Editor.Rendering {
             var viewport = new[] { 0, 0, Width, Height };
             // throw new NotImplementedException();
             
-            var pm = Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), Width / (float)Height, 0.1f, 50000).ToCbre();
-            var vm = Microsoft.Xna.Framework.Matrix.CreateLookAt(
-                new Microsoft.Xna.Framework.Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z),
-                new Microsoft.Xna.Framework.Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z),
-                Microsoft.Xna.Framework.Vector3.UnitZ).ToCbre();
-            return MathFunctions.Project(world, viewport, pm, vm) ?? Vector3.Zero;
+            var pm = Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), Width / (float)Height, 0.1f, 50000).ToCbre();
+            var vm = Matrix.CreateLookAt(
+                new Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z),
+                new Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z),
+                Vector3.UnitZ).ToCbre();
+            return (MathFunctions.Project(world.ToCbre(), viewport, pm, vm) ?? Vector3.Zero.ToCbre()).ToXna();
         }
 
         /// <summary>
@@ -141,14 +142,14 @@ namespace CBRE.Editor.Rendering {
             var near = new Vector3(x, Height - y, 0);
             var far = new Vector3(x, Height - y, 1);
             
-            var pm = Microsoft.Xna.Framework.Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), Width / (float)Height, 0.1f, 50000).ToCbre();
-            var vm = Microsoft.Xna.Framework.Matrix.CreateLookAt(
-                new Microsoft.Xna.Framework.Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z),
-                new Microsoft.Xna.Framework.Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z),
-                Microsoft.Xna.Framework.Vector3.UnitZ).ToCbre();
+            var pm = Matrix.CreatePerspectiveFieldOfView(Microsoft.Xna.Framework.MathHelper.ToRadians((float)Camera.FOV), Width / (float)Height, 0.1f, 50000).ToCbre();
+            var vm = Matrix.CreateLookAt(
+                new Vector3((float)Camera.EyePosition.X, (float)Camera.EyePosition.Y, (float)Camera.EyePosition.Z),
+                new Vector3((float)Camera.LookPosition.X, (float)Camera.LookPosition.Y, (float)Camera.LookPosition.Z),
+                Vector3.UnitZ).ToCbre();
             var viewport = new[] { 0, 0, Width, Height };
-            var un = MathFunctions.Unproject(near, viewport, pm, vm);
-            var uf = MathFunctions.Unproject(far, viewport, pm, vm);
+            var un = MathFunctions.Unproject(near.ToCbre(), viewport, pm, vm);
+            var uf = MathFunctions.Unproject(far.ToCbre(), viewport, pm, vm);
             return (un == null || uf == null) ? null : new Line(un.Value, uf.Value);
         }
 
@@ -162,12 +163,12 @@ namespace CBRE.Editor.Rendering {
                 var objectRenderer = DocumentManager.CurrentDocument.ObjectRenderer;
                 objectRenderer.Projection = GetViewportMatrix();
                 objectRenderer.View = GetCameraMatrix();
-                objectRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
+                objectRenderer.World = Matrix.Identity;
 
-                GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
-                GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-                GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
-                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                objectRenderer.BlendFactor = Veldrid.RgbaFloat.White;
+                objectRenderer.BlendState = BlendState.NonPremultiplied;
+                objectRenderer.RasterizerState = RasterizerState.CullCounterClockwise;
+                objectRenderer.DepthStencilState = DepthStencilState.Default;
 
                 switch (Type) {
                     case ViewType.Lightmapped:
@@ -193,7 +194,7 @@ namespace CBRE.Editor.Rendering {
                 if (!ScreenshotRender)
                     objectRenderer.RenderSprites(this);
 
-                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+                objectRenderer.DepthStencilState = DepthStencilState.None;
             }
         }
 

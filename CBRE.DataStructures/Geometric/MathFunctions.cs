@@ -49,5 +49,9 @@ namespace CBRE.DataStructures.Geometric {
             var result = new Vector3(vector.X, vector.Y, vector.Z) / vector.W;
             return result;
         }
+
+        public static float ToRadians(float deg) {
+            return deg * (MathF.PI / 180f);
+        }
     }
 }

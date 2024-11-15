@@ -3,13 +3,14 @@ using CBRE.Editor.Documents;
 using CBRE.Extensions;
 using CBRE.Graphics;
 using CBRE.Settings;
-using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Drawing;
 using System.Linq;
 using CBRE.Common;
+using Matrix = System.Numerics.Matrix4x4;
+using Vector3 = System.Numerics.Vector3;
 
 namespace CBRE.Editor.Rendering {
     public class Viewport2D : ViewportBase {
@@ -122,7 +123,7 @@ namespace CBRE.Editor.Rendering {
         }
 
         private Vector3 CenterScreen {
-            get { return new Vector3(Width * 0.5m, Height * 0.5m, 0m); }
+            get { return new Vector3(Width * 0.5f, Height * 0.5f, 0f); }
         }
 
         public Viewport2D(ViewDirection direction) {
@@ -152,45 +153,42 @@ namespace CBRE.Editor.Rendering {
             return ZeroUnusedCoordinate(c, Direction);
         }
 
-        public override Microsoft.Xna.Framework.Matrix GetViewportMatrix() {
+        public override Matrix GetViewportMatrix() {
             const float near = -1000000;
             const float far = 1000000;
-            return Microsoft.Xna.Framework.Matrix.CreateOrthographic((float)Width, (float)Height, near, far);
+            return Matrix.CreateOrthographic((float)Width, (float)Height, near, far);
         }
 
-        public override Microsoft.Xna.Framework.Matrix GetCameraMatrix() {
-            var translate = Microsoft.Xna.Framework.Matrix.CreateTranslation(-(float)Position.X, -(float)Position.Y, 0f);
-            var scale = Microsoft.Xna.Framework.Matrix.CreateScale((float)Zoom, (float)Zoom, 0);
+        public override Matrix GetCameraMatrix() {
+            var translate = Matrix.CreateTranslation(-(float)Position.X, -(float)Position.Y, 0f);
+            var scale = Matrix.CreateScale((float)Zoom, (float)Zoom, 0);
             return translate * scale;
         }
 
-        public override Microsoft.Xna.Framework.Matrix GetModelViewMatrix() {
+        public override Matrix GetModelViewMatrix() {
             var modelViewMatrix = GetMatrixFor(Direction);
-            return new Microsoft.Xna.Framework.Matrix(
+            return modelViewMatrix;
+            /*return new Matrix(
                     (float)modelViewMatrix[0], (float)modelViewMatrix[1], (float)modelViewMatrix[2], (float)modelViewMatrix[3],
                     (float)modelViewMatrix[4], (float)modelViewMatrix[5], (float)modelViewMatrix[6], (float)modelViewMatrix[7],
                     (float)modelViewMatrix[8], (float)modelViewMatrix[9], (float)modelViewMatrix[10], (float)modelViewMatrix[11],
-                    (float)modelViewMatrix[12], (float)modelViewMatrix[13], (float)modelViewMatrix[14], (float)modelViewMatrix[15]);
+                    (float)modelViewMatrix[12], (float)modelViewMatrix[13], (float)modelViewMatrix[14], (float)modelViewMatrix[15]);*/
         }
 
         public Vector3 ScreenToWorld(Point location) {
             return ScreenToWorld(location.X, location.Y);
         }
 
-        public Vector3 ScreenToWorld(Microsoft.Xna.Framework.Point location) {
-            return ScreenToWorld(location.X, location.Y);
-        }
-
         public Vector3 ScreenToWorld(decimal x, decimal y) {
-            return ScreenToWorld(new Vector3(x, y, 0));
+            return ScreenToWorld(new Vector3((float)x, (float)y, 0));
         }
 
         public Vector3 ScreenToWorld(Vector3 location) {
-            return Position + ((location - CenterScreen) / Zoom);
+            return Position + ((location - CenterScreen) / (float)Zoom);
         }
 
         public Vector3 WorldToScreen(Vector3 location) {
-            return CenterScreen + ((location - Position) * Zoom);
+            return CenterScreen + ((location - Position) * (float)Zoom);
         }
 
         public decimal UnitsToPixels(decimal units) {
@@ -215,16 +213,16 @@ namespace CBRE.Editor.Rendering {
                 var ObjectRenderer = DocumentManager.CurrentDocument.ObjectRenderer;
                 ObjectRenderer.Projection = GetViewportMatrix();
                 ObjectRenderer.View = GetModelViewMatrix() * GetCameraMatrix();
-                ObjectRenderer.World = Microsoft.Xna.Framework.Matrix.Identity;
+                ObjectRenderer.World = System.Numerics.Matrix4x4.Identity;
 
-                GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
-                GlobalGraphics.GraphicsDevice.BlendState = BlendState.NonPremultiplied;
-                GlobalGraphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
-                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+                ObjectRenderer.BlendFactor = Veldrid.RgbaFloat.White;
+                ObjectRenderer.BlendState = BlendState.NonPremultiplied;
+                ObjectRenderer.RasterizerState = RasterizerState.CullNone;
+                ObjectRenderer.DepthStencilState = DepthStencilState.Default;
 
                 ObjectRenderer.RenderWireframe();
 
-                GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.None;
+                ObjectRenderer.DepthStencilState = DepthStencilState.None;
             }
         }
 
@@ -233,10 +231,10 @@ namespace CBRE.Editor.Rendering {
                 decimal gridSpacing = DocumentManager.CurrentDocument.Map.GridSpacing;
                 while (gridSpacing * Zoom < 4.0m) { gridSpacing *= 4m; }
 
-                int startX = (int)(Position.X - ((Width / 2) / Zoom));
-                int startY = (int)(Position.Y - ((Height / 2) / Zoom));
-                int endX = (int)(Position.X + ((Width / 2) / Zoom));
-                int endY = (int)(Position.Y + ((Height / 2) / Zoom));
+                int startX = (int)(Position.X - ((Width / 2) / (float)Zoom));
+                int startY = (int)(Position.Y - ((Height / 2) / (float)Zoom));
+                int endX = (int)(Position.X + ((Width / 2) / (float)Zoom));
+                int endY = (int)(Position.Y + ((Height / 2) / (float)Zoom));
                 startX = (int)(Math.Round(startX / gridSpacing) * gridSpacing) - (int)gridSpacing;
                 startY = (int)(Math.Round(startY / gridSpacing) * gridSpacing) - (int)gridSpacing;
                 endX = (int)(Math.Round(endX / gridSpacing) * gridSpacing) + (int)gridSpacing;

@@ -22,7 +22,7 @@ public class Program {
         Console.WriteLine("h");
         if (!RenderDoc.Load(out RenderDoc doc)) {
             Console.WriteLine("Failed to load RenderDoc");
-            return;
+            // return;
         }
         VeldridStartup.CreateWindowAndGraphicsDevice(windowCI, options, GraphicsBackend.Vulkan, out Sdl2Window window, out GraphicsDevice gd);
         window.Resizable = false;
@@ -30,7 +30,7 @@ public class Program {
         GlobalGraphics.Set(gd, window, renderer);
         while (window.Exists) {
             window.PumpEvents();
-            if (doc.IsFrameCapturing()) {
+            if (doc != null && doc.IsFrameCapturing()) {
                 doc.LaunchReplayUI();
             }
             GlobalGraphics.BeginMainDraw();

@@ -43,7 +43,7 @@ namespace CBRE.Editor.Rendering {
                 effect.Texture = PrimitiveDrawing.Texture;
                 effect.TextureEnabled = true;
                 effect.VertexColorEnabled = false;
-                effect.CurrentTechnique.Passes[0].Apply();
+                effect.Apply();
                 GlobalGraphics.SetVertexBuffer(texBuf.Value);
                 GlobalGraphics.DrawPrimitives(PrimitiveType.TriangleList, 0, texBuf.Value.VertexCount / 3);
                 if (texture != null) ((AsyncTexture)texture).Unbind();
