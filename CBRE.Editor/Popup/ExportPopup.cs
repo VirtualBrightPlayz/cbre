@@ -48,6 +48,7 @@ namespace CBRE.Editor.Popup {
                 (byte)LightmapConfig.AmbientColorR,
                 (byte)LightmapConfig.AmbientColorG,
                 (byte)LightmapConfig.AmbientColorB);
+            ambientLightNormal = new Num.Vector3(LightmapConfig.AmbientNormalX, LightmapConfig.AmbientNormalY, LightmapConfig.AmbientNormalZ);
             blurRadius = LightmapConfig.BlurRadius;
             planeMargin = LightmapConfig.PlaneMargin;
             bakeModels = LightmapConfig.BakeModels;
@@ -128,7 +129,7 @@ namespace CBRE.Editor.Popup {
             ImGui.Text("Ambient light normal");
             Num.Vector3 ambientNormal = new(ambientLightNormal.X, ambientLightNormal.Y, ambientLightNormal.Z);
             ImGui.InputFloat3("##ambientLightNormal", ref ambientNormal);
-            ambientLightNormal = ambientNormal;
+            ambientLightNormal = new Num.Vector3(ambientNormal.X, ambientNormal.Y, ambientNormal.Z);
 
             if (ImGui.Button("Apply render settings")) {
                 LightmapConfig.DownscaleFactor = downscaleFactor;

@@ -34,9 +34,9 @@ namespace CBRE.Editor.Documents {
             Mediator.Publish(EditorMediator.DocumentClosed, doc);
 
             if (Documents.Count == 0) {
+                Mediator.Publish(EditorMediator.DocumentAllClosed);
                 Document newDoc = new(null, new DataStructures.MapObjects.Map());
                 AddAndSwitch(newDoc);
-                Mediator.Publish(EditorMediator.DocumentAllClosed);
             }
 
         }
