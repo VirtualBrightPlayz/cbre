@@ -37,7 +37,7 @@ jobs:
       working-directory: ${{github.workspace}}/CBRE.Editor/bin/x64/Release/net6.0/
       run: git log -1 --format=%h > gitinfo.txt
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: CBRE.Editor Build
         path: CBRE.Editor/bin/x64/Release/net6.0/
