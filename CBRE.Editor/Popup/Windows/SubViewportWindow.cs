@@ -25,9 +25,9 @@ namespace CBRE.Editor.Popup {
             bool mouse3Hit = mouse3Down && !prevMouse3Down;
             int scrollWheelValue = mouseState.ScrollWheelValue;
             MouseButtons mouseButtons = MouseButtons.None;
-            if (mouse1Down) { mouseButtons |= MouseButtons.Left; }
-            if (mouse2Down) { mouseButtons |= MouseButtons.Right; }
-            if (mouse3Down) { mouseButtons |= MouseButtons.Middle; }
+            if (mouse1Down || prevMouse1Down) { mouseButtons |= MouseButtons.Left; }
+            if (mouse2Down || prevMouse2Down) { mouseButtons |= MouseButtons.Right; }
+            if (mouse3Down || prevMouse3Down) { mouseButtons |= MouseButtons.Middle; }
 
             var mousePos = mouseState.Position;
 

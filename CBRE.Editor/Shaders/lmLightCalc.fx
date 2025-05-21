@@ -6,6 +6,9 @@ float3 lightPos;
 float4 lightColor;
 float shadowMapTexelSize;
 
+float3 ambientLightColor;
+float3 ambientLightNormal;
+
 Matrix lightProjView0;
 Matrix lightProjView1;
 Matrix lightProjView2;
@@ -99,12 +102,12 @@ float shadowMapBlocked(sampler smp, float4 position) {
 }
 
 float4 PixelShaderF(VertexShaderOutput input) : COLOR0 {
-    float4 c = saturate((lightRange - distance(lightPos, input.WorldPosition.xyz)) / lightRange);
-    c *= c;
-    c *= saturate(dot(normalize(lightPos - input.WorldPosition.xyz), input.Normal));
-    c *= lightColor;
+    float atten = saturate((lightRange - distance(lightPos, input.WorldPosition.xyz)) / lightRange);
+    atten *= atten;
+    atten *= saturate(dot(normalize(lightPos - input.WorldPosition.xyz), input.Normal));
+    float shadowAtten = atten;
     if (lightType == 0) {
-        c.xyz *= min(1.0,
+        shadowAtten *= min(1.0,
             shadowMapBlocked(lightShadowMapSampler0, input.ShadowMapPos0)
             +shadowMapBlocked(lightShadowMapSampler1, input.ShadowMapPos1)
             +shadowMapBlocked(lightShadowMapSampler2, input.ShadowMapPos2)
@@ -115,12 +118,12 @@ float4 PixelShaderF(VertexShaderOutput input) : COLOR0 {
         float dirDot = dot(lightDirection, normalize(input.WorldPosition.xyz - lightPos));
         if (dirDot < lightConeAngles.x) {
             if (dirDot < lightConeAngles.y) {
-                c *= 0.0;
+                shadowAtten *= 0.0;
             } else {
-                c *= (dirDot - lightConeAngles.y) / (lightConeAngles.x - lightConeAngles.y);
+                shadowAtten *= (dirDot - lightConeAngles.y) / (lightConeAngles.x - lightConeAngles.y);
             }
         }
-        c.xyz *= min(1.0,
+        shadowAtten *= min(1.0,
             shadowMapBlocked(lightShadowMapSampler0, input.ShadowMapPos0)
             +shadowMapBlocked(lightShadowMapSampler1, input.ShadowMapPos1)
             +shadowMapBlocked(lightShadowMapSampler2, input.ShadowMapPos2)
@@ -136,7 +139,8 @@ float4 PixelShaderF(VertexShaderOutput input) : COLOR0 {
     if (uv.x > 1.0 || uv.y > 1.0 || uv.x < 0.0 || uv.y < 0.0) { uv = float2(0.0, 0.0); }
     else { uv = tex2D(lightShadowMapSampler1, uv).xy / 1024.0; }
     c.xy += uv;*/
-    //c.xyz += uv.x;
+    float4 c = atten;
+    c.xyz = lerp(ambientLightColor.xyz, lightColor.xyz, saturate(shadowAtten));
 
     c.a = 1.0f;
     c.xyz = saturate(c.xyz);

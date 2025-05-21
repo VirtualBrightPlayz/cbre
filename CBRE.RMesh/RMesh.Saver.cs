@@ -40,7 +40,7 @@ public partial record RMesh {
                 }
                 
                 if (mesh.TextureBlendMode == VisibleMesh.BlendMode.Lightmapped) {
-                    writeTextureInfo(2, mesh.LightmapTexture ?? throw new Exception("Blend mode is lightmapped but lightmap texture is null"));
+                    writeTextureInfo(1, mesh.LightmapTexture ?? throw new Exception("Blend mode is lightmapped but lightmap texture is null"));
                     writeTextureInfo(1, mesh.DiffuseTexture);
                 } else {
                     writeTextureInfo(0, "");
@@ -145,8 +145,12 @@ public partial record RMesh {
                                 writer.WriteFloat((float)v3.Z);
                             }
                             break;
-                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Bool:
-                            throw new NotImplementedException(); // TODO
+                        case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Bool: {
+                                bool i = default;
+                                bool.TryParse(entity.EntityData.GetPropertyValue(rmEntry.Property), out i);
+                                writer.WriteBool(i);
+                            }
+                            break;
                         case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector3D:
                             {
                                 var v3 = entity.EntityData.GetPropertyVector3(rmEntry.Property);

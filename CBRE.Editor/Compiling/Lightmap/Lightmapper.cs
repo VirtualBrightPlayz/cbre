@@ -31,6 +31,7 @@ using CBRE.DataStructures.Transformations;
 using CBRE.FileSystem;
 using CBRE.Providers.Model;
 using CBRE.Common.Mediator;
+using System.Drawing;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     sealed partial class Lightmapper {
@@ -188,7 +189,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         private async Task WaitForRender(string name, Action? action, CancellationToken token) {
             bool signal = false;
-            TaskPool.Add(name, Task.Delay(100), (t) => {
+            TaskPool.Add(name, Task.Delay(1), (t) => {
                 try {
                     action?.Invoke();
                 }
@@ -278,7 +279,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     BufferUsage.None);
                 
                 GeomVertices.SetData(vertices
-                    .Select(v => new ObjectRenderer.BrushVertex(v.OriginalVertex))
+                    .Select(v => { var r = new ObjectRenderer.BrushVertex(v.OriginalVertex); r.Position /= 1024; return r; })
                     .ToArray());
                 GeomIndices.SetData(indices.ToArray());
                 indexCount = indices.Count;
@@ -319,7 +320,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         private record PointLight(Vector3 Location, float Range, Vector3 Color, Vector3 RawColor, float Intensity) {
             public PointLight(MapObject lightEntity) : this(default, default, default, default, default) {
-                Location = lightEntity.BoundingBox.Center.ToXna();
+                Location = (lightEntity.BoundingBox.Center).ToXna();
                 
                 var data = lightEntity.GetEntityData();
                 float getPropertyFloat(string key)
@@ -341,15 +342,20 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         private record SpotLight(Vector3 Location, float Range, Vector3 Color, Vector3 Direction, float InnerConeAngle, float OuterConeAngle, Vector3 RawColor, float Intensity) {
             public SpotLight(MapObject lightEntity) : this(default, default, default, default, default, default, default, default) {
-                Location = lightEntity.BoundingBox.Center.ToXna();
+                Location = (lightEntity.BoundingBox.Center).ToXna();
                 var data = lightEntity.GetEntityData();
                 var m = new UnitMatrixMult((lightEntity as Entity).LeftHandedWorldMatrix);
-                /*DataStructures.Geometric.Vector3 angles = data.GetPropertyVector3("angles");
+                DataStructures.Geometric.Vector3 angles = data.GetPropertyVector3("angles");
+                angles.X = DMath.DegreesToRadians(angles.X);
+                angles.Y = DMath.DegreesToRadians(angles.Y);
+                angles.Z = DMath.DegreesToRadians(angles.Z);
+                angles.X *= -1;
+                /*
                 var pitch = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
                 var yaw = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
                 var roll = DataStructures.Geometric.Matrix.Rotation(DataStructures.Geometric.Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
                 var m = new UnitMatrixMult(yaw * roll * pitch);*/
-                Direction = m.Transform(DataStructures.Geometric.Vector3.UnitY).Normalise().ToXna();
+                Direction = DataStructures.Geometric.Quaternion.EulerAngles(angles).Rotate(DataStructures.Geometric.Vector3.UnitY).Normalise().ToXna();
                 float getPropertyFloat(string key)
                     => float.TryParse(data.GetPropertyValue(key), NumberStyles.Any, CultureInfo.InvariantCulture,
                         out float v)
@@ -423,9 +429,9 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         private static void CalculateUv(
             List<LightmapGroup> lmGroups,
-            Rectangle area,
-            out int usedWidth,
-            out int usedHeight
+            RectangleF area,
+            out float usedWidth,
+            out float usedHeight
         ) {
             usedWidth = 0;
             usedHeight = 0;
@@ -442,13 +448,13 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     lmGroup.SwapUv();
                 }
 
-                int downscaledWidth = 0;
-                int downscaledHeight = 0;
+                float downscaledWidth = 0;
+                float downscaledHeight = 0;
                 bool fits = false;
                 
                 for (int attempts = 0; attempts < 2; attempts++) {
-                    downscaledWidth = (int)Math.Ceiling(lmGroup.UvSpaceWidth);
-                    downscaledHeight = (int)Math.Ceiling(lmGroup.UvSpaceHeight);
+                    downscaledWidth = (lmGroup.UvSpaceWidth);
+                    downscaledHeight = (lmGroup.UvSpaceHeight);
 
                     if (downscaledWidth > area.Width || downscaledHeight > area.Height) {
                         //The group did not fit, try flipping the group
@@ -463,9 +469,9 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 if (!fits) { continue; } //The given group simply does not fit in the given area, try the next one
 
                 lmGroups.RemoveAt(i); //Remove the current group from the list of pending groups
-                
-                lmGroup.StartWriteUV.U = area.Left;
-                lmGroup.StartWriteUV.V = area.Top;
+
+                lmGroup.StartWriteUV.U = area.Left;// + 0.5f;
+                lmGroup.StartWriteUV.V = area.Top;// + 0.5f;
                 usedWidth += downscaledWidth;
                 usedHeight += downscaledHeight;
                 
@@ -484,10 +490,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
                 //Try to fill region A
                 if (downscaledWidth < area.Width) {
-                    int subWidth = -1;
+                    float subWidth = -1;
                     usedWidth += LightmapConfig.PlaneMargin;
-                    while (subWidth != 0) {
-                        CalculateUv(lmGroups, new Rectangle(
+                    while (MathF.Abs(subWidth) <= float.Epsilon) {
+                        CalculateUv(lmGroups, new RectangleF(
                                 area.Left + usedWidth,
                                 area.Top,
                                 area.Width - usedWidth,
@@ -499,10 +505,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
                 //Try to fill region B
                 if (downscaledHeight < area.Height) {
-                    int subHeight = -1;
+                    float subHeight = -1;
                     usedHeight += LightmapConfig.PlaneMargin;
-                    while (subHeight != 0) {
-                        CalculateUv(lmGroups, new Rectangle(
+                    while (MathF.Abs(subHeight) <= float.Epsilon) {
+                        CalculateUv(lmGroups, new RectangleF(
                                 area.Left,
                                 area.Top + usedHeight,
                                 downscaledWidth,
@@ -514,14 +520,14 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
                 //Try to fill region C
                 if (downscaledWidth < area.Width && downscaledHeight < area.Height) {
-                    Rectangle remainder = new Rectangle(
+                    RectangleF remainder = new RectangleF(
                         area.Left + downscaledWidth + LightmapConfig.PlaneMargin,
                         area.Top + downscaledHeight + LightmapConfig.PlaneMargin,
                         area.Width - downscaledWidth - LightmapConfig.PlaneMargin,
                         area.Height - downscaledHeight - LightmapConfig.PlaneMargin);
 
                     CalculateUv(lmGroups, remainder,
-                        out int subWidth, out int subHeight);
+                        out float subWidth, out float subHeight);
 
                     usedWidth = Math.Max(usedWidth, downscaledWidth + LightmapConfig.PlaneMargin + subWidth);
                     usedHeight = Math.Max(usedHeight, downscaledHeight + LightmapConfig.PlaneMargin + subHeight);

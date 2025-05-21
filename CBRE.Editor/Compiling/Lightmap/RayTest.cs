@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if false
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -244,3 +245,4 @@ sealed partial class Lightmapper {
             .ToArray();
     }
 }
+#endif

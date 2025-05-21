@@ -81,7 +81,7 @@ sealed partial class Lightmapper {
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathF.Tau / 4.0f, 1.0f, 1.0f, light.Range);
             lightRange = light.Range;
 
-            Vector3 lightXzy = light.Location.ToCbre().XYZ().ToXna();
+            Vector3 lightXzy = light.Location;
             var translation = Matrix.CreateTranslation(-lightXzy);
             for (int i = 0; i < 6; i++) {
                 ProjectionViewMatrices[i] = (translation * baseViewMatrices[i]) * projectionMatrix;
@@ -92,7 +92,7 @@ sealed partial class Lightmapper {
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathF.Tau / 4.0f, 1.0f, 1.0f, light.Range);
             lightRange = light.Range;
 
-            Vector3 lightXzy = light.Location.ToCbre().XYZ().ToXna();
+            Vector3 lightXzy = light.Location;
             var translation = Matrix.CreateTranslation(-lightXzy);
             for (int i = 0; i < 6; i++) {
                 ProjectionViewMatrices[i] = (translation * baseViewMatrices[i]) * projectionMatrix;
@@ -231,7 +231,6 @@ sealed partial class Lightmapper {
                     gd.SetRenderTarget(atlasTexture);
 
                     gd.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
-                    hasRun = false;
 
                     lmLightCalc.Parameters["lightType"].SetValue(0);
                     lmLightCalc.Parameters["lightPos"].SetValue(pointLight.Location);
@@ -240,6 +239,11 @@ sealed partial class Lightmapper {
                     lmLightCalc.Parameters["lightDirection"].SetValue(Vector3.Zero);
                     lmLightCalc.Parameters["lightConeAngles"].SetValue(Vector2.Zero);
                     lmLightCalc.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
+                    if (hasRun)
+                        lmLightCalc.Parameters["ambientLightColor"].SetValue(new Vector3(LightmapConfig.AmbientColorR / 255f, LightmapConfig.AmbientColorG / 255f, LightmapConfig.AmbientColorB / 255f));
+                    else
+                        lmLightCalc.Parameters["ambientLightColor"].SetValue(new Vector3(0f, 0f, 0f));
+                    hasRun = false;
                     // lmLightCalc.Parameters["blurRadius"].SetValue(LightmapConfig.BlurRadius);
                     for (int j = 0; j < 6; j++) {
                         lmLightCalc.Parameters[$"lightProjView{j}"].SetValue(shadowMap.ProjectionViewMatrices[j]);
@@ -278,7 +282,6 @@ sealed partial class Lightmapper {
                     gd.SetRenderTarget(atlasTexture);
 
                     gd.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
-                    hasRun = false;
 
                     lmLightCalc.Parameters["lightType"].SetValue(1);
                     lmLightCalc.Parameters["lightPos"].SetValue(spotLight.Location);
@@ -287,6 +290,11 @@ sealed partial class Lightmapper {
                     lmLightCalc.Parameters["lightDirection"].SetValue(spotLight.Direction);
                     lmLightCalc.Parameters["lightConeAngles"].SetValue(new Vector2(spotLight.InnerConeAngle, spotLight.OuterConeAngle));
                     lmLightCalc.Parameters["shadowMapTexelSize"].SetValue(1.0f / LightmapConfig.TextureDims);
+                    if (hasRun)
+                        lmLightCalc.Parameters["ambientLightColor"].SetValue(new Vector3(LightmapConfig.AmbientColorR / 255f, LightmapConfig.AmbientColorG / 255f, LightmapConfig.AmbientColorB / 255f));
+                    else
+                        lmLightCalc.Parameters["ambientLightColor"].SetValue(new Vector3(0f, 0f, 0f));
+                    hasRun = false;
                     for (int j = 0; j < 6; j++) {
                         lmLightCalc.Parameters[$"lightProjView{j}"].SetValue(shadowMap.ProjectionViewMatrices[j]);
                         lmLightCalc.Parameters[$"lightShadowMap{j}"].SetValue(shadowMap.RenderTargets[j]);
@@ -322,7 +330,8 @@ sealed partial class Lightmapper {
                 PrimitiveDrawing.End();
                 gd.SetRenderTarget(null);
                 gd.BlendState = BlendState.NonPremultiplied;
-                saveTexture($"atlas_blur_{atlasIndex}.png", rt);
+                if (debug)
+                    saveTexture($"atlas_blur_{atlasIndex}.png", rt);
                 Document.MGLightmaps.Add(rt);
                 atlasTexture.Dispose();
             }, token);

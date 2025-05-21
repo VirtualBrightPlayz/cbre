@@ -15,6 +15,9 @@ public class BlitzWriter : IDisposable {
 
     public void WriteByte(byte b)
         => binaryWriter.Write(b);
+
+    public void WriteBool(bool b)
+        => binaryWriter.Write(b);
     
     //Little-endian 32-bit signed integer
     public void WriteInt(Int32 i) {

@@ -322,9 +322,9 @@ namespace CBRE.Editor.Compiling.Lightmap.Legacy {
                                                                 LightmapConfig.AmbientNormalY,
                                                                 LightmapConfig.AmbientNormalZ).Normalise();
                     float ambientMultiplier = (group.Plane.Normal.Dot(ambientNormal) + 1.5f) * 0.4f;
-                    Vector3F mAmbientColor = new Vector3F((LightmapConfig.AmbientColorB * ambientMultiplier / 255.0f),
+                    Vector3F mAmbientColor = new Vector3F((LightmapConfig.AmbientColorR * ambientMultiplier / 255.0f),
                                                             (LightmapConfig.AmbientColorG * ambientMultiplier / 255.0f),
-                                                            (LightmapConfig.AmbientColorR * ambientMultiplier / 255.0f));
+                                                            (LightmapConfig.AmbientColorB * ambientMultiplier / 255.0f));
                     for (int y = group.writeY; y < group.writeY + downscaledHeight; y++) {
                         if (y < 0 || y >= totalTextureDims) continue;
                         for (int x = group.writeX; x < group.writeX + downscaledWidth; x++) {

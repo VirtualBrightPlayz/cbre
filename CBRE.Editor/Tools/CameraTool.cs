@@ -196,9 +196,9 @@ namespace CBRE.Editor.Tools
 
         public override void MouseLifted(ViewportBase viewport, ViewportEvent e)
         {
-            if (e.Button == MouseButtons.None) {
+            // if (e.Button == MouseButtons.None) {
                 _state = State.None;
-            }
+            // }
         }
 
         public override void MouseWheel(ViewportBase viewport, ViewportEvent e)
