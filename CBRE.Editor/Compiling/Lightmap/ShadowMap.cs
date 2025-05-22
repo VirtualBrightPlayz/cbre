@@ -242,7 +242,7 @@ sealed partial class Lightmapper {
                     if (hasRun)
                         lmLightCalc.Parameters["ambientLightColor"].SetValue(new Vector3(LightmapConfig.AmbientColorR / 255f, LightmapConfig.AmbientColorG / 255f, LightmapConfig.AmbientColorB / 255f));
                     else
-                        lmLightCalc.Parameters["ambientLightColor"].SetValue(new Vector3(0f, 0f, 0f));
+                        lmLightCalc.Parameters["ambientLightColor"].SetValue(Vector3.Zero);
                     hasRun = false;
                     // lmLightCalc.Parameters["blurRadius"].SetValue(LightmapConfig.BlurRadius);
                     for (int j = 0; j < 6; j++) {
@@ -293,7 +293,7 @@ sealed partial class Lightmapper {
                     if (hasRun)
                         lmLightCalc.Parameters["ambientLightColor"].SetValue(new Vector3(LightmapConfig.AmbientColorR / 255f, LightmapConfig.AmbientColorG / 255f, LightmapConfig.AmbientColorB / 255f));
                     else
-                        lmLightCalc.Parameters["ambientLightColor"].SetValue(new Vector3(0f, 0f, 0f));
+                        lmLightCalc.Parameters["ambientLightColor"].SetValue(Vector3.Zero);
                     hasRun = false;
                     for (int j = 0; j < 6; j++) {
                         lmLightCalc.Parameters[$"lightProjView{j}"].SetValue(shadowMap.ProjectionViewMatrices[j]);

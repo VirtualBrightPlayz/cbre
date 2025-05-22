@@ -229,7 +229,9 @@ namespace CBRE.Editor.Compiling.Lightmap {
             var vAxis = UvProjectionAxes.VAxis;
 
             var minPosition = TopLeftWorldPos;
-            
+
+            float padding = -1f;
+
             ObjectRenderer.BrushVertex genVert(float u, float v)
                 => new ObjectRenderer.BrushVertex(
                     position: (minPosition + uAxis * u + vAxis * v).ToXna(),
@@ -241,10 +243,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     color: Color.White,
                     selected: false);
 
-            yield return genVert(0.0f, 0.0f);
-            yield return genVert(0.0f, WorldSpaceHeight);
-            yield return genVert(WorldSpaceWidth, 0.0f);
-            yield return genVert(WorldSpaceWidth, WorldSpaceHeight);
+            yield return genVert(0.0f+padding, 0.0f+padding);
+            yield return genVert(0.0f+padding, WorldSpaceHeight-padding);
+            yield return genVert(WorldSpaceWidth-padding, 0.0f+padding);
+            yield return genVert(WorldSpaceWidth-padding, WorldSpaceHeight-padding);
         }
     }
 }
