@@ -231,6 +231,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
             var minPosition = TopLeftWorldPos;
 
             float padding = -1f;
+            float offset = -1f;
 
             ObjectRenderer.BrushVertex genVert(float u, float v)
                 => new ObjectRenderer.BrushVertex(
@@ -238,8 +239,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     normal: Plane.Normal.ToXna(),
                     diffUv: Vector2.Zero,
                     lmUv: new Vector2(
-                        MathF.Floor(u / LightmapConfig.DownscaleFactor + StartWriteUV.U) / LightmapConfig.TextureDims,
-                        MathF.Floor(v / LightmapConfig.DownscaleFactor + StartWriteUV.V) / LightmapConfig.TextureDims),
+                        MathF.Floor(u / LightmapConfig.DownscaleFactor + StartWriteUV.U + offset) / LightmapConfig.TextureDims,
+                        MathF.Floor(v / LightmapConfig.DownscaleFactor + StartWriteUV.V + offset) / LightmapConfig.TextureDims),
                     color: Color.White,
                     selected: false);
 

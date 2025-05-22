@@ -116,11 +116,12 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         public void UpdateLmUv(LightmapGroup group, int lmIndex) {
             LmIndex = lmIndex;
+            float offset = 0f;
             foreach (var vertex in Vertices) {
                 var u = vertex.Location.Dot(group.UvProjectionAxes.UAxis);
                 var v = vertex.Location.Dot(group.UvProjectionAxes.VAxis);
-                vertex.LMU = MathF.Floor(group.StartWriteUV.U + (u - group.ProjectedBounds.Min.U) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
-                vertex.LMV = MathF.Floor(group.StartWriteUV.V + (v - group.ProjectedBounds.Min.V) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
+                vertex.LMU = MathF.Floor(group.StartWriteUV.U + offset + (u - group.ProjectedBounds.Min.U) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
+                vertex.LMV = MathF.Floor(group.StartWriteUV.V + offset + (v - group.ProjectedBounds.Min.V) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
             }
         }
 
