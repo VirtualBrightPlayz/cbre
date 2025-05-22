@@ -40,7 +40,7 @@ public partial record RMesh {
                 }
                 
                 if (mesh.TextureBlendMode == VisibleMesh.BlendMode.Lightmapped) {
-                    writeTextureInfo(1, mesh.LightmapTexture ?? throw new Exception("Blend mode is lightmapped but lightmap texture is null"));
+                    writeTextureInfo(2, mesh.LightmapTexture ?? throw new Exception("Blend mode is lightmapped but lightmap texture is null"));
                     writeTextureInfo(1, mesh.DiffuseTexture);
                 } else {
                     writeTextureInfo(0, "");

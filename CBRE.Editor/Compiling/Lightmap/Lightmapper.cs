@@ -31,7 +31,6 @@ using CBRE.DataStructures.Transformations;
 using CBRE.FileSystem;
 using CBRE.Providers.Model;
 using CBRE.Common.Mediator;
-using System.Drawing;
 
 namespace CBRE.Editor.Compiling.Lightmap {
     sealed partial class Lightmapper {
@@ -189,7 +188,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         private async Task WaitForRender(string name, Action? action, CancellationToken token) {
             bool signal = false;
-            TaskPool.Add(name, Task.Delay(1), (t) => {
+            TaskPool.Add(name, Task.CompletedTask, (t) => {
                 try {
                     action?.Invoke();
                 }
@@ -279,7 +278,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     BufferUsage.None);
                 
                 GeomVertices.SetData(vertices
-                    .Select(v => { var r = new ObjectRenderer.BrushVertex(v.OriginalVertex); r.Position /= 1024; return r; })
+                    .Select(v => new ObjectRenderer.BrushVertex(v.OriginalVertex))
+                    // .Select(v => { var r = new ObjectRenderer.BrushVertex(v.OriginalVertex); r.Position /= 1024; return r; })
                     .ToArray());
                 GeomIndices.SetData(indices.ToArray());
                 indexCount = indices.Count;
@@ -429,9 +429,9 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         private static void CalculateUv(
             List<LightmapGroup> lmGroups,
-            RectangleF area,
-            out float usedWidth,
-            out float usedHeight
+            Rectangle area,
+            out int usedWidth,
+            out int usedHeight
         ) {
             usedWidth = 0;
             usedHeight = 0;
@@ -448,13 +448,13 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     lmGroup.SwapUv();
                 }
 
-                float downscaledWidth = 0;
-                float downscaledHeight = 0;
+                int downscaledWidth = 0;
+                int downscaledHeight = 0;
                 bool fits = false;
                 
                 for (int attempts = 0; attempts < 2; attempts++) {
-                    downscaledWidth = (lmGroup.UvSpaceWidth);
-                    downscaledHeight = (lmGroup.UvSpaceHeight);
+                    downscaledWidth = (int)Math.Ceiling(lmGroup.UvSpaceWidth);
+                    downscaledHeight = (int)Math.Ceiling(lmGroup.UvSpaceHeight);
 
                     if (downscaledWidth > area.Width || downscaledHeight > area.Height) {
                         //The group did not fit, try flipping the group
@@ -490,10 +490,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
                 //Try to fill region A
                 if (downscaledWidth < area.Width) {
-                    float subWidth = -1;
+                    int subWidth = -1;
                     usedWidth += LightmapConfig.PlaneMargin;
-                    while (MathF.Abs(subWidth) <= float.Epsilon) {
-                        CalculateUv(lmGroups, new RectangleF(
+                    while (subWidth != 0) {
+                        CalculateUv(lmGroups, new Rectangle(
                                 area.Left + usedWidth,
                                 area.Top,
                                 area.Width - usedWidth,
@@ -505,10 +505,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
                 //Try to fill region B
                 if (downscaledHeight < area.Height) {
-                    float subHeight = -1;
+                    int subHeight = -1;
                     usedHeight += LightmapConfig.PlaneMargin;
-                    while (MathF.Abs(subHeight) <= float.Epsilon) {
-                        CalculateUv(lmGroups, new RectangleF(
+                    while (subHeight != 0) {
+                        CalculateUv(lmGroups, new Rectangle(
                                 area.Left,
                                 area.Top + usedHeight,
                                 downscaledWidth,
@@ -520,14 +520,14 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
                 //Try to fill region C
                 if (downscaledWidth < area.Width && downscaledHeight < area.Height) {
-                    RectangleF remainder = new RectangleF(
+                    Rectangle remainder = new Rectangle(
                         area.Left + downscaledWidth + LightmapConfig.PlaneMargin,
                         area.Top + downscaledHeight + LightmapConfig.PlaneMargin,
                         area.Width - downscaledWidth - LightmapConfig.PlaneMargin,
                         area.Height - downscaledHeight - LightmapConfig.PlaneMargin);
 
                     CalculateUv(lmGroups, remainder,
-                        out float subWidth, out float subHeight);
+                        out int subWidth, out int subHeight);
 
                     usedWidth = Math.Max(usedWidth, downscaledWidth + LightmapConfig.PlaneMargin + subWidth);
                     usedHeight = Math.Max(usedHeight, downscaledHeight + LightmapConfig.PlaneMargin + subHeight);

@@ -18,11 +18,15 @@ namespace CBRE.Editor.Popup {
         }
 
         protected override void ImGuiLayout(out bool shouldBeOpen) {
-            ImGui.SetWindowSize(new Num.Vector2(300,200), ImGuiCond.Once);
+            ImGui.SetWindowSize(new Num.Vector2(300, 200), ImGuiCond.Once);
             ImGui.Text(message);
             // ImGui.SameLine();
             ImGui.ProgressBar(progress, new Num.Vector2(250f, 0f));
             shouldBeOpen = true;
+        }
+
+        protected override void OnCloseButtonHit(ref bool shouldBeOpen) {
+            base.OnCloseButtonHit(ref shouldBeOpen);
         }
     }
 }

@@ -106,8 +106,8 @@ sealed partial class Lightmapper {
         }
     }
 
-    public async Task RenderShadowMapped(bool debug = false) {
-        CancellationToken token = new CancellationToken();
+    public async Task RenderShadowMapped(bool debug = false, CancellationToken token = default) {
+        // CancellationToken token = new CancellationToken();
 
         await WaitForRender("ShadowMap Init", null, token);
 

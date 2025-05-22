@@ -119,8 +119,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
             foreach (var vertex in Vertices) {
                 var u = vertex.Location.Dot(group.UvProjectionAxes.UAxis);
                 var v = vertex.Location.Dot(group.UvProjectionAxes.VAxis);
-                vertex.LMU = (group.StartWriteUV.U + (u - group.ProjectedBounds.Min.U) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
-                vertex.LMV = (group.StartWriteUV.V + (v - group.ProjectedBounds.Min.V) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
+                vertex.LMU = MathF.Floor(group.StartWriteUV.U + (u - group.ProjectedBounds.Min.U) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
+                vertex.LMV = MathF.Floor(group.StartWriteUV.V + (v - group.ProjectedBounds.Min.V) / LightmapConfig.DownscaleFactor) / LightmapConfig.TextureDims;
             }
         }
 

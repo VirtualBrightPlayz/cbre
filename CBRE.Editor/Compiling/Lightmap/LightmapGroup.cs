@@ -120,10 +120,10 @@ namespace CBRE.Editor.Compiling.Lightmap {
             }
         }
         
-        public UvPairFloat StartWriteUV;
-        public UvPairFloat EndWriteUV => new LightmapGroup.UvPairFloat {
-            U = StartWriteUV.U + (UvSpaceWidth),
-            V = StartWriteUV.V + (UvSpaceHeight)
+        public UvPairInt StartWriteUV;
+        public UvPairInt EndWriteUV => new LightmapGroup.UvPairInt {
+            U = StartWriteUV.U + (int)Math.Ceiling(UvSpaceWidth),
+            V = StartWriteUV.V + (int)Math.Ceiling(UvSpaceHeight)
         };
 
         public LightmapGroup() {
@@ -236,8 +236,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     normal: Plane.Normal.ToXna(),
                     diffUv: Vector2.Zero,
                     lmUv: new Vector2(
-                        (u / LightmapConfig.DownscaleFactor + StartWriteUV.U) / LightmapConfig.TextureDims,
-                        (v / LightmapConfig.DownscaleFactor + StartWriteUV.V) / LightmapConfig.TextureDims),
+                        MathF.Floor(u / LightmapConfig.DownscaleFactor + StartWriteUV.U) / LightmapConfig.TextureDims,
+                        MathF.Floor(v / LightmapConfig.DownscaleFactor + StartWriteUV.V) / LightmapConfig.TextureDims),
                     color: Color.White,
                     selected: false);
 
