@@ -347,11 +347,12 @@ sealed partial class Lightmapper {
                 if (debug)
                     saveTexture($"atlas_blur_{atlasIndex}.png", rt);
                 Document.MGLightmaps.Add(rt);
-                atlasTexture.Dispose();
             }, token);
             // await saveTextureAsync($"atlas_blur_{atlasIndex}.png", atlasTexture);
 
             await WaitForRender("Cleanup", () => {
+                atlasTexture.Dispose();
+                shadowMap.Dispose();
                 gd.SetRenderTarget(null);
                 gd.BlendState = BlendState.NonPremultiplied;
             }, token);
