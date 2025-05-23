@@ -23,6 +23,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
         private readonly List<LMFace> faces;
         public IReadOnlyList<LMFace> Faces => faces;
 
+        public bool ReceivesShadows = true;
+
         public struct UvAxes {
             public bool Initialized;
             public Vector3F UAxis;

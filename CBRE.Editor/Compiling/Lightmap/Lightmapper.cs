@@ -165,6 +165,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                     LightmapGroup group = LightmapGroup.FindCoplanar(groups, face);
                     if (group is null) {
                         group = new LightmapGroup();
+                        group.ReceivesShadows = false;
                         groups.Add(group);
                     }
                     group.AddFace(face);
@@ -178,6 +179,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 // LightmapGroup group = null;
                 if (group is null) {
                     group = new LightmapGroup();
+                    group.ReceivesShadows = LightmapConfig.BakeModelLightmaps;
                     modelGroups.Add(group);
                 }
                 group.AddFace(face);
@@ -243,22 +245,23 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 }
                 
                 var gd = GlobalGraphics.GraphicsDevice;
+                var filteredGroups = Groups.Where(g => g.ReceivesShadows).ToList();
 
                 GroupVertices = new VertexBuffer(
                     gd,
                     ObjectRenderer.BrushVertex.VertexDeclaration,
-                    Groups.Count * 4,
+                    filteredGroups.Count * 4,
                     BufferUsage.None);
                 GroupIndices = new IndexBuffer(
                     gd,
                     IndexElementSize.ThirtyTwoBits,
-                    Groups.Count * 6,
+                    filteredGroups.Count * 6,
                     BufferUsage.None);
                 
-                GroupVertices.SetData(Groups
+                GroupVertices.SetData(filteredGroups
                     .SelectMany(g => g.GenQuadVerts())
                     .ToArray());
-                GroupIndices.SetData(Enumerable.Range(0, Groups.Count)
+                GroupIndices.SetData(Enumerable.Range(0, filteredGroups.Count)
                     .SelectMany(i => new[] {
                         i*4+0, i*4+1, i*4+2,
                         i*4+2, i*4+3, i*4+1
@@ -279,7 +282,6 @@ namespace CBRE.Editor.Compiling.Lightmap {
                 
                 GeomVertices.SetData(vertices
                     .Select(v => new ObjectRenderer.BrushVertex(v.OriginalVertex))
-                    // .Select(v => { var r = new ObjectRenderer.BrushVertex(v.OriginalVertex); r.Position /= 1024; return r; })
                     .ToArray());
                 GeomIndices.SetData(indices.ToArray());
                 indexCount = indices.Count;
@@ -389,6 +391,7 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
         private ImmutableArray<Atlas> PrepareAtlases() {
             List<LightmapGroup> remainingGroups = Groups
+                // .Where(g => g.ReceivesShadows)
                 .OrderByDescending(g => g.WorldSpaceWidth * g.WorldSpaceHeight)
                 .ThenByDescending(g => g.WorldSpaceWidth)
                 .ThenByDescending(g => g.WorldSpaceHeight)
@@ -439,6 +442,11 @@ namespace CBRE.Editor.Compiling.Lightmap {
 
             for (int i = 0; i < lmGroups.Count; i++) {
                 LightmapGroup lmGroup = lmGroups[i];
+
+                if (!lmGroup.ReceivesShadows) {
+                    lmGroups.RemoveAt(i);
+                    continue;
+                }
 
                 //Make the aspect ratio of the group
                 //closer to the aspect ratio of the
