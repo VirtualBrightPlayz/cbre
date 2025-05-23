@@ -182,6 +182,8 @@ sealed partial class Lightmapper {
         }
         
         UpdateProgress("Calculating brightness levels... (Step 3/3)", 0);
+
+        Queue<Action> actions = new Queue<Action>();
         int progressCount = 0;
         int progressMax = atlases.Length * (pointLights.Length + spotLights.Length);
         for (int atlasIndex = 0; atlasIndex < atlases.Length; atlasIndex++) {
@@ -189,7 +191,7 @@ sealed partial class Lightmapper {
 
             RenderTarget2D atlasTexture = null;
             ShadowMap shadowMap = null;
-            await WaitForRender("ShadowMap prepare atlasTexture", () => {
+            actions.Enqueue(() => {
                 atlasTexture = new RenderTarget2D(
                     gd,
                     LightmapConfig.TextureDims,
@@ -201,20 +203,21 @@ sealed partial class Lightmapper {
                     usage: RenderTargetUsage.PreserveContents);
                 Document.MGLightmaps ??= new List<Texture2D>();
                 // Document.MGLightmaps.Add(atlasTexture);
-                
+
                 gd.SetRenderTarget(atlasTexture);
                 gd.Clear(Color.Black);
                 gd.SetRenderTarget(null);
-                
+
                 shadowMap = new ShadowMap(LightmapConfig.ShadowTextureDims);
                 gd.SetRenderTarget(null);
-            }, token);
+            });
 
             bool hasRun = true;
 
             for (int i = 0; i < pointLights.Length; i++) {
-                await WaitForRender($"Render point light {i}", () => {
-                    var pointLight = pointLights[i];
+                int ind = i;
+                actions.Enqueue(() => {
+                    var pointLight = pointLights[ind];
 
                     shadowMap.SetLight(pointLight);
                     GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
@@ -225,9 +228,9 @@ sealed partial class Lightmapper {
                         GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
                         renderAllAtlases();
                         if (debug)
-                            saveTexture($"shadowMap_0_{i}_{j}.png", shadowMap.RenderTargets[j]);
+                            saveTexture($"shadowMap_0_{ind}_{j}.png", shadowMap.RenderTargets[j]);
                     }
-                    
+
                     gd.SetRenderTarget(atlasTexture);
 
                     gd.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
@@ -257,15 +260,17 @@ sealed partial class Lightmapper {
 
                     gd.SetRenderTarget(null);
                     gd.BlendState = BlendState.NonPremultiplied;
-                }, token);
-                progressCount++;
-                UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)progressCount / progressMax);
+
+                    progressCount++;
+                    UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)progressCount / progressMax);
+                });
                 // UpdateProgress(progressCount.ToString() + "/" + progressMax.ToString() + " complete", 0.05f + ((float)progressCount / (float)progressMax) * 0.85f);
             }
-            
+
             for (int i = 0; i < spotLights.Length; i++) {
-                await WaitForRender($"Render spot light {i}", () => {
-                    var spotLight = spotLights[i];
+                int ind = i;
+                actions.Enqueue(() => {
+                    var spotLight = spotLights[ind];
 
                     shadowMap.SetLight(spotLight);
                     GlobalGraphics.GraphicsDevice.BlendFactor = Microsoft.Xna.Framework.Color.White;
@@ -276,9 +281,9 @@ sealed partial class Lightmapper {
                         GlobalGraphics.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
                         renderAllAtlases();
                         if (debug)
-                            saveTexture($"shadowMap_1_{i}_{j}.png", shadowMap.RenderTargets[j]);
+                            saveTexture($"shadowMap_1_{ind}_{j}.png", shadowMap.RenderTargets[j]);
                     }
-                    
+
                     gd.SetRenderTarget(atlasTexture);
 
                     gd.BlendState = hasRun ? BlendState.NonPremultiplied : BlendState.Additive;
@@ -307,10 +312,19 @@ sealed partial class Lightmapper {
 
                     gd.SetRenderTarget(null);
                     gd.BlendState = BlendState.NonPremultiplied;
-                }, token);
-                progressCount++;
-                UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)progressCount / progressMax);
+
+                    progressCount++;
+                    UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)progressCount / progressMax);
+                });
+                // progressCount++;
+                // UpdateProgress("Calculating brightness levels... (Step 3/3)", (float)progressCount / progressMax);
                 // UpdateProgress(progressCount.ToString() + "/" + progressMax.ToString() + " complete", 0.05f + ((float)progressCount / (float)progressMax) * 0.85f);
+            }
+
+            while (actions.TryDequeue(out Action? res)) {
+                await WaitForRender("Running actions", () => {
+                    res.Invoke();
+                }, token);
             }
 
             if (debug)

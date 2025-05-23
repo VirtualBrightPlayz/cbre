@@ -174,8 +174,8 @@ namespace CBRE.Editor.Compiling.Lightmap {
             List<LightmapGroup> modelGroups = new();
 
             foreach (var face in modelFaces) {
-                // LightmapGroup group = LightmapGroup.FindCoplanar(modelGroups, face);
-                LightmapGroup group = null;
+                LightmapGroup group = LightmapGroup.FindCoplanar(modelGroups, face);
+                // LightmapGroup group = null;
                 if (group is null) {
                     group = new LightmapGroup();
                     modelGroups.Add(group);
