@@ -389,10 +389,12 @@ namespace CBRE.Providers.Map {
                     if (xscl == 0) xscl = 1;
                     if (yscl == 0) yscl = 1;
 
-                    newFace.Texture.XScale = 1 / (xscl / (dimU) * newFace.Texture.Texture.Width);
-                    newFace.Texture.YScale = -1 / (yscl / (dimV) * newFace.Texture.Texture.Height);
-                    newFace.Texture.XShift = -(minU.Location.Dot(newFace.Texture.UAxis) / (newFace.Texture.XScale * newFace.Texture.Texture.Width) - minU.TextureU) * newFace.Texture.Texture.Width;
-                    newFace.Texture.YShift = -(minV.Location.Dot(newFace.Texture.VAxis) / (newFace.Texture.YScale * newFace.Texture.Texture.Height) - minV.TextureV) * newFace.Texture.Texture.Height;
+                    if (newFace.Texture != null && newFace.Texture.Texture != null) {
+                        newFace.Texture.XScale = 1 / (xscl / (dimU) * newFace.Texture.Texture.Width);
+                        newFace.Texture.YScale = -1 / (yscl / (dimV) * newFace.Texture.Texture.Height);
+                        newFace.Texture.XShift = -(minU.Location.Dot(newFace.Texture.UAxis) / (newFace.Texture.XScale * newFace.Texture.Texture.Width) - minU.TextureU) * newFace.Texture.Texture.Width;
+                        newFace.Texture.YShift = -(minV.Location.Dot(newFace.Texture.VAxis) / (newFace.Texture.YScale * newFace.Texture.Texture.Height) - minV.TextureV) * newFace.Texture.Texture.Height;
+                    }
 
 #if false
                     if (newFace.Texture.Texture.Width > 0 && newFace.Texture.Texture.Height > 0 && verts.Count > 0) {
@@ -466,41 +468,41 @@ namespace CBRE.Providers.Map {
                     }
 #endif
 
-                    /*
-                    xscale = texUMax - texUMin
-                    -xshift = dotU / xscale - texU
-                    */
+                        /*
+                        xscale = texUMax - texUMin
+                        -xshift = dotU / xscale - texU
+                        */
 
-                    /*
-                    newFace.Texture.XScale = (maxU - minU) / dimU;
-                    newFace.Texture.YScale = (maxV - minV) / dimV;
-                    if (newFace.Texture.XScale == 0) newFace.Texture.XScale = 1;
-                    if (newFace.Texture.YScale == 0) newFace.Texture.YScale = 1;
-                    newFace.Texture.XShift = -((v0u / newFace.Texture.XScale) - minU) * newFace.Texture.Texture.Width;
-                    newFace.Texture.YShift = -((v0v / newFace.Texture.YScale) - minV) * newFace.Texture.Texture.Height;
-                    // newFace.Texture.XScale = -1 - newFace.Texture.XScale;
-                    // newFace.Texture.YScale = -1 - newFace.Texture.YScale;
-                    */
+                        /*
+                        newFace.Texture.XScale = (maxU - minU) / dimU;
+                        newFace.Texture.YScale = (maxV - minV) / dimV;
+                        if (newFace.Texture.XScale == 0) newFace.Texture.XScale = 1;
+                        if (newFace.Texture.YScale == 0) newFace.Texture.YScale = 1;
+                        newFace.Texture.XShift = -((v0u / newFace.Texture.XScale) - minU) * newFace.Texture.Texture.Width;
+                        newFace.Texture.YShift = -((v0v / newFace.Texture.YScale) - minV) * newFace.Texture.Texture.Height;
+                        // newFace.Texture.XScale = -1 - newFace.Texture.XScale;
+                        // newFace.Texture.YScale = -1 - newFace.Texture.YScale;
+                        */
 
-                    /*
-                    // newFace.Texture.XScale = (minU - (newFace.Texture.XShift / newFace.Texture.Texture.Width)) * (v0u == 0 ? 0 : v0u) / newFace.Texture.Texture.Width;
-                    // newFace.Texture.YScale = (minV - (newFace.Texture.YShift / newFace.Texture.Texture.Height)) * (v0v == 0 ? 0 : v0v) / newFace.Texture.Texture.Height;
-                    newFace.Texture.XScale = 1-((maxU - minU) * v0u / newFace.Texture.Texture.Width);
-                    newFace.Texture.YScale = 1+((maxV - minV) * v0v / newFace.Texture.Texture.Height);
-                    // newFace.Texture.XScale *= dimU / newFace.Texture.Texture.Width;
-                    // newFace.Texture.YScale *= dimV / newFace.Texture.Texture.Height;
-                    // newFace.Texture.XScale *= v2u == v0u ? 1 : v2u - v0u;
-                    // newFace.Texture.YScale *= v2v == v0v ? 1 : v2v - v0v;
-                    if (newFace.Texture.XScale == 0) newFace.Texture.XScale = 1;
-                    if (newFace.Texture.YScale == 0) newFace.Texture.YScale = 1;
-                    newFace.Texture.XShift = -((v0u / (newFace.Texture.Texture.Width * newFace.Texture.XScale)) - minU) * newFace.Texture.Texture.Width;
-                    newFace.Texture.YShift = -((v0v / (newFace.Texture.Texture.Height * newFace.Texture.YScale)) - minV) * newFace.Texture.Texture.Height;
-                    newFace.Texture.XShift += newFace.Texture.Texture.Width * newFace.Texture.XScale;
-                    newFace.Texture.YShift -= newFace.Texture.Texture.Height * newFace.Texture.YScale;
-                    */
-                    
-                    // newFace.AlignTextureToFace();
-                    newFace.CalculateTextureCoordinates(true);
+                        /*
+                        // newFace.Texture.XScale = (minU - (newFace.Texture.XShift / newFace.Texture.Texture.Width)) * (v0u == 0 ? 0 : v0u) / newFace.Texture.Texture.Width;
+                        // newFace.Texture.YScale = (minV - (newFace.Texture.YShift / newFace.Texture.Texture.Height)) * (v0v == 0 ? 0 : v0v) / newFace.Texture.Texture.Height;
+                        newFace.Texture.XScale = 1-((maxU - minU) * v0u / newFace.Texture.Texture.Width);
+                        newFace.Texture.YScale = 1+((maxV - minV) * v0v / newFace.Texture.Texture.Height);
+                        // newFace.Texture.XScale *= dimU / newFace.Texture.Texture.Width;
+                        // newFace.Texture.YScale *= dimV / newFace.Texture.Texture.Height;
+                        // newFace.Texture.XScale *= v2u == v0u ? 1 : v2u - v0u;
+                        // newFace.Texture.YScale *= v2v == v0v ? 1 : v2v - v0v;
+                        if (newFace.Texture.XScale == 0) newFace.Texture.XScale = 1;
+                        if (newFace.Texture.YScale == 0) newFace.Texture.YScale = 1;
+                        newFace.Texture.XShift = -((v0u / (newFace.Texture.Texture.Width * newFace.Texture.XScale)) - minU) * newFace.Texture.Texture.Width;
+                        newFace.Texture.YShift = -((v0v / (newFace.Texture.Texture.Height * newFace.Texture.YScale)) - minV) * newFace.Texture.Texture.Height;
+                        newFace.Texture.XShift += newFace.Texture.Texture.Width * newFace.Texture.XScale;
+                        newFace.Texture.YShift -= newFace.Texture.Texture.Height * newFace.Texture.YScale;
+                        */
+
+                        // newFace.AlignTextureToFace();
+                        newFace.CalculateTextureCoordinates(true);
 #endif
                 }
                 if (newSolid.Faces.Any()) {

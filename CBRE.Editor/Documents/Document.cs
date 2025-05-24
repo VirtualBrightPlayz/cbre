@@ -98,9 +98,9 @@ namespace CBRE.Editor.Documents {
 
         public void SetActive() {
             if (!CBRE.Settings.View.KeepSelectedTool) ToolManager.Activate(_memory.SelectedTool);
-            /*if (!CBRE.Settings.View.KeepCameraPositions) _memory.RestoreViewports(ViewportManager.Viewports);
+            if (!CBRE.Settings.View.KeepCameraPositions) _memory.RestoreViewports(ViewportManager.Viewports);
 
-            ViewportManager.AddContext3D(new WidgetLinesRenderable());
+            /*ViewportManager.AddContext3D(new WidgetLinesRenderable());
             Renderer.Register(ViewportManager.Viewports);
             ViewportManager.AddContextAll(new ToolRenderable());
             ViewportManager.AddContextAll(new HelperRenderable(this));*/

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Drawing;
 using CBRE.DataStructures.GameData;
 using CBRE.DataStructures.Geometric;
@@ -180,6 +181,10 @@ public partial record RMesh {
             for (int i = 0; i < entityCount; i++) {
                 string name = reader.ReadString();
                 var gameClass = gameData.Classes.FirstOrDefault(x => x.RMeshDef.ClassName.ToLowerInvariant() == name.ToLowerInvariant());
+                if (gameClass == null) {
+                    Debug.WriteLine(name.ToLowerInvariant());
+                    return new Entity[0].ToImmutableArray();
+                }
                 Entity entity = new Entity(0) {
                     EntityData = new EntityData(gameClass),
                     GameData = gameClass,
@@ -212,7 +217,10 @@ public partial record RMesh {
                             }
                             break;
                         case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Bool:
-                            throw new NotImplementedException(); // TODO
+                            {
+                                entity.EntityData.SetPropertyValue(rmEntry.Property, (reader.ReadByte() == 1).ToString());
+                            }
+                            break;
                         // case DataStructures.GameData.GameDataObject.RMeshLayout.WriteType.Vector3D:
                             // throw new NotImplementedException(); // TODO
                     }
