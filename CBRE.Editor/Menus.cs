@@ -4,9 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using CBRE.Common.Mediator;
+using CBRE.Editor.Documents;
 using CBRE.Editor.Popup;
 using CBRE.Editor.Rendering;
 using CBRE.Graphics;
+using CBRE.Providers.Map;
 using CBRE.Settings;
 using ImGuiNET;
 using Microsoft.Xna.Framework.Input;
@@ -26,6 +28,14 @@ namespace CBRE.Editor {
                 new MenuItem(HotkeysMediator.FileSaveAs.ToString(), MenuTextures["Menu_SaveAs"]),
                 new MenuSeparator(),
                 new MenuItem(HotkeysMediator.FileCompile.ToString(), MenuTextures["Menu_ExportRmesh"]),
+                new MenuItem("Bulk Export", "", MenuTextures["Menu_ExportRmesh"], () => {
+                    var result = NativeFileDialog.SaveDialog.Open("rmesh", Directory.GetCurrentDirectory(), out string path);
+                    if (result == NativeFileDialog.Result.Okay) {
+                        foreach (var document in DocumentManager.Documents) {
+                            RMeshProvider.SaveToFile(Path.Combine(Path.GetDirectoryName(path), document.MapFileName + ".rmesh"), document.Map, null, null, false);
+                        }
+                    }
+                }),
                 new MenuSeparator(),
                 new MenuItem("Exit", "", action: Exit)));
             Menus.Add(new Menu("Edit",
