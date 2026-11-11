@@ -597,6 +597,56 @@ namespace CBRE.Editor.Compiling.Lightmap
             { CurrentCulture = CultureInfo.InvariantCulture };
         }
 
+        public static void UpdateLightmapUVs(Document doc, LightmapGroup group, LMFace targetFace, int textureDims)
+        {
+            Random rand = new Random(666);
+
+            int writeX = group.writeX;
+            int writeY = group.writeY;
+
+            float? minX = null; float? maxX = null;
+            float? minY = null; float? maxY = null;
+
+            foreach (CoordinateF coord in targetFace.Vertices.Select(x => x.Location))
+            {
+                float x = coord.Dot(group.uAxis);
+                float y = coord.Dot(group.vAxis);
+
+                if (minX == null || x < minX) minX = x;
+                if (minY == null || y < minY) minY = y;
+                if (maxX == null || x > maxX) maxX = x;
+                if (maxY == null || y > maxY) maxY = y;
+            }
+
+            CoordinateF leewayPoint = group.Plane.PointOnPlane + (group.Plane.Normal * Math.Max(LightmapConfig.DownscaleFactor * 0.25f, 1.5f));
+
+            minX -= LightmapConfig.DownscaleFactor; minY -= LightmapConfig.DownscaleFactor;
+            maxX += LightmapConfig.DownscaleFactor; maxY += LightmapConfig.DownscaleFactor;
+
+            minX /= LightmapConfig.DownscaleFactor; minX = (float)Math.Ceiling(minX.Value); minX *= LightmapConfig.DownscaleFactor;
+            minY /= LightmapConfig.DownscaleFactor; minY = (float)Math.Ceiling(minY.Value); minY *= LightmapConfig.DownscaleFactor;
+            maxX /= LightmapConfig.DownscaleFactor; maxX = (float)Math.Ceiling(maxX.Value); maxX *= LightmapConfig.DownscaleFactor;
+            maxY /= LightmapConfig.DownscaleFactor; maxY = (float)Math.Ceiling(maxY.Value); maxY *= LightmapConfig.DownscaleFactor;
+
+            foreach (LMFace.Vertex vert in targetFace.Vertices)
+            {
+                float x = vert.Location.Dot(group.uAxis);
+                float y = vert.Location.Dot(group.vAxis);
+
+                float u = (writeX + 0.5f + (x - group.minTotalX.Value) / LightmapConfig.DownscaleFactor);
+                float v = (writeY + 0.5f + (y - group.minTotalY.Value) / LightmapConfig.DownscaleFactor);
+
+                targetFace.LmIndex = (u >= LightmapConfig.TextureDims ? 1 : 0) + (v >= LightmapConfig.TextureDims ? 2 : 0);
+                targetFace.OriginalFace.LmIndex = targetFace.LmIndex;
+
+                u /= (float)textureDims;
+                v /= (float)textureDims;
+
+                vert.LMU = u; vert.LMV = v;
+                vert.OriginalVertex.LMU = u; vert.OriginalVertex.LMV = v;
+            }
+        }
+
         private static void RenderLightOntoFace(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces)
         {
             Random rand = new Random(666);

@@ -49,14 +49,21 @@ namespace CBRE.Editor.Compiling.Lightmap
             Lightmapper.CollectMapData(document, exportForm, out List<LMFace> faces, out List<LightmapGroup> lmGroups, out List<Light> lightEntities, out int lmCount, out List<LMFace> allBlockers, out int blockerCount, out int modelBlockerCount);
             if (lmCount != 1)
             {
-                throw new Exception("Could not fit lightmap into four textures; try increasing texture dimensions or downscale factor; External Lightmapping has a maximum of 1 lightmap texture!");
+                throw new Exception("Could not fit lightmap into one texture; try increasing texture dimensions or downscale factor; External Lightmapping has a maximum of 1 lightmap texture!");
+            }
+            foreach (LightmapGroup group in lmGroups)
+            {
+                foreach (LMFace face in group.Faces)
+                {
+                    Lightmapper.UpdateLightmapUVs(document, group, face, LightmapConfig.TextureDims);
+                }
             }
             Lightmapper.UpdateProgress(exportForm, "Exporting glb file...", 0.05f);
 
             ITextureStreamSource streamSource = document.TextureCollection.GetStreamSource(0, 0);
             using MemoryStream memStream = new MemoryStream();
 
-            float scale = 1f;
+            float scale = 1f / 160f;
             ModelRoot root = ModelRoot.CreateModel();
             Scene scene = root.UseScene(0);
             {
@@ -213,6 +220,7 @@ namespace CBRE.Editor.Compiling.Lightmap
             TextureCollection textureCollection = document.TextureCollection;
             int totalTextureDims = LightmapConfig.TextureDims;
             for (int k = 0; k < 4; k++)
+            //int k = 3;
             {
                 lock (textureCollection.Lightmaps)
                 {
