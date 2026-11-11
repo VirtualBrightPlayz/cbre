@@ -1,10 +1,16 @@
-﻿using CBRE.DataStructures.Geometric;
+﻿using CBRE.Common.Extensions;
+using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
+using CBRE.DataStructures.Models;
 using CBRE.Editor.Documents;
+using CBRE.Editor.Extensions;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.UI;
+using CBRE.Extensions;
+using CBRE.Providers.Model;
 using CBRE.Settings;
 using CBRE.UI;
+using Microsoft.WindowsAPICodePack.Taskbar;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,12 +21,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
-using CBRE.Common.Extensions;
-using CBRE.DataStructures.Models;
-using CBRE.Editor.Extensions;
-using CBRE.Extensions;
-using CBRE.Providers.Model;
-using Microsoft.WindowsAPICodePack.Taskbar;
+using static Steamworks.InventoryItem;
 using ThreadState = System.Threading.ThreadState;
 
 namespace CBRE.Editor.Compiling.Lightmap
@@ -42,7 +43,7 @@ namespace CBRE.Editor.Compiling.Lightmap
         public static List<Thread> FaceRenderThreads { get; private set; }
         private static List<LMThreadException> threadExceptions;
 
-        private static void UpdateProgress(ExportForm exportForm, string msg, float progress)
+        public static void UpdateProgress(ExportForm exportForm, string msg, float progress)
         {
             string currTxt = "";
             exportForm.ProgressLog.Invoke((MethodInvoker)(() => currTxt = exportForm.ProgressLog.Text));
@@ -71,7 +72,7 @@ namespace CBRE.Editor.Compiling.Lightmap
         }
 
 
-        private static void CalculateUV(List<LightmapGroup> lmGroups, Rectangle area, out int usedWidth, out int usedHeight)
+        public static void CalculateUV(List<LightmapGroup> lmGroups, Rectangle area, out int usedWidth, out int usedHeight)
         {
             usedWidth = 0;
             usedHeight = 0;
@@ -155,15 +156,13 @@ namespace CBRE.Editor.Compiling.Lightmap
             }
         }
 
-        public static void Render(Document document, ExportForm exportForm, out List<LMFace> faces, out int lmCount)
+        public static void CollectMapData(Document document, ExportForm exportForm, out List<LMFace> faces, out List<LightmapGroup> lmGroups, out List<Light> lightEntities, out int lmCount, out List<LMFace> allBlockers, out int blockerCount, out int modelBlockerCount)
         {
-            GC.Collect();
             Providers.Texture.TextureCollection textureCollection = document.TextureCollection;
-
             Map map = document.Map;
 
             faces = new List<LMFace>();
-            List<Light> lightEntities = new List<Light>();
+            lightEntities = new List<Light>();
 
             IEnumerable<Entity> modelEntities = map.WorldSpawn
                 .Find(x => x.ClassName != null).OfType<Entity>()
@@ -171,7 +170,6 @@ namespace CBRE.Editor.Compiling.Lightmap
 
             threadExceptions = new List<LMThreadException>();
 
-            List<LightmapGroup> lmGroups = new List<LightmapGroup>();
             List<LMFace> exclusiveBlockers = new List<LMFace>();
 
             //get faces
@@ -180,8 +178,8 @@ namespace CBRE.Editor.Compiling.Lightmap
 
             if (!lmGroups.Any()) { throw new Exception("No lightmap groups!"); }
 
-            int blockerCount = 0;
-            int modelBlockerCount = 0;
+            blockerCount = 0;
+            modelBlockerCount = 0;
 
             UpdateProgress(exportForm, "Finding light blocker brushes...", 0.02f);
 
@@ -318,8 +316,7 @@ namespace CBRE.Editor.Compiling.Lightmap
             UpdateProgress(exportForm, "Finding light entities...", 0.04f);
             Light.FindLights(map, out lightEntities);
 
-            List<LMFace> allBlockers = lmGroups.Select(q => q.Faces).SelectMany(q => q).Where(f => f.CastsShadows).Union(exclusiveBlockers).ToList();
-            int faceCount = 0;
+            allBlockers = lmGroups.Select(q => q.Faces).SelectMany(q => q).Where(f => f.CastsShadows).Union(exclusiveBlockers).ToList();
 
             List<LightmapGroup> uvCalcFaces = new List<LightmapGroup>(lmGroups);
 
@@ -339,6 +336,17 @@ namespace CBRE.Editor.Compiling.Lightmap
             {
                 throw new Exception("Could not fit lightmap into four textures; try increasing texture dimensions or downscale factor");
             }
+        }
+
+        public static void Render(Document document, ExportForm exportForm, out List<LMFace> faces, out int lmCount)
+        {
+            GC.Collect();
+            Providers.Texture.TextureCollection textureCollection = document.TextureCollection;
+
+            CollectMapData(document, exportForm, out faces, out List<LightmapGroup> lmGroups, out List<Light> lightEntities, out lmCount, out List<LMFace> allBlockers, out int blockerCount, out int modelBlockerCount);
+
+            int totalTextureDims = LightmapConfig.TextureDims;
+            int faceCount = 0;
 
             float[][] buffers = new float[4][];
             lock (textureCollection.Lightmaps)

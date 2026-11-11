@@ -595,6 +595,8 @@
     <PackageReference Include="DiscordRichPresence" Version="1.1.4.20" />
     <PackageReference Include="LargeAddressAware" Version="1.0.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="SharpGLTF.Runtime" Version="1.0.7" />
+    <PackageReference Include="SharpGLTF.Toolkit" Version="1.0.7" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="WindowsAPICodePack" Version="8.0.6" />
   </ItemGroup>

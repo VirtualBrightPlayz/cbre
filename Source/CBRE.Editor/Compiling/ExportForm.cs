@@ -302,7 +302,8 @@ namespace CBRE.Editor.Compiling
                 }
                 else
                 {
-                    Lightmap.Lightmapper.Render(Document, this, out _, out _);
+                    Lightmap.ExternalMapper.RenderExternal(Document, this);
+                    //Lightmap.Lightmapper.Render(Document, this, out _, out _);
                 }
             }
             catch (ThreadAbortException)
