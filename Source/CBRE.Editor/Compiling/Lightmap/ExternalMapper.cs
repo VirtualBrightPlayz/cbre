@@ -72,9 +72,8 @@ namespace CBRE.Editor.Compiling.Lightmap
                 Dictionary<string, PrimitiveBuilder<SharpGLTF.Materials.MaterialBuilder, VertexPositionNormal, VertexTexture2, VertexEmpty>> dict = new Dictionary<string, PrimitiveBuilder<SharpGLTF.Materials.MaterialBuilder, VertexPositionNormal, VertexTexture2, VertexEmpty>>();
                 Node n = scene.CreateNode();
                 MeshBuilder<VertexPositionNormal, VertexTexture2> meshBuilder = new MeshBuilder<VertexPositionNormal, VertexTexture2>("mesh");
-                foreach (LightmapGroup group in lmGroups)
                 {
-                    foreach (LMFace face in group.Faces)
+                    foreach (LMFace face in allBlockers)
                     {
                         PrimitiveBuilder<SharpGLTF.Materials.MaterialBuilder, VertexPositionNormal, VertexTexture2, VertexEmpty> prim = null;
                         string name = face.OriginalFace.Texture.Name;
@@ -94,12 +93,13 @@ namespace CBRE.Editor.Compiling.Lightmap
                         }
                         foreach (LMFace.Vertex[] tri in face.GetTriangles())
                         {
+                            float uvScale = face.LmIndex < 0 ? 0f : 1f;
                             var p0 = new VertexPositionNormal(tri[0].Location.X * scale, tri[0].Location.Y * scale, tri[0].Location.Z * scale, face.Normal.X, face.Normal.Y, face.Normal.Z);
                             var p1 = new VertexPositionNormal(tri[1].Location.X * scale, tri[1].Location.Y * scale, tri[1].Location.Z * scale, face.Normal.X, face.Normal.Y, face.Normal.Z);
                             var p2 = new VertexPositionNormal(tri[2].Location.X * scale, tri[2].Location.Y * scale, tri[2].Location.Z * scale, face.Normal.X, face.Normal.Y, face.Normal.Z);
-                            var t0 = new VertexTexture2(new System.Numerics.Vector2(tri[0].DiffU, tri[0].DiffV), new System.Numerics.Vector2(tri[0].LMU, tri[0].LMV));
-                            var t1 = new VertexTexture2(new System.Numerics.Vector2(tri[1].DiffU, tri[1].DiffV), new System.Numerics.Vector2(tri[1].LMU, tri[1].LMV));
-                            var t2 = new VertexTexture2(new System.Numerics.Vector2(tri[2].DiffU, tri[2].DiffV), new System.Numerics.Vector2(tri[2].LMU, tri[2].LMV));
+                            var t0 = new VertexTexture2(new System.Numerics.Vector2(tri[0].DiffU, tri[0].DiffV), new System.Numerics.Vector2(tri[0].LMU, tri[0].LMV) * uvScale);
+                            var t1 = new VertexTexture2(new System.Numerics.Vector2(tri[1].DiffU, tri[1].DiffV), new System.Numerics.Vector2(tri[1].LMU, tri[1].LMV) * uvScale);
+                            var t2 = new VertexTexture2(new System.Numerics.Vector2(tri[2].DiffU, tri[2].DiffV), new System.Numerics.Vector2(tri[2].LMU, tri[2].LMV) * uvScale);
                             var v0 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p0, t0);
                             var v1 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p1, t1);
                             var v2 = new VertexBuilder<VertexPositionNormal, VertexTexture2, VertexEmpty>(p2, t2);
