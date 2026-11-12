@@ -1,3 +1,4 @@
+using CBRE.DataStructures.Geometric;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.UI;
@@ -42,9 +43,65 @@ namespace CBRE.Editor.Compiling.Lightmap
             return data;
         }
 
-        public static void ExportGLB(string filename, Document document, ExportForm exportForm)
+        public static float[] BitmapToFloats(Bitmap bitmap)
         {
-            Lightmapper.CollectMapData(document, exportForm, out List<LMFace> faces, out List<LightmapGroup> lmGroups, out List<Light> lightEntities, out int lmCount, out List<LMFace> allBlockers, out int blockerCount, out int modelBlockerCount);
+            float[] data = new float[bitmap.Width * bitmap.Height * 4];
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    Color color = bitmap.GetPixel(x, y);
+                    int offset = (y * bitmap.Width + x) * 4;
+                    data[offset + 0] = color.R / 255f;
+                    data[offset + 1] = color.G / 255f;
+                    data[offset + 2] = color.B / 255f;
+                    data[offset + 3] = color.A / 255f;
+                }
+            }
+            return data;
+        }
+
+        public static void BytesToBitmap(Bitmap bitmap, byte[] data)
+        {
+            if (data.Length < bitmap.Width * bitmap.Height * 4)
+            {
+                throw new Exception("This should not happen, but data is too small to be copied to the bitmap.");
+            }
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    int offset = (y * bitmap.Width + x) * 4;
+                    Color color = Color.FromArgb(data[offset + 3], data[offset + 0], data[offset + 1], data[offset + 2]);
+                    bitmap.SetPixel(x, y, color);
+                }
+            }
+        }
+
+        public static void FloatsToBitmap(Bitmap bitmap, float[] data)
+        {
+            if (data.Length < bitmap.Width * bitmap.Height * 4)
+            {
+                throw new Exception("This should not happen, but data is too small to be copied to the bitmap.");
+            }
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    int offset = (y * bitmap.Width + x) * 4;
+                    byte r = (byte)Math.Max(Math.Min(data[offset + 0] * 255.0f, 255.0f), 0.0f);
+                    byte g = (byte)Math.Max(Math.Min(data[offset + 1] * 255.0f, 255.0f), 0.0f);
+                    byte b = (byte)Math.Max(Math.Min(data[offset + 2] * 255.0f, 255.0f), 0.0f);
+                    byte a = (byte)Math.Max(Math.Min(data[offset + 3] * 255.0f, 255.0f), 0.0f);
+                    Color color = Color.FromArgb(a, r, g, b);
+                    bitmap.SetPixel(x, y, color);
+                }
+            }
+        }
+
+        public static void ExportGLB(string filename, Document document, ExportForm exportForm, out List<LightmapGroup> lmGroups)
+        {
+            Lightmapper.CollectMapData(document, exportForm, out List<LMFace> faces, out lmGroups, out List<Light> lightEntities, out int lmCount, out List<LMFace> allBlockers, out int blockerCount, out int modelBlockerCount);
             if (lmCount != 1)
             {
                 throw new Exception("Could not fit lightmap into one texture; try increasing texture dimensions or downscale factor; External Lightmapping has a maximum of 1 lightmap texture!");
@@ -159,7 +216,7 @@ namespace CBRE.Editor.Compiling.Lightmap
             string wkDir = System.IO.Path.Combine(typeof(Lightmapper).Assembly.Location, "..");
             string tempGlb = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "bake.glb");
 
-            ExportGLB(tempGlb, document, exportForm);
+            ExportGLB(tempGlb, document, exportForm, out List<LightmapGroup> lmGroups);
 
             string executableFile = string.Empty;
             string processArgs = string.Empty;
@@ -234,17 +291,121 @@ namespace CBRE.Editor.Compiling.Lightmap
                 throw new Exception("Error in external lightmapping program!");
             }
 
-            Lightmapper.UpdateProgress(exportForm, "Copying bitmap data...", 0.99f);
-
             string colorFile = System.IO.Path.Combine(wkDir, "color.png");
 
-            TextureCollection textureCollection = document.TextureCollection;
+            using Bitmap bitmap = new Bitmap(System.Drawing.Image.FromFile(colorFile));
+            float[] buffer = BitmapToFloats(bitmap);
+            float[][] buffers = new float[4][];
+            buffers[0] = new float[buffer.Length];
+            buffer.CopyTo(buffers[0]);
+            buffers[1] = new float[buffer.Length];
+            buffer.CopyTo(buffers[1]);
+            buffers[2] = new float[buffer.Length];
+            buffer.CopyTo(buffers[2]);
+            buffers[3] = new float[buffer.Length];
+            buffer.CopyTo(buffers[3]);
+
             int totalTextureDims = LightmapConfig.TextureDims;
+            Lightmapper.UpdateProgress(exportForm, "Blurring lightmap...", 0.95f);
+            float[] blurBuffer = new float[buffers[0].Length];
             for (int k = 0; k < 4; k++)
             {
+                foreach (LightmapGroup group in lmGroups)
+                {
+                    int downscaledWidth = (int)Math.Ceiling(group.Width / LightmapConfig.DownscaleFactor);
+                    int downscaledHeight = (int)Math.Ceiling(group.Height / LightmapConfig.DownscaleFactor);
+
+                    //CoordinateF ambientNormal = new CoordinateF(LightmapConfig.AmbientNormalX,
+                    //                                            LightmapConfig.AmbientNormalY,
+                    //                                            LightmapConfig.AmbientNormalZ).Normalise();
+                    //float ambientMultiplier = (group.Plane.Normal.Dot(ambientNormal) + 1.5f) * 0.4f;
+                    //CoordinateF mAmbientColor = new CoordinateF((LightmapConfig.AmbientColorB * ambientMultiplier / 255.0f),
+                    //                                        (LightmapConfig.AmbientColorG * ambientMultiplier / 255.0f),
+                    //                                        (LightmapConfig.AmbientColorR * ambientMultiplier / 255.0f));
+                    for (int y = group.writeY; y < group.writeY + downscaledHeight; y++)
+                    {
+                        if (y < 0 || y >= totalTextureDims) continue;
+                        for (int x = group.writeX; x < group.writeX + downscaledWidth; x++)
+                        {
+                            if (x < 0 || x >= totalTextureDims) continue;
+                            int offset = (x + y * totalTextureDims) * 4;
+
+                            float accumRed = 0;
+                            float accumGreen = 0;
+                            float accumBlue = 0;
+                            int sampleCount = 0;
+                            for (int j = -LightmapConfig.BlurRadius; j <= LightmapConfig.BlurRadius; j++)
+                            {
+                                if (y + j < 0 || y + j >= totalTextureDims) continue;
+                                if (y + j < group.writeY || y + j >= group.writeY + downscaledHeight) continue;
+                                for (int i = -LightmapConfig.BlurRadius; i <= LightmapConfig.BlurRadius; i++)
+                                {
+                                    if (i * i + j * j > LightmapConfig.BlurRadius * LightmapConfig.BlurRadius) continue;
+                                    if (x + i < 0 || x + i >= totalTextureDims) continue;
+                                    if (x + i < group.writeX || x + i >= group.writeX + downscaledWidth) continue;
+                                    int sampleOffset = ((x + i) + (y + j) * totalTextureDims) * 4;
+                                    if (buffers[k][sampleOffset + 3] <= 0.0f) continue;
+                                    sampleCount++;
+                                    accumRed += buffers[k][sampleOffset + 0];
+                                    accumGreen += buffers[k][sampleOffset + 1];
+                                    accumBlue += buffers[k][sampleOffset + 2];
+                                }
+                            }
+
+                            if (sampleCount < 1) sampleCount = 1;
+                            accumRed /= sampleCount;
+                            accumGreen /= sampleCount;
+                            accumBlue /= sampleCount;
+
+                            //accumRed = mAmbientColor.X + (accumRed * (1.0f - mAmbientColor.X));
+                            //accumGreen = mAmbientColor.Y + (accumGreen * (1.0f - mAmbientColor.Y));
+                            //accumBlue = mAmbientColor.Z + (accumBlue * (1.0f - mAmbientColor.Z));
+
+                            if (accumRed > 1.0f) accumRed = 1.0f;
+                            if (accumGreen > 1.0f) accumGreen = 1.0f;
+                            if (accumBlue > 1.0f) accumBlue = 1.0f;
+
+                            blurBuffer[offset + 0] = accumRed;
+                            blurBuffer[offset + 1] = accumGreen;
+                            blurBuffer[offset + 2] = accumBlue;
+                            blurBuffer[offset + 3] = 1.0f;
+                        }
+                    }
+                }
+
+                blurBuffer.CopyTo(buffers[k], 0);
+            }
+
+            for (int i = 0; i < buffers[0].Length; i++)
+            {
+                if (i % 4 == 3)
+                {
+                    buffers[0][i] = 1.0f;
+                    buffers[1][i] = 1.0f;
+                    buffers[2][i] = 1.0f;
+                    buffers[3][i] = 1.0f;
+                }
+                else
+                {
+                    float brightnessAdd = (buffers[0][i] + buffers[1][i] + buffers[2][i]) / (float)Math.Sqrt(3.0);
+                    if (brightnessAdd > 0.0f) //normalize brightness to remove artifacts when adding together
+                    {
+                        buffers[0][i] *= buffers[3][i] / brightnessAdd;
+                        buffers[1][i] *= buffers[3][i] / brightnessAdd;
+                        buffers[2][i] *= buffers[3][i] / brightnessAdd;
+                    }
+                }
+            }
+
+            Lightmapper.UpdateProgress(exportForm, "Copying bitmap data...", 0.99f);
+            TextureCollection textureCollection = document.TextureCollection;
+            for (int k = 0; k < 4; k++)
+            {
+                Bitmap bitmapFinal = new Bitmap(totalTextureDims, totalTextureDims);
+                FloatsToBitmap(bitmapFinal, buffers[k]);
                 lock (textureCollection.Lightmaps)
                 {
-                    textureCollection.Lightmaps[k] = new Bitmap(System.Drawing.Image.FromFile(colorFile));
+                    textureCollection.Lightmaps[k] = bitmapFinal;
                 }
             }
 
