@@ -124,18 +124,7 @@ namespace CBRE.Editor.Compiling.Lightmap
             for (int i = 0; i < lightEntities.Count; i++)
             {
                 Light data = lightEntities[i];
-                if (data.Direction == null)
-                {
-                    Node n = scene.CreateNode();
-                    PunctualLight light = root.CreatePunctualLight($"pointlight_{i}", PunctualLightType.Point);
-                    light.Color = CbreToSystem(data.Color) / 255f;
-                    light.Range = data.Range * scale;
-                    light.Intensity = data.Intensity;
-                    //light.Extras = SharpGLTF.IO.JsonContent.Serialize(new ExternalLightData(MathF.Max(1f, getPropertyFloat("size")) * scale));
-                    n.PunctualLight = light;
-                    n.WithLocalTranslation(CbreToSystem(data.Origin) * scale);
-                }
-                else if (data.Direction != null && data.innerCos != null && data.outerCos != null)
+                if (data.Direction != null && data.innerCos != null && data.outerCos != null)
                 {
                     Node n = scene.CreateNode();
                     PunctualLight light = root.CreatePunctualLight($"spotlight_{i}", PunctualLightType.Spot);
@@ -147,6 +136,17 @@ namespace CBRE.Editor.Compiling.Lightmap
                     n.PunctualLight = light;
                     n.WithLocalTranslation(CbreToSystem(data.Origin) * scale);
                     n.WithLocalRotation(System.Numerics.Quaternion.CreateFromAxisAngle(CbreToSystem(data.Direction), 0f));
+                }
+                else
+                {
+                    Node n = scene.CreateNode();
+                    PunctualLight light = root.CreatePunctualLight($"pointlight_{i}", PunctualLightType.Point);
+                    light.Color = CbreToSystem(data.Color) / 255f;
+                    light.Range = data.Range * scale;
+                    light.Intensity = data.Intensity;
+                    //light.Extras = SharpGLTF.IO.JsonContent.Serialize(new ExternalLightData(MathF.Max(1f, getPropertyFloat("size")) * scale));
+                    n.PunctualLight = light;
+                    n.WithLocalTranslation(CbreToSystem(data.Origin) * scale);
                 }
             }
 
