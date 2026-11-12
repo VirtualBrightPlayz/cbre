@@ -65,6 +65,10 @@ namespace CBRE.Editor.Compiling.Lightmap
             ModelRoot root = ModelRoot.CreateModel();
             Scene scene = root.UseScene(0);
             {
+                scene.Extras = new System.Text.Json.Nodes.JsonObject();
+                scene.Extras["ambient_light_color_red"] = LightmapConfig.AmbientColorR / 255f;
+                scene.Extras["ambient_light_color_green"] = LightmapConfig.AmbientColorG / 255f;
+                scene.Extras["ambient_light_color_blue"] = LightmapConfig.AmbientColorB / 255f;
                 Dictionary<string, PrimitiveBuilder<SharpGLTF.Materials.MaterialBuilder, VertexPositionNormal, VertexTexture2, VertexEmpty>> dict = new Dictionary<string, PrimitiveBuilder<SharpGLTF.Materials.MaterialBuilder, VertexPositionNormal, VertexTexture2, VertexEmpty>>();
                 Node n = scene.CreateNode();
                 MeshBuilder<VertexPositionNormal, VertexTexture2> meshBuilder = new MeshBuilder<VertexPositionNormal, VertexTexture2>("mesh");
@@ -127,7 +131,7 @@ namespace CBRE.Editor.Compiling.Lightmap
                 else if (data.Direction != null && data.innerCos != null && data.outerCos != null)
                 {
                     Node n = scene.CreateNode();
-                    PunctualLight light = root.CreatePunctualLight(PunctualLightType.Spot);
+                    PunctualLight light = root.CreatePunctualLight($"spotlight_{i}", PunctualLightType.Spot);
                     light.Color = CbreToSystem(data.Color) / 255f;
                     light.Range = data.Range * scale;
                     light.Intensity = data.Intensity;
