@@ -84,11 +84,18 @@ namespace CBRE.Editor.Compiling.Lightmap
                         else
                         {
                             TextureItem item = document.TextureCollection.GetItem(name);
-                            BitmapRef bitmapRef = streamSource.GetImage(item);
-                            memStream.Position = 0;
-                            bitmapRef.Bitmap.Save(memStream, ImageFormat.Png);
-                            SharpGLTF.Materials.MaterialBuilder materialBuilder = new SharpGLTF.Materials.MaterialBuilder(name).WithChannelImage(SharpGLTF.Materials.KnownChannel.BaseColor, memStream.ToArray());
-                            prim = meshBuilder.UsePrimitive(materialBuilder);
+                            if (item != null && streamSource.HasImage(item))
+                            {
+                                BitmapRef bitmapRef = streamSource.GetImage(item);
+                                memStream.Position = 0;
+                                bitmapRef.Bitmap.Save(memStream, ImageFormat.Png);
+                                SharpGLTF.Materials.MaterialBuilder materialBuilder = new SharpGLTF.Materials.MaterialBuilder(name).WithChannelImage(SharpGLTF.Materials.KnownChannel.BaseColor, memStream.ToArray());
+                                prim = meshBuilder.UsePrimitive(materialBuilder);
+                            }
+                            else
+                            {
+                                prim = meshBuilder.UsePrimitive(new SharpGLTF.Materials.MaterialBuilder(name));
+                            }
                             dict.Add(name, prim);
                         }
                         foreach (LMFace.Vertex[] tri in face.GetTriangles())
