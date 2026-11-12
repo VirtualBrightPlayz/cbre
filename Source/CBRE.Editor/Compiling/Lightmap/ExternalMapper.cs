@@ -1,4 +1,3 @@
-using CBRE.DataStructures.MapObjects;
 using CBRE.Editor.Documents;
 using CBRE.Editor.Rendering;
 using CBRE.Editor.UI;
@@ -15,7 +14,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace CBRE.Editor.Compiling.Lightmap
 {
@@ -115,18 +113,30 @@ namespace CBRE.Editor.Compiling.Lightmap
             for (int i = 0; i < lightEntities.Count; i++)
             {
                 Light data = lightEntities[i];
-                if (data.Direction != null)
+                if (data.Direction == null)
                 {
-                    continue;
+                    Node n = scene.CreateNode();
+                    PunctualLight light = root.CreatePunctualLight($"pointlight_{i}", PunctualLightType.Point);
+                    light.Color = CbreToSystem(data.Color) / 255f;
+                    light.Range = data.Range * scale;
+                    light.Intensity = data.Intensity;
+                    //light.Extras = SharpGLTF.IO.JsonContent.Serialize(new ExternalLightData(MathF.Max(1f, getPropertyFloat("size")) * scale));
+                    n.PunctualLight = light;
+                    n.WithLocalTranslation(CbreToSystem(data.Origin) * scale);
                 }
-                Node n = scene.CreateNode();
-                PunctualLight light = root.CreatePunctualLight($"pointlight_{i}", PunctualLightType.Point);
-                light.Color = CbreToSystem(data.Color) / 255f;
-                light.Range = data.Range * scale;
-                light.Intensity = data.Intensity;
-                //light.Extras = SharpGLTF.IO.JsonContent.Serialize(new ExternalLightData(MathF.Max(1f, getPropertyFloat("size")) * scale));
-                n.PunctualLight = light;
-                n.WithLocalTranslation(CbreToSystem(data.Origin) * scale);
+                else if (data.Direction != null && data.innerCos != null && data.outerCos != null)
+                {
+                    Node n = scene.CreateNode();
+                    PunctualLight light = root.CreatePunctualLight(PunctualLightType.Spot);
+                    light.Color = CbreToSystem(data.Color) / 255f;
+                    light.Range = data.Range * scale;
+                    light.Intensity = data.Intensity;
+                    light.SetSpotCone((float)Math.Acos(data.innerCos.Value), (float)Math.Acos(data.outerCos.Value));
+                    //light.Extras = SharpGLTF.IO.JsonContent.Serialize(new ExternalLightData(MathF.Max(1f, getPropertyFloat("size")) * scale));
+                    n.PunctualLight = light;
+                    n.WithLocalTranslation(CbreToSystem(data.Origin) * scale);
+                    n.WithLocalRotation(System.Numerics.Quaternion.CreateFromAxisAngle(CbreToSystem(data.Direction), 0f));
+                }
             }
 
             root.SaveGLB(filename);
@@ -220,7 +230,6 @@ namespace CBRE.Editor.Compiling.Lightmap
             TextureCollection textureCollection = document.TextureCollection;
             int totalTextureDims = LightmapConfig.TextureDims;
             for (int k = 0; k < 4; k++)
-            //int k = 3;
             {
                 lock (textureCollection.Lightmaps)
                 {
