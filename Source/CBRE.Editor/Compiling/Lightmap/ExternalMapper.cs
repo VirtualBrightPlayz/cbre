@@ -297,13 +297,13 @@ namespace CBRE.Editor.Compiling.Lightmap
             float[] buffer = BitmapToFloats(bitmap);
             float[][] buffers = new float[4][];
             buffers[0] = new float[buffer.Length];
-            buffer.CopyTo(buffers[0]);
+            Array.Copy(buffer, buffers[0], buffer.Length);
             buffers[1] = new float[buffer.Length];
-            buffer.CopyTo(buffers[1]);
+            Array.Copy(buffer, buffers[1], buffer.Length);
             buffers[2] = new float[buffer.Length];
-            buffer.CopyTo(buffers[2]);
+            Array.Copy(buffer, buffers[2], buffer.Length);
             buffers[3] = new float[buffer.Length];
-            buffer.CopyTo(buffers[3]);
+            Array.Copy(buffer, buffers[3], buffer.Length);
 
             int totalTextureDims = LightmapConfig.TextureDims;
             Lightmapper.UpdateProgress(exportForm, "Blurring lightmap...", 0.95f);
