@@ -293,7 +293,8 @@ namespace CBRE.Editor.Compiling.Lightmap
 
             string colorFile = System.IO.Path.Combine(wkDir, "color.png");
 
-            using Bitmap bitmap = new Bitmap(System.Drawing.Image.FromFile(colorFile));
+            using System.Drawing.Image img = System.Drawing.Image.FromFile(colorFile);
+            using Bitmap bitmap = new Bitmap(img);
             float[] buffer = BitmapToFloats(bitmap);
             float[][] buffers = new float[4][];
             buffers[0] = new float[buffer.Length];
